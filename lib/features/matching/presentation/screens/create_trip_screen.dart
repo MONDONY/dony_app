@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/boat_carrier.dart';
 import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
@@ -224,7 +225,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   void initState() {
     super.initState();
     final args = widget.args;
-    final modes = transportModes;
+    // Trajet dédié à une demande : pas encore de bateau (son volume et sa
+    // fourchette d'arrivée viennent de la demande, tâche A9).
+    final modes = args?.lockContext != null
+        ? transportModes.withoutBoat
+        : transportModes;
     _tripModes = modes.tripCreationModes;
     _steps = tripFormSteps(
       showModeStep: showModeStepFor(
@@ -957,6 +962,23 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// Jours entre le départ et l'arrivée (vol de nuit, escale : FLUTTER-4E).
   final _arrivalDayOffsetNotifier = ValueNotifier<int>(0);
 
+  /// Bateau : arrivée estimée au plus tôt et au plus tard, jours sans heure
+  /// (`arrivalDate`, `arrivalDateMax`). Remplacent l'heure et le jour
+  /// d'arrivée, jamais envoyées hors bateau.
+  final _boatArrivalMinNotifier = ValueNotifier<DateTime?>(null);
+  final _boatArrivalMaxNotifier = ValueNotifier<DateTime?>(null);
+
+  /// Bateau au m³ : prix net par m³ saisi (étape Prix). Recopié dans le bloc
+  /// (aperçu) ; lu à l'envoi.
+  final _pricePerM3Ctrl = TextEditingController();
+
+  /// Bateau : unité de vente (m³ ou kilo). Même schéma que
+  /// [_availableKgNotifier] : `CapacityControl` l'écrit dans le bloc, un
+  /// `BlocListener` la recopie ici ; le formulaire la pose lui-même
+  /// (modification, brouillon), sans attendre le bloc, pour décider tout de
+  /// suite de la règle du prix. `null` tant que le bateau n'est pas choisi.
+  final _boatPriceUnitNotifier = ValueNotifier<BoatPriceUnit?>(null);
+
   /// Date limite de dépôt : jour et heure choisis par le voyageur
   /// (FLUTTER-PK). Une valeur à minuit est un jour sans heure (modèle
   /// appliqué, ancien brouillon, heure annulée) : son heure se déduit à
@@ -1044,6 +1066,22 @@ class _TripFormContentState extends State<_TripFormContent> {
   bool get _isEdit => widget.announcement != null;
   bool get _isLocked => widget.lockContext != null;
 
+  /// Trajet en bateau (mode choisi ou du trajet modifié). Un trajet dédié à
+  /// une demande bateau garde le formulaire d'avant le lot 3 (tâche A9).
+  bool get _isBoat =>
+      !_isLocked && _transportModeNotifier.value == TransportMode.boat;
+
+  /// Trajet bateau vendu au m³ (unité de l'étape Capacité) : aucun kilo
+  /// n'est envoyé.
+  bool get _isBoatPerM3 =>
+      _isBoat && _boatPriceUnitNotifier.value == BoatPriceUnit.m3;
+
+  /// Le voyageur peut publier en bateau (badge GP Pro ou compte pro, C15).
+  bool get _canPublishBoat {
+    final user = context.read<AuthBloc>().state.currentUser;
+    return user != null && canPublishBoat(user);
+  }
+
   /// Modification d'un trajet dont la devise peut encore changer (FLUTTER-KV).
   bool get _isEditCurrencyEditable =>
       _isEdit && widget.currencyEditableNotifier?.value == true;
@@ -1076,6 +1114,11 @@ class _TripFormContentState extends State<_TripFormContent> {
   //   8 XOF/kg saisis en croyant taper des euros (FLUTTER-GK).
   bool get _isPriceValid {
     if (_isLocked) return true;
+    // Bateau au m³ : un prix d'au moins 0,01, sans borne haute.
+    if (_isBoatPerM3) {
+      final price = parsePriceInput(_pricePerM3Ctrl.text);
+      return price != null && price >= minPricePerM3;
+    }
     if (!_kgPriceEnabledNotifier.value) return true;
     final idx = _priceOptionNotifier.value;
     if (idx == -1) return false;
@@ -1155,6 +1198,25 @@ class _TripFormContentState extends State<_TripFormContent> {
       // anciennes données : avion.
       _transportModeNotifier.value = transportModeOrPlane(a.transportMode);
       _stopsNotifier.value = a.stops;
+      // Bateau : unité de vente, fourchette d'arrivée et prix au m³ relus
+      // tels quels.
+      if (a.transportMode == TransportMode.boat) {
+        _boatPriceUnitNotifier.value = a.isPricedPerM3
+            ? BoatPriceUnit.m3
+            : BoatPriceUnit.kg;
+        final min = a.arrivalDate;
+        final max = a.arrivalDateMax;
+        _boatArrivalMinNotifier.value = min == null
+            ? null
+            : DateUtils.dateOnly(min);
+        _boatArrivalMaxNotifier.value = max == null
+            ? null
+            : DateUtils.dateOnly(max);
+        final pricePerM3 = a.pricePerM3;
+        if (pricePerM3 != null) {
+          _pricePerM3Ctrl.text = _priceInputText(pricePerM3);
+        }
+      }
 
       if (a.description != null) {
         _descriptionCtrl.text = a.description!;
@@ -1225,15 +1287,27 @@ class _TripFormContentState extends State<_TripFormContent> {
         formBloc
           ..add(const EditingTripStarted())
           ..add(AvailableKgChanged(a.availableKg));
-        // Taille et poids max par colis du trajet routier : relus tels quels,
-        // renvoyés seulement si le voyageur les change (cf. _submit).
-        if (transportModeOrPlane(a.transportMode).hasItemSize) {
+        // Taille (route) et poids max par colis (route, bateau) : relus tels
+        // quels, renvoyés seulement si le voyageur les change (cf. _submit).
+        // Sans cette relecture, un poids max d'un trajet bateau partait
+        // effacé au premier enregistrement.
+        final tripMode = transportModeOrPlane(a.transportMode);
+        if (tripMode.hasItemSize) {
+          formBloc.add(MaxItemSizeChanged(a.maxItemSize));
+        }
+        if (tripMode.hasMaxParcelWeight) {
+          formBloc.add(MaxParcelWeightChanged(a.maxParcelWeightKg));
+        }
+        // Bateau : volume et prix au m³ du trajet (l'unité est partie avec
+        // le mode, cf. _syncTransportModeToFormBloc).
+        if (tripMode == TransportMode.boat) {
           formBloc
-            ..add(MaxItemSizeChanged(a.maxItemSize))
-            ..add(MaxParcelWeightChanged(a.maxParcelWeightKg));
+            ..add(VolumeCapacityChanged(a.volumeCapacityM3))
+            ..add(PricePerM3Changed(a.pricePerM3));
         }
 
-        final mode = a.pricingMode == 'MIXED'
+        // Pas de grille en bateau.
+        final mode = a.pricingMode == 'MIXED' && tripMode != TransportMode.boat
             ? PricingMode.mixed
             : PricingMode.kg;
         formBloc.add(AnnouncementPricingModeSetRequested(mode));
@@ -1268,6 +1342,9 @@ class _TripFormContentState extends State<_TripFormContent> {
     _transportModeNotifier.addListener(_syncCanSubmit);
     _priceOptionNotifier.addListener(_syncCanSubmit);
     _customPriceCtrl.addListener(_syncCanSubmit);
+    _pricePerM3Ctrl.addListener(_syncCanSubmit);
+    _pricePerM3Ctrl.addListener(_syncPricePerM3ToFormBloc);
+    _boatPriceUnitNotifier.addListener(_syncCanSubmit);
     // Un prix custom valide dans une devise peut dépasser le plafond d'une
     // autre (cf. _isPriceValid) : changer de devise doit donc réévaluer
     // canSubmit sans que l'utilisateur retouche le champ prix.
@@ -1301,6 +1378,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureTimeNotifier.addListener(_updateCanContinue);
     _transportModeNotifier.addListener(_updateCanContinue);
     _handoverDeadlineNotifier.addListener(_updateCanContinue);
+    _boatArrivalMinNotifier.addListener(_updateCanContinue);
+    _boatArrivalMaxNotifier.addListener(_updateCanContinue);
     _updateCanContinue(); // état initial (pré-remplissage en mode édition)
 
     // Armé APRÈS le calcul initial : la pré-sélection automatique du mode
@@ -1317,6 +1396,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     // sans cette garde, Trajet s'ouvrait tout en rouge juste après le choix.
     if (!_hasModeStep) _transportModeNotifier.addListener(_markStep0Touched);
     _handoverDeadlineNotifier.addListener(_markStep0Touched);
+    _boatArrivalMinNotifier.addListener(_markStep0Touched);
+    _boatArrivalMaxNotifier.addListener(_markStep0Touched);
 
     // L'étape 1 n'a que deux champs, et on n'y arrive qu'en ayant complété
     // l'étape 0 : y entrer vaut engagement, on annonce donc tout de suite ce
@@ -1371,14 +1452,75 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (_departureDateNotifier.value == null) _Step0Field.departureDate,
     if (_transportModeNotifier.value == null) _Step0Field.transportMode,
     if (_handoverDeadlineNotifier.value == null) _Step0Field.handoverDeadline,
+    if (_isBoat &&
+        (_boatArrivalMinNotifier.value == null ||
+            _boatArrivalMaxNotifier.value == null))
+      _Step0Field.boatArrival,
   };
 
   void _updateCanContinue() {
     final missing = _missingStep0Fields;
     widget.canContinueNotifier?.value =
-        missing.isEmpty && !_isHandoverDeadlineInvalid();
+        missing.isEmpty &&
+        !_isHandoverDeadlineInvalid() &&
+        _boatArrivalIssue() == null;
     _refreshStep0Errors(missing);
   }
+
+  /// Incohérence de l'arrivée estimée d'un bateau (miroir de
+  /// `ArrivalRules.validateRange` et de `validate` du back), `null` si elle
+  /// est correcte ou incomplète (l'incomplet relève des champs obligatoires).
+  /// Fonction pure, sans texte, comme [_isHandoverDeadlineInvalid].
+  _BoatArrivalIssue? _boatArrivalIssue() {
+    if (!_isBoat) return null;
+    final min = _boatArrivalMinNotifier.value;
+    final max = _boatArrivalMaxNotifier.value;
+    final departure = _departureDateNotifier.value;
+    if (min != null &&
+        departure != null &&
+        DateUtils.dateOnly(min).isBefore(DateUtils.dateOnly(departure))) {
+      return _BoatArrivalIssue.beforeDeparture;
+    }
+    if (min != null && max != null && max.isBefore(min)) {
+      return _BoatArrivalIssue.latestBeforeEarliest;
+    }
+    if (max != null &&
+        departure != null &&
+        DateUtils.dateOnly(max).isAfter(_boatArrivalLimit(departure))) {
+      return _BoatArrivalIssue.tooFar;
+    }
+    return null;
+  }
+
+  /// Dernier jour d'arrivée possible d'un bateau parti le jour [departure].
+  static DateTime _boatArrivalLimit(DateTime departure) => DateTime(
+    departure.year,
+    departure.month,
+    departure.day + TransportMode.boat.maxArrivalDays,
+  );
+
+  /// Message sous l'arrivée estimée d'un bateau : l'incohérence d'abord, puis
+  /// l'arrivée manquante une fois l'étape touchée.
+  String? _boatArrivalMessage(AppLocalizations l10n) {
+    final issue = _boatArrivalIssue();
+    if (issue != null) return _boatArrivalIssueMessage(l10n, issue);
+    return _step0ErrorsNotifier.value.contains(_Step0Field.boatArrival)
+        ? _step0FieldMessage(l10n, _Step0Field.boatArrival)
+        : null;
+  }
+
+  static String _boatArrivalIssueMessage(
+    AppLocalizations l10n,
+    _BoatArrivalIssue issue,
+  ) => switch (issue) {
+    _BoatArrivalIssue.beforeDeparture =>
+      l10n.tripPublishBoatArrivalBeforeDeparture,
+    _BoatArrivalIssue.latestBeforeEarliest =>
+      l10n.tripPublishBoatArrivalLatestBeforeEarliest,
+    _BoatArrivalIssue.tooFar => l10n.tripPublishBoatArrivalTooFar(
+      TransportMode.boat.maxArrivalDays,
+    ),
+  };
 
   /// Publie les erreurs de l'étape 0 — mais seulement une fois que
   /// l'utilisateur a touché à quelque chose.
@@ -1424,6 +1566,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     _arrivalTimeNotifier,
     _arrivalDayOffsetNotifier,
     _handoverDeadlineNotifier,
+    _boatArrivalMinNotifier,
+    _boatArrivalMaxNotifier,
     _pickupAddressNotifier,
     _deliveryAddressNotifier,
     _availableKgNotifier,
@@ -1443,6 +1587,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customAcceptedCtrl,
     _refusedCtrl,
     _customPriceCtrl,
+    _pricePerM3Ctrl,
+    _boatPriceUnitNotifier,
   ];
 
   /// Signature de l'état saisissable du formulaire.
@@ -1467,6 +1613,8 @@ class _TripFormContentState extends State<_TripFormContent> {
       _arrivalTimeNotifier.value,
       _arrivalDayOffsetNotifier.value,
       _handoverDeadlineNotifier.value,
+      _boatArrivalMinNotifier.value,
+      _boatArrivalMaxNotifier.value,
       _pickupAddressNotifier.value?.label,
       _deliveryAddressNotifier.value?.label,
       _availableKgNotifier.value,
@@ -1486,6 +1634,10 @@ class _TripFormContentState extends State<_TripFormContent> {
       _customAcceptedCtrl.text,
       _refusedCtrl.text,
       _customPriceCtrl.text,
+      _pricePerM3Ctrl.text,
+      _boatPriceUnitNotifier.value?.wire,
+      // Volume d'un bateau : porté par le bloc (étape Capacité).
+      context.read<AnnouncementFormBloc>().state.volumeCapacityM3,
     ].join('|');
   }
 
@@ -1752,9 +1904,33 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (!mounted) return;
     final mode = _transportModeNotifier.value;
     if (mode != null) {
-      context.read<AnnouncementFormBloc>().add(TransportModeChanged(mode));
+      final bloc = context.read<AnnouncementFormBloc>();
+      bloc.add(TransportModeChanged(mode));
+      // Trajet dédié bateau : formulaire d'avant le lot 3 (tâche A9).
+      if (mode == TransportMode.boat && !_isLocked) {
+        // Vendu au m³ par défaut (groupage en conteneur), tant que rien
+        // n'est choisi (modification, brouillon : l'unité du trajet).
+        final unit = _boatPriceUnitNotifier.value ??= BoatPriceUnit.m3;
+        bloc.add(BoatPriceUnitChanged(unit));
+        // Pas de grille en bateau (422 `boat-price-required`) : retour au
+        // prix au kilo, jamais une grille cachée envoyée.
+        if (bloc.state.pricingMode == PricingMode.mixed) {
+          bloc.add(const AnnouncementPricingModeSetRequested(PricingMode.kg));
+        }
+      }
     }
   }
+
+  void _syncPricePerM3ToFormBloc() {
+    if (!mounted) return;
+    context.read<AnnouncementFormBloc>().add(
+      PricePerM3Changed(parsePriceInput(_pricePerM3Ctrl.text)),
+    );
+  }
+
+  /// Texte de saisie d'un prix relu (point décimal, deux décimales au plus).
+  static String _priceInputText(double price) =>
+      NumberFormat('#0.##', 'en').format(price);
 
   void _syncCashAcceptedToFormBloc() {
     if (!mounted) return;
@@ -1821,6 +1997,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureDateNotifier.removeListener(_updateCanContinue);
     _departureTimeNotifier.removeListener(_updateCanContinue);
     _handoverDeadlineNotifier.removeListener(_updateCanContinue);
+    _boatArrivalMinNotifier.removeListener(_updateCanContinue);
+    _boatArrivalMaxNotifier.removeListener(_updateCanContinue);
     _departureCityNotifier.removeListener(_syncCityToFormBloc);
     _arrivalCityNotifier.removeListener(_syncCityToFormBloc);
     _departureDateNotifier.removeListener(_syncDateToFormBloc);
@@ -1848,6 +2026,9 @@ class _TripFormContentState extends State<_TripFormContent> {
     _kgPriceEnabledNotifier.removeListener(_syncCanSubmit);
     _priceOptionNotifier.removeListener(_syncCanSubmit);
     _customPriceCtrl.removeListener(_syncCanSubmit);
+    _pricePerM3Ctrl.removeListener(_syncCanSubmit);
+    _pricePerM3Ctrl.removeListener(_syncPricePerM3ToFormBloc);
+    _boatPriceUnitNotifier.removeListener(_syncCanSubmit);
     widget.currencyNotifier.removeListener(_syncCanSubmit);
     widget.currencyNotifier.removeListener(_onCurrencyChanged);
     _kgPriceEnabledNotifier.dispose();
@@ -1860,6 +2041,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customAcceptedCtrl.dispose();
     _refusedCtrl.dispose();
     _customPriceCtrl.dispose();
+    _pricePerM3Ctrl.dispose();
+    _boatPriceUnitNotifier.dispose();
     _customPriceNotifier.dispose();
     _departureCityNotifier.dispose();
     _arrivalCityNotifier.dispose();
@@ -1869,6 +2052,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureTimeNotifier.dispose();
     _arrivalTimeNotifier.dispose();
     _arrivalDayOffsetNotifier.dispose();
+    _boatArrivalMinNotifier.dispose();
+    _boatArrivalMaxNotifier.dispose();
     _handoverDeadlineNotifier.dispose();
     _availableKgNotifier.dispose();
     _priceOptionNotifier.dispose();
@@ -2046,15 +2231,34 @@ class _TripFormContentState extends State<_TripFormContent> {
     final arrivalTime = arrivalTimeVal != null
         ? _formatTime(arrivalTimeVal)
         : null;
-    // Envoyée seulement si l'arrivée est un autre jour que le départ.
-    final arrivalOffset = _effectiveArrivalOffset();
-    final arrivalDate = arrivalOffset > 0
-        ? DateFormat('yyyy-MM-dd').format(
-            DateUtils.dateOnly(
-              departureDate,
-            ).add(Duration(days: arrivalOffset)),
-          )
-        : null;
+    // Bateau : la fourchette d'arrivée estimée, toujours envoyée. Ailleurs,
+    // l'arrivée seulement si elle tombe un autre jour que le départ.
+    final String? arrivalDate;
+    String? arrivalDateMax;
+    if (_isBoat) {
+      final min = _boatArrivalMinNotifier.value;
+      final max = _boatArrivalMaxNotifier.value;
+      if (min == null || max == null) {
+        _showError(_step0FieldMessage(context.l10n, _Step0Field.boatArrival));
+        return;
+      }
+      final issue = _boatArrivalIssue();
+      if (issue != null) {
+        _showError(_boatArrivalIssueMessage(context.l10n, issue));
+        return;
+      }
+      arrivalDate = DateFormat('yyyy-MM-dd').format(min);
+      arrivalDateMax = DateFormat('yyyy-MM-dd').format(max);
+    } else {
+      final arrivalOffset = _effectiveArrivalOffset();
+      arrivalDate = arrivalOffset > 0
+          ? DateFormat('yyyy-MM-dd').format(
+              DateUtils.dateOnly(
+                departureDate,
+              ).add(Duration(days: arrivalOffset)),
+            )
+          : null;
+    }
 
     final allAccepted = acceptedContentWithPrecision(
       selected: _selectedContentNotifier.value,
@@ -2139,6 +2343,13 @@ class _TripFormContentState extends State<_TripFormContent> {
     final stops = supportsStops(transportMode) ? _stopsNotifier.value : null;
 
     final formBlocState = context.read<AnnouncementFormBloc>().state;
+    // Bateau au m³ : volume et prix au m³, aucun kilo (ni capacité, ni prix
+    // au kilo, ni unité de capacité).
+    final perM3 = transportMode == TransportMode.boat && _isBoatPerM3;
+    if (perM3 && !formBlocState.isVolumeValid) {
+      _showError(context.l10n.tripPublishBoatVolumeInvalid);
+      return;
+    }
     if (formBlocState.capacityTooHigh) {
       _showError(
         context.l10n.tripPublishCapacityTooHigh(
@@ -2151,17 +2362,26 @@ class _TripFormContentState extends State<_TripFormContent> {
       _showError(context.l10n.tripPublishMaxParcelWeightInvalid);
       return;
     }
-    // Taille et poids max par colis : route seulement, jamais un champ caché.
-    final hasParcelLimits = transportMode.hasItemSize;
-    final maxItemSize = hasParcelLimits ? formBlocState.maxItemSize : null;
-    final maxParcelWeightKg = hasParcelLimits
+    // Taille max d'un colis en route, poids max par colis en route et en
+    // bateau : jamais un champ caché.
+    final hasItemSize = transportMode.hasItemSize;
+    final hasMaxParcelWeight = transportMode.hasMaxParcelWeight;
+    final maxItemSize = hasItemSize ? formBlocState.maxItemSize : null;
+    final maxParcelWeightKg = hasMaxParcelWeight
         ? formBlocState.maxParcelWeightKg
         : null;
-    final capacityUnitWire = formBlocState.capacityUnit.toWire();
-    final pricingModeWire = formBlocState.pricingMode == PricingMode.mixed
+    final capacityUnitWire = perM3 ? null : formBlocState.capacityUnit.toWire();
+    // Pas de grille en bateau.
+    final pricingModeWire =
+        formBlocState.pricingMode == PricingMode.mixed &&
+            transportMode != TransportMode.boat
         ? 'MIXED'
         : 'KG';
-    final pricePerKgToSubmit = formBlocState.pricePerKg ?? 0.0;
+    final double? pricePerKgToSubmit = perM3
+        ? null
+        : formBlocState.pricePerKg ?? 0.0;
+    final volumeCapacityM3 = perM3 ? formBlocState.volumeCapacityM3 : null;
+    final pricePerM3 = perM3 ? parsePriceInput(_pricePerM3Ctrl.text) : null;
 
     final handoverDeadline = _resolveHandoverDeadline();
     if (handoverDeadline == null) {
@@ -2196,9 +2416,12 @@ class _TripFormContentState extends State<_TripFormContent> {
           arrivalDate: arrivalDate,
           pickupAddress: _pickupAddress!,
           deliveryAddress: _deliveryAddress!,
-          availableKg: _availableKgNotifier.value,
+          availableKg: perM3 ? null : _availableKgNotifier.value,
           pricePerKg: pricePerKgToSubmit,
           transportMode: transportMode,
+          arrivalDateMax: arrivalDateMax,
+          volumeCapacityM3: volumeCapacityM3,
+          pricePerM3: pricePerM3,
           stops: stops,
           description: description,
           acceptedContentTypes: allAccepted,
@@ -2220,12 +2443,12 @@ class _TripFormContentState extends State<_TripFormContent> {
           maxItemSize: _editChange(
             maxItemSize,
             widget.announcement!.maxItemSize,
-            hasParcelLimits,
+            hasItemSize,
           ),
           maxParcelWeightKg: _editChange(
             maxParcelWeightKg,
             widget.announcement!.maxParcelWeightKg,
-            hasParcelLimits,
+            hasMaxParcelWeight,
           ),
         ),
       );
@@ -2241,9 +2464,12 @@ class _TripFormContentState extends State<_TripFormContent> {
         arrivalDate: arrivalDate,
         pickupAddress: _pickupAddress!,
         deliveryAddress: _deliveryAddress!,
-        availableKg: _availableKgToSubmit,
+        availableKg: perM3 ? null : _availableKgToSubmit,
         pricePerKg: pricePerKgToSubmit,
         transportMode: transportMode,
+        arrivalDateMax: arrivalDateMax,
+        volumeCapacityM3: volumeCapacityM3,
+        pricePerM3: pricePerM3,
         stops: stops,
         description: description,
         acceptedContentTypes: allAccepted,
@@ -2260,8 +2486,11 @@ class _TripFormContentState extends State<_TripFormContent> {
         maxParcelWeightKg: maxParcelWeightKg,
       );
       // Voyage à plusieurs étapes (FLUTTER-4D) : toutes les étapes partent
-      // ensemble, en une transaction côté serveur.
-      final extraLegs = context.read<TripLegsCubit>().state.legs;
+      // ensemble, en une transaction côté serveur. Jamais en bateau, qui n'a
+      // ni escales ni étapes (section masquée).
+      final extraLegs = transportMode == TransportMode.boat
+          ? const <TripLegDraft>[]
+          : context.read<TripLegsCubit>().state.legs;
       if (extraLegs.isEmpty) {
         context.read<AnnouncementBloc>().add(createEvent);
         return;
@@ -2510,6 +2739,37 @@ class _TripFormContentState extends State<_TripFormContent> {
     }
   }
 
+  /// Arrivée estimée d'un bateau, au plus tôt ([latest] faux) ou au plus
+  /// tard : un jour entre le départ (ou l'arrivée au plus tôt) et départ +
+  /// 120 jours. Sans départ saisi, la fenêtre part d'aujourd'hui ; la
+  /// cohérence reste vérifiée à chaque changement (`_boatArrivalIssue`).
+  Future<void> _selectBoatArrival({required bool latest}) async {
+    final cs = Theme.of(context).colorScheme;
+    final today = DateUtils.dateOnly(DateTime.now());
+    final departure = _departureDateNotifier.value;
+    final base = departure == null ? today : DateUtils.dateOnly(departure);
+    final last = _boatArrivalLimit(base);
+    final notifier = latest ? _boatArrivalMaxNotifier : _boatArrivalMinNotifier;
+    var first = latest ? (_boatArrivalMinNotifier.value ?? base) : base;
+    if (first.isAfter(last)) first = last;
+    var initial = notifier.value ?? first;
+    if (initial.isBefore(first)) initial = first;
+    if (initial.isAfter(last)) initial = last;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: first,
+      lastDate: last,
+      builder: (ctx, child) => Theme(
+        data: Theme.of(
+          ctx,
+        ).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
+        child: child!,
+      ),
+    );
+    if (picked != null && mounted) notifier.value = DateUtils.dateOnly(picked);
+  }
+
   /// Sélection de la date limite de dépôt : le jour puis l'heure, en un seul
   /// geste (retour testeur FLUTTER-PK : l'heure affichée était déduite sans
   /// jamais être choisie).
@@ -2741,10 +3001,13 @@ class _TripFormContentState extends State<_TripFormContent> {
                           : 'trip_published_v2',
                       // Trajet récurrent : un trajet direct tout juste créé
                       // peut être répété à d'autres dates (yadony-back #525).
+                      // Jamais en bateau : le back refuse modèles et
+                      // récurrences bateau (422 `boat-template-unsupported`).
                       extra:
                           !isEdit &&
                               state is! AnnouncementTripCreated &&
-                              announcement.tripGroupId == null
+                              announcement.tripGroupId == null &&
+                              announcement.transportMode != TransportMode.boat
                           ? TripSeriesCard(announcement: announcement)
                           : null,
                       secondaryLabel: isEdit ? null : l.tripPublishSuccessCta,
@@ -2832,7 +3095,21 @@ class _TripFormContentState extends State<_TripFormContent> {
                 listenWhen: (prev, curr) =>
                     prev.isCapacityStepValid != curr.isCapacityStepValid,
                 listener: (_, _) => _updateCanContinueStep1(),
-                child: formChild,
+                // Bateau : unité de vente choisie à l'étape Capacité, recopiée
+                // dans le formulaire (règle du prix) ; le volume compte comme
+                // une saisie.
+                child:
+                    BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
+                      listenWhen: (prev, curr) =>
+                          prev.boatPriceUnit != curr.boatPriceUnit ||
+                          prev.volumeCapacityM3 != curr.volumeCapacityM3,
+                      listener: (_, formState) {
+                        final unit = formState.boatPriceUnit;
+                        if (unit != null) _boatPriceUnitNotifier.value = unit;
+                        _markDirty();
+                      },
+                      child: formChild,
+                    ),
               ),
             ),
       ),
@@ -3024,6 +3301,11 @@ class _TripFormContentState extends State<_TripFormContent> {
       legs: context.read<TripLegsCubit>().state.legs,
       maxItemSize: formState.maxItemSize,
       maxParcelWeightKg: formState.maxParcelWeightKg,
+      arrivalDate: _boatArrivalMinNotifier.value,
+      arrivalDateMax: _boatArrivalMaxNotifier.value,
+      volumeM3: formState.volumeCapacityM3,
+      pricePerM3: parsePriceInput(_pricePerM3Ctrl.text),
+      boatPriceUnit: _boatPriceUnitNotifier.value,
     );
   }
 
@@ -3044,6 +3326,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureTimeNotifier.value = _timeOfDay(d.departureTime);
     _arrivalTimeNotifier.value = _timeOfDay(d.arrivalTime);
     final draftMode = _creationModeFrom(d.transportMode);
+    // Avant le mode : son changement envoie l'unité au bloc.
+    _boatPriceUnitNotifier.value = d.boatPriceUnit ?? BoatPriceUnit.m3;
     // Le brouillon garde jusqu'à 120 jours (bateau) : borné ici au mode
     // retenu, un J+10 de route devient J+3 en avion.
     // Mode d'abord : son changement ramène le décalage à 0, la restauration
@@ -3056,6 +3340,12 @@ class _TripFormContentState extends State<_TripFormContent> {
       offset: d.arrivalDayOffset,
     ).clamp(0, transportModeOrPlane(draftMode).maxArrivalDays);
     _stopsNotifier.value = d.stops;
+    _boatArrivalMinNotifier.value = d.arrivalDate;
+    _boatArrivalMaxNotifier.value = d.arrivalDateMax;
+    final pricePerM3 = d.pricePerM3;
+    _pricePerM3Ctrl.text = pricePerM3 == null
+        ? ''
+        : _priceInputText(pricePerM3);
     // Après la date : son listener réapplique un délai de modèle en attente.
     _pendingHandoverLeadDays = d.handoverLeadDays;
     _handoverDeadlineNotifier.value = d.handoverDeadline;
@@ -3098,13 +3388,22 @@ class _TripFormContentState extends State<_TripFormContent> {
     // Comme pour un modèle : l'unité réécrit le kg à son maximum, le kg
     // saisi passe ensuite.
     if (kg != null) formBloc.add(AvailableKgChanged(kg));
-    // Après le mode : vers un mode sans taille, le bloc les aurait effacés.
+    // Après le mode : vers un mode sans taille ni poids max, le bloc les
+    // aurait effacés.
     if (transportModeOrPlane(draftMode).hasItemSize) {
-      formBloc
-        ..add(MaxItemSizeChanged(d.maxItemSize))
-        ..add(MaxParcelWeightChanged(d.maxParcelWeightKg));
+      formBloc.add(MaxItemSizeChanged(d.maxItemSize));
     }
-    final pricingMode = d.pricingMode == 'MIXED'
+    if (transportModeOrPlane(draftMode).hasMaxParcelWeight) {
+      formBloc.add(MaxParcelWeightChanged(d.maxParcelWeightKg));
+    }
+    // Unité de vente du brouillon : aussi quand le mode n'a pas changé (déjà
+    // bateau), sans quoi le bloc garderait l'unité d'avant.
+    formBloc
+      ..add(BoatPriceUnitChanged(_boatPriceUnitNotifier.value!))
+      ..add(VolumeCapacityChanged(d.volumeM3));
+    // Pas de grille en bateau.
+    final pricingMode =
+        d.pricingMode == 'MIXED' && draftMode != TransportMode.boat
         ? PricingMode.mixed
         : PricingMode.kg;
     _pendingKgPriceEnabled = formBloc.state.pricingMode != pricingMode
@@ -3123,9 +3422,12 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// création : à choisir à l'étape Mode, ou l'avion sans choix (C1, C12).
   TransportMode? _creationModeFrom(String? wire) {
     final mode = transportModeFromWire(wire);
+    // Bateau d'un brouillon (ou de l'IA) pour un voyageur non vérifié : sa
+    // carte est grisée, le mode reste à choisir.
     final proposable =
         mode != null &&
-        widget.tripModes.any((m) => m.displayGroup == mode.displayGroup);
+        widget.tripModes.any((m) => m.displayGroup == mode.displayGroup) &&
+        (mode != TransportMode.boat || _canPublishBoat);
     if (proposable) return mode;
     return _hasModeStep ? null : TransportMode.plane;
   }
@@ -3138,7 +3440,27 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   // ── Mode ───────────────────────────────────────────────────────────────────
   List<Widget> _buildModeStep() => [
-    ModeStep(modes: widget.tripModes, notifier: _transportModeNotifier),
+    BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, auth) {
+        final user = auth.currentUser;
+        return ModeStep(
+          modes: widget.tripModes,
+          notifier: _transportModeNotifier,
+          // Bateau réservé aux transporteurs vérifiés (C15) : carte grisée et
+          // lien vers la demande de badge GP Pro.
+          boatLocked: user == null || !canPublishBoat(user),
+          onRequestBoatBadge: () => unawaited(context.push('/profile/gp-pro')),
+        );
+      },
+    ),
+  ];
+
+  /// Modes de la ligne « Mode de transport » (modification) : sans le bateau
+  /// pour un voyageur non vérifié, sauf s'il est le mode du trajet (la ligne
+  /// montre toujours le mode réel).
+  List<TransportMode> get _modeRowModes => [
+    for (final mode in widget.tripModes)
+      if (mode != TransportMode.boat || _canPublishBoat) mode,
   ];
 
   // ── Trajet ─────────────────────────────────────────────────────────────────
@@ -3148,9 +3470,15 @@ class _TripFormContentState extends State<_TripFormContent> {
         _LockedBanner(lockContext: widget.lockContext!),
         const SizedBox(height: DonySpacing.lg),
       ],
-      ValueListenableBuilder<Set<_Step0Field>>(
-        valueListenable: _step0ErrorsNotifier,
-        builder: (context, missing, _) => TrajetStep(
+      ListenableBuilder(
+        listenable: Listenable.merge([
+          _step0ErrorsNotifier,
+          _boatArrivalMinNotifier,
+          _boatArrivalMaxNotifier,
+          _departureDateNotifier,
+          _transportModeNotifier,
+        ]),
+        builder: (context, _) => TrajetStep(
           departureCityNotifier: _departureCityNotifier,
           arrivalCityNotifier: _arrivalCityNotifier,
           departureCountryCodeNotifier: _departureCountryCodeNotifier,
@@ -3165,31 +3493,37 @@ class _TripFormContentState extends State<_TripFormContent> {
           // le mode se lit (et se change en modification) en tête de l'étape.
           // Un trajet dédié « peu importe » a l'étape Mode, donc pas de ligne.
           // Avion seul proposé et trajet avion : rien à choisir, pas de ligne.
-          transportModeRowModes: _showModeRow ? widget.tripModes : null,
+          transportModeRowModes: _showModeRow ? _modeRowModes : null,
           transportModeRowReadOnly: _isLocked,
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
           onSelectDate: _selectDate,
           departureCityError: _msg(
             context.l10n,
-            missing,
+            _step0ErrorsNotifier.value,
             _Step0Field.departureCity,
           ),
           arrivalCityError: _msg(
             context.l10n,
-            missing,
+            _step0ErrorsNotifier.value,
             _Step0Field.arrivalCity,
           ),
           departureDateError: _msg(
             context.l10n,
-            missing,
+            _step0ErrorsNotifier.value,
             _Step0Field.departureDate,
           ),
           departureTimeError: _msg(
             context.l10n,
-            missing,
+            _step0ErrorsNotifier.value,
             _Step0Field.departureTime,
           ),
+          // Trajet dédié bateau : pas encore de fourchette (tâche A9).
+          boatArrivalMinNotifier: _isLocked ? null : _boatArrivalMinNotifier,
+          boatArrivalMaxNotifier: _isLocked ? null : _boatArrivalMaxNotifier,
+          onSelectBoatArrivalMin: () => _selectBoatArrival(latest: false),
+          onSelectBoatArrivalMax: () => _selectBoatArrival(latest: true),
+          boatArrivalError: _boatArrivalMessage(context.l10n),
           // Corridor verrouillé en modification (Q1) ET en trajet dédié (lockContext).
           // Date verrouillée seulement en modification ; le dédié la garde éditable
           // dans la fenêtre de tolérance.
@@ -3305,6 +3639,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           lockedTransportMode: _isLocked
               ? widget.lockContext!.transportMode
               : null,
+          transportMode: _isLocked ? null : _transportModeNotifier.value,
         ),
       ),
     ];
@@ -3368,6 +3703,7 @@ class _TripFormContentState extends State<_TripFormContent> {
                   ? widget.lockContext!.agreedPriceEur
                   : null,
               showPaymentMethods: !_isLocked,
+              pricePerM3Ctrl: _pricePerM3Ctrl,
               // En modification, la devise ne change que si le serveur le
               // permet (`currencyEditable`, FLUTTER-KV) : le PUT l'envoie
               // alors. Sinon elle reste figée, sans quoi l'écran validait le
@@ -3417,8 +3753,8 @@ class _TripFormContentState extends State<_TripFormContent> {
       ),
       // Voyage à plusieurs étapes (FLUTTER-4D), sous les conditions (C5) :
       // création seulement. Une modification touche une seule étape, un
-      // trajet dédié reste unique.
-      if (isCreation)
+      // trajet dédié reste unique, un bateau n'a ni escales ni étapes.
+      if (isCreation && !_isBoat)
         ListenableBuilder(
           listenable: Listenable.merge([
             _arrivalCityNotifier,
@@ -3534,6 +3870,8 @@ class _TripFormContentState extends State<_TripFormContent> {
         widget.currentStepNotifier,
         _pickupAddressNotifier,
         _deliveryAddressNotifier,
+        // Libellés et sections propres au mode (bateau : entrepôt, étapes).
+        _transportModeNotifier,
       ]),
       builder: (context, _) {
         final current = widget.currentStepNotifier!.value;
@@ -3581,7 +3919,13 @@ enum _Step0Field {
   departureTime,
   transportMode,
   handoverDeadline,
+
+  /// Bateau : arrivée estimée au plus tôt et au plus tard.
+  boatArrival,
 }
+
+/// Incohérence de l'arrivée estimée d'un bateau (`_boatArrivalIssue`).
+enum _BoatArrivalIssue { beforeDeparture, latestBeforeEarliest, tooFar }
 
 /// Message affiché sous le champ [f]. Repris mot pour mot des gardes de
 /// `_submit()` pour que l'utilisateur lise la même chose aux deux endroits.
@@ -3599,6 +3943,8 @@ String _step0FieldMessage(AppLocalizations l10n, _Step0Field f) {
       return l10n.tripPublishFieldTransportModeRequired;
     case _Step0Field.handoverDeadline:
       return l10n.tripPublishFieldHandoverDeadlineRequired;
+    case _Step0Field.boatArrival:
+      return l10n.tripPublishBoatArrivalRequired;
   }
 }
 

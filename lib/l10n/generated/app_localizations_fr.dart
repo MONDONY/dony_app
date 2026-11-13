@@ -24560,4 +24560,112 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get requestCreateWeightTooHeavySubmit =>
       'Ce colis dépasse 32 kg : modifiez son poids ou choisissez Route.';
+
+  @override
+  String get tripPublishModeBoatTitle => 'Voie maritime';
+
+  @override
+  String get tripPublishModeBoatSubtitle => 'Bateau, groupage en conteneur';
+
+  @override
+  String get tripPublishModeBoatTagDuration => 'Plusieurs semaines';
+
+  @override
+  String get tripPublishModeBoatTagCapacity => 'Volume en m³';
+
+  @override
+  String get tripPublishModeBoatLocked => 'Réservé aux transporteurs vérifiés';
+
+  @override
+  String get tripPublishModeBoatBadgeLink => 'Demander le badge GP Pro';
+
+  @override
+  String get tripPublishBoatDeparturePortLabel => 'Port de départ';
+
+  @override
+  String get tripPublishBoatArrivalPortLabel => 'Port d\'arrivée';
+
+  @override
+  String get tripPublishBoatArrivalLabel => 'Arrivée estimée';
+
+  @override
+  String get tripPublishBoatArrivalEarliestLabel => 'Au plus tôt';
+
+  @override
+  String get tripPublishBoatArrivalLatestLabel => 'Au plus tard';
+
+  @override
+  String get tripPublishBoatArrivalHelp =>
+      'Les expéditeurs voient une fourchette : les retards au port sont fréquents.';
+
+  @override
+  String get tripPublishBoatArrivalRequired =>
+      'Indiquez l\'arrivée au plus tôt et au plus tard';
+
+  @override
+  String get tripPublishBoatArrivalBeforeDeparture =>
+      'L\'arrivée estimée ne peut pas précéder le départ';
+
+  @override
+  String get tripPublishBoatArrivalLatestBeforeEarliest =>
+      'L\'arrivée au plus tard ne peut pas précéder l\'arrivée au plus tôt';
+
+  @override
+  String tripPublishBoatArrivalTooFar(int days) {
+    return 'L\'arrivée au plus tard doit tomber dans les $days jours qui suivent le départ';
+  }
+
+  @override
+  String get tripPublishBoatWarehouseLabel => 'Adresse de l\'entrepôt';
+
+  @override
+  String get tripPublishBoatWarehouseSubtitle =>
+      'Où les expéditeurs déposent leurs colis';
+
+  @override
+  String get tripPublishBoatPickupLabel => 'Adresse de retrait';
+
+  @override
+  String get tripPublishBoatPickupSubtitle =>
+      'Où les destinataires récupèrent leurs colis';
+
+  @override
+  String get tripPublishBoatUnitQuestion => 'Vous vendez la place';
+
+  @override
+  String get tripPublishBoatUnitM3 => 'Au m³';
+
+  @override
+  String get tripPublishBoatUnitKg => 'Au kilo';
+
+  @override
+  String get tripPublishBoatVolumeLabel => 'Volume disponible (m³)';
+
+  @override
+  String get tripPublishBoatVolumeHint => 'De 0,1 à 9 999 m³, une décimale';
+
+  @override
+  String get tripPublishBoatVolumeInvalid =>
+      'Indiquez un volume entre 0,1 et 9 999 m³';
+
+  @override
+  String get tripPublishBoatPricePerM3Label => 'Prix par m³';
+
+  @override
+  String get tripPublishBoatPricePrompt =>
+      'Indiquez votre prix par m³ pour voir l\'estimation';
+
+  @override
+  String tripPublishBoatPriceEstimateLine(String net, String total) {
+    return 'Vous touchez $net par m³ · l\'expéditeur paie $total';
+  }
+
+  @override
+  String get tripPublishBoatDepositPayoutNotice =>
+      'Par bateau, vous êtes payé dès que l\'expéditeur dépose son colis à l\'entrepôt, sans attendre la livraison.';
+
+  @override
+  String tripPublishPerM3Value(String value) {
+    return '$value/m³';
+  }
 }

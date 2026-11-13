@@ -12121,5 +12121,147 @@
   "requestCreateWeightTooHeavySubmit": "This parcel is over 32 kg: change its weight or choose Road.",
   "@requestCreateWeightTooHeavySubmit": {
     "description": "Message de la publication refusée : poids au-delà de 32 kg pour le mode choisi, affiché depuis l'étape budget (package_request_create_screen.dart)"
+  },
+  "tripPublishModeBoatTitle": "By sea",
+  "@tripPublishModeBoatTitle": {
+    "description": "Titre de la carte Bateau de l'étape Mode (mode_step.dart)"
+  },
+  "tripPublishModeBoatSubtitle": "Ship, shared container",
+  "@tripPublishModeBoatSubtitle": {
+    "description": "Sous-titre de la carte Bateau de l'étape Mode (mode_step.dart)"
+  },
+  "tripPublishModeBoatTagDuration": "Several weeks",
+  "@tripPublishModeBoatTagDuration": {
+    "description": "Étiquette de durée de la carte Bateau (mode_step.dart)"
+  },
+  "tripPublishModeBoatTagCapacity": "Volume in m³",
+  "@tripPublishModeBoatTagCapacity": {
+    "description": "Étiquette de capacité de la carte Bateau (mode_step.dart)"
+  },
+  "tripPublishModeBoatLocked": "Reserved for verified carriers",
+  "@tripPublishModeBoatLocked": {
+    "description": "Carte Bateau grisée : voyageur sans badge GP Pro ni compte pro (mode_step.dart)"
+  },
+  "tripPublishModeBoatBadgeLink": "Request the GP Pro badge",
+  "@tripPublishModeBoatBadgeLink": {
+    "description": "Lien texte de la carte Bateau grisée, ouvre la demande GP Pro (mode_step.dart)"
+  },
+  "tripPublishBoatDeparturePortLabel": "Departure port",
+  "@tripPublishBoatDeparturePortLabel": {
+    "description": "Champ de la ville de départ d'un trajet bateau (trajet_step.dart)"
+  },
+  "tripPublishBoatArrivalPortLabel": "Arrival port",
+  "@tripPublishBoatArrivalPortLabel": {
+    "description": "Champ de la ville d'arrivée d'un trajet bateau (trajet_step.dart)"
+  },
+  "tripPublishBoatArrivalLabel": "Estimated arrival",
+  "@tripPublishBoatArrivalLabel": {
+    "description": "Titre des deux dates d'arrivée d'un trajet bateau (trajet_step.dart)"
+  },
+  "tripPublishBoatArrivalEarliestLabel": "Earliest",
+  "@tripPublishBoatArrivalEarliestLabel": {
+    "description": "Champ de la première date d'arrivée estimée d'un bateau (trajet_step.dart)"
+  },
+  "tripPublishBoatArrivalLatestLabel": "Latest",
+  "@tripPublishBoatArrivalLatestLabel": {
+    "description": "Champ de la dernière date d'arrivée estimée d'un bateau (trajet_step.dart)"
+  },
+  "tripPublishBoatArrivalHelp": "Senders see a date range: delays at port are common.",
+  "@tripPublishBoatArrivalHelp": {
+    "description": "Aide sous l'arrivée estimée d'un trajet bateau (trajet_step.dart)"
+  },
+  "tripPublishBoatArrivalRequired": "Enter the earliest and the latest arrival",
+  "@tripPublishBoatArrivalRequired": {
+    "description": "Erreur : arrivée estimée d'un bateau incomplète (create_trip_screen.dart)"
+  },
+  "tripPublishBoatArrivalBeforeDeparture": "The estimated arrival can't be before departure",
+  "@tripPublishBoatArrivalBeforeDeparture": {
+    "description": "Erreur : arrivée au plus tôt d'un bateau avant le départ (create_trip_screen.dart)"
+  },
+  "tripPublishBoatArrivalLatestBeforeEarliest": "The latest arrival can't be before the earliest",
+  "@tripPublishBoatArrivalLatestBeforeEarliest": {
+    "description": "Erreur : fin de la fourchette d'arrivée avant son début (create_trip_screen.dart)"
+  },
+  "tripPublishBoatArrivalTooFar": "The latest arrival must be within {days} days of departure",
+  "@tripPublishBoatArrivalTooFar": {
+    "description": "Erreur : fin de la fourchette d'arrivée au-delà du maximum du bateau (create_trip_screen.dart)",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "tripPublishBoatWarehouseLabel": "Warehouse address",
+  "@tripPublishBoatWarehouseLabel": {
+    "description": "Adresse de remise d'un trajet bateau (lieux_capacite_step.dart)"
+  },
+  "tripPublishBoatWarehouseSubtitle": "Where senders drop off their parcels",
+  "@tripPublishBoatWarehouseSubtitle": {
+    "description": "Aide de l'adresse de l'entrepôt d'un trajet bateau (lieux_capacite_step.dart)"
+  },
+  "tripPublishBoatPickupLabel": "Pickup address",
+  "@tripPublishBoatPickupLabel": {
+    "description": "Adresse de livraison d'un trajet bateau (lieux_capacite_step.dart)"
+  },
+  "tripPublishBoatPickupSubtitle": "Where recipients collect their parcels",
+  "@tripPublishBoatPickupSubtitle": {
+    "description": "Aide de l'adresse de retrait d'un trajet bateau (lieux_capacite_step.dart)"
+  },
+  "tripPublishBoatUnitQuestion": "You sell the space",
+  "@tripPublishBoatUnitQuestion": {
+    "description": "Titre du choix de l'unité de vente d'un trajet bateau (capacity_control.dart)"
+  },
+  "tripPublishBoatUnitM3": "Per m³",
+  "@tripPublishBoatUnitM3": {
+    "description": "Segment de l'unité de vente d'un trajet bateau : au mètre cube (capacity_control.dart)"
+  },
+  "tripPublishBoatUnitKg": "Per kilo",
+  "@tripPublishBoatUnitKg": {
+    "description": "Segment de l'unité de vente d'un trajet bateau : au kilo (capacity_control.dart)"
+  },
+  "tripPublishBoatVolumeLabel": "Available volume (m³)",
+  "@tripPublishBoatVolumeLabel": {
+    "description": "Champ du volume proposé d'un trajet bateau au m³ (capacity_control.dart)"
+  },
+  "tripPublishBoatVolumeHint": "From 0.1 to 9,999 m³, one decimal",
+  "@tripPublishBoatVolumeHint": {
+    "description": "Aide du champ du volume proposé (capacity_control.dart)"
+  },
+  "tripPublishBoatVolumeInvalid": "Enter a volume between 0.1 and 9,999 m³",
+  "@tripPublishBoatVolumeInvalid": {
+    "description": "Erreur : volume proposé hors bornes (capacity_control.dart)"
+  },
+  "tripPublishBoatPricePerM3Label": "Price per m³",
+  "@tripPublishBoatPricePerM3Label": {
+    "description": "Titre et champ du prix au m³ d'un trajet bateau (prix_step.dart)"
+  },
+  "tripPublishBoatPricePrompt": "Enter your price per m³ to see the estimate",
+  "@tripPublishBoatPricePrompt": {
+    "description": "Invite sous le champ du prix au m³ encore vide (prix_step.dart)"
+  },
+  "tripPublishBoatPriceEstimateLine": "You get {net} per m³ · the sender pays {total}",
+  "@tripPublishBoatPriceEstimateLine": {
+    "description": "Estimation du prix au m³, montants déjà formatés dans la devise (prix_step.dart)",
+    "placeholders": {
+      "net": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishBoatDepositPayoutNotice": "By ship, you get paid as soon as the sender drops off their parcel at the warehouse, without waiting for delivery.",
+  "@tripPublishBoatDepositPayoutNotice": {
+    "description": "Encadré de l'étape Prix d'un trajet bateau : versement au dépôt (prix_step.dart)"
+  },
+  "tripPublishPerM3Value": "{value}/m³",
+  "@tripPublishPerM3Value": {
+    "description": "Montant ou symbole suivi de « par m³ » (prix_step.dart, announcement_preview_sheet.dart)",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
   }
 }

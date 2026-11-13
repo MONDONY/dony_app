@@ -50,6 +50,8 @@ class CityCorridorFields extends StatefulWidget {
     this.departureCityBloc,
     this.arrivalCityBloc,
     this.allowFreeText = false,
+    this.departureLabel,
+    this.arrivalLabel,
   });
 
   final String? departureValue;
@@ -85,6 +87,11 @@ class CityCorridorFields extends StatefulWidget {
   /// Filtres de recherche : une ville tapée sans suggestion choisie est
   /// transmise telle quelle (voir [CityAutocompleteField.allowFreeText]).
   final bool allowFreeText;
+
+  /// Libellés des deux champs (« Port de départ » d'un trajet bateau) ;
+  /// `null` : « Ville de départ » et « Ville d'arrivée ».
+  final String? departureLabel;
+  final String? arrivalLabel;
 
   @override
   State<CityCorridorFields> createState() => _CityCorridorFieldsState();
@@ -159,7 +166,9 @@ class _CityCorridorFieldsState extends State<CityCorridorFields> {
                           widget.departureCityBloc ?? getIt<CitySearchBloc>(),
                       child: CityAutocompleteField(
                         fieldKey: widget.departureFieldKey,
-                        label: context.l10n.cityDepartureLabel,
+                        label:
+                            widget.departureLabel ??
+                            context.l10n.cityDepartureLabel,
                         requiredLabel: widget.requiredLabels,
                         initialValue: widget.departureValue,
                         variant: CityFieldVariant.connected,
@@ -190,7 +199,9 @@ class _CityCorridorFieldsState extends State<CityCorridorFields> {
                           widget.arrivalCityBloc ?? getIt<CitySearchBloc>(),
                       child: CityAutocompleteField(
                         fieldKey: widget.arrivalFieldKey,
-                        label: context.l10n.cityArrivalLabel,
+                        label:
+                            widget.arrivalLabel ??
+                            context.l10n.cityArrivalLabel,
                         requiredLabel: widget.requiredLabels,
                         initialValue: widget.arrivalValue,
                         variant: CityFieldVariant.connected,

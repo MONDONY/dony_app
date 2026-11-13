@@ -39317,6 +39317,192 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce colis dépasse 32 kg : modifiez son poids ou choisissez Route.'**
   String get requestCreateWeightTooHeavySubmit;
+
+  /// Titre de la carte Bateau de l'étape Mode (mode_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voie maritime'**
+  String get tripPublishModeBoatTitle;
+
+  /// Sous-titre de la carte Bateau de l'étape Mode (mode_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bateau, groupage en conteneur'**
+  String get tripPublishModeBoatSubtitle;
+
+  /// Étiquette de durée de la carte Bateau (mode_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Plusieurs semaines'**
+  String get tripPublishModeBoatTagDuration;
+
+  /// Étiquette de capacité de la carte Bateau (mode_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume en m³'**
+  String get tripPublishModeBoatTagCapacity;
+
+  /// Carte Bateau grisée : voyageur sans badge GP Pro ni compte pro (mode_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réservé aux transporteurs vérifiés'**
+  String get tripPublishModeBoatLocked;
+
+  /// Lien texte de la carte Bateau grisée, ouvre la demande GP Pro (mode_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander le badge GP Pro'**
+  String get tripPublishModeBoatBadgeLink;
+
+  /// Champ de la ville de départ d'un trajet bateau (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Port de départ'**
+  String get tripPublishBoatDeparturePortLabel;
+
+  /// Champ de la ville d'arrivée d'un trajet bateau (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Port d\'arrivée'**
+  String get tripPublishBoatArrivalPortLabel;
+
+  /// Titre des deux dates d'arrivée d'un trajet bateau (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée'**
+  String get tripPublishBoatArrivalLabel;
+
+  /// Champ de la première date d'arrivée estimée d'un bateau (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus tôt'**
+  String get tripPublishBoatArrivalEarliestLabel;
+
+  /// Champ de la dernière date d'arrivée estimée d'un bateau (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus tard'**
+  String get tripPublishBoatArrivalLatestLabel;
+
+  /// Aide sous l'arrivée estimée d'un trajet bateau (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les expéditeurs voient une fourchette : les retards au port sont fréquents.'**
+  String get tripPublishBoatArrivalHelp;
+
+  /// Erreur : arrivée estimée d'un bateau incomplète (create_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez l\'arrivée au plus tôt et au plus tard'**
+  String get tripPublishBoatArrivalRequired;
+
+  /// Erreur : arrivée au plus tôt d'un bateau avant le départ (create_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'arrivée estimée ne peut pas précéder le départ'**
+  String get tripPublishBoatArrivalBeforeDeparture;
+
+  /// Erreur : fin de la fourchette d'arrivée avant son début (create_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'arrivée au plus tard ne peut pas précéder l\'arrivée au plus tôt'**
+  String get tripPublishBoatArrivalLatestBeforeEarliest;
+
+  /// Erreur : fin de la fourchette d'arrivée au-delà du maximum du bateau (create_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'arrivée au plus tard doit tomber dans les {days} jours qui suivent le départ'**
+  String tripPublishBoatArrivalTooFar(int days);
+
+  /// Adresse de remise d'un trajet bateau (lieux_capacite_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse de l\'entrepôt'**
+  String get tripPublishBoatWarehouseLabel;
+
+  /// Aide de l'adresse de l'entrepôt d'un trajet bateau (lieux_capacite_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Où les expéditeurs déposent leurs colis'**
+  String get tripPublishBoatWarehouseSubtitle;
+
+  /// Adresse de livraison d'un trajet bateau (lieux_capacite_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse de retrait'**
+  String get tripPublishBoatPickupLabel;
+
+  /// Aide de l'adresse de retrait d'un trajet bateau (lieux_capacite_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Où les destinataires récupèrent leurs colis'**
+  String get tripPublishBoatPickupSubtitle;
+
+  /// Titre du choix de l'unité de vente d'un trajet bateau (capacity_control.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous vendez la place'**
+  String get tripPublishBoatUnitQuestion;
+
+  /// Segment de l'unité de vente d'un trajet bateau : au mètre cube (capacity_control.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au m³'**
+  String get tripPublishBoatUnitM3;
+
+  /// Segment de l'unité de vente d'un trajet bateau : au kilo (capacity_control.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au kilo'**
+  String get tripPublishBoatUnitKg;
+
+  /// Champ du volume proposé d'un trajet bateau au m³ (capacity_control.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume disponible (m³)'**
+  String get tripPublishBoatVolumeLabel;
+
+  /// Aide du champ du volume proposé (capacity_control.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'De 0,1 à 9 999 m³, une décimale'**
+  String get tripPublishBoatVolumeHint;
+
+  /// Erreur : volume proposé hors bornes (capacity_control.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un volume entre 0,1 et 9 999 m³'**
+  String get tripPublishBoatVolumeInvalid;
+
+  /// Titre et champ du prix au m³ d'un trajet bateau (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix par m³'**
+  String get tripPublishBoatPricePerM3Label;
+
+  /// Invite sous le champ du prix au m³ encore vide (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez votre prix par m³ pour voir l\'estimation'**
+  String get tripPublishBoatPricePrompt;
+
+  /// Estimation du prix au m³, montants déjà formatés dans la devise (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous touchez {net} par m³ · l\'expéditeur paie {total}'**
+  String tripPublishBoatPriceEstimateLine(String net, String total);
+
+  /// Encadré de l'étape Prix d'un trajet bateau : versement au dépôt (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Par bateau, vous êtes payé dès que l\'expéditeur dépose son colis à l\'entrepôt, sans attendre la livraison.'**
+  String get tripPublishBoatDepositPayoutNotice;
+
+  /// Montant ou symbole suivi de « par m³ » (prix_step.dart, announcement_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{value}/m³'**
+  String tripPublishPerM3Value(String value);
 }
 
 class _AppLocalizationsDelegate

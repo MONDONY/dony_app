@@ -2,6 +2,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
@@ -120,10 +121,26 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         ? (formState.pricePerKg! * formState.availableKg!)
         : null;
 
-    final prixStr = formState.pricePerKg != null
+    final kgPrixStr = formState.pricePerKg != null
         ? '${CurrencyFormatter.formatOrPlain(formState.pricePerKg!, currency)}/kg'
               '${netEstimate != null ? l.listingPriceEstimateSuffix(CurrencyFormatter.formatOrPlain(netEstimate, currency)) : ''}'
         : '-';
+    // Bateau au m³ : ni kilos ni prix au kilo, le volume et le prix au m³.
+    final perM3 = formState.isPricedPerM3;
+    final volume = formState.volumeCapacityM3;
+    final pricePerM3 = formState.pricePerM3;
+    final prixStr = !perM3
+        ? kgPrixStr
+        : pricePerM3 == null
+        ? '-'
+        : l.tripPublishPerM3Value(
+            CurrencyFormatter.formatOrPlain(pricePerM3, currency),
+          );
+    final capacityStr = !perM3
+        ? formState.capacityUnit.label(l)
+        : volume == null
+        ? '-'
+        : formatVolumeM3(l, volume);
 
     return Padding(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -166,9 +183,12 @@ class AnnouncementPreviewSheet extends StatelessWidget {
               value: formState.deliveryAddress!.label,
             ),
           _PreviewRow(
-            iconAsset: 'luggage',
+            // Pas de valise hors avion : le colis.
+            iconAsset: transportModeOrPlane(formState.transportMode).isHeavy
+                ? 'package'
+                : 'luggage',
             label: l.listingRowLabelCapacity,
-            value: formState.capacityUnit.label(l),
+            value: capacityStr,
           ),
           _PreviewRow(
             iconAsset: 'banknote',

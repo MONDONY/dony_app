@@ -56,6 +56,10 @@ class LieuxCapaciteStep extends StatelessWidget {
   final String? pickupAddressError;
   final String? deliveryAddressError;
 
+  /// Mode du trajet : en bateau, les adresses deviennent « Adresse de
+  /// l'entrepôt » et « Adresse de retrait ».
+  final TransportMode? transportMode;
+
   const LieuxCapaciteStep({
     super.key,
     this.initialPickupAddress,
@@ -68,6 +72,7 @@ class LieuxCapaciteStep extends StatelessWidget {
     this.lockedTransportMode,
     this.pickupAddressError,
     this.deliveryAddressError,
+    this.transportMode,
   });
 
   @override
@@ -75,6 +80,7 @@ class LieuxCapaciteStep extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
+    final isBoat = transportMode == TransportMode.boat;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,6 +99,9 @@ class LieuxCapaciteStep extends StatelessWidget {
         AddressSelectorField(
           type: AddressSelectorType.remise,
           value: initialPickupAddress,
+          emptyLabel: isBoat ? l.tripPublishBoatWarehouseLabel : null,
+          emptySubtitle: isBoat ? l.tripPublishBoatWarehouseSubtitle : null,
+          caption: isBoat ? l.tripPublishBoatWarehouseLabel : null,
           onChanged: (addr) {
             onPickupChanged(addr);
             onPickupSaved(addr);
@@ -111,6 +120,9 @@ class LieuxCapaciteStep extends StatelessWidget {
         AddressSelectorField(
           type: AddressSelectorType.livraison,
           value: initialDeliveryAddress,
+          emptyLabel: isBoat ? l.tripPublishBoatPickupLabel : null,
+          emptySubtitle: isBoat ? l.tripPublishBoatPickupSubtitle : null,
+          caption: isBoat ? l.tripPublishBoatPickupLabel : null,
           onChanged: (addr) {
             onDeliveryChanged(addr);
             onDeliverySaved(addr);
@@ -132,7 +144,8 @@ class LieuxCapaciteStep extends StatelessWidget {
           fields: const ['availableKg', 'capacityUnit'],
           child: CaSectionLabel(
             label: l.tripPublishCapacityAvailableLabel,
-            iconAsset: 'luggage',
+            // Pas de valise en bateau : le colis.
+            iconAsset: isBoat ? 'package' : 'luggage',
           ),
         ),
         const SizedBox(height: DonySpacing.base),

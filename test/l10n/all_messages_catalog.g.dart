@@ -8493,6 +8493,48 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.requestCreateBudgetTechnicalMax(placeholderMarker('max')),
   'requestCreateWeightTooHeavySubmit': (l) =>
       l.requestCreateWeightTooHeavySubmit,
+  'tripPublishModeBoatTitle': (l) => l.tripPublishModeBoatTitle,
+  'tripPublishModeBoatSubtitle': (l) => l.tripPublishModeBoatSubtitle,
+  'tripPublishModeBoatTagDuration': (l) => l.tripPublishModeBoatTagDuration,
+  'tripPublishModeBoatTagCapacity': (l) => l.tripPublishModeBoatTagCapacity,
+  'tripPublishModeBoatLocked': (l) => l.tripPublishModeBoatLocked,
+  'tripPublishModeBoatBadgeLink': (l) => l.tripPublishModeBoatBadgeLink,
+  'tripPublishBoatDeparturePortLabel': (l) =>
+      l.tripPublishBoatDeparturePortLabel,
+  'tripPublishBoatArrivalPortLabel': (l) => l.tripPublishBoatArrivalPortLabel,
+  'tripPublishBoatArrivalLabel': (l) => l.tripPublishBoatArrivalLabel,
+  'tripPublishBoatArrivalEarliestLabel': (l) =>
+      l.tripPublishBoatArrivalEarliestLabel,
+  'tripPublishBoatArrivalLatestLabel': (l) =>
+      l.tripPublishBoatArrivalLatestLabel,
+  'tripPublishBoatArrivalHelp': (l) => l.tripPublishBoatArrivalHelp,
+  'tripPublishBoatArrivalRequired': (l) => l.tripPublishBoatArrivalRequired,
+  'tripPublishBoatArrivalBeforeDeparture': (l) =>
+      l.tripPublishBoatArrivalBeforeDeparture,
+  'tripPublishBoatArrivalLatestBeforeEarliest': (l) =>
+      l.tripPublishBoatArrivalLatestBeforeEarliest,
+  'tripPublishBoatArrivalTooFar': (l) =>
+      l.tripPublishBoatArrivalTooFar(intPlaceholderValue),
+  'tripPublishBoatWarehouseLabel': (l) => l.tripPublishBoatWarehouseLabel,
+  'tripPublishBoatWarehouseSubtitle': (l) => l.tripPublishBoatWarehouseSubtitle,
+  'tripPublishBoatPickupLabel': (l) => l.tripPublishBoatPickupLabel,
+  'tripPublishBoatPickupSubtitle': (l) => l.tripPublishBoatPickupSubtitle,
+  'tripPublishBoatUnitQuestion': (l) => l.tripPublishBoatUnitQuestion,
+  'tripPublishBoatUnitM3': (l) => l.tripPublishBoatUnitM3,
+  'tripPublishBoatUnitKg': (l) => l.tripPublishBoatUnitKg,
+  'tripPublishBoatVolumeLabel': (l) => l.tripPublishBoatVolumeLabel,
+  'tripPublishBoatVolumeHint': (l) => l.tripPublishBoatVolumeHint,
+  'tripPublishBoatVolumeInvalid': (l) => l.tripPublishBoatVolumeInvalid,
+  'tripPublishBoatPricePerM3Label': (l) => l.tripPublishBoatPricePerM3Label,
+  'tripPublishBoatPricePrompt': (l) => l.tripPublishBoatPricePrompt,
+  'tripPublishBoatPriceEstimateLine': (l) => l.tripPublishBoatPriceEstimateLine(
+    placeholderMarker('net'),
+    placeholderMarker('total'),
+  ),
+  'tripPublishBoatDepositPayoutNotice': (l) =>
+      l.tripPublishBoatDepositPayoutNotice,
+  'tripPublishPerM3Value': (l) =>
+      l.tripPublishPerM3Value(placeholderMarker('value')),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -9198,4 +9240,6 @@ const textParameters = <String, List<String>>{
   'parcelSizeLabel': ['size'],
   'requestCreateBudgetMinOnly': ['min'],
   'requestCreateBudgetTechnicalMax': ['max'],
+  'tripPublishBoatPriceEstimateLine': ['net', 'total'],
+  'tripPublishPerM3Value': ['value'],
 };

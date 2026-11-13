@@ -12,14 +12,30 @@ import 'package:flutter/material.dart';
 
 /// Une carte par mode proposé : icône, titre, sous-titre, deux étiquettes, et
 /// une coche sur la carte choisie.
+///
+/// Le bateau est réservé aux transporteurs vérifiés (C15) : [boatLocked], sa
+/// carte reste visible mais grisée, ne se choisit pas, et propose
+/// [onRequestBoatBadge] (« Demander le badge GP Pro »).
 class ModeStep extends StatelessWidget {
-  const ModeStep({super.key, required this.modes, required this.notifier});
+  const ModeStep({
+    super.key,
+    required this.modes,
+    required this.notifier,
+    this.boatLocked = false,
+    this.onRequestBoatBadge,
+  });
 
   /// Modes proposés, dans l'ordre d'affichage.
   final List<TransportMode> modes;
 
   /// Mode choisi ; `null` tant que le voyageur n'a pas choisi.
   final ValueNotifier<TransportMode?> notifier;
+
+  /// Le voyageur n'a ni badge GP Pro ni compte pro (`canPublishBoat`).
+  final bool boatLocked;
+
+  /// Lien de la carte Bateau grisée.
+  final VoidCallback? onRequestBoatBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +65,9 @@ class ModeStep extends StatelessWidget {
                   child: _ModeCard(
                     mode: mode,
                     selected: selected?.displayGroup == mode.displayGroup,
+                    locked: boatLocked && mode == TransportMode.boat,
                     onTap: () => notifier.value = mode,
+                    onRequestBadge: onRequestBoatBadge,
                   ),
                 ),
             ],
@@ -61,8 +79,7 @@ class ModeStep extends StatelessWidget {
 }
 
 /// Textes d'une carte : le titre, le sous-titre et deux étiquettes. Un mode
-/// sans texte dédié (bateau, pas proposé à la publication avant le lot 3)
-/// n'affiche que son nom.
+/// sans texte dédié (jamais proposé à la publication) n'affiche que son nom.
 ({String title, String? subtitle, List<String> tags}) _copy(
   TransportMode mode,
   AppLocalizations l,
@@ -77,6 +94,11 @@ class ModeStep extends StatelessWidget {
     subtitle: l.tripPublishModeRoadSubtitle,
     tags: [l.tripPublishModeRoadTagScope, l.tripPublishModeRoadTagCapacity],
   ),
+  TransportMode.boat => (
+    title: l.tripPublishModeBoatTitle,
+    subtitle: l.tripPublishModeBoatSubtitle,
+    tags: [l.tripPublishModeBoatTagDuration, l.tripPublishModeBoatTagCapacity],
+  ),
   _ => (title: mode.label(l), subtitle: null, tags: const <String>[]),
 };
 
@@ -84,12 +106,18 @@ class _ModeCard extends StatelessWidget {
   const _ModeCard({
     required this.mode,
     required this.selected,
+    required this.locked,
     required this.onTap,
+    this.onRequestBadge,
   });
 
   final TransportMode mode;
   final bool selected;
+
+  /// Mode réservé (bateau sans badge) : carte grisée, non sélectionnable.
+  final bool locked;
   final VoidCallback onTap;
+  final VoidCallback? onRequestBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -99,10 +127,11 @@ class _ModeCard extends StatelessWidget {
     final radius = BorderRadius.circular(DonyRadius.card);
     // Couleurs unies : seule la bordure (et la coche) porte la sélection.
     // Même épaisseur des deux côtés pour que la carte ne bouge pas.
-    return MergeSemantics(
+    final card = MergeSemantics(
       child: Semantics(
         button: true,
         selected: selected,
+        enabled: !locked,
         child: DecoratedBox(
           key: Key('mode-card-${mode.displayGroup.name}'),
           decoration: BoxDecoration(
@@ -118,7 +147,7 @@ class _ModeCard extends StatelessWidget {
             borderRadius: radius,
             child: InkWell(
               borderRadius: radius,
-              onTap: onTap,
+              onTap: locked ? null : onTap,
               child: Padding(
                 padding: const EdgeInsets.all(DonySpacing.base),
                 child: Row(
@@ -168,6 +197,29 @@ class _ModeCard extends StatelessWidget {
                               ],
                             ),
                           ],
+                          if (locked) ...[
+                            const SizedBox(height: DonySpacing.sm),
+                            Row(
+                              key: Key('mode-locked-${mode.displayGroup.name}'),
+                              children: [
+                                DonyIcon(
+                                  'lock',
+                                  size: DonySpacing.md,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: DonySpacing.xs),
+                                Expanded(
+                                  child: Text(
+                                    context.l10n.tripPublishModeBoatLocked,
+                                    style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -196,6 +248,29 @@ class _ModeCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+    if (!locked) return card;
+    // Grisée sans dégradé : opacité réduite sur la carte, le lien reste net.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Opacity(opacity: 0.55, child: card),
+        if (onRequestBadge != null)
+          TextButton.icon(
+            key: Key('mode-badge-link-${mode.displayGroup.name}'),
+            onPressed: onRequestBadge,
+            icon: DonyIcon(
+              'badge-check',
+              size: DonySpacing.base,
+              color: cs.primary,
+            ),
+            label: Text(
+              context.l10n.tripPublishModeBoatBadgeLink,
+              maxLines: 1,
+              softWrap: false,
+            ),
+          ),
+      ],
     );
   }
 }

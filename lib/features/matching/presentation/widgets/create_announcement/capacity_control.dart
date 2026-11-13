@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -22,6 +23,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///   (999 en avion, 999 999 en route) ; au-delà, erreur sous le champ.
 /// - Route : sous la capacité, la taille max d'un colis (facultative, C24) et
 ///   le poids max par colis (facultatif, de 0,5 kg à la capacité, D19).
+/// - Bateau : l'unité de vente d'abord (« Au m³ » / « Au kilo ») ; au m³, le
+///   volume disponible (0,1 à 9 999 m³, une décimale) remplace les kilos ;
+///   sous la capacité, le poids max par colis (facultatif), sans taille.
 ///
 /// `StatefulWidget` requis pour :
 ///   - les `TextEditingController` des kilos et du poids max par colis (créés
@@ -38,6 +42,7 @@ class CapacityControl extends StatefulWidget {
 class _CapacityControlState extends State<CapacityControl> {
   late final TextEditingController _customKgController;
   late final TextEditingController _maxWeightController;
+  late final TextEditingController _volumeController;
 
   @override
   void initState() {
@@ -52,14 +57,23 @@ class _CapacityControlState extends State<CapacityControl> {
     _maxWeightController = TextEditingController(
       text: _weightText(bloc.state.maxParcelWeightKg),
     );
+    _volumeController = TextEditingController(
+      text: _volumeText(bloc.state.volumeCapacityM3),
+    );
   }
 
   @override
   void dispose() {
     _customKgController.dispose();
     _maxWeightController.dispose();
+    _volumeController.dispose();
     super.dispose();
   }
+
+  /// Texte du champ de volume (point décimal, comme les autres champs de
+  /// saisie de ce formulaire).
+  static String _volumeText(double? m3) =>
+      m3 == null ? '' : formatVolumeValue('en', m3);
 
   /// Texte du champ de poids max, sans séparateur de milliers (saisie).
   static String _weightText(double? kg) =>
@@ -102,6 +116,16 @@ class _CapacityControlState extends State<CapacityControl> {
             _maxWeightController.text = _weightText(state.maxParcelWeightKg);
           },
         ),
+        // Volume posé d'ailleurs (brouillon, modification) : même règle.
+        BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
+          listenWhen: (prev, curr) =>
+              prev.volumeCapacityM3 != curr.volumeCapacityM3,
+          listener: (context, state) {
+            final typed = readVolumeInput(_volumeController.text);
+            if (typed == state.volumeCapacityM3) return;
+            _volumeController.text = _volumeText(state.volumeCapacityM3);
+          },
+        ),
       ],
       child: BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
         buildWhen: (prev, curr) =>
@@ -109,7 +133,9 @@ class _CapacityControlState extends State<CapacityControl> {
             prev.availableKg != curr.availableKg ||
             prev.transportMode != curr.transportMode ||
             prev.maxItemSize != curr.maxItemSize ||
-            prev.maxParcelWeightKg != curr.maxParcelWeightKg,
+            prev.maxParcelWeightKg != curr.maxParcelWeightKg ||
+            prev.boatPriceUnit != curr.boatPriceUnit ||
+            prev.volumeCapacityM3 != curr.volumeCapacityM3,
         builder: (context, state) {
           final tt = Theme.of(context).textTheme;
           final l = context.l10n;
@@ -120,27 +146,44 @@ class _CapacityControlState extends State<CapacityControl> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l.tripPublishCapacityAvailableLabel, style: tt.titleMedium),
-              const SizedBox(height: DonySpacing.sm),
-              Wrap(
-                spacing: DonySpacing.sm,
-                runSpacing: DonySpacing.sm,
-                children: units.map((unit) {
-                  return DonyChip(
-                    label: unit.label(l),
-                    selected: state.capacityUnit == unit,
-                    onTap: () => context.read<AnnouncementFormBloc>().add(
-                      CapacityUnitChanged(unit),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: DonySpacing.md),
-              _buildBody(context, state, mode),
-              if (mode.hasItemSize) ...[
+              if (state.hasBoatPricing) ...[
+                _BoatUnitSegment(selected: state.boatPriceUnit!),
                 const SizedBox(height: DonySpacing.lg),
-                _RoadParcelLimits(
+              ],
+              if (state.isPricedPerM3)
+                _VolumeCard(
+                  controller: _volumeController,
+                  showError:
+                      _volumeController.text.trim().isNotEmpty &&
+                      !state.isVolumeValid,
+                )
+              else ...[
+                Text(
+                  l.tripPublishCapacityAvailableLabel,
+                  style: tt.titleMedium,
+                ),
+                const SizedBox(height: DonySpacing.sm),
+                Wrap(
+                  spacing: DonySpacing.sm,
+                  runSpacing: DonySpacing.sm,
+                  children: units.map((unit) {
+                    return DonyChip(
+                      label: unit.label(l),
+                      selected: state.capacityUnit == unit,
+                      onTap: () => context.read<AnnouncementFormBloc>().add(
+                        CapacityUnitChanged(unit),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: DonySpacing.md),
+                _buildBody(context, state, mode),
+              ],
+              if (mode.hasMaxParcelWeight) ...[
+                const SizedBox(height: DonySpacing.lg),
+                _ParcelLimits(
                   state: state,
+                  withItemSize: mode.hasItemSize,
                   weightController: _maxWeightController,
                 ),
               ],
@@ -167,7 +210,7 @@ class _CapacityControlState extends State<CapacityControl> {
       case CapacityUnit.custom:
         return _CustomKgCard(
           controller: _customKgController,
-          isRoad: mode.isRoad,
+          withoutSuitcase: !mode.allowsSuitcases,
           error: state.capacityTooHigh
               ? context.l10n.tripPublishCapacityTooHigh(
                   formatWeightKg(context.l10n, state.capacityMaxKg.toDouble()),
@@ -179,16 +222,21 @@ class _CapacityControlState extends State<CapacityControl> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Route : taille max d'un colis et poids max par colis, facultatifs
+// Route et bateau : taille max d'un colis (route) et poids max par colis,
+// facultatifs
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _RoadParcelLimits extends StatelessWidget {
-  const _RoadParcelLimits({
+class _ParcelLimits extends StatelessWidget {
+  const _ParcelLimits({
     required this.state,
+    required this.withItemSize,
     required this.weightController,
   });
 
   final AnnouncementFormState state;
+
+  /// Route seulement : la taille max d'un colis (S à XL).
+  final bool withItemSize;
   final TextEditingController weightController;
 
   @override
@@ -197,17 +245,19 @@ class _RoadParcelLimits extends StatelessWidget {
     final l = context.l10n;
     final bloc = context.read<AnnouncementFormBloc>();
     return Column(
-      key: const Key('capacity-road-limits'),
+      key: Key(withItemSize ? 'capacity-road-limits' : 'capacity-boat-limits'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l.tripPublishMaxItemSizeLabel, style: tt.titleSmall),
-        const SizedBox(height: DonySpacing.sm),
-        ItemSizeSelector(
-          sizes: ItemSize.values,
-          selected: state.maxItemSize,
-          onChanged: (size) => bloc.add(MaxItemSizeChanged(size)),
-        ),
-        const SizedBox(height: DonySpacing.lg),
+        if (withItemSize) ...[
+          Text(l.tripPublishMaxItemSizeLabel, style: tt.titleSmall),
+          const SizedBox(height: DonySpacing.sm),
+          ItemSizeSelector(
+            sizes: ItemSize.values,
+            selected: state.maxItemSize,
+            onChanged: (size) => bloc.add(MaxItemSizeChanged(size)),
+          ),
+          const SizedBox(height: DonySpacing.lg),
+        ],
         DonyTextField(
           key: const Key('max-parcel-weight-field'),
           controller: weightController,
@@ -423,14 +473,14 @@ class _KgFreeInfoCard extends StatelessWidget {
 class _CustomKgCard extends StatelessWidget {
   const _CustomKgCard({
     required this.controller,
-    required this.isRoad,
+    required this.withoutSuitcase,
     required this.error,
   });
 
   final TextEditingController controller;
 
-  /// Route : pas d'icône de valise.
-  final bool isRoad;
+  /// Route et bateau : pas d'icône de valise.
+  final bool withoutSuitcase;
 
   /// Capacité au-delà du plafond du mode, `null` sinon.
   final String? error;
@@ -455,7 +505,9 @@ class _CustomKgCard extends StatelessWidget {
             key: const Key('capacity-kg-field'),
             controller: controller,
             label: l.tripPublishCapacityKgFieldLabel,
-            prefixIcon: isRoad ? Icons.inventory_2_rounded : DonyIcons.suitcase,
+            prefixIcon: withoutSuitcase
+                ? Icons.inventory_2_rounded
+                : DonyIcons.suitcase,
             keyboardType: TextInputType.number,
             onChanged: (value) {
               final parsed = int.tryParse(value.trim());
@@ -476,6 +528,158 @@ class _CustomKgCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.xs),
           Text(
             l.tripPublishCapacityKgFieldHint,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bateau : unité de vente et volume disponible
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// « Au m³ » / « Au kilo » : même rendu que le choix « Au kilo / Articles +
+/// kilo » de l'étape Prix, auquel il se substitue en bateau (pas de grille).
+class _BoatUnitSegment extends StatelessWidget {
+  const _BoatUnitSegment({required this.selected});
+
+  final BoatPriceUnit selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final bloc = context.read<AnnouncementFormBloc>();
+    return Column(
+      key: const Key('boat-unit-segment'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l.tripPublishBoatUnitQuestion, style: tt.titleMedium),
+        const SizedBox(height: DonySpacing.sm),
+        Container(
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+          ),
+          padding: const EdgeInsets.all(3),
+          child: Row(
+            children: [
+              for (final unit in BoatPriceUnit.values)
+                Expanded(
+                  child: _SegmentOption(
+                    key: Key('boat-unit-${unit.name}'),
+                    label: switch (unit) {
+                      BoatPriceUnit.m3 => l.tripPublishBoatUnitM3,
+                      BoatPriceUnit.kg => l.tripPublishBoatUnitKg,
+                    },
+                    active: unit == selected,
+                    onTap: () => bloc.add(BoatPriceUnitChanged(unit)),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SegmentOption extends StatelessWidget {
+  const _SegmentOption({
+    super.key,
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      selected: active,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          constraints: const BoxConstraints(minHeight: kDonyMinTapTarget - 4),
+          padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+          decoration: BoxDecoration(
+            color: active ? cs.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(DonyRadius.sm),
+            border: Border.all(color: active ? cs.primary : Colors.transparent),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              maxLines: 1,
+              softWrap: false,
+              style: tt.labelLarge?.copyWith(
+                color: active ? cs.primary : cs.onSurfaceVariant,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Volume disponible d'un trajet bateau au m³ : de 0,1 à 9 999, une
+/// décimale. Une saisie hors bornes part au bloc : l'étape la signale et
+/// grise « Continuer », sans la corriger en silence.
+class _VolumeCard extends StatelessWidget {
+  const _VolumeCard({required this.controller, required this.showError});
+
+  final TextEditingController controller;
+  final bool showError;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    return Container(
+      key: const Key('boat-volume-card'),
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DonyTextField(
+            key: const Key('boat-volume-field'),
+            controller: controller,
+            label: l.tripPublishBoatVolumeLabel,
+            prefixIcon: Icons.inventory_2_rounded,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*([.,]\d?)?')),
+            ],
+            onChanged: (value) => context.read<AnnouncementFormBloc>().add(
+              VolumeCapacityChanged(readVolumeInput(value)),
+            ),
+          ),
+          DonyFieldError(
+            message: showError ? l.tripPublishBoatVolumeInvalid : null,
+            textKey: const Key('boat-volume-error'),
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            l.tripPublishBoatVolumeHint,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],

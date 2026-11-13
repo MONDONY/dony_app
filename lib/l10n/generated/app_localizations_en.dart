@@ -24382,4 +24382,112 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get requestCreateWeightTooHeavySubmit =>
       'This parcel is over 32 kg: change its weight or choose Road.';
+
+  @override
+  String get tripPublishModeBoatTitle => 'By sea';
+
+  @override
+  String get tripPublishModeBoatSubtitle => 'Ship, shared container';
+
+  @override
+  String get tripPublishModeBoatTagDuration => 'Several weeks';
+
+  @override
+  String get tripPublishModeBoatTagCapacity => 'Volume in m³';
+
+  @override
+  String get tripPublishModeBoatLocked => 'Reserved for verified carriers';
+
+  @override
+  String get tripPublishModeBoatBadgeLink => 'Request the GP Pro badge';
+
+  @override
+  String get tripPublishBoatDeparturePortLabel => 'Departure port';
+
+  @override
+  String get tripPublishBoatArrivalPortLabel => 'Arrival port';
+
+  @override
+  String get tripPublishBoatArrivalLabel => 'Estimated arrival';
+
+  @override
+  String get tripPublishBoatArrivalEarliestLabel => 'Earliest';
+
+  @override
+  String get tripPublishBoatArrivalLatestLabel => 'Latest';
+
+  @override
+  String get tripPublishBoatArrivalHelp =>
+      'Senders see a date range: delays at port are common.';
+
+  @override
+  String get tripPublishBoatArrivalRequired =>
+      'Enter the earliest and the latest arrival';
+
+  @override
+  String get tripPublishBoatArrivalBeforeDeparture =>
+      'The estimated arrival can\'t be before departure';
+
+  @override
+  String get tripPublishBoatArrivalLatestBeforeEarliest =>
+      'The latest arrival can\'t be before the earliest';
+
+  @override
+  String tripPublishBoatArrivalTooFar(int days) {
+    return 'The latest arrival must be within $days days of departure';
+  }
+
+  @override
+  String get tripPublishBoatWarehouseLabel => 'Warehouse address';
+
+  @override
+  String get tripPublishBoatWarehouseSubtitle =>
+      'Where senders drop off their parcels';
+
+  @override
+  String get tripPublishBoatPickupLabel => 'Pickup address';
+
+  @override
+  String get tripPublishBoatPickupSubtitle =>
+      'Where recipients collect their parcels';
+
+  @override
+  String get tripPublishBoatUnitQuestion => 'You sell the space';
+
+  @override
+  String get tripPublishBoatUnitM3 => 'Per m³';
+
+  @override
+  String get tripPublishBoatUnitKg => 'Per kilo';
+
+  @override
+  String get tripPublishBoatVolumeLabel => 'Available volume (m³)';
+
+  @override
+  String get tripPublishBoatVolumeHint => 'From 0.1 to 9,999 m³, one decimal';
+
+  @override
+  String get tripPublishBoatVolumeInvalid =>
+      'Enter a volume between 0.1 and 9,999 m³';
+
+  @override
+  String get tripPublishBoatPricePerM3Label => 'Price per m³';
+
+  @override
+  String get tripPublishBoatPricePrompt =>
+      'Enter your price per m³ to see the estimate';
+
+  @override
+  String tripPublishBoatPriceEstimateLine(String net, String total) {
+    return 'You get $net per m³ · the sender pays $total';
+  }
+
+  @override
+  String get tripPublishBoatDepositPayoutNotice =>
+      'By ship, you get paid as soon as the sender drops off their parcel at the warehouse, without waiting for delivery.';
+
+  @override
+  String tripPublishPerM3Value(String value) {
+    return '$value/m³';
+  }
 }

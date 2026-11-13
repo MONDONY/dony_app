@@ -417,6 +417,7 @@ AnnouncementModel _makeFullAnnouncement({
   ItemSize? maxItemSize,
   double? maxParcelWeightKg,
   DateTime? arrivalDate,
+  DateTime? arrivalDateMax,
   String? arrivalTime = '10:30',
 }) => AnnouncementModel(
   id: 'ann-full-1',
@@ -428,6 +429,7 @@ AnnouncementModel _makeFullAnnouncement({
   departureTime: '22:00',
   arrivalTime: arrivalTime,
   arrivalDate: arrivalDate,
+  arrivalDateMax: arrivalDateMax,
   availableKg: availableKg,
   totalKg: 23.0,
   pricePerKg: pricePerKg,
@@ -5868,19 +5870,18 @@ void main() {
       expect(sentCreate().transportMode, TransportMode.plane);
     });
 
-    testWidgets('bateau allumé : pas de carte bateau en création', (
-      tester,
-    ) async {
+    testWidgets('bateau seul allumé : étape Mode, cartes Avion et Bateau (lot '
+        '3)', (tester) async {
       setTransportModes(
         const TransportModesAvailability(road: false, boat: true),
       );
       await pumpScreen(tester, null);
-      // Bateau seul allumé : la création reste « avion seul » (C1).
-      expect(header(tester).steps.first, TripFormStep.trajet);
-      expect(find.byType(ModeStep, skipOffstage: false), findsNothing);
+      expect(header(tester).steps.first, TripFormStep.mode);
+      expect(find.byKey(const Key('mode-card-plane')), findsOneWidget);
+      expect(find.byKey(const Key('mode-card-boat')), findsOneWidget);
     });
 
-    testWidgets('bateau et route allumés : cartes Avion et Route seulement', (
+    testWidgets('bateau et route allumés : cartes Avion, Route et Bateau', (
       tester,
     ) async {
       setTransportModes(
@@ -5890,14 +5891,19 @@ void main() {
 
       expect(find.byKey(const Key('mode-card-plane')), findsOneWidget);
       expect(find.byKey(const Key('mode-card-car')), findsOneWidget);
-      expect(find.byKey(const Key('mode-card-boat')), findsNothing);
+      expect(find.byKey(const Key('mode-card-boat')), findsOneWidget);
     });
 
     testWidgets("modification d'un trajet BOAT : mode gardé et renvoyé BOAT", (
       tester,
     ) async {
       roadOn();
-      final boatTrip = _makeFullAnnouncement(transportMode: TransportMode.boat);
+      final boatTrip = _makeFullAnnouncement(
+        transportMode: TransportMode.boat,
+        arrivalTime: null,
+        arrivalDate: DateTime(2026, 8, 20),
+        arrivalDateMax: DateTime(2026, 8, 30),
+      );
       await pumpScreen(tester, CreateTripArgs(announcement: boatTrip));
 
       expect(header(tester).steps.first, TripFormStep.trajet);
