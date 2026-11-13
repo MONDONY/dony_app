@@ -548,8 +548,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _gridQuantitiesNotifier.addListener(_scheduleAutoQuote);
     for (final c in _dimensionCtrls) {
       c.addListener(_syncFormButtonState);
-      c.addListener(_invalidateQuote);
-      c.addListener(_scheduleAutoQuote);
+      c.addListener(_onDimensionsChanged);
     }
     // Poids prérempli à l'ouverture : le devis serveur part aussi sans
     // attendre un premier changement, pour que les frais de service affichés
@@ -701,8 +700,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _gridQuantitiesNotifier.removeListener(_scheduleAutoQuote);
     for (final c in _dimensionCtrls) {
       c.removeListener(_syncFormButtonState);
-      c.removeListener(_invalidateQuote);
-      c.removeListener(_scheduleAutoQuote);
+      c.removeListener(_onDimensionsChanged);
       c.dispose();
     }
     _autoQuoteTimer?.cancel();
@@ -1151,6 +1149,21 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         volume: _volumeInput,
       ),
     );
+  }
+
+  /// Dernières dimensions vues par [_onDimensionsChanged].
+  String _dimensionsKey = '||';
+
+  /// Un contrôleur de texte notifie aussi pour un curseur déplacé ou un
+  /// changement de focus : sans ce filtre, un simple tap dans un champ de
+  /// dimension renverrait le total du serveur à l'estimation locale et
+  /// relancerait un devis. Le devis ne repart que si une valeur change.
+  void _onDimensionsChanged() {
+    final key = _dimensionCtrls.map((c) => c.text).join('|');
+    if (key == _dimensionsKey) return;
+    _dimensionsKey = key;
+    _invalidateQuote();
+    _scheduleAutoQuote();
   }
 
   void _invalidateQuote() {
@@ -2154,6 +2167,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     }
     if (_volumeTooLarge) return const SizedBox.shrink();
     final currency = quote?.currency ?? widget.announcement.currency;
+    // La ligne montre le calcul « volume × prix au m³ » ; son montant n'est
+    // affiché que s'il est le produit lui-même. Le total du serveur peut
+    // différer de quelques centimes (frais arrondis de son côté) : la ligne
+    // garde alors son calcul sans montant, le total en dessous fait foi.
+    final local = _localVolumeTotal();
+    final lineAmount =
+        quote == null ||
+            (local != null && (quote.totalEur - local).abs() < 0.005)
+        ? total
+        : null;
     return _PriceBreakdown(
       weightKg: 0,
       pricePerKg: 0,
@@ -2165,7 +2188,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         formatParcelVolumeM3(context.l10n, volume.volumeM3),
         formatPriceIn(perM3, currency),
       ),
-      volumeLineAmount: total,
+      volumeLineAmount: lineAmount,
     );
   }
 
@@ -3301,7 +3324,11 @@ class _CardModeContent extends StatelessWidget {
         const SizedBox(height: DonySpacing.md),
         const PaymentMethodNames(compact: true),
         const SizedBox(height: DonySpacing.md),
-        _PanelAssurance(text: context.l10n.bidCreateRefundAssurance),
+        _PanelAssurance(
+          text: paidAtDeposit
+              ? context.l10n.bidCreateDepositDisputeAssurance
+              : context.l10n.bidCreateRefundAssurance,
+        ),
       ],
     );
   }
@@ -3342,7 +3369,11 @@ class _MobileMoneyModeContent extends StatelessWidget {
         const SizedBox(height: DonySpacing.md),
         const _OperatorChips(),
         const SizedBox(height: DonySpacing.md),
-        _PanelAssurance(text: context.l10n.bidCreateRefundAssurance),
+        _PanelAssurance(
+          text: paidAtDeposit
+              ? context.l10n.bidCreateDepositDisputeAssurance
+              : context.l10n.bidCreateRefundAssurance,
+        ),
       ],
     );
   }
@@ -3572,6 +3603,8 @@ class _PriceBreakdown extends StatelessWidget {
 
   /// Ligne « volume × prix au m³ » d'un trajet vendu au m³, à la place de la
   /// ligne poids. Le prix au m³ affiché porte déjà les frais de service.
+  /// Sans [volumeLineAmount], seule la formule s'affiche (le total du serveur
+  /// ne tombe pas juste sur le produit).
   final String? volumeLineLabel;
   final double? volumeLineAmount;
 
@@ -3615,14 +3648,21 @@ class _PriceBreakdown extends StatelessWidget {
     final hasRealSavings = savings > 0.005;
 
     final lines = <Widget>[];
-    if (volumeLineLabel != null && volumeLineAmount != null) {
+    if (volumeLineLabel != null) {
+      final amount = volumeLineAmount;
       lines.add(
-        _line(
-          tt,
-          volumeLineLabel!,
-          fmt(volumeLineAmount!),
-          valueKey: const Key('bid-volume-line-amount'),
-        ),
+        amount != null
+            ? _line(
+                tt,
+                volumeLineLabel!,
+                fmt(amount),
+                valueKey: const Key('bid-volume-line-amount'),
+              )
+            : Text(
+                volumeLineLabel!,
+                key: const Key('bid-volume-line-label'),
+                style: tt.bodyMedium,
+              ),
       );
     }
     if (weightKg > 0 && kgDisplay > 0) {

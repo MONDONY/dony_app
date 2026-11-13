@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -20,6 +21,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/custom_items_section.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
@@ -72,6 +74,8 @@ AnnouncementModel _announcement({
   String currency = 'EUR',
   bool gridOnly = false,
   ItemSize? maxItemSize,
+  TransportMode? transportMode,
+  bool perM3 = false,
 }) => AnnouncementModel(
   id: 'ann-nego',
   currency: currency,
@@ -79,9 +83,14 @@ AnnouncementModel _announcement({
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
   departureDate: DateTime(2026, 9, 12),
-  availableKg: 10.0,
-  totalKg: 10.0,
-  pricePerKg: gridOnly ? null : 10.0,
+  availableKg: perM3 ? 0 : 10.0,
+  totalKg: perM3 ? 0 : 10.0,
+  pricePerKg: gridOnly || perM3 ? null : 10.0,
+  transportMode: perM3 ? TransportMode.boat : transportMode,
+  volumeCapacityM3: perM3 ? 20 : null,
+  availableVolumeM3: perM3 ? 20 : null,
+  pricePerM3: perM3 ? 500 : null,
+  pricePerM3Display: perM3 ? 600 : null,
   priceGridItems: gridOnly
       ? const [
           AnnouncementGridItemModel(
@@ -266,6 +275,29 @@ void main() {
     expect(find.text('Proposer un prix'), findsOneWidget);
   });
 
+  testWidgets(
+    'trajet bateau au kilo négociable : la proposition reste offerte',
+    (tester) async {
+      await openDetail(
+        tester,
+        _announcement(negotiable: true, transportMode: TransportMode.boat),
+      );
+
+      expect(find.byKey(const Key('negotiate-price-btn')), findsOneWidget);
+    },
+  );
+
+  testWidgets('trajet bateau au m³ négociable : pas de proposition de prix '
+      'tant que le back ne la porte pas', (tester) async {
+    await openDetail(tester, _announcement(negotiable: true, perM3: true));
+
+    // La demande directe reste là ; « Proposer un prix » ne mènerait qu'à un
+    // refus 422 (la proposition ne porte pas les dimensions du colis).
+    expect(find.text('Faire une demande'), findsOneWidget);
+    expect(find.byKey(const Key('negotiate-price-btn')), findsNothing);
+    expect(find.text('Proposer un prix'), findsNothing);
+  });
+
   // ── Écran de proposition ──────────────────────────────────────────────────
 
   Widget bidApp({
@@ -276,6 +308,7 @@ void main() {
     String currency = 'EUR',
     bool gridOnly = false,
     ItemSize? maxItemSize,
+    TransportMode? transportMode,
   }) => MaterialApp.router(
     theme: AppTheme.light(),
     localizationsDelegates: const [
@@ -295,6 +328,7 @@ void main() {
               currency: currency,
               gridOnly: gridOnly,
               maxItemSize: maxItemSize,
+              transportMode: transportMode,
             ),
             negotiation: negotiation,
           ),
@@ -312,6 +346,7 @@ void main() {
     String currency = 'EUR',
     bool gridOnly = false,
     ItemSize? maxItemSize,
+    TransportMode? transportMode,
   }) async {
     tester.view.physicalSize = const Size(800, 6000);
     tester.view.devicePixelRatio = 1.0;
@@ -323,6 +358,7 @@ void main() {
         currency: currency,
         gridOnly: gridOnly,
         maxItemSize: maxItemSize,
+        transportMode: transportMode,
       ),
     );
     await tester.pump(_kSettle);
@@ -642,6 +678,88 @@ void main() {
       final captured = await submitProposal(tester);
       expect(captured, hasLength(1));
       expect(captured.single.paymentMethod, BidPaymentMethod.stripe);
+    },
+  );
+
+  testWidgets(
+    'trajet bateau, proposition par carte : versé au transporteur au dépôt '
+    'du colis (jamais « jusqu\'à la confirmation de la livraison »)',
+    (tester) async {
+      setTransportModes(
+        const TransportModesAvailability(road: false, boat: true),
+      );
+      addTearDown(resetTransportModesForTest);
+      await openBid(
+        tester,
+        negotiation: true,
+        transportMode: TransportMode.boat,
+        acceptedPaymentMethods: {
+          BidPaymentMethod.stripe,
+          BidPaymentMethod.cash,
+        },
+      );
+      await fillNegotiationForm(tester);
+
+      await tester.ensureVisible(find.byKey(const Key('bid-submit-btn')));
+      await tester.tap(find.byKey(const Key('bid-submit-btn')));
+      await tester.pump(_kSettle);
+      expect(
+        find.text(
+          'Payé par carte une fois votre prix accepté, puis versé au '
+          'transporteur au dépôt du colis.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('confirmation de la livraison'), findsNothing);
+      // Le sous-titre du choix de paiement dit la même chose.
+      expect(
+        find.text('Versé au transporteur au dépôt du colis'),
+        findsOneWidget,
+      );
+      // Le remboursement automatique n'est plus promis : un litige passe par
+      // le support.
+      expect(find.text("Remboursé si le colis n'arrive pas"), findsNothing);
+      expect(
+        find.text('Un litige se règle avec le support Yadony.'),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
+
+  testWidgets(
+    'trajet en route, proposition par carte : texte de la livraison, jamais '
+    'celui du dépôt',
+    (tester) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: true),
+      );
+      addTearDown(resetTransportModesForTest);
+      await openBid(
+        tester,
+        negotiation: true,
+        transportMode: TransportMode.car,
+        acceptedPaymentMethods: {
+          BidPaymentMethod.stripe,
+          BidPaymentMethod.cash,
+        },
+      );
+      await fillNegotiationForm(tester);
+
+      await tester.ensureVisible(find.byKey(const Key('bid-submit-btn')));
+      await tester.tap(find.byKey(const Key('bid-submit-btn')));
+      await tester.pump(_kSettle);
+      expect(
+        find.text(
+          'Payé par carte une fois votre prix accepté, puis bloqué par Yadony '
+          "jusqu'à la confirmation de la livraison.",
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('au dépôt du colis'), findsNothing);
+      expect(find.text("Remboursé si le colis n'arrive pas"), findsOneWidget);
+      expect(find.textContaining('support Yadony'), findsNothing);
+      await tester.pump(const Duration(seconds: 1));
     },
   );
 

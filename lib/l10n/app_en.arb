@@ -2087,6 +2087,10 @@
   "@bidCreateRefundAssurance": {
     "description": "Rappel de garantie sous le mode carte et mobile money (create_bid_bottom_sheet.dart)"
   },
+  "bidCreateDepositDisputeAssurance": "Disputes are handled by Yadony support.",
+  "@bidCreateDepositDisputeAssurance": {
+    "description": "Rappel sous le mode carte et mobile money quand le voyageur est payé au dépôt du colis (trajet bateau) : aucun remboursement automatique, le support tranche un litige (create_bid_bottom_sheet.dart)"
+  },
   "bidCreateCashEscrowWarning": "Cash payment: no payment on hold, you pay the traveler directly, with no refund guarantee from Yadony.",
   "@bidCreateCashEscrowWarning": {
     "description": "Avertissement affiché sous le mode espèces (create_bid_bottom_sheet.dart)"

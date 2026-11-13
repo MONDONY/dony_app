@@ -132,8 +132,13 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
   // décision produit « offres classiques seulement ». Un trajet qui
   // n'accepte QUE le mobile money ne propose donc pas l'entrée de
   // négociation, même si `announcement.negotiable` vaut true côté back.
+  //
+  // Un trajet bateau vendu au m³ ne propose pas non plus de prix : la demande
+  // de négociation ne porte pas les dimensions du colis, le back la refuserait
+  // en 422. L'entrée reviendra avec le back de l'argent (BB2).
   final canNegotiate =
       announcement.negotiable &&
+      !announcement.isPricedPerM3 &&
       (announcement.acceptedPaymentMethods.contains(BidPaymentMethod.stripe) ||
           announcement.acceptedPaymentMethods.contains(BidPaymentMethod.cash));
   // Capture la référence au BidBloc du parent (carousel / liste) pour pouvoir

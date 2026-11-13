@@ -6184,6 +6184,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Refunded if the parcel doesn\'t arrive';
 
   @override
+  String get bidCreateDepositDisputeAssurance =>
+      'Disputes are handled by Yadony support.';
+
+  @override
   String get bidCreateCashEscrowWarning =>
       'Cash payment: no payment on hold, you pay the traveler directly, with no refund guarantee from Yadony.';
 

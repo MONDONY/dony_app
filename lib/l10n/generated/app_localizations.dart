@@ -10315,6 +10315,12 @@ abstract class AppLocalizations {
   /// **'Remboursé si le colis n\'arrive pas'**
   String get bidCreateRefundAssurance;
 
+  /// Rappel sous le mode carte et mobile money quand le voyageur est payé au dépôt du colis (trajet bateau) : aucun remboursement automatique, le support tranche un litige (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Un litige se règle avec le support Yadony.'**
+  String get bidCreateDepositDisputeAssurance;
+
   /// Avertissement affiché sous le mode espèces (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:

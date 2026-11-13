@@ -6216,6 +6216,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidCreateRefundAssurance => 'Remboursé si le colis n\'arrive pas';
 
   @override
+  String get bidCreateDepositDisputeAssurance =>
+      'Un litige se règle avec le support Yadony.';
+
+  @override
   String get bidCreateCashEscrowWarning =>
       'Paiement en espèces : pas de séquestre, vous payez le voyageur directement, sans garantie de remboursement par Yadony.';
 

@@ -89,7 +89,9 @@ AnnouncementModel _boatM3({
 AnnouncementModel _kgTrip(
   TransportMode mode, {
   Set<BidPaymentMethod> methods = const {BidPaymentMethod.stripe},
+  String currency = 'EUR',
 }) => AnnouncementModel(
+  currency: currency,
   id: 'kg-${mode.name}-1',
   travelerId: 'trav-1',
   departureCity: 'Paris',
@@ -394,6 +396,100 @@ void main() {
       expect(total().data, isNot(contains('120,00')));
     });
 
+    testWidgets('M6 : devis du serveur différent du produit, la ligne garde '
+        'son calcul sans montant contradictoire', (tester) async {
+      await openSheet(tester, _boatM3());
+      await typeDimensions(tester);
+      await tester.pump(const Duration(milliseconds: 500));
+      // Estimation locale : la ligne montre son montant (0,2 × 600).
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('bid-volume-line-amount')))
+            .data,
+        contains('120,00'),
+      );
+
+      final key = sentEvents<BidQuoteRequested>().last.backgroundKey;
+      bidStream.add(BidQuoteLoaded(_quote(), backgroundKey: key));
+      await tester.pumpAndSettle();
+
+      // Total du serveur 118,50 ≠ 0,2 × 600 : la formule reste, sans montant.
+      expect(find.byKey(const Key('bid-volume-line-amount')), findsNothing);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('bid-volume-line-label')))
+            .data,
+        contains('0,20 m³ × 600'),
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const Key('bid-total-amount'))).data,
+        contains('118,50'),
+      );
+      expect(find.textContaining('120,00'), findsNothing);
+    });
+
+    testWidgets('M6 : devis du serveur égal au produit, montant affiché', (
+      tester,
+    ) async {
+      await openSheet(tester, _boatM3());
+      await typeDimensions(tester);
+      await tester.pump(const Duration(milliseconds: 500));
+      final key = sentEvents<BidQuoteRequested>().last.backgroundKey;
+      bidStream.add(BidQuoteLoaded(_quote(total: 120), backgroundKey: key));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('bid-volume-line-label')), findsNothing);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('bid-volume-line-amount')))
+            .data,
+        contains('120,00'),
+      );
+    });
+
+    testWidgets('M2 : un curseur déplacé ou un tap dans une dimension ne '
+        'relance pas le devis et garde le total du serveur', (tester) async {
+      final seen = <BidEvent>[];
+      when(() => bidBloc.add(any())).thenAnswer((i) {
+        seen.add(i.positionalArguments.first as BidEvent);
+      });
+      List<BidQuoteRequested> quotes() =>
+          seen.whereType<BidQuoteRequested>().toList();
+
+      await openSheet(tester, _boatM3());
+      await typeDimensions(tester);
+      await tester.pump(const Duration(milliseconds: 500));
+      final key = quotes().last.backgroundKey;
+      bidStream.add(BidQuoteLoaded(_quote(), backgroundKey: key));
+      await tester.pumpAndSettle();
+      Text total() =>
+          tester.widget<Text>(find.byKey(const Key('bid-total-amount')));
+      expect(total().data, contains('118,50'));
+      final quotesBefore = quotes().length;
+
+      // Curseur déplacé : le contrôleur notifie, le texte ne change pas.
+      final field = find.byKey(const Key('bid-dimension-length'));
+      final controller = tester
+          .widget<EditableText>(
+            find.descendant(of: field, matching: find.byType(EditableText)),
+          )
+          .controller;
+      controller.selection = const TextSelection.collapsed(offset: 1);
+      await tester.pump();
+      // Tap dans un champ : focus, sans modification de texte.
+      await tester.tap(find.byKey(const Key('bid-dimension-width')));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(total().data, contains('118,50'));
+      expect(quotes().length, quotesBefore);
+
+      // Une vraie modification invalide le total du serveur et relance un devis.
+      await typeDimensions(tester, height: '60');
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(total().data, contains('180,00'));
+      expect(quotes().length, greaterThan(quotesBefore));
+    });
+
     testWidgets('un devis périmé (dimensions changées) est écarté', (
       tester,
     ) async {
@@ -549,8 +645,84 @@ void main() {
         tester.widget<Text>(find.byKey(const Key('payment-panel-amount'))).data,
         contains('120'),
       );
+      // Aucun remboursement automatique après le dépôt : le support tranche.
+      expect(find.text("Remboursé si le colis n'arrive pas"), findsNothing);
+      expect(
+        find.text('Un litige se règle avec le support Yadony.'),
+        findsOneWidget,
+      );
       expectNoPlaneIcon(tester);
     });
+
+    testWidgets('boatCheckout_depositWording_en', (tester) async {
+      setTransportModes(
+        const TransportModesAvailability(road: false, boat: true),
+      );
+      await openSheet(
+        tester,
+        _boatM3(methods: _bothMethods),
+        locale: AppL10n.en,
+      );
+      await typeDimensions(tester);
+      await goToPicker(tester);
+
+      expect(
+        find.text('Disputes are handled by Yadony support.'),
+        findsOneWidget,
+      );
+      expect(find.text("Refunded if the parcel doesn't arrive"), findsNothing);
+    });
+
+    for (final mode in [TransportMode.boat, TransportMode.car]) {
+      testWidgets('mobile money (${mode.name}) : corps du mode, litige ou '
+          'remboursement selon le mode', (tester) async {
+        setTransportModes(
+          const TransportModesAvailability(road: true, boat: true),
+        );
+        await openSheet(
+          tester,
+          _kgTrip(
+            mode,
+            methods: {BidPaymentMethod.cash, BidPaymentMethod.mobileMoney},
+            currency: 'XOF',
+          ),
+        );
+        await tester.enterText(find.byKey(const Key('weight-field')), '40');
+        await tester.pump();
+        await fillRest(tester);
+        await tester.tap(find.byKey(const Key('bid-submit-btn')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
+        await tester.pumpAndSettle();
+
+        final deposit = mode == TransportMode.boat;
+        expect(
+          find.text(
+            "Après l'accord du transporteur, vous recevez une demande de "
+            'paiement sur votre téléphone. Le montant est versé au '
+            'transporteur au dépôt du colis.',
+          ),
+          deposit ? findsOneWidget : findsNothing,
+        );
+        expect(
+          find.text(
+            "Après l'accord du voyageur, vous recevez une demande de paiement "
+            'sur votre téléphone. Le montant est bloqué par Yadony jusqu\'à '
+            'la livraison.',
+          ),
+          deposit ? findsNothing : findsOneWidget,
+        );
+        expect(
+          find.text("Remboursé si le colis n'arrive pas"),
+          deposit ? findsNothing : findsOneWidget,
+        );
+        expect(
+          find.text('Un litige se règle avec le support Yadony.'),
+          deposit ? findsOneWidget : findsNothing,
+        );
+        expectNoPlaneIcon(tester);
+      });
+    }
 
     testWidgets('bateau éteint côté serveur : texte actuel', (tester) async {
       await openSheet(tester, _boatM3(methods: _bothMethods));
@@ -561,6 +733,8 @@ void main() {
         find.text('Versé au transporteur au dépôt du colis'),
         findsNothing,
       );
+      expect(find.text("Remboursé si le colis n'arrive pas"), findsOneWidget);
+      expect(find.textContaining('support Yadony'), findsNothing);
     });
 
     testWidgets('trajet bateau au kilo : kilos envoyés, texte du dépôt', (
@@ -607,6 +781,8 @@ void main() {
         find.text('Versé au transporteur au dépôt du colis'),
         findsNothing,
       );
+      expect(find.text("Remboursé si le colis n'arrive pas"), findsOneWidget);
+      expect(find.textContaining('support Yadony'), findsNothing);
       expectNoPlaneIcon(tester);
     });
   });
@@ -633,6 +809,8 @@ void main() {
 
       // Même texte qu'avant, même avec le bateau allumé.
       expect(find.text("Bloqué jusqu'à la livraison"), findsOneWidget);
+      expect(find.text("Remboursé si le colis n'arrive pas"), findsOneWidget);
+      expect(find.textContaining('support Yadony'), findsNothing);
       expect(
         find.text('Versé au transporteur au dépôt du colis'),
         findsNothing,

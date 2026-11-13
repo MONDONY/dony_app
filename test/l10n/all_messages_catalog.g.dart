@@ -2157,6 +2157,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidCreateMobileMoneyModeBody': (l) => l.bidCreateMobileMoneyModeBody,
   'bidCreateCashModeBody': (l) => l.bidCreateCashModeBody,
   'bidCreateRefundAssurance': (l) => l.bidCreateRefundAssurance,
+  'bidCreateDepositDisputeAssurance': (l) => l.bidCreateDepositDisputeAssurance,
   'bidCreateCashEscrowWarning': (l) => l.bidCreateCashEscrowWarning,
   'bidCreateArticlesLineLabel': (l) => l.bidCreateArticlesLineLabel,
   'bidCreatePromoDiscountLabel': (l) => l.bidCreatePromoDiscountLabel,
