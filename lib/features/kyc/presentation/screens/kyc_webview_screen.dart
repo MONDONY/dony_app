@@ -127,6 +127,29 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
   /// rechargée pour que « Démarrer » reprenne avec la caméra autorisée.
   bool _awaitingSettings = false;
 
+  /// Instrumentation du parcours : sans elle, quitter la page sans la
+  /// terminer ne laissait aucune trace (ni échec, ni abandon).
+  final _openedAt = Stopwatch()..start();
+  late final String _provider;
+  bool _pageLoaded = false;
+  bool _cameraWasBlocked = false;
+
+  AnalyticsService get _analytics =>
+      widget.analytics ?? getIt<AnalyticsService>();
+
+  void _track(String event, Map<String, Object> properties) {
+    unawaited(
+      _analytics.logEvent(
+        event,
+        properties: {
+          'provider': _provider,
+          'duration_ms': _openedAt.elapsedMilliseconds,
+          ...properties,
+        },
+      ),
+    );
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -144,9 +167,11 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
 
   /// Caméra refusée par le système : expliquer et mener aux réglages, au lieu
   /// de laisser « Démarrer » échouer sans rien dire (FLUTTER-4J).
-  void _onCameraBlocked() {
+  void _onCameraBlocked({required String source}) {
     if (_cameraSheetShown || !mounted) return;
     _cameraSheetShown = true;
+    _cameraWasBlocked = true;
+    _track(AnalyticsEvents.kycWebviewCameraBlocked, {'source': source});
     final l = context.l10n;
     DonyBottomSheet.show<void>(
       context,
@@ -173,12 +198,11 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
     // l'observer PostHog n'en voit que le chemin : ce second `$screen`
     // distingue le parcours du fournisseur.
     final host = Uri.tryParse(widget.stripeUrl)?.host ?? '';
+    _provider = host.endsWith('stripe.com') ? 'stripe' : 'didit';
     unawaited(
-      (widget.analytics ?? getIt<AnalyticsService>()).logScreen(
+      _analytics.logScreen(
         AnalyticsEvents.kycProviderWebviewScreen,
-        properties: {
-          'provider': host.endsWith('stripe.com') ? 'stripe' : 'didit',
-        },
+        properties: {'provider': _provider},
       ),
     );
     _controller =
@@ -201,20 +225,24 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
                 await request.grant();
               } else {
                 await request.deny();
-                _onCameraBlocked();
+                _onCameraBlocked(source: 'system');
               }
             },
           )
           ..setJavaScriptMode(JavaScriptMode.unrestricted)
           ..addJavaScriptChannel(
             kycCameraChannel,
-            onMessageReceived: (_) => _onCameraBlocked(),
+            onMessageReceived: (_) => _onCameraBlocked(source: 'page'),
           )
           ..setNavigationDelegate(
             NavigationDelegate(
               onPageStarted: (_) => _isLoading.value = true,
               onPageFinished: (_) {
                 _isLoading.value = false;
+                if (!_pageLoaded) {
+                  _pageLoaded = true;
+                  _track(AnalyticsEvents.kycWebviewPageLoaded, const {});
+                }
                 // Hors connexion ou page déjà déchargée : le relais caméra
                 // manque, la page reste utilisable comme avant.
                 unawaited(
@@ -236,6 +264,13 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
                 if (error.isForMainFrame == false) {
                   return;
                 }
+                final description = error.description;
+                _track(AnalyticsEvents.kycWebviewError, {
+                  'error_code': error.errorCode,
+                  'description': description.length > 100
+                      ? description.substring(0, 100)
+                      : description,
+                });
                 if (mounted) {
                   _isLoading.value = false;
                   DonySnackbar.show(
@@ -288,7 +323,12 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
 
   /// Croix de l'en-tête, et retour système une fois l'historique de la page
   /// de vérification épuisé.
-  void _close() {
+  void _close({required String via}) {
+    _track(AnalyticsEvents.kycWebviewClosed, {
+      'via': via,
+      'page_loaded': _pageLoaded,
+      'camera_blocked': _cameraWasBlocked,
+    });
     context.read<KycBloc>().add(const KycSessionAbandoned());
     context.read<AuthBloc>().add(const AuthCheckRequested());
     // Revient d'où la vérification a été ouverte ; seule dans la pile
@@ -310,7 +350,7 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
       await _controller.goBack();
       return;
     }
-    if (mounted) _close();
+    if (mounted) _close(via: 'system_back');
   }
 
   @override
@@ -329,7 +369,7 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
             IconButton(
               tooltip: l.commonClose,
               icon: DonyIcon('x', color: cs.onSurface),
-              onPressed: _close,
+              onPressed: () => _close(via: 'button'),
             ),
           ],
         ),
