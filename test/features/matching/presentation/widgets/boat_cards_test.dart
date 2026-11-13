@@ -349,6 +349,7 @@ void main() {
         BlocProvider<FavoriteIdsCubit>.value(
           value: cubit,
           child: TripCard(
+            viewer: TripCardViewer.sender,
             announcement: _boat(availableVolumeM3: 4.5),
             onTap: () {},
             index: 0,
@@ -363,12 +364,43 @@ void main() {
       expectNoPlaneIcon(tester);
     });
 
+    testWidgets('qui regarde décide du prix, pas le cœur : expéditeur sans '
+        'cœur = brut, propriétaire avec cœur = net', (tester) async {
+      final cubit = FavoriteIdsCubit(_MockFavoriteRepository())
+        ..emitSeed(trips: {}, requests: {});
+      addTearDown(cubit.close);
+      Widget card(TripCardViewer viewer, {required bool heart}) =>
+          BlocProvider<FavoriteIdsCubit>.value(
+            value: cubit,
+            child: TripCard(
+              viewer: viewer,
+              announcement: _boat(availableVolumeM3: 4.5),
+              onTap: () {},
+              index: 0,
+              showFavorite: heart,
+            ),
+          );
+
+      await _pumpCard(tester, card(TripCardViewer.sender, heart: false));
+      expect(find.textContaining('600'), findsOneWidget);
+      expect(find.textContaining('500'), findsNothing);
+
+      await _pumpCard(tester, card(TripCardViewer.owner, heart: true));
+      expect(find.textContaining('500'), findsOneWidget);
+      expect(find.textContaining('600'), findsNothing);
+    });
+
     testWidgets('au m³ : volume vendu, volume restant, prix au m³, aucun '
         'kilo', (tester) async {
       final a = _boat(availableVolumeM3: 4.5);
       await _pumpCard(
         tester,
-        TripCard(announcement: a, onTap: () {}, index: 0),
+        TripCard(
+          viewer: TripCardViewer.owner,
+          announcement: a,
+          onTap: () {},
+          index: 0,
+        ),
       );
 
       expect(tester.takeException(), isNull);
@@ -389,7 +421,12 @@ void main() {
       final a = _boat(availableVolumeM3: 0.29);
       await _pumpCard(
         tester,
-        TripCard(announcement: a, onTap: () {}, index: 0),
+        TripCard(
+          viewer: TripCardViewer.owner,
+          announcement: a,
+          onTap: () {},
+          index: 0,
+        ),
       );
       expect(_text('11,71 m³ vendus sur 12 m³'), findsOneWidget);
       expect(_text('0,29 m³ restants'), findsOneWidget);
@@ -397,7 +434,12 @@ void main() {
       final b = _boat(availableVolumeM3: 8.2);
       await _pumpCard(
         tester,
-        TripCard(announcement: b, onTap: () {}, index: 0),
+        TripCard(
+          viewer: TripCardViewer.owner,
+          announcement: b,
+          onTap: () {},
+          index: 0,
+        ),
       );
       expect(_text('3,8 m³ vendus sur 12 m³'), findsOneWidget);
       expect(_text('8,2 m³ restants'), findsOneWidget);
@@ -413,7 +455,12 @@ void main() {
       );
       await _pumpCard(
         tester,
-        TripCard(announcement: a, onTap: () {}, index: 0),
+        TripCard(
+          viewer: TripCardViewer.owner,
+          announcement: a,
+          onTap: () {},
+          index: 0,
+        ),
       );
       expect(find.textContaining('8 m³'), findsOneWidget);
       expect(find.textContaining('kg'), findsNothing);
@@ -428,7 +475,12 @@ void main() {
       );
       await _pumpCard(
         tester,
-        TripCard(announcement: a, onTap: () {}, index: 0),
+        TripCard(
+          viewer: TripCardViewer.owner,
+          announcement: a,
+          onTap: () {},
+          index: 0,
+        ),
       );
       expect(find.textContaining('/ kg'), findsOneWidget);
       expect(find.textContaining('m³'), findsNothing);

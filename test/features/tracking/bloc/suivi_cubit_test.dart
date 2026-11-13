@@ -1281,6 +1281,16 @@ void main() {
       expect(effect.isDeposit, isFalse);
     });
 
+    test('QR avec jeton sur un colis livré (avion, route) : parcours normal, '
+        'ni dépôt ni photo imposée, le jeton est seulement relayé', () {
+      final c = validating()
+        ..onQrScanned('plain', depositHub(), qrToken: 'tok_abc');
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.step, 'DEPART');
+      expect(effect.isDeposit, isFalse);
+      expect(effect.qrToken, 'tok_abc');
+    });
+
     test('numéro saisi : « Scannez le QR de l\'expéditeur »', () async {
       final c = validating();
       await c.validateNumber('DON-DEP001', depositHub());

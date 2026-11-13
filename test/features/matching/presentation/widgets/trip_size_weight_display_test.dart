@@ -236,6 +236,7 @@ void main() {
       await _pump(
         tester,
         TripCard(
+          viewer: TripCardViewer.owner,
           index: 0,
           announcement: _trip(size: ItemSize.m),
           onTap: () {},
@@ -254,6 +255,7 @@ void main() {
       await _pump(
         tester,
         TripCard(
+          viewer: TripCardViewer.owner,
           index: 0,
           announcement: _trip(
             mode: TransportMode.plane,

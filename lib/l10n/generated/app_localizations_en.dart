@@ -19329,6 +19329,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suiviPhotoLostDismiss => 'Close the lost photo message';
 
   @override
+  String get suiviDepositPhotoRetake =>
+      'The deposit photo could not be sent: the drop-off is not recorded. Retake the deposit photo to confirm it.';
+
+  @override
+  String get suiviDepositPhotoRetakeDismiss =>
+      'Close the deposit photo message';
+
+  @override
   String get suiviScanClosedBeforeSync =>
       'This parcel was closed before your scan synced. If you have the parcel, contact support.';
 

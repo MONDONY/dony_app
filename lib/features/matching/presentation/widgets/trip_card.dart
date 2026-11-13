@@ -34,12 +34,24 @@ import 'package:intl/intl.dart';
 // • Motion : fadeIn + slideY staggeré par index, easeOutCubic 300 ms.
 // ─────────────────────────────────────────────────────────────
 
+/// Qui regarde la carte : décide du prix au m³ affiché (brut frais inclus pour
+/// l'expéditeur, net pour le voyageur propriétaire), indépendamment du cœur
+/// des favoris ([TripCard.showFavorite]).
+enum TripCardViewer {
+  /// Un expéditeur : prix brut, frais de service inclus.
+  sender,
+
+  /// Le voyageur propriétaire du trajet : son net.
+  owner,
+}
+
 class TripCard extends StatelessWidget {
   const TripCard({
     super.key,
     required this.announcement,
     required this.onTap,
     required this.index,
+    required this.viewer,
     this.showFavorite = false,
     this.pinned,
     this.onTogglePin,
@@ -48,6 +60,9 @@ class TripCard extends StatelessWidget {
   final AnnouncementModel announcement;
   final VoidCallback onTap;
   final int index;
+
+  /// Qui regarde : obligatoire, jamais déduit d'un drapeau d'affichage.
+  final TripCardViewer viewer;
 
   /// When true, renders a heart button in the header row.
   /// Requires a [FavoriteIdsCubit] to be in the widget tree; if absent the
@@ -207,6 +222,7 @@ class TripCard extends StatelessWidget {
                 kg: (v) => _kg(l, v),
                 price: _price,
                 showFavorite: showFavorite,
+                viewer: viewer,
                 pinButton: _pinButton(),
               ),
       ),
@@ -330,9 +346,11 @@ class _ActiveCardContent extends StatelessWidget {
     required this.kg,
     required this.price,
     required this.showFavorite,
+    required this.viewer,
     this.pinButton,
   });
 
+  final TripCardViewer viewer;
   final AnnouncementModel announcement;
   final ({Color bg, Color fg, String label, bool pulse}) badge;
   final double soldKg;
@@ -538,9 +556,13 @@ class _ActiveCardContent extends StatelessWidget {
               const SizedBox(width: DonySpacing.sm),
               Flexible(
                 child: Text(
-                  // Mes trajets : le net du voyageur. Favoris (vue de
-                  // l'expéditeur) : le prix frais inclus.
-                  tripPricePerM3Text(l, announcement, net: !showFavorite) ??
+                  // Voyageur propriétaire : son net. Expéditeur : le prix frais
+                  // inclus.
+                  tripPricePerM3Text(
+                        l,
+                        announcement,
+                        net: viewer == TripCardViewer.owner,
+                      ) ??
                       _activePriceLabel(announcement, price, l),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

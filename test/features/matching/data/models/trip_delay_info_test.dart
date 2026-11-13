@@ -43,10 +43,19 @@ void main() {
         TripDelayInfo.fromJsonOrNull(_json()..['arrivalDate'] = 'bad'),
         isNull,
       );
-      expect(
-        TripDelayInfo.fromJsonOrNull(_json()..remove('arrivalDateMax')),
-        isNull,
+    });
+
+    test('arrivalDateMax absent ou illisible : repli sur la date d\'arrivée '
+        'seule, le retard est gardé', () {
+      final absent = TripDelayInfo.fromJsonOrNull(
+        _json()..remove('arrivalDateMax'),
+      )!;
+      expect(absent.arrivalDate, DateTime(2026, 7, 15));
+      expect(absent.arrivalDateMax, absent.arrivalDate);
+      final bad = TripDelayInfo.fromJsonOrNull(
+        _json()..['arrivalDateMax'] = 'bad',
       );
+      expect(bad?.arrivalDateMax, bad?.arrivalDate);
     });
 
     test('announcedAt illisible : repli sur la nouvelle arrivée', () {

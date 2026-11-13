@@ -91,10 +91,11 @@ final class SuiviValidateStep extends SuiviEffect {
 
   /// Dépôt d'un colis payé au dépôt : la photo, preuve du dépôt, doit être
   /// réellement téléversée avant l'envoi (sinon 422
-  /// `boat-deposit-photo-required`).
+  /// `boat-deposit-photo-required`). Décidé par le seul `payoutTrigger` du
+  /// colis : la présence d'un jeton `?k=` dans le QR ne change ni le mode, ni
+  /// la photo, ni le libellé (un colis avion ou route garde son parcours).
   bool get isDeposit =>
-      step == 'DEPART' &&
-      (bid.payoutTrigger == PayoutTrigger.deposit || qrToken != null);
+      step == 'DEPART' && bid.payoutTrigger == PayoutTrigger.deposit;
 
   /// Remise sans QR ni numéro saisi : le numéro doit être demandé.
   bool get needsTrackingNumber =>

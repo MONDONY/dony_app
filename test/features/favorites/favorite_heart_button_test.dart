@@ -182,7 +182,12 @@ void main() {
       (tester) async {
         await tester.pumpWidget(
           _wrap(
-            TripCard(announcement: makeAnnouncement(), onTap: () {}, index: 0),
+            TripCard(
+              viewer: TripCardViewer.owner,
+              announcement: makeAnnouncement(),
+              onTap: () {},
+              index: 0,
+            ),
           ),
         );
         await tester.pump(const Duration(milliseconds: 600));
@@ -198,6 +203,7 @@ void main() {
         await tester.pumpWidget(
           _wrap(
             TripCard(
+              viewer: TripCardViewer.sender,
               announcement: makeAnnouncement(),
               onTap: () {},
               index: 0,
@@ -225,6 +231,7 @@ void main() {
             value: cubit,
             child: _wrap(
               TripCard(
+                viewer: TripCardViewer.sender,
                 announcement: makeAnnouncement(),
                 onTap: () {},
                 index: 0,
@@ -255,6 +262,7 @@ void main() {
             value: cubit,
             child: _wrap(
               TripCard(
+                viewer: TripCardViewer.sender,
                 announcement: makeAnnouncement(),
                 onTap: () {},
                 index: 0,
@@ -296,6 +304,7 @@ void main() {
           value: cubit,
           child: _wrap(
             TripCard(
+              viewer: TripCardViewer.sender,
               announcement: makeAnnouncement(),
               onTap: () {},
               index: 0,
@@ -329,6 +338,7 @@ void main() {
           value: cubit,
           child: _wrap(
             TripCard(
+              viewer: TripCardViewer.sender,
               announcement: makeAnnouncement(),
               onTap: () {},
               index: 0,

@@ -40,10 +40,10 @@ class TripDelayInfo extends Equatable {
     this.id,
     required this.reason,
     required this.arrivalDate,
-    required this.arrivalDateMax,
+    DateTime? arrivalDateMax,
     this.message,
     required this.announcedAt,
-  });
+  }) : arrivalDateMax = arrivalDateMax ?? arrivalDate;
 
   final String? id;
 
@@ -54,7 +54,8 @@ class TripDelayInfo extends Equatable {
   /// Nouvelle arrivée estimée au plus tôt.
   final DateTime arrivalDate;
 
-  /// Nouvelle arrivée estimée au plus tard.
+  /// Nouvelle arrivée estimée au plus tard. Repli sur [arrivalDate] quand le
+  /// back ne la sert pas (un seul jour).
   final DateTime arrivalDateMax;
 
   /// Message libre du voyageur (300 caractères au plus).
@@ -73,16 +74,16 @@ class TripDelayInfo extends Equatable {
     final arrival = _date(json['arrivalDate']);
     final arrivalMax = _date(json['arrivalDateMax']);
     final announcedAt = _date(json['announcedAt']);
-    if (reason is! String || arrival == null || arrivalMax == null) {
-      return null;
-    }
+    // `arrivalDateMax` est facultatif : un back qui ne sert qu'une date
+    // d'arrivée donne un retard d'un seul jour, jamais un retard perdu.
+    if (reason is! String || arrival == null) return null;
     final message = json['message'];
     final id = json['id'];
     return TripDelayInfo(
       id: id is String ? id : null,
       reason: reason,
       arrivalDate: arrival,
-      arrivalDateMax: arrivalMax,
+      arrivalDateMax: arrivalMax ?? arrival,
       message: message is String && message.trim().isNotEmpty ? message : null,
       announcedAt: announcedAt ?? arrival,
     );

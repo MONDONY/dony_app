@@ -322,6 +322,7 @@ void main() {
     when(() => offlineSync.queueChanges).thenReturn(queue);
     when(() => offlineSync.lostPhotoChanges).thenReturn(queue);
     when(() => offlineSync.lostPhotosFor(any())).thenReturn(const []);
+    when(() => offlineSync.depositRetakeFor(any())).thenReturn(const []);
     when(() => offlineSync.closedScanChanges).thenReturn(queue);
     when(() => offlineSync.closedScansFor(any())).thenReturn(const []);
 

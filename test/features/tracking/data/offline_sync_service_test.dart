@@ -2209,37 +2209,47 @@ void main() {
       expect(entry.containsKey('photoRequired'), isFalse);
     });
 
-    test(
-      'photo exigée mais absente : jamais envoyée, entrée retirée',
-      () async {
-        await service.queueScan(
-          bidId: 'bid-9',
-          eventType: 'DEPART',
-          qrToken: 'tok_abc',
-          photoRequired: true,
-        );
-        stubPost();
+    test('photo exigée mais absente : jamais envoyée, entrée gardée '
+        '« à reprendre » (pas supprimée en silence)', () async {
+      await service.queueScan(
+        bidId: 'bid-9',
+        eventType: 'DEPART',
+        qrToken: 'tok_abc',
+        photoRequired: true,
+      );
+      stubPost();
 
-        await service.syncAll();
-        // Refus définitif : l'entrée est retirée, jamais un départ sans preuve.
-        expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      await service.syncAll();
+      // Garde locale, pas un verdict du serveur : l'entrée reste en file.
+      expect(_hiveService.offlineQueue.length, 1);
+      final retake = service.depositRetakeFor({'bid-9'});
+      expect(retake, hasLength(1));
+      expect(retake.single.eventType, 'DEPART');
+      expect(service.depositRetakeFor({'autre'}), isEmpty);
+      // Ni envoyée, ni comptée parmi les scans en attente de réseau.
+      expect(service.pendingCount, 0);
 
-        verifyNever(
-          () => mockRepo.postScan(
-            bidId: any(named: 'bidId'),
-            eventType: any(named: 'eventType'),
-            gpsLat: any(named: 'gpsLat'),
-            gpsLon: any(named: 'gpsLon'),
-            gpsLabel: any(named: 'gpsLabel'),
-            photoUrl: any(named: 'photoUrl'),
-            scanMethod: any(named: 'scanMethod'),
-            trackingNumber: any(named: 'trackingNumber'),
-            qrToken: any(named: 'qrToken'),
-            offlineTimestamp: any(named: 'offlineTimestamp'),
-          ),
-        );
-      },
-    );
+      // Mise de côté : un nouveau rejeu ne la renvoie pas.
+      await service.syncAll();
+      verifyNever(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+          scanMethod: any(named: 'scanMethod'),
+          trackingNumber: any(named: 'trackingNumber'),
+          qrToken: any(named: 'qrToken'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      );
+
+      // L'utilisateur lit le message : l'entrée part, explicitement.
+      await service.dismissDepositRetake(retake.single);
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+    });
   });
 }
 

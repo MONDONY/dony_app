@@ -64,6 +64,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(stopsCount: 1),
           onTap: () {},
           index: 0,
@@ -74,7 +75,14 @@ void main() {
     expect(find.text('1 escale'), findsOneWidget);
 
     await tester.pumpWidget(
-      _wrap(TripCard(announcement: _announcement(), onTap: () {}, index: 0)),
+      _wrap(
+        TripCard(
+          viewer: TripCardViewer.owner,
+          announcement: _announcement(),
+          onTap: () {},
+          index: 0,
+        ),
+      ),
     );
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.byKey(const Key('trip-stops-badge')), findsNothing);
@@ -89,6 +97,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           TripCard(
+            viewer: TripCardViewer.owner,
             announcement: _announcement(
               transportMode: mode,
               stopsCount: stopsCount,
@@ -149,7 +158,14 @@ void main() {
 
   testWidgets('affiche route, drapeaux, progression et prix', (tester) async {
     await tester.pumpWidget(
-      _wrap(TripCard(announcement: _announcement(), onTap: () {}, index: 0)),
+      _wrap(
+        TripCard(
+          viewer: TripCardViewer.owner,
+          announcement: _announcement(),
+          onTap: () {},
+          index: 0,
+        ),
+      ),
     );
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -170,6 +186,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(currency: 'CAD'),
           onTap: () {},
           index: 0,
@@ -188,6 +205,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(
             pricingMode: 'MIXED',
             pricePerKg: 0,
@@ -224,6 +242,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(pricingMode: 'MIXED', pricePerKg: 0),
           onTap: () {},
           index: 0,
@@ -242,6 +261,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(
             departureCity: 'New York',
             arrivalCity: 'Tokyo',
@@ -267,6 +287,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(departureFlag: '🇺🇸'),
           onTap: () {},
           index: 0,
@@ -287,6 +308,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(status: 'COMPLETED', availableKg: 0),
           onTap: () {},
           index: 0,
@@ -310,6 +332,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           TripCard(
+            viewer: TripCardViewer.owner,
             announcement: _announcement(
               capacityUnit: 'KG_FREE',
               availableKg: 1,
@@ -338,6 +361,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           TripCard(
+            viewer: TripCardViewer.owner,
             announcement: _announcement(
               status: 'COMPLETED',
               capacityUnit: 'KG_FREE',
@@ -367,6 +391,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           TripCard(
+            viewer: TripCardViewer.owner,
             announcement: _announcement(
               confirmedParcelCount: 2,
               pendingBidCount: 3,
@@ -387,7 +412,14 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      _wrap(TripCard(announcement: _announcement(), onTap: () {}, index: 0)),
+      _wrap(
+        TripCard(
+          viewer: TripCardViewer.owner,
+          announcement: _announcement(),
+          onTap: () {},
+          index: 0,
+        ),
+      ),
     );
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -401,6 +433,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(confirmedParcelCount: 1),
           onTap: () {},
           index: 0,
@@ -419,6 +452,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           TripCard(
+            viewer: TripCardViewer.owner,
             announcement: _announcement(
               status: 'COMPLETED',
               availableKg: 0,
@@ -443,6 +477,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(status: 'DRAFT'),
           onTap: () {},
           index: 0,
@@ -459,6 +494,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(),
           onTap: () => tapped = true,
           index: 0,
@@ -477,6 +513,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(capacityUnit: 'KG_FREE'),
           onTap: () {},
           index: 0,
@@ -497,6 +534,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           TripCard(
+            viewer: TripCardViewer.owner,
             announcement: _announcement(departureDate: date),
             onTap: () {},
             index: 0,
@@ -520,6 +558,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(departureDate: date),
           onTap: () {},
           index: 0,
@@ -541,6 +580,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           TripCard(
+            viewer: TripCardViewer.owner,
             announcement: _announcement(departureDate: date),
             onTap: () {},
             index: 0,
@@ -564,6 +604,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
+          viewer: TripCardViewer.owner,
           announcement: _announcement(departureDate: date),
           onTap: () {},
           index: 0,
@@ -593,6 +634,7 @@ void main() {
           localizedApp(
             Scaffold(
               body: TripCard(
+                viewer: TripCardViewer.owner,
                 announcement: _announcement(
                   status: 'COMPLETED',
                   departureCity: 'Clermont-Ferrand',

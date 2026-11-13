@@ -199,6 +199,7 @@ class _TripsTab extends StatelessWidget {
               itemBuilder: (context, index) {
                 final trip = trips[index];
                 return TripCard(
+                  viewer: TripCardViewer.sender,
                   announcement: trip,
                   onTap: () => _openTrip(context, trip),
                   index: index,

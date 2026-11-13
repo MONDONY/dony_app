@@ -31615,6 +31615,18 @@ abstract class AppLocalizations {
   /// **'Fermer le message sur la photo perdue'**
   String get suiviPhotoLostDismiss;
 
+  /// Onglet Suivi : un dépôt mis en file hors ligne est resté en attente parce que sa photo (preuve du dépôt) n'a pas pu partir (refusée, quota, fichier perdu). Message jusqu'à ce que l'utilisateur le ferme.
+  ///
+  /// In fr, this message translates to:
+  /// **'La photo du dépôt n\'a pas pu être envoyée : le dépôt n\'est pas enregistré. Reprenez la photo du dépôt pour le confirmer.'**
+  String get suiviDepositPhotoRetake;
+
+  /// Libellé d'accessibilité du bouton qui ferme le message de la photo du dépôt à reprendre (onglet Suivi)
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer le message sur la photo du dépôt'**
+  String get suiviDepositPhotoRetakeDismiss;
+
   /// Onglet Suivi : une remise (DEPART) scannée hors ligne a été refusée à la synchronisation (422 bid-not-accepted) parce que le colis a été clos entre-temps (absence confirmée, annulation). Ne jamais promettre une alerte de l'équipe : le back n'alerte que dans quelques cas (suivi_closed_scans_banner.dart).
   ///
   /// In fr, this message translates to:

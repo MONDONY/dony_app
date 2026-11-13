@@ -19473,6 +19473,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get suiviPhotoLostDismiss => 'Fermer le message sur la photo perdue';
 
   @override
+  String get suiviDepositPhotoRetake =>
+      'La photo du dépôt n\'a pas pu être envoyée : le dépôt n\'est pas enregistré. Reprenez la photo du dépôt pour le confirmer.';
+
+  @override
+  String get suiviDepositPhotoRetakeDismiss =>
+      'Fermer le message sur la photo du dépôt';
+
+  @override
   String get suiviScanClosedBeforeSync =>
       'Ce colis a été clos avant la synchronisation de votre scan. Si vous avez le colis, contactez le support.';
 

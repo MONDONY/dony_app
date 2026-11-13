@@ -9,7 +9,8 @@ import 'package:flutter/material.dart';
 /// Étapes de ces colis parties sans leur photo, disparue du téléphone
 /// pendant l'attente dans la file hors ligne (FLUTTER-MJ). Le back accepte
 /// l'étape sans photo : elle est enregistrée, l'utilisateur en est prévenu
-/// jusqu'à ce qu'il ferme le message.
+/// jusqu'à ce qu'il ferme le message. Porte aussi le message d'un dépôt resté
+/// en file faute de photo (à reprendre).
 class SuiviLostPhotosBanner extends StatelessWidget {
   const SuiviLostPhotosBanner({super.key, required this.bidIds, this.sync});
 
@@ -22,13 +23,28 @@ class SuiviLostPhotosBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final service = sync ?? getIt<OfflineSyncService>();
     return ListenableBuilder(
-      listenable: service.lostPhotoChanges,
+      listenable: Listenable.merge([
+        service.lostPhotoChanges,
+        service.queueChanges,
+      ]),
       builder: (context, _) {
         final lost = service.lostPhotosFor(bidIds);
-        if (lost.isEmpty) return const SizedBox.shrink();
+        final retakes = service.depositRetakeFor(bidIds);
+        if (lost.isEmpty && retakes.isEmpty) return const SizedBox.shrink();
+        final l = context.l10n;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Dépôt resté en file faute de photo : à reprendre, jamais
+            // supprimé en silence.
+            for (final retake in retakes)
+              SuiviSyncNotice(
+                key: Key('suivi-deposit-retake-${retake.bidId}'),
+                iconAsset: 'image-off',
+                message: l.suiviDepositPhotoRetake,
+                dismissTooltip: l.suiviDepositPhotoRetakeDismiss,
+                onDismiss: () => service.dismissDepositRetake(retake),
+              ),
             for (final photo in lost)
               _LostPhotoNotice(
                 lost: photo,

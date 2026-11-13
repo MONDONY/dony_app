@@ -838,6 +838,7 @@ Widget _suiviHarness(List<String> roles, {SuiviMode? mode}) {
   when(() => offlineSync.queueChanges).thenReturn(ChangeNotifier());
   when(() => offlineSync.lostPhotoChanges).thenReturn(ChangeNotifier());
   when(() => offlineSync.lostPhotosFor(any())).thenReturn(const []);
+  when(() => offlineSync.depositRetakeFor(any())).thenReturn(const []);
   when(() => offlineSync.closedScanChanges).thenReturn(ChangeNotifier());
   when(() => offlineSync.closedScansFor(any())).thenReturn(const []);
 
