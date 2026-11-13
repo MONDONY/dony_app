@@ -229,6 +229,7 @@ class _SuiviContent extends StatelessWidget {
             bidStatus: bid.status,
             departureCity: bid.departureCity,
             arrivalCity: bid.arrivalCity,
+            transportMode: bid.transportMode,
           ),
         if (showTracking && showLocations)
           const SizedBox(height: DonySpacing.base),

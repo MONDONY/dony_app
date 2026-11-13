@@ -1,4 +1,5 @@
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/arrival_range.dart';
 import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -145,22 +146,11 @@ String? tripBoatArrivalText(
 }) {
   final arrival = a.arrivalDate;
   if (a.transportMode != TransportMode.boat || arrival == null) return null;
-  final year = (now ?? DateTime.now()).year;
-  String day(DateTime d) =>
-      (d.year == year
-              ? DateFormat.MMMd(l.localeName)
-              : DateFormat.yMMMd(l.localeName))
-          .format(d);
-  final max = a.arrivalDateMax;
-  final sameDay =
-      max != null &&
-      max.year == arrival.year &&
-      max.month == arrival.month &&
-      max.day == arrival.day;
-  if (max == null || sameDay || max.isBefore(arrival)) {
-    return l.listingBoatArrivalDate(day(arrival));
-  }
-  return l.listingBoatArrivalRange(day(arrival), day(max));
+  final days = arrivalRangeDays(l, arrival, a.arrivalDateMax, now: now);
+  final to = days.to;
+  return to == null
+      ? l.listingBoatArrivalDate(days.from)
+      : l.listingBoatArrivalRange(days.from, to);
 }
 
 /// « 120 kg max par colis », quand le trajet en route fixe un poids maximal

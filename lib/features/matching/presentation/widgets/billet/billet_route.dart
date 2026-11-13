@@ -1,5 +1,6 @@
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/arrival_range.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/billet_perforation.dart';
@@ -24,6 +25,7 @@ class BilletRoute extends StatelessWidget {
     this.departureTime,
     this.arrivalDate,
     this.arrivalTime,
+    this.arrivalDateMax,
     this.showWeekday = false,
     this.notchColor,
     this.transportMode,
@@ -41,6 +43,10 @@ class BilletRoute extends StatelessWidget {
   final String? departureTime;
   final DateTime? arrivalDate;
   final String? arrivalTime;
+
+  /// Fin de la fourchette d'arrivée estimée (bateau) : l'arrivée se lit
+  /// alors « Arrivée estimée · 11 janv. au 18 janv. ».
+  final DateTime? arrivalDateMax;
 
   /// Jour de la semaine devant la date (« lun. 5 oct. ») : utile pour choisir
   /// un trajet, superflu sur un colis déjà réservé.
@@ -67,6 +73,7 @@ class BilletRoute extends StatelessWidget {
           departureTime: departureTime,
           arrivalDate: arrivalDate,
           arrivalTime: arrivalTime,
+          arrivalDateMax: arrivalDateMax,
           showWeekday: showWeekday,
         ),
         if (notch != null) BilletPerforation(notchColor: notch),
@@ -231,6 +238,9 @@ class _DashedLine extends StatelessWidget {
 /// Dates et heures de départ et d'arrivée. L'arrivée affiche sa date quand
 /// elle tombe un autre jour que le départ (vol de nuit, FLUTTER-4E), l'heure
 /// seule sinon. Une valeur inconnue s'affiche « - ».
+///
+/// Avec une fin de fourchette ([arrivalDateMax], bateau), l'arrivée devient
+/// « Arrivée estimée » : du premier au dernier jour, sans heure.
 class BilletDates extends StatelessWidget {
   const BilletDates({
     super.key,
@@ -238,6 +248,7 @@ class BilletDates extends StatelessWidget {
     this.departureTime,
     this.arrivalDate,
     this.arrivalTime,
+    this.arrivalDateMax,
     this.showWeekday = false,
   });
 
@@ -245,6 +256,7 @@ class BilletDates extends StatelessWidget {
   final String? departureTime;
   final DateTime? arrivalDate;
   final String? arrivalTime;
+  final DateTime? arrivalDateMax;
   final bool showWeekday;
 
   @override
@@ -263,10 +275,23 @@ class BilletDates extends StatelessWidget {
       if (depDate != null) _formatDate(depDate, l.localeName),
       _trimTime(departureTime),
     ]);
-    final arrival = _join([
-      if (arrivalOtherDay) _formatDate(arrDate, l.localeName),
-      _trimTime(arrivalTime),
-    ]);
+    final max = arrivalDateMax;
+    final range = arrDate != null && max != null
+        ? arrivalRangeDays(l, arrDate, max)
+        : null;
+    final estimated = range != null;
+    final String arrival;
+    if (range != null) {
+      final to = range.to;
+      arrival = to == null
+          ? range.from
+          : l.ticketArrivalRangeValue(range.from, to);
+    } else {
+      arrival = _join([
+        if (arrivalOtherDay) _formatDate(arrDate, l.localeName),
+        _trimTime(arrivalTime),
+      ]);
+    }
 
     final labelStyle = tt.bodySmall?.copyWith(
       color: cs.onSurfaceVariant,
@@ -306,7 +331,14 @@ class BilletDates extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(l.ticketArrivalLabel, style: labelStyle),
+                Text(
+                  estimated
+                      ? l.ticketEstimatedArrivalLabel
+                      : l.ticketArrivalLabel,
+                  key: const Key('billet-arrival-label'),
+                  style: labelStyle,
+                  textAlign: TextAlign.end,
+                ),
                 Text(
                   arrival,
                   key: const Key('billet-arrival-value'),

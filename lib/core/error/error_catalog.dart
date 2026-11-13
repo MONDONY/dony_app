@@ -2026,6 +2026,15 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.schedule_rounded,
     ),
+    // Même règle, à l'heure près : arrivée le jour du départ à une heure qui
+    // ne le suit pas (formulaire de trajet après un changement de l'heure de
+    // départ, report). `detail` du back dans `_serverDetailCodes`.
+    'arrival-time-before-departure': _Entry(
+      title: (l) => l.errorArrivalTimeBeforeDepartureTitle,
+      message: (l) => l.errorArrivalTimeBeforeDepartureMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.schedule_rounded,
+    ),
     'boat-volume-required': _Entry(
       title: (l) => l.errorBoatVolumeRequiredTitle,
       message: (l) => l.errorBoatVolumeRequiredMessage,
@@ -2171,6 +2180,7 @@ abstract final class ErrorCatalog {
     'invalid-transport-mode',
     'arrival-too-far',
     'arrival-before-departure',
+    'arrival-time-before-departure',
     // Fourchette d'arrivée invalide : le back émet toujours ce code et choisit
     // le `detail` selon le cas (fin avant début, fin dans le passé, début
     // avant le départ) ; le texte du catalogue couvre les trois en repli.

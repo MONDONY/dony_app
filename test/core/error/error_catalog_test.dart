@@ -2490,6 +2490,48 @@ void main() {
       );
     });
 
+    // Même règle à l'heure près (`ArrivalRules.validate`) : un formulaire de
+    // trajet dont l'heure de départ change après l'heure d'arrivée, un report.
+    test(
+      'arrival-time-before-departure : detail du serveur puis repli FR/EN',
+      () {
+        expect(
+          ErrorCatalog.debugCodes,
+          contains('arrival-time-before-departure'),
+        );
+        final withDetail = ErrorCatalog.lookup(
+          const ValidationException(
+            "Le même jour, l'heure d'arrivée doit suivre l'heure de départ",
+            code: 'arrival-time-before-departure',
+          ),
+          l10n: fr,
+        );
+        expect(
+          withDetail.message,
+          "Le même jour, l'heure d'arrivée doit suivre l'heure de départ",
+        );
+        final fallbackFr = ErrorCatalog.lookup(
+          const ValidationException('', code: 'arrival-time-before-departure'),
+          l10n: fr,
+        );
+        expect(fallbackFr.title, "Heure d'arrivée avant le départ");
+        expect(
+          fallbackFr.message,
+          "Le même jour, l'heure d'arrivée doit suivre l'heure de départ.",
+        );
+        final fallbackEn = ErrorCatalog.lookup(
+          const ValidationException('', code: 'arrival-time-before-departure'),
+          l10n: en,
+        );
+        expect(fallbackEn.title, 'Arrival time before departure');
+        expect(
+          fallbackEn.message,
+          'On the same day, the arrival time must be after the departure time.',
+        );
+        expect(fallbackEn.severity, ErrorSeverity.warning);
+      },
+    );
+
     test('trip-delay-too-frequent : detail vide, texte de repli', () {
       final p = ErrorCatalog.lookup(
         const ConflictException('', code: 'trip-delay-too-frequent'),

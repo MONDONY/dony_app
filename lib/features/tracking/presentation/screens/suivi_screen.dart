@@ -388,12 +388,14 @@ class _SuiviBodyState extends State<_SuiviBody> {
         :final arrivalInstructions,
         :final trackingNumber,
         :final bidStatus,
+        :final milestones,
       ):
         BidModel? parcelToOpen;
         await showTrackingTimelineSheet(
           context,
           bidId: bidId,
           bidStatus: bidStatus,
+          milestones: milestones,
           departureCity: departureCity,
           arrivalCity: arrivalCity,
           transportMode: transportMode,

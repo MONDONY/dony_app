@@ -145,6 +145,13 @@ AnnouncementModel _buildAnnouncement({
   String arrivalCity = 'Dakar',
   String? departureTimezone,
   TransportMode? transportMode,
+  double? pricePerKg = 8,
+  DateTime? arrivalDate,
+  DateTime? arrivalDateMax,
+  double? volumeCapacityM3,
+  double? availableVolumeM3,
+  double? pricePerM3,
+  double? pricePerM3Display,
 }) {
   final now = DateTime.now();
   return AnnouncementModel(
@@ -157,7 +164,13 @@ AnnouncementModel _buildAnnouncement({
     arrivalTime: arrivalTime,
     availableKg: 12,
     totalKg: 20,
-    pricePerKg: 8,
+    pricePerKg: pricePerKg,
+    arrivalDate: arrivalDate,
+    arrivalDateMax: arrivalDateMax,
+    volumeCapacityM3: volumeCapacityM3,
+    availableVolumeM3: availableVolumeM3,
+    pricePerM3: pricePerM3,
+    pricePerM3Display: pricePerM3Display,
     capacityUnit: capacityUnit,
     currency: currency,
     status: status,
@@ -2573,5 +2586,84 @@ void main() {
     expect(find.bySemanticsLabel('Lyon → Bamako'), findsOneWidget);
     expect(find.text('LYS'), findsOneWidget);
     expect(find.text('BKO'), findsOneWidget);
+  });
+
+  // A6 : la fiche d'un trajet bateau vendu au m³ dit sa fourchette d'arrivée
+  // et son prix au m³ frais inclus, jamais « Prix indisponible ».
+  group('trajet bateau au m³ (vue expéditeur)', () {
+    AnnouncementModel boatTrip() {
+      final now = DateTime.now();
+      return _buildAnnouncement(
+        transportMode: TransportMode.boat,
+        departureCity: 'Le Havre',
+        arrivalCity: 'Abidjan',
+        departureDate: DateTime(now.year, now.month + 1, 2),
+        arrivalDate: DateTime(now.year, now.month + 2, 11),
+        arrivalDateMax: DateTime(now.year, now.month + 2, 18),
+        pricePerKg: null,
+        volumeCapacityM3: 2,
+        availableVolumeM3: 0.4,
+        pricePerM3: 540,
+        pricePerM3Display: 600,
+      );
+    }
+
+    testWidgets('fourchette d\'arrivée et prix au m³ brut', (tester) async {
+      await tester.pumpWidget(_harness(announcement: boatTrip()));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<Text>(find.byKey(const Key('billet-arrival-label'))).data,
+        'Arrivée estimée',
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const Key('billet-arrival-value'))).data,
+        contains(' au '),
+      );
+      final price = find.byKey(const Key('trip-price-per-m3-stat'));
+      expect(price, findsOneWidget);
+      // Prix affiché à l'expéditeur, frais inclus (pricePerM3Display).
+      expect(
+        find.descendant(of: price, matching: find.textContaining('600')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: price, matching: find.text('par m³')),
+        findsOneWidget,
+      );
+      expect(find.text('Prix indisponible'), findsNothing);
+      expect(find.textContaining('0,4'), findsWidgets);
+      expect(tester.takeException(), isNull);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_harness(announcement: boatTrip()));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+      expect(find.text('Estimated arrival'), findsOneWidget);
+      expect(find.text('per m³'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('trajet en route : prix au kilo, arrivée habituelle', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _harness(
+          announcement: _buildAnnouncement(transportMode: TransportMode.car),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('trip-price-per-m3-stat')), findsNothing);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('billet-arrival-label'))).data,
+        'Arrivée',
+      );
+      expectNoPlaneIcon(tester);
+    });
   });
 }

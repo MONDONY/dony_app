@@ -12,6 +12,7 @@ import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/models/trip_milestones.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 
 /// Les deux usages de l'onglet Suivi. Le nom sert aussi de valeur de
@@ -147,10 +148,15 @@ final class SuiviShowTimeline extends SuiviEffect {
     this.arrivalInstructions,
     this.trackingNumber,
     this.bidStatus,
+    this.milestones,
     this.bid,
     this.source,
   });
   final String bidId;
+
+  /// Jalons du trajet (départ prévu, arrivée estimée, dernier retard) d'un
+  /// colis connu de l'app, `null` sinon.
+  final TripMilestones? milestones;
 
   /// Colis quand il est connu de l'app (liste « Mes envois »), `null` pour un
   /// colis d'un tiers retrouvé par numéro ou par QR.
@@ -763,9 +769,9 @@ class SuiviCubit extends Cubit<SuiviState> {
             bidId: result.bidId,
             departureCity: result.departureCity,
             arrivalCity: result.arrivalCity,
-            // Le back ne sert pas le mode du colis d'un tiers : icône neutre
-            // explicite, jamais un avion supposé.
-            transportMode: TransportMode.other,
+            // Mode servi par le back (lot 3) ; inconnu ou absent (back
+            // antérieur) : icône et étapes neutres, jamais un avion supposé.
+            transportMode: result.transportMode ?? TransportMode.other,
             arrivalInstructions: result.arrivalInstructions,
             trackingNumber: result.trackingNumber,
             source: 'number',
@@ -808,11 +814,17 @@ class SuiviCubit extends Cubit<SuiviState> {
         bidId: bidId,
         departureCity: hasRoute ? from : null,
         arrivalCity: hasRoute ? to : null,
-        transportMode: known?.transportMode ?? trip?.transportMode,
+        // Colis inconnu de l'app (QR d'un tiers, « Suivre ce colis ») : aucun
+        // mode connu, icône et étapes neutres, jamais l'avion (C14). Un colis
+        // connu garde son mode, `null` (ancienne donnée) compris.
+        transportMode: known == null && trip == null
+            ? TransportMode.other
+            : known?.transportMode ?? trip?.transportMode,
         arrivalInstructions:
             known?.arrivalInstructions ?? trip?.arrivalInstructions,
         trackingNumber: known?.trackingNumber,
         bidStatus: known?.status,
+        milestones: known == null ? null : TripMilestones.fromBid(known),
         bid: known,
         source: source,
       ),

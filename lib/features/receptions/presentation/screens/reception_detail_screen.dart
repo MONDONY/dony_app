@@ -14,6 +14,7 @@ import 'package:dony/features/ratings/presentation/widgets/star_selector.dart';
 import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/receptions/presentation/widgets/reception_leave_confirm_sheet.dart';
+import 'package:dony/features/tracking/data/models/trip_milestones.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -40,6 +41,12 @@ Future<void> _openTimeline(BuildContext context, Reception reception) =>
       trackingNumber: reception.trackingNumber,
       arrivalInstructions: reception.arrivalInstructions,
       transportMode: reception.displayTransportMode,
+      // Jalons connus du destinataire : départ prévu et arrivée (début de la
+      // fourchette en bateau), sans retard (servi à l'expéditeur seulement).
+      milestones: TripMilestones(
+        departureDate: reception.departureDate,
+        arrivalDate: reception.arrivalDate,
+      ),
     );
 
 /// La même feuille que l'expéditeur (luminosité maximale, enregistrer,

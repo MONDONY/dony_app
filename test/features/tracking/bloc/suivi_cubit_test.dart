@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_delay_info.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
@@ -626,6 +627,84 @@ void main() {
       await c.trackNumber('DON-NEUTRE');
       final effect = c.state.effect! as SuiviShowTimeline;
       expect(effect.transportMode, TransportMode.other);
+    });
+
+    test('unknownQr_usesBackMode : trackNumber prend le mode servi par le '
+        'back', () async {
+      when(() => trackingRepo.searchByTrackingNumber('DON-MER')).thenAnswer(
+        (_) async => const TrackingSearchModel(
+          trackingNumber: 'DON-MER',
+          bidId: 'bid-m',
+          departureCity: 'Le Havre',
+          arrivalCity: 'Abidjan',
+          currentStep: 'HANDED_OVER',
+          stepLabel: "Dépôt à l'entrepôt",
+          paymentStatus: 'ESCROWED',
+          transportMode: TransportMode.boat,
+        ),
+      );
+      final c = build()..start(canValidate: false);
+      await c.trackNumber('DON-MER');
+      final effect = c.state.effect! as SuiviShowTimeline;
+      expect(effect.transportMode, TransportMode.boat);
+      // Colis d'un tiers : aucun jalon du trajet connu.
+      expect(effect.milestones, isNull);
+    });
+
+    test('unknownQr_withoutMode_neutral : followParcel et QR inconnu en '
+        'Suivre, icône neutre (jamais l\'avion)', () {
+      final c = build()
+        ..start(canValidate: true, requested: SuiviMode.valider)
+        ..onQrScanned('nowhere', _hub())
+        ..followParcel('nowhere');
+      final followed = c.state.effect! as SuiviShowTimeline;
+      expect(followed.transportMode, TransportMode.other);
+      expect(followed.milestones, isNull);
+
+      c
+        ..releaseScan()
+        ..onQrScanned('ailleurs', _hub());
+      final scanned = c.state.effect! as SuiviShowTimeline;
+      expect(scanned.transportMode, TransportMode.other);
+    });
+
+    test('colis connu : son mode, même absent (ancienne donnée), et ses '
+        'jalons du trajet', () async {
+      final c = build()..start(canValidate: false);
+      await Future<void>.delayed(Duration.zero);
+      final boat = BidModel(
+        id: 'ship-boat',
+        announcementId: 'trip-boat',
+        senderId: 's',
+        status: 'IN_TRANSIT',
+        departureCity: 'Le Havre',
+        arrivalCity: 'Abidjan',
+        transportMode: TransportMode.boat,
+        departureDate: DateTime(2026, 12, 2),
+        arrivalDate: DateTime(2027, 1, 11),
+        arrivalDateMax: DateTime(2027, 1, 18),
+        latestTripDelay: TripDelayInfo(
+          reason: 'PORT_CONGESTION',
+          arrivalDate: DateTime(2027, 1, 16),
+          arrivalDateMax: DateTime(2027, 1, 23),
+          announcedAt: DateTime(2026, 12, 20),
+        ),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      );
+      c.trackShipment(boat);
+      final effect = c.state.effect! as SuiviShowTimeline;
+      expect(effect.transportMode, TransportMode.boat);
+      expect(effect.milestones?.arrivalDateMax, DateTime(2027, 1, 18));
+      expect(effect.milestones?.latestDelay?.reason, 'PORT_CONGESTION');
+      expect(effect.milestones?.departureDate, DateTime(2026, 12, 2));
+
+      c
+        ..releaseScan()
+        ..trackShipment(c.state.shipments.single);
+      // Colis connu sans mode (ancienne donnée) : `null`, lu comme un avion
+      // par la frise, jamais remplacé par l'icône d'un tiers.
+      expect((c.state.effect! as SuiviShowTimeline).transportMode, isNull);
     });
 
     test('trackNumber trouve le colis et ouvre son parcours', () async {

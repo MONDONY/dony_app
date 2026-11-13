@@ -7,6 +7,7 @@ import 'package:dony/features/matching/presentation/widgets/billet_perforation.d
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/plane_icon_expectations.dart';
@@ -320,5 +321,104 @@ void main() {
       ),
       findsNWidgets(2),
     );
+  });
+
+  // A6 : un trajet bateau annonce une fourchette d'arrivée estimée.
+  group('arrivée estimée (bateau)', () {
+    final year = DateTime.now().year;
+    for (final width in [360.0, 414.0]) {
+      testWidgets('« Arrivée estimée » du premier au dernier jour, sans heure '
+          '(${width.toInt()} px)', (tester) async {
+        await initializeDateFormatting('fr');
+        await _pump(
+          tester,
+          BilletRoute(
+            departureCity: 'Le Havre',
+            arrivalCity: 'Abidjan',
+            transportMode: TransportMode.boat,
+            departureDate: DateTime(year, 12, 2),
+            departureTime: '18:00',
+            arrivalDate: DateTime(year, 12, 11),
+            arrivalTime: '06:30',
+            arrivalDateMax: DateTime(year, 12, 18),
+          ),
+          width: width,
+        );
+        expect(
+          tester
+              .widget<Text>(find.byKey(const Key('billet-arrival-label')))
+              .data,
+          'Arrivée estimée',
+        );
+        expect(
+          tester
+              .widget<Text>(find.byKey(const Key('billet-arrival-value')))
+              .data,
+          '11 déc. au 18 déc.',
+        );
+        expect(find.textContaining('06:30'), findsNothing);
+        expect(tester.takeException(), isNull);
+        expectNoPlaneIcon(tester);
+      });
+    }
+
+    testWidgets('en anglais', (tester) async {
+      useEnglish();
+      await initializeDateFormatting('en');
+      await _pump(
+        tester,
+        BilletRoute(
+          departureCity: 'Le Havre',
+          arrivalCity: 'Abidjan',
+          transportMode: TransportMode.boat,
+          departureDate: DateTime(year, 12, 2),
+          arrivalDate: DateTime(year, 12, 11),
+          arrivalDateMax: DateTime(year, 12, 18),
+        ),
+        width: 360,
+      );
+      expect(find.text('Estimated arrival'), findsOneWidget);
+      expect(find.text('Dec 11 to Dec 18'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('fourchette d\'un jour : la date seule', (tester) async {
+      await initializeDateFormatting('fr');
+      await _pump(
+        tester,
+        BilletRoute(
+          departureCity: 'Le Havre',
+          arrivalCity: 'Abidjan',
+          transportMode: TransportMode.boat,
+          departureDate: DateTime(year, 12, 2),
+          arrivalDate: DateTime(year, 12, 11),
+          arrivalDateMax: DateTime(year, 12, 11),
+        ),
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const Key('billet-arrival-value'))).data,
+        '11 déc.',
+      );
+    });
+
+    testWidgets('sans fin de fourchette : libellé et heure habituels', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        BilletRoute(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(year, 10, 6),
+          arrivalDate: DateTime(year, 10, 7),
+          arrivalTime: '06:30',
+        ),
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const Key('billet-arrival-label'))).data,
+        'Arrivée',
+      );
+      expect(find.textContaining('06:30'), findsOneWidget);
+    });
   });
 }

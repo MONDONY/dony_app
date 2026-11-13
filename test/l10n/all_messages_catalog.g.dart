@@ -8633,6 +8633,69 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.listingBoatArrivalDate(placeholderMarker('date')),
   'listingBoatVolumeRemaining': (l) =>
       l.listingBoatVolumeRemaining(placeholderMarker('volume')),
+  'trackingBoatStepDeposit': (l) => l.trackingBoatStepDeposit,
+  'trackingBoatStepDeposited': (l) => l.trackingBoatStepDeposited,
+  'trackingBoatStepDeparture': (l) => l.trackingBoatStepDeparture,
+  'trackingBoatStepDeparted': (l) => l.trackingBoatStepDeparted,
+  'trackingBoatStepAtSea': (l) => l.trackingBoatStepAtSea,
+  'trackingBoatStepAtPort': (l) =>
+      l.trackingBoatStepAtPort(placeholderMarker('city')),
+  'trackingBoatStepAtPortElided': (l) =>
+      l.trackingBoatStepAtPortElided(placeholderMarker('city')),
+  'trackingBoatStepAtPortNoCity': (l) => l.trackingBoatStepAtPortNoCity,
+  'trackingBoatHeadlineAwaitingDeposit': (l) =>
+      l.trackingBoatHeadlineAwaitingDeposit,
+  'trackingBoatHeadlineAtSeaTo': (l) =>
+      l.trackingBoatHeadlineAtSeaTo(placeholderMarker('city')),
+  'trackingBoatPlannedDeparture': (l) =>
+      l.trackingBoatPlannedDeparture(placeholderMarker('date')),
+  'trackingBoatEstimatedRange': (l) => l.trackingBoatEstimatedRange(
+    placeholderMarker('from'),
+    placeholderMarker('to'),
+  ),
+  'trackingBoatEstimatedDate': (l) =>
+      l.trackingBoatEstimatedDate(placeholderMarker('date')),
+  'trackingBoatDelayNote': (l) =>
+      l.trackingBoatDelayNote(placeholderMarker('detail')),
+  'ticketEstimatedArrivalLabel': (l) => l.ticketEstimatedArrivalLabel,
+  'ticketArrivalRangeValue': (l) => l.ticketArrivalRangeValue(
+    placeholderMarker('from'),
+    placeholderMarker('to'),
+  ),
+  'bidDetailSenderInTransitBoatRange': (l) =>
+      l.bidDetailSenderInTransitBoatRange(
+        placeholderMarker('from'),
+        placeholderMarker('to'),
+        placeholderMarker('city'),
+      ),
+  'bidDetailSenderInTransitBoatDate': (l) => l.bidDetailSenderInTransitBoatDate(
+    placeholderMarker('date'),
+    placeholderMarker('city'),
+  ),
+  'bidDetailDepositPaidLabel': (l) => l.bidDetailDepositPaidLabel(
+    placeholderMarker('amount'),
+    placeholderMarker('date'),
+  ),
+  'bidDetailDepositPaidNoDateLabel': (l) =>
+      l.bidDetailDepositPaidNoDateLabel(placeholderMarker('amount')),
+  'bidDetailDepositPendingLabel': (l) =>
+      l.bidDetailDepositPendingLabel(placeholderMarker('amount')),
+  'bidDelayTitle': (l) => l.bidDelayTitle,
+  'bidDelayNewRange': (l) =>
+      l.bidDelayNewRange(placeholderMarker('from'), placeholderMarker('to')),
+  'bidDelayNewDate': (l) => l.bidDelayNewDate(placeholderMarker('date')),
+  'bidDelayReason': (l) => l.bidDelayReason(placeholderMarker('reason')),
+  'tripDelayReasonPortCongestion': (l) => l.tripDelayReasonPortCongestion,
+  'tripDelayReasonWeather': (l) => l.tripDelayReasonWeather,
+  'tripDelayReasonExtendedStopover': (l) => l.tripDelayReasonExtendedStopover,
+  'tripDelayReasonExtendedStop': (l) => l.tripDelayReasonExtendedStop,
+  'tripDelayReasonTransportDisruption': (l) =>
+      l.tripDelayReasonTransportDisruption,
+  'listingPricePerM3Label': (l) => l.listingPricePerM3Label,
+  'errorArrivalTimeBeforeDepartureTitle': (l) =>
+      l.errorArrivalTimeBeforeDepartureTitle,
+  'errorArrivalTimeBeforeDepartureMessage': (l) =>
+      l.errorArrivalTimeBeforeDepartureMessage,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -9356,4 +9419,20 @@ const textParameters = <String, List<String>>{
   'listingBoatArrivalRange': ['from', 'to'],
   'listingBoatArrivalDate': ['date'],
   'listingBoatVolumeRemaining': ['volume'],
+  'trackingBoatStepAtPort': ['city'],
+  'trackingBoatStepAtPortElided': ['city'],
+  'trackingBoatHeadlineAtSeaTo': ['city'],
+  'trackingBoatPlannedDeparture': ['date'],
+  'trackingBoatEstimatedRange': ['from', 'to'],
+  'trackingBoatEstimatedDate': ['date'],
+  'trackingBoatDelayNote': ['detail'],
+  'ticketArrivalRangeValue': ['from', 'to'],
+  'bidDetailSenderInTransitBoatRange': ['from', 'to', 'city'],
+  'bidDetailSenderInTransitBoatDate': ['date', 'city'],
+  'bidDetailDepositPaidLabel': ['amount', 'date'],
+  'bidDetailDepositPaidNoDateLabel': ['amount'],
+  'bidDetailDepositPendingLabel': ['amount'],
+  'bidDelayNewRange': ['from', 'to'],
+  'bidDelayNewDate': ['date'],
+  'bidDelayReason': ['reason'],
 };

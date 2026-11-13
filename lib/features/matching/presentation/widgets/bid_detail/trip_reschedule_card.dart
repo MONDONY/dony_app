@@ -1,12 +1,15 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/arrival_range.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_delay_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
+import 'package:dony/features/matching/presentation/trip_delay_labels.dart';
 import 'package:dony/features/matching/presentation/trip_reschedule_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -126,6 +129,72 @@ class TripRescheduleCard extends StatelessWidget {
     );
     if (!framed) return content;
     return DonyCard(key: const Key('trip-reschedule-card'), child: content);
+  }
+}
+
+/// Dernier retard annoncé par le voyageur sur le trajet du colis
+/// (`latestTripDelay`, servi une fois le colis remis) : même carte que le
+/// report, sans décision à prendre. Motif (selon le mode du trajet), nouvelle
+/// arrivée estimée, message du voyageur. Un report efface les retards côté
+/// back : la carte disparaît d'elle-même.
+class TripDelayCard extends StatelessWidget {
+  const TripDelayCard({super.key, required this.bid});
+
+  final BidModel bid;
+
+  static bool shouldShow(BidModel bid) => bid.latestTripDelay != null;
+
+  @override
+  Widget build(BuildContext context) {
+    final TripDelayInfo delay = bid.latestTripDelay!;
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final range = arrivalRangeDays(l, delay.arrivalDate, delay.arrivalDateMax);
+    final to = range.to;
+    final message = delay.message?.trim() ?? '';
+    return DonyCard(
+      key: const Key('trip-delay-card'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              DonyIcon('clock', size: 20, color: cs.tertiary),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(child: Text(l.bidDelayTitle, style: tt.titleSmall)),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            to == null
+                ? l.bidDelayNewDate(range.from)
+                : l.bidDelayNewRange(range.from, to),
+            key: const Key('trip-delay-arrival'),
+            style: tt.bodyMedium,
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            l.bidDelayReason(
+              tripDelayInfoReasonLabel(l, delay, bid.transportMode),
+            ),
+            key: const Key('trip-delay-reason'),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          if (message.isNotEmpty) ...[
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              l.bidRescheduleNote(message),
+              key: const Key('trip-delay-message'),
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 

@@ -5,6 +5,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/tracking/data/models/trip_milestones.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +33,7 @@ void openSenderTrackingTimeline(BuildContext context, BidModel bid) {
     trackingNumber: bid.trackingNumber,
     bidStatus: bid.status,
     travelerTracking: bid.travelerTracking,
+    milestones: TripMilestones.fromBid(bid),
     onShareTracking: bid.trackingToken != null
         ? () => shareTrackingLink(
             bid,

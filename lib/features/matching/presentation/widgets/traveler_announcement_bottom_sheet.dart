@@ -1173,11 +1173,25 @@ class _PriceStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
+    // Bateau vendu au m³ : aucun kilo, le prix au m³ frais inclus
+    // (`pricePerM3Display`, servi à tous les lecteurs, invité compris).
+    if (announcement.isPricedPerM3) {
+      final perM3 = announcement.pricePerM3Display;
+      if (perM3 == null || perM3 <= 0) {
+        return _StatCard(value: '-', label: l.tripPosterPriceUnavailable);
+      }
+      return _StatCard(
+        key: const Key('trip-price-per-m3-stat'),
+        value: formatPriceIn(perM3, announcement.currency),
+        label: l.listingPricePerM3Label,
+        valueColor: cs.primary,
+      );
+    }
     // Garde sur hasKgPrice (valeur > 0), pas sur la seule nullité :
     // senderPricePerKg n'est en pratique jamais null (pricePerKgDisplay
     // toujours servi), 0 est la vraie valeur trompeuse en mode MIXED.
     if (!announcement.hasKgPrice) {
-      return _StatCard(value: '—', label: l.tripPosterPriceUnavailable);
+      return _StatCard(value: '-', label: l.tripPosterPriceUnavailable);
     }
     return _StatCard(
       value: formatPriceIn(

@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/arrival_range.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -240,9 +242,23 @@ String _buildInTransitSubtitle(BuildContext context, BidModel bid) {
   final l = context.l10n;
   final arrivalCity = bid.arrivalCity ?? l.bidDetailFallbackDestination;
   final arrivalTime = bid.arrivalTime ?? '';
-  final timePart = arrivalTime.isNotEmpty
-      ? l.bidDetailSenderInTransitEta(arrivalTime, arrivalCity)
-      : l.bidDetailSenderInTransitEnRoute(arrivalCity);
+  final boatArrival = bid.transportMode == TransportMode.boat
+      ? bid.arrivalDate
+      : null;
+  final String timePart;
+  if (boatArrival != null) {
+    // Bateau : arrivée estimée en fourchette, déjà décalée par un retard
+    // annoncé (le back réécrit l'arrivée du trajet).
+    final range = arrivalRangeDays(l, boatArrival, bid.arrivalDateMax);
+    final to = range.to;
+    timePart = to == null
+        ? l.bidDetailSenderInTransitBoatDate(range.from, arrivalCity)
+        : l.bidDetailSenderInTransitBoatRange(range.from, to, arrivalCity);
+  } else {
+    timePart = arrivalTime.isNotEmpty
+        ? l.bidDetailSenderInTransitEta(arrivalTime, arrivalCity)
+        : l.bidDetailSenderInTransitEnRoute(arrivalCity);
+  }
 
   // Avant le code présent : un code expiré est encore là mais inutilisable.
   if (bid.needsNewPickupCode) {

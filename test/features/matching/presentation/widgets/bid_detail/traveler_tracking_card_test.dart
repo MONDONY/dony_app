@@ -10,6 +10,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tracking_card.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -23,6 +24,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
@@ -105,6 +108,8 @@ void main() {
     Locale locale = const Locale('fr'),
     DateTime? now,
     String? bidStatus,
+    TransportMode? transportMode,
+    String arrivalCity = 'Dakar',
   }) => MaterialApp(
     theme: AppTheme.light(),
     locale: locale,
@@ -117,7 +122,8 @@ void main() {
           bidId: 'bid-1',
           bidStatus: bidStatus,
           departureCity: 'Paris',
-          arrivalCity: 'Dakar',
+          arrivalCity: arrivalCity,
+          transportMode: transportMode,
           now: () => now ?? _nowUtc,
         ),
       ),
@@ -484,6 +490,39 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const Key('tracking-step-photo')), findsNothing);
+    });
+
+    testWidgets('bateau : dépôt à l\'entrepôt et arrivée au port', (
+      tester,
+    ) async {
+      withEvents([_event('DEPART', handed)]);
+      await tester.pumpWidget(
+        host(
+          _tracking(status: TravelerTrackingStatus.arrived),
+          bidStatus: 'ARRIVED',
+          transportMode: TransportMode.boat,
+          arrivalCity: 'Abidjan',
+        ),
+      );
+
+      expect(find.text("Déposé à l'entrepôt"), findsOneWidget);
+      expect(find.text("Arrivé au port d'Abidjan"), findsOneWidget);
+      expect(find.text('Remis au voyageur'), findsNothing);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('route : libellés neutres, sans avion', (tester) async {
+      withEvents([_event('DEPART', handed)]);
+      await tester.pumpWidget(
+        host(
+          _tracking(status: TravelerTrackingStatus.arrived),
+          bidStatus: 'ARRIVED',
+          transportMode: TransportMode.car,
+        ),
+      );
+      expect(find.text('Remis au voyageur'), findsOneWidget);
+      expect(find.text('Arrivé à destination'), findsOneWidget);
+      expectNoPlaneIcon(tester);
     });
 
     testWidgets('cardShowsArrivedStepWhenParcelArrived', (tester) async {

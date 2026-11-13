@@ -26977,7 +26977,7 @@ abstract class AppLocalizations {
   /// **'Voyage repoussé'**
   String get tripRescheduleReasonPostponed;
 
-  /// Motif de report
+  /// Motif de report ; aussi motif de retard OTHER (trip_delay_labels.dart)
   ///
   /// In fr, this message translates to:
   /// **'Autre raison'**
@@ -27025,7 +27025,7 @@ abstract class AppLocalizations {
   /// **'Le voyageur a reporté son trajet du {previous} au {next} ({reason}).'**
   String bidRescheduleBody(String previous, String next, String reason);
 
-  /// Carte de report : message libre du voyageur
+  /// Carte de report et carte du dernier retard (TripDelayCard, trip_reschedule_card.dart) : message libre du voyageur
   ///
   /// In fr, this message translates to:
   /// **'Message du voyageur : {note}'**
@@ -39850,6 +39850,204 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{volume} restants'**
   String listingBoatVolumeRemaining(String volume);
+
+  /// Frise de suivi d'un colis bateau (tracking_timeline_bottom_sheet.dart) : étape en cours tant que le colis n'est pas déposé ; libellé court de l'étape DEPART en bateau (tracking_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépôt à l\'entrepôt'**
+  String get trackingBoatStepDeposit;
+
+  /// Frise de suivi d'un colis bateau : étape DEPART faite (dépôt scanné à l'entrepôt), aussi phrase d'état avant le départ du bateau (tracking_timeline_bottom_sheet.dart, journey_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Déposé à l\'entrepôt'**
+  String get trackingBoatStepDeposited;
+
+  /// Frise de suivi d'un colis bateau : jalon du trajet à venir, le bateau n'est pas encore parti.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ du bateau'**
+  String get trackingBoatStepDeparture;
+
+  /// Frise de suivi d'un colis bateau : jalon du trajet fait, le bateau est parti.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bateau parti'**
+  String get trackingBoatStepDeparted;
+
+  /// Frise de suivi d'un colis bateau : étape en cours entre le départ et l'arrivée au port ; aussi phrase d'état sans ville d'arrivée.
+  ///
+  /// In fr, this message translates to:
+  /// **'En mer'**
+  String get trackingBoatStepAtSea;
+
+  /// Frise de suivi d'un colis bateau : jalon de l'arrivée au port (à venir ou fait), aussi phrase d'état une fois arrivé. Ville commençant par une consonne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé au port de {city}'**
+  String trackingBoatStepAtPort(String city);
+
+  /// Comme trackingBoatStepAtPort, pour une ville commençant par une voyelle (élision : « port d'Abidjan »).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé au port d\'{city}'**
+  String trackingBoatStepAtPortElided(String city);
+
+  /// Comme trackingBoatStepAtPort, quand la ville d'arrivée n'est pas connue (colis lu par QR).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé au port'**
+  String get trackingBoatStepAtPortNoCity;
+
+  /// Phrase d'état de la frise d'un colis bateau pas encore déposé (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente du dépôt à l\'entrepôt'**
+  String get trackingBoatHeadlineAwaitingDeposit;
+
+  /// Phrase d'état de la frise d'un colis bateau parti, pas encore arrivé au port (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En mer vers {city}'**
+  String trackingBoatHeadlineAtSeaTo(String city);
+
+  /// Sous le jalon « Départ du bateau » à venir : date de départ prévue du trajet (« 2 déc. »).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prévu le {date}'**
+  String trackingBoatPlannedDeparture(String date);
+
+  /// Sous le jalon « Arrivé au port » à venir : fourchette d'arrivée estimée (celle du dernier retard s'il existe).
+  ///
+  /// In fr, this message translates to:
+  /// **'Estimé du {from} au {to}'**
+  String trackingBoatEstimatedRange(String from, String to);
+
+  /// Sous le jalon « Arrivé au port » à venir : arrivée estimée à une seule date.
+  ///
+  /// In fr, this message translates to:
+  /// **'Estimé le {date}'**
+  String trackingBoatEstimatedDate(String date);
+
+  /// Sous l'étape « En mer » : dernier retard annoncé par le transporteur, son message ou à défaut son motif.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retard annoncé : {detail}'**
+  String trackingBoatDelayNote(String detail);
+
+  /// Billet (billet_route.dart) : libellé de l'arrivée quand le trajet annonce une fourchette (bateau), à la place de « Arrivée ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée'**
+  String get ticketEstimatedArrivalLabel;
+
+  /// Billet (billet_route.dart) : fourchette d'arrivée estimée (« 11 janv. au 18 janv. »).
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} au {to}'**
+  String ticketArrivalRangeValue(String from, String to);
+
+  /// Résumé d'état d'un colis bateau parti (sender_hero_card.dart, tuile Suivi) : fourchette d'arrivée estimée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée du {from} au {to} à {city}.'**
+  String bidDetailSenderInTransitBoatRange(String from, String to, String city);
+
+  /// Résumé d'état d'un colis bateau parti dont l'arrivée estimée tient sur une date.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée le {date} à {city}.'**
+  String bidDetailSenderInTransitBoatDate(String date, String city);
+
+  /// Carte Paiement de l'expéditeur (paiement_card.dart), colis payé au dépôt (payoutTrigger DEPOSIT) une fois déposé, avec la date du dépôt.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} versé au transporteur au dépôt du colis, le {date}'**
+  String bidDetailDepositPaidLabel(String amount, String date);
+
+  /// Comme bidDetailDepositPaidLabel quand la date du dépôt n'est pas encore lue.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} versé au transporteur au dépôt du colis'**
+  String bidDetailDepositPaidNoDateLabel(String amount);
+
+  /// Carte Paiement de l'expéditeur, colis payé au dépôt (payoutTrigger DEPOSIT) pas encore déposé.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} payé, versé au transporteur au dépôt du colis'**
+  String bidDetailDepositPendingLabel(String amount);
+
+  /// Carte du dernier retard du trajet dans la fiche colis de l'expéditeur (trip_reschedule_card.dart, TripDelayCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retard annoncé'**
+  String get bidDelayTitle;
+
+  /// Carte du retard : nouvelle fourchette d'arrivée estimée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle arrivée estimée : du {from} au {to}.'**
+  String bidDelayNewRange(String from, String to);
+
+  /// Carte du retard : nouvelle arrivée estimée à une seule date.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle arrivée estimée : le {date}.'**
+  String bidDelayNewDate(String date);
+
+  /// Carte du retard : motif annoncé par le transporteur (libellé de trip_delay_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif : {reason}'**
+  String bidDelayReason(String reason);
+
+  /// Motif de retard PORT_CONGESTION, bateau seulement (trip_delay_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Congestion au port'**
+  String get tripDelayReasonPortCongestion;
+
+  /// Motif de retard WEATHER, tous modes (trip_delay_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Météo'**
+  String get tripDelayReasonWeather;
+
+  /// Motif de retard EXTENDED_STOPOVER en bateau et en avion (trip_delay_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Escale prolongée'**
+  String get tripDelayReasonExtendedStopover;
+
+  /// Motif de retard EXTENDED_STOPOVER sur la route ou un mode inconnu : jamais « escale » hors bateau et avion (trip_delay_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrêt prolongé'**
+  String get tripDelayReasonExtendedStop;
+
+  /// Motif de retard TRANSPORT_DISRUPTION, neutre, tous modes (trip_delay_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Transport perturbé'**
+  String get tripDelayReasonTransportDisruption;
+
+  /// Carte de prix de la fiche d'un trajet bateau vendu au m³, vue expéditeur (traveler_announcement_bottom_sheet.dart), sous le prix frais inclus.
+  ///
+  /// In fr, this message translates to:
+  /// **'par m³'**
+  String get listingPricePerM3Label;
+
+  /// Erreur arrival-time-before-departure du back, titre (error_catalog.dart) : arrivée le même jour que le départ, à une heure qui ne le suit pas.
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure d\'arrivée avant le départ'**
+  String get errorArrivalTimeBeforeDepartureTitle;
+
+  /// Erreur arrival-time-before-departure du back, message de repli (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le même jour, l\'heure d\'arrivée doit suivre l\'heure de départ.'**
+  String get errorArrivalTimeBeforeDepartureMessage;
 }
 
 class _AppLocalizationsDelegate

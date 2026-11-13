@@ -1,3 +1,5 @@
+import 'package:dony/core/utils/trip_local_time.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
@@ -9,13 +11,33 @@ import 'package:dony/l10n/l10n.dart';
 /// requêtes, comparaisons) — seul l'affichage passe par cette fonction.
 /// Remplace les cinq tables `_etapeLabels`/`_eventTypes` locales des écrans
 /// de lecture. Un code inconnu est rendu tel quel.
-String trackingStepLabel(AppLocalizations l, String eventType) {
+///
+/// [mode] : mode du trajet quand il est connu. En bateau, `DEPART` est le
+/// dépôt du colis à l'entrepôt ; les autres modes gardent les libellés
+/// neutres.
+String trackingStepLabel(
+  AppLocalizations l,
+  String eventType, {
+  TransportMode? mode,
+}) {
   return switch (eventType) {
+    'DEPART' when mode == TransportMode.boat => l.trackingBoatStepDeposit,
     'DEPART' => l.trackingStepDeparture,
     'TRANSIT' => l.trackingStepTransit,
     'ARRIVEE' => l.trackingStepArrival,
     _ => eventType,
   };
+}
+
+/// Arrivée au port d'un trajet bateau : « Arrivé au port de Dakar », « Arrivé
+/// au port d'Abidjan » (élision devant une voyelle), « Arrivé au port » sans
+/// ville connue.
+String boatPortArrivalLabel(AppLocalizations l, String? city) {
+  final name = city?.trim() ?? '';
+  if (name.isEmpty) return l.trackingBoatStepAtPortNoCity;
+  return cityTakesElision(name)
+      ? l.trackingBoatStepAtPortElided(name)
+      : l.trackingBoatStepAtPort(name);
 }
 
 /// Icône (`DonyIcon`, teintable) de chaque étape de suivi, pour les écrans de

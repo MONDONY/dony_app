@@ -12576,5 +12576,238 @@
         "type": "String"
       }
     }
+  },
+  "trackingBoatStepDeposit": "Drop-off at the warehouse",
+  "@trackingBoatStepDeposit": {
+    "description": "Frise de suivi d'un colis bateau (tracking_timeline_bottom_sheet.dart) : étape en cours tant que le colis n'est pas déposé ; libellé court de l'étape DEPART en bateau (tracking_labels.dart)."
+  },
+  "trackingBoatStepDeposited": "Dropped off at the warehouse",
+  "@trackingBoatStepDeposited": {
+    "description": "Frise de suivi d'un colis bateau : étape DEPART faite (dépôt scanné à l'entrepôt), aussi phrase d'état avant le départ du bateau (tracking_timeline_bottom_sheet.dart, journey_timeline.dart)."
+  },
+  "trackingBoatStepDeparture": "Ship departure",
+  "@trackingBoatStepDeparture": {
+    "description": "Frise de suivi d'un colis bateau : jalon du trajet à venir, le bateau n'est pas encore parti."
+  },
+  "trackingBoatStepDeparted": "Ship departed",
+  "@trackingBoatStepDeparted": {
+    "description": "Frise de suivi d'un colis bateau : jalon du trajet fait, le bateau est parti."
+  },
+  "trackingBoatStepAtSea": "At sea",
+  "@trackingBoatStepAtSea": {
+    "description": "Frise de suivi d'un colis bateau : étape en cours entre le départ et l'arrivée au port ; aussi phrase d'état sans ville d'arrivée."
+  },
+  "trackingBoatStepAtPort": "Arrived at the port of {city}",
+  "@trackingBoatStepAtPort": {
+    "description": "Frise de suivi d'un colis bateau : jalon de l'arrivée au port (à venir ou fait), aussi phrase d'état une fois arrivé. Ville commençant par une consonne.",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatStepAtPortElided": "Arrived at the port of {city}",
+  "@trackingBoatStepAtPortElided": {
+    "description": "Comme trackingBoatStepAtPort, pour une ville commençant par une voyelle (élision : « port d'Abidjan »).",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatStepAtPortNoCity": "Arrived at port",
+  "@trackingBoatStepAtPortNoCity": {
+    "description": "Comme trackingBoatStepAtPort, quand la ville d'arrivée n'est pas connue (colis lu par QR)."
+  },
+  "trackingBoatHeadlineAwaitingDeposit": "Waiting to be dropped off at the warehouse",
+  "@trackingBoatHeadlineAwaitingDeposit": {
+    "description": "Phrase d'état de la frise d'un colis bateau pas encore déposé (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingBoatHeadlineAtSeaTo": "At sea, bound for {city}",
+  "@trackingBoatHeadlineAtSeaTo": {
+    "description": "Phrase d'état de la frise d'un colis bateau parti, pas encore arrivé au port (tracking_timeline_bottom_sheet.dart).",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatPlannedDeparture": "Scheduled for {date}",
+  "@trackingBoatPlannedDeparture": {
+    "description": "Sous le jalon « Départ du bateau » à venir : date de départ prévue du trajet (« 2 déc. »).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatEstimatedRange": "Estimated {from} to {to}",
+  "@trackingBoatEstimatedRange": {
+    "description": "Sous le jalon « Arrivé au port » à venir : fourchette d'arrivée estimée (celle du dernier retard s'il existe).",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatEstimatedDate": "Estimated {date}",
+  "@trackingBoatEstimatedDate": {
+    "description": "Sous le jalon « Arrivé au port » à venir : arrivée estimée à une seule date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatDelayNote": "Delay announced: {detail}",
+  "@trackingBoatDelayNote": {
+    "description": "Sous l'étape « En mer » : dernier retard annoncé par le transporteur, son message ou à défaut son motif.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketEstimatedArrivalLabel": "Estimated arrival",
+  "@ticketEstimatedArrivalLabel": {
+    "description": "Billet (billet_route.dart) : libellé de l'arrivée quand le trajet annonce une fourchette (bateau), à la place de « Arrivée »."
+  },
+  "ticketArrivalRangeValue": "{from} to {to}",
+  "@ticketArrivalRangeValue": {
+    "description": "Billet (billet_route.dart) : fourchette d'arrivée estimée (« 11 janv. au 18 janv. »).",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderInTransitBoatRange": "Estimated arrival {from} to {to} in {city}.",
+  "@bidDetailSenderInTransitBoatRange": {
+    "description": "Résumé d'état d'un colis bateau parti (sender_hero_card.dart, tuile Suivi) : fourchette d'arrivée estimée.",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderInTransitBoatDate": "Estimated arrival {date} in {city}.",
+  "@bidDetailSenderInTransitBoatDate": {
+    "description": "Résumé d'état d'un colis bateau parti dont l'arrivée estimée tient sur une date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailDepositPaidLabel": "{amount} paid to the carrier at parcel drop-off, on {date}",
+  "@bidDetailDepositPaidLabel": {
+    "description": "Carte Paiement de l'expéditeur (paiement_card.dart), colis payé au dépôt (payoutTrigger DEPOSIT) une fois déposé, avec la date du dépôt.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailDepositPaidNoDateLabel": "{amount} paid to the carrier at parcel drop-off",
+  "@bidDetailDepositPaidNoDateLabel": {
+    "description": "Comme bidDetailDepositPaidLabel quand la date du dépôt n'est pas encore lue.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailDepositPendingLabel": "{amount} paid, released to the carrier at parcel drop-off",
+  "@bidDetailDepositPendingLabel": {
+    "description": "Carte Paiement de l'expéditeur, colis payé au dépôt (payoutTrigger DEPOSIT) pas encore déposé.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDelayTitle": "Delay announced",
+  "@bidDelayTitle": {
+    "description": "Carte du dernier retard du trajet dans la fiche colis de l'expéditeur (trip_reschedule_card.dart, TripDelayCard)."
+  },
+  "bidDelayNewRange": "New estimated arrival: {from} to {to}.",
+  "@bidDelayNewRange": {
+    "description": "Carte du retard : nouvelle fourchette d'arrivée estimée.",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDelayNewDate": "New estimated arrival: {date}.",
+  "@bidDelayNewDate": {
+    "description": "Carte du retard : nouvelle arrivée estimée à une seule date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDelayReason": "Reason: {reason}",
+  "@bidDelayReason": {
+    "description": "Carte du retard : motif annoncé par le transporteur (libellé de trip_delay_labels.dart).",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "tripDelayReasonPortCongestion": "Port congestion",
+  "@tripDelayReasonPortCongestion": {
+    "description": "Motif de retard PORT_CONGESTION, bateau seulement (trip_delay_labels.dart)."
+  },
+  "tripDelayReasonWeather": "Weather",
+  "@tripDelayReasonWeather": {
+    "description": "Motif de retard WEATHER, tous modes (trip_delay_labels.dart)."
+  },
+  "tripDelayReasonExtendedStopover": "Extended stopover",
+  "@tripDelayReasonExtendedStopover": {
+    "description": "Motif de retard EXTENDED_STOPOVER en bateau et en avion (trip_delay_labels.dart)."
+  },
+  "tripDelayReasonExtendedStop": "Extended stop",
+  "@tripDelayReasonExtendedStop": {
+    "description": "Motif de retard EXTENDED_STOPOVER sur la route ou un mode inconnu : jamais « escale » hors bateau et avion (trip_delay_labels.dart)."
+  },
+  "tripDelayReasonTransportDisruption": "Transport disruption",
+  "@tripDelayReasonTransportDisruption": {
+    "description": "Motif de retard TRANSPORT_DISRUPTION, neutre, tous modes (trip_delay_labels.dart)."
+  },
+  "listingPricePerM3Label": "per m³",
+  "@listingPricePerM3Label": {
+    "description": "Carte de prix de la fiche d'un trajet bateau vendu au m³, vue expéditeur (traveler_announcement_bottom_sheet.dart), sous le prix frais inclus."
+  },
+  "errorArrivalTimeBeforeDepartureTitle": "Arrival time before departure",
+  "@errorArrivalTimeBeforeDepartureTitle": {
+    "description": "Erreur arrival-time-before-departure du back, titre (error_catalog.dart) : arrivée le même jour que le départ, à une heure qui ne le suit pas."
+  },
+  "errorArrivalTimeBeforeDepartureMessage": "On the same day, the arrival time must be after the departure time.",
+  "@errorArrivalTimeBeforeDepartureMessage": {
+    "description": "Erreur arrival-time-before-departure du back, message de repli (error_catalog.dart)."
   }
 }

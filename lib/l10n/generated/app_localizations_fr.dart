@@ -24900,4 +24900,142 @@ class AppLocalizationsFr extends AppLocalizations {
   String listingBoatVolumeRemaining(String volume) {
     return '$volume restants';
   }
+
+  @override
+  String get trackingBoatStepDeposit => 'Dépôt à l\'entrepôt';
+
+  @override
+  String get trackingBoatStepDeposited => 'Déposé à l\'entrepôt';
+
+  @override
+  String get trackingBoatStepDeparture => 'Départ du bateau';
+
+  @override
+  String get trackingBoatStepDeparted => 'Bateau parti';
+
+  @override
+  String get trackingBoatStepAtSea => 'En mer';
+
+  @override
+  String trackingBoatStepAtPort(String city) {
+    return 'Arrivé au port de $city';
+  }
+
+  @override
+  String trackingBoatStepAtPortElided(String city) {
+    return 'Arrivé au port d\'$city';
+  }
+
+  @override
+  String get trackingBoatStepAtPortNoCity => 'Arrivé au port';
+
+  @override
+  String get trackingBoatHeadlineAwaitingDeposit =>
+      'En attente du dépôt à l\'entrepôt';
+
+  @override
+  String trackingBoatHeadlineAtSeaTo(String city) {
+    return 'En mer vers $city';
+  }
+
+  @override
+  String trackingBoatPlannedDeparture(String date) {
+    return 'Prévu le $date';
+  }
+
+  @override
+  String trackingBoatEstimatedRange(String from, String to) {
+    return 'Estimé du $from au $to';
+  }
+
+  @override
+  String trackingBoatEstimatedDate(String date) {
+    return 'Estimé le $date';
+  }
+
+  @override
+  String trackingBoatDelayNote(String detail) {
+    return 'Retard annoncé : $detail';
+  }
+
+  @override
+  String get ticketEstimatedArrivalLabel => 'Arrivée estimée';
+
+  @override
+  String ticketArrivalRangeValue(String from, String to) {
+    return '$from au $to';
+  }
+
+  @override
+  String bidDetailSenderInTransitBoatRange(
+    String from,
+    String to,
+    String city,
+  ) {
+    return 'Arrivée estimée du $from au $to à $city.';
+  }
+
+  @override
+  String bidDetailSenderInTransitBoatDate(String date, String city) {
+    return 'Arrivée estimée le $date à $city.';
+  }
+
+  @override
+  String bidDetailDepositPaidLabel(String amount, String date) {
+    return '$amount versé au transporteur au dépôt du colis, le $date';
+  }
+
+  @override
+  String bidDetailDepositPaidNoDateLabel(String amount) {
+    return '$amount versé au transporteur au dépôt du colis';
+  }
+
+  @override
+  String bidDetailDepositPendingLabel(String amount) {
+    return '$amount payé, versé au transporteur au dépôt du colis';
+  }
+
+  @override
+  String get bidDelayTitle => 'Retard annoncé';
+
+  @override
+  String bidDelayNewRange(String from, String to) {
+    return 'Nouvelle arrivée estimée : du $from au $to.';
+  }
+
+  @override
+  String bidDelayNewDate(String date) {
+    return 'Nouvelle arrivée estimée : le $date.';
+  }
+
+  @override
+  String bidDelayReason(String reason) {
+    return 'Motif : $reason';
+  }
+
+  @override
+  String get tripDelayReasonPortCongestion => 'Congestion au port';
+
+  @override
+  String get tripDelayReasonWeather => 'Météo';
+
+  @override
+  String get tripDelayReasonExtendedStopover => 'Escale prolongée';
+
+  @override
+  String get tripDelayReasonExtendedStop => 'Arrêt prolongé';
+
+  @override
+  String get tripDelayReasonTransportDisruption => 'Transport perturbé';
+
+  @override
+  String get listingPricePerM3Label => 'par m³';
+
+  @override
+  String get errorArrivalTimeBeforeDepartureTitle =>
+      'Heure d\'arrivée avant le départ';
+
+  @override
+  String get errorArrivalTimeBeforeDepartureMessage =>
+      'Le même jour, l\'heure d\'arrivée doit suivre l\'heure de départ.';
 }
