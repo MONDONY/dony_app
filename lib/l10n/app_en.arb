@@ -12537,7 +12537,7 @@
       }
     }
   },
-  "homeFilterBoatArrivalHelp": "Based on the arrival estimated by the carrier.",
+  "homeFilterBoatArrivalHelp": "The carrier's whole estimated arrival range falls before this limit.",
   "@homeFilterBoatArrivalHelp": {
     "description": "Aide sous le filtre d'arrivée d'un trajet bateau (feuille et composeur)."
   },

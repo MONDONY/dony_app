@@ -39857,10 +39857,10 @@ abstract class AppLocalizations {
   /// **'Sous {weeks} semaines'**
   String homeFilterBoatArrivalOption(int weeks);
 
-  /// Aide sous le filtre d'arrivée d'un trajet bateau (feuille et composeur).
+  /// Aide sous le filtre d'arrivée d'un trajet bateau (feuille et composeur). Le back compare la FIN de la fourchette (arrival_date_max, sinon arrival_date) à la limite (AnnouncementSpecification.arrivalNotAfter) : un trajet « du 20 déc. au 10 janv. » n'entre pas dans « Sous 8 semaines » si le 10 janv. dépasse la limite.
   ///
   /// In fr, this message translates to:
-  /// **'Selon l\'arrivée estimée annoncée par le transporteur.'**
+  /// **'Toute la fourchette d\'arrivée annoncée par le transporteur tombe avant cette limite.'**
   String get homeFilterBoatArrivalHelp;
 
   /// Composeur de recherche de trajets, bateau seulement : section du volume minimal et du prix maximal au m³.

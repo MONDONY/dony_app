@@ -1275,7 +1275,10 @@ void main() {
         expect(find.text('Sous $weeks semaines'), findsOneWidget);
       }
       expect(
-        find.text('Selon l\'arrivée estimée annoncée par le transporteur.'),
+        find.text(
+          'Toute la fourchette d\'arrivée annoncée par le transporteur tombe '
+          'avant cette limite.',
+        ),
         findsOneWidget,
       );
       expect(find.byKey(const Key('composer-urgent')), findsNothing);

@@ -24240,9 +24240,9 @@
       }
     }
   },
-  "homeFilterBoatArrivalHelp": "Selon l'arrivée estimée annoncée par le transporteur.",
+  "homeFilterBoatArrivalHelp": "Toute la fourchette d'arrivée annoncée par le transporteur tombe avant cette limite.",
   "@homeFilterBoatArrivalHelp": {
-    "description": "Aide sous le filtre d'arrivée d'un trajet bateau (feuille et composeur)."
+    "description": "Aide sous le filtre d'arrivée d'un trajet bateau (feuille et composeur). Le back compare la FIN de la fourchette (arrival_date_max, sinon arrival_date) à la limite (AnnouncementSpecification.arrivalNotAfter) : un trajet « du 20 déc. au 10 janv. » n'entre pas dans « Sous 8 semaines » si le 10 janv. dépasse la limite."
   },
   "homeComposerSectionVolumePrice": "VOLUME ET PRIX",
   "@homeComposerSectionVolumePrice": {

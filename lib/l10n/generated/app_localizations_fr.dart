@@ -24915,7 +24915,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeFilterBoatArrivalHelp =>
-      'Selon l\'arrivée estimée annoncée par le transporteur.';
+      'Toute la fourchette d\'arrivée annoncée par le transporteur tombe avant cette limite.';
 
   @override
   String get homeComposerSectionVolumePrice => 'VOLUME ET PRIX';

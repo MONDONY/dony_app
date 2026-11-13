@@ -24736,7 +24736,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeFilterBoatArrivalHelp =>
-      'Based on the arrival estimated by the carrier.';
+      'The carrier\'s whole estimated arrival range falls before this limit.';
 
   @override
   String get homeComposerSectionVolumePrice => 'VOLUME AND PRICE';
