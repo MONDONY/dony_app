@@ -20711,6 +20711,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripSeriesErrorProLimit => 'Limite de trajets du mois atteinte.';
 
   @override
+  String get tripSeriesErrorGpProPending =>
+      'Votre demande GP Pro est en cours d\'examen. Vous pouvez créer des brouillons en attendant.';
+
+  @override
   String get tripSeriesErrorStripe =>
       'Configurez vos paiements par carte pour publier ces trajets, ou créez des brouillons.';
 

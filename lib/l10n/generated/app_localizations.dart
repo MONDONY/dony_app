@@ -33462,11 +33462,17 @@ abstract class AppLocalizations {
   /// **'Vérifiez votre identité pour publier ces trajets, ou créez des brouillons.'**
   String get tripSeriesErrorKyc;
 
-  /// Refus pro-limit-reached.
+  /// Refus monthly-limit-reached, traveler-status-required ou pro-limit-reached.
   ///
   /// In fr, this message translates to:
   /// **'Limite de trajets du mois atteinte.'**
   String get tripSeriesErrorProLimit;
+
+  /// Refus gp-pro-pending.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre demande GP Pro est en cours d\'examen. Vous pouvez créer des brouillons en attendant.'**
+  String get tripSeriesErrorGpProPending;
 
   /// Refus stripe-onboarding-incomplete.
   ///

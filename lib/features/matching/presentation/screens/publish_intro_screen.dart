@@ -8,6 +8,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/kyc/data/kyc_recheck.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_required_bottom_sheet.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
@@ -63,8 +64,13 @@ class PublishIntroScreen extends StatelessWidget {
       create: (ctx) {
         final verified =
             _currentUser(ctx.read<AuthBloc>().state)?.isKycVerified ?? false;
-        return getIt<PublishGateCubit>(param1: role.commitmentRole)
-          ..start(kycVerified: verified);
+        final authBloc = ctx.read<AuthBloc>();
+        return getIt<PublishGateCubit>(param1: role.commitmentRole)..start(
+          kycVerified: verified,
+          // Profil en cache non vérifié : on relit le serveur avant de
+          // bloquer (identité validée hors de l'app).
+          recheckKyc: () => recheckKycVerified(authBloc),
+        );
       },
       child: BlocConsumer<PublishGateCubit, PublishGateState>(
         listenWhen: (prev, next) =>
@@ -250,7 +256,7 @@ class PublishIntroScreen extends StatelessWidget {
                           _ConditionCallout(
                             verified: verified,
                             verifiedText: config.verifiedText,
-                            onVerify: () => _startKyc(context, user),
+                            onVerify: () => unawaited(_startKyc(context, user)),
                           ),
                           // Rappel voyageur : activer Stripe pour encaisser par carte —
                           // se masque tout seul si le compte est déjà opérationnel.
@@ -307,22 +313,34 @@ class PublishIntroScreen extends StatelessWidget {
             needsCheck: needsCheck,
             onContinue: () =>
                 unawaited(context.read<PublishGateCubit>().accept()),
-            onVerify: () => _startKyc(context, user),
+            onVerify: () => unawaited(_startKyc(context, user)),
           ),
         ],
       ),
     );
   }
 
-  void _startKyc(BuildContext context, UserModel? user) {
-    KycRequiredBottomSheet.show(
-      context,
-      kycStatus: user?.kycStatus ?? 'NOT_STARTED',
-      // Revenir ici une fois vérifié, pour enchaîner sur la publication.
-      returnTo: switch (role) {
-        PublishIntroRole.trip => '/trips/publish-intro',
-        PublishIntroRole.parcel => '/parcels/send-intro',
-      },
+  Future<void> _startKyc(BuildContext context, UserModel? user) async {
+    // Avant d'ouvrir la vérification, on s'assure côté serveur que l'identité
+    // n'a pas déjà été validée (cache périmé) : dans ce cas on relance
+    // l'aiguillage au lieu de bloquer.
+    final cubit = context.read<PublishGateCubit>();
+    final verified = await recheckKycVerified(context.read<AuthBloc>());
+    if (!context.mounted) return;
+    if (verified) {
+      unawaited(cubit.start(kycVerified: true));
+      return;
+    }
+    unawaited(
+      KycRequiredBottomSheet.show(
+        context,
+        kycStatus: user?.kycStatus ?? 'NOT_STARTED',
+        // Revenir ici une fois vérifié, pour enchaîner sur la publication.
+        returnTo: switch (role) {
+          PublishIntroRole.trip => '/trips/publish-intro',
+          PublishIntroRole.parcel => '/parcels/send-intro',
+        },
+      ),
     );
   }
 }

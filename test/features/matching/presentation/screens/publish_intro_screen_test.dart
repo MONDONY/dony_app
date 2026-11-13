@@ -9,6 +9,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
@@ -40,6 +41,8 @@ import '../../../publish_gate/publish_gate_fixtures.dart';
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
+
+class _MockAuthRepository extends Mock implements AuthRepository {}
 
 class _MockStripeAccountBloc
     extends MockBloc<StripeAccountEvent, StripeAccountState>
@@ -78,6 +81,7 @@ Future<void> _pump(
   Map<String, dynamic>? localDraft,
   List<Object> serverDrafts = const [],
   List<TripTemplate> tripTemplates = const [],
+  AuthRepository? authRepository,
 }) async {
   tester.view.physicalSize = const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
@@ -91,6 +95,9 @@ Future<void> _pump(
     getIt.registerLazySingleton<AnalyticsService>(() => analytics);
   }
   addTearDown(getIt.reset);
+  if (authRepository != null) {
+    getIt.registerSingleton<AuthRepository>(authRepository);
+  }
 
   _commitmentRepo = _MockCommitments();
   when(() => _commitmentRepo.fetch()).thenAnswer(
@@ -161,6 +168,7 @@ Future<void> _pump(
   visited = [];
   extras = [];
   final authBloc = _MockAuthBloc();
+  when(() => authBloc.isClosed).thenReturn(false);
   when(
     () => authBloc.state,
   ).thenReturn(AuthAuthenticated(_user(kycStatus: kycStatus)));
@@ -327,6 +335,121 @@ void main() {
         expect(find.text('Vérifier mon identité'), findsNothing);
       },
     );
+
+    group('profil en cache périmé (identité validée hors du flux Didit)', () {
+      testWidgets(
+        'cache non vérifié, serveur VERIFIED : pas de blocage, formulaire direct',
+        (tester) async {
+          final repo = _MockAuthRepository();
+          when(
+            () => repo.getProfile(),
+          ).thenAnswer((_) async => _user(kycStatus: 'VERIFIED'));
+          await _pump(
+            tester,
+            role: PublishIntroRole.trip,
+            kycStatus: 'NOT_STARTED',
+            commitmentRequired: false,
+            authRepository: repo,
+          );
+          await tester.pumpAndSettle();
+
+          verify(() => repo.getProfile()).called(1);
+          expect(visited, ['/trips/create']);
+          expect(
+            find.textContaining('identité doit être vérifiée'),
+            findsNothing,
+          );
+        },
+      );
+
+      testWidgets('cache non vérifié, serveur non vérifié : blocage conservé', (
+        tester,
+      ) async {
+        final repo = _MockAuthRepository();
+        when(
+          () => repo.getProfile(),
+        ).thenAnswer((_) async => _user(kycStatus: 'NOT_STARTED'));
+        await _pump(
+          tester,
+          role: PublishIntroRole.trip,
+          kycStatus: 'NOT_STARTED',
+          commitmentRequired: false,
+          authRepository: repo,
+        );
+        await tester.pumpAndSettle();
+
+        expect(visited, isEmpty);
+        expect(find.text('Vérifier mon identité'), findsOneWidget);
+        expect(
+          find.textContaining('identité doit être vérifiée'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('serveur injoignable : blocage conservé (comme avant)', (
+        tester,
+      ) async {
+        final repo = _MockAuthRepository();
+        when(() => repo.getProfile()).thenThrow(Exception('hors ligne'));
+        await _pump(
+          tester,
+          role: PublishIntroRole.trip,
+          kycStatus: 'NOT_STARTED',
+          authRepository: repo,
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Vérifier mon identité'), findsOneWidget);
+        expect(visited, isEmpty);
+      });
+
+      testWidgets(
+        'cache vérifié : aucune relecture du serveur (comportement nominal)',
+        (tester) async {
+          final repo = _MockAuthRepository();
+          await _pump(
+            tester,
+            role: PublishIntroRole.trip,
+            kycStatus: 'VERIFIED',
+            commitmentRequired: false,
+            authRepository: repo,
+          );
+          await tester.pumpAndSettle();
+
+          verifyNever(() => repo.getProfile());
+          expect(visited, ['/trips/create']);
+        },
+      );
+
+      testWidgets(
+        'tap sur « Vérifier » : le serveur dit VERIFIED, la feuille ne s\'ouvre pas',
+        (tester) async {
+          final repo = _MockAuthRepository();
+          // Premier appel (démarrage) : encore non vérifié ; second (tap) :
+          // l'admin a validé entre-temps.
+          var calls = 0;
+          when(() => repo.getProfile()).thenAnswer((_) async {
+            calls++;
+            return _user(kycStatus: calls == 1 ? 'NOT_STARTED' : 'VERIFIED');
+          });
+          await _pump(
+            tester,
+            role: PublishIntroRole.trip,
+            kycStatus: 'NOT_STARTED',
+            commitmentRequired: false,
+            authRepository: repo,
+          );
+          await tester.pumpAndSettle();
+          expect(visited, isEmpty);
+
+          await tester.tap(find.text('Vérifier mon identité'));
+          await tester.pumpAndSettle();
+
+          expect(calls, 2);
+          expect(visited, ['/trips/create']);
+        },
+      );
+    });
 
     testWidgets('non vérifié : bouton Vérifier + invite, pas de Continuer', (
       tester,
