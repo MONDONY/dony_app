@@ -12373,5 +12373,56 @@
   "requestCreateBoatDepositNotice": "By boat, expect several weeks. The carrier is paid as soon as your package is dropped off at the warehouse: payment doesn't wait for delivery.",
   "@requestCreateBoatDepositNotice": {
     "description": "Encadré de l'étape Prix d'une demande en bateau : délai et versement au dépôt (step_3_recap_budget.dart)"
+  },
+  "bidCreateVolumeRateLine": "{volume} × {rate} per m³",
+  "@bidCreateVolumeRateLine": {
+    "description": "Ligne de calcul du prix d'une réservation au m³ : volume du colis × prix au m³, déjà formatés (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "volume": {"type": "String"},
+      "rate": {"type": "String"}
+    }
+  },
+  "bidCreateVolumeAvailableLine": "Space left on this trip: {available}",
+  "@bidCreateVolumeAvailableLine": {
+    "description": "Volume encore disponible sur le trajet bateau, déjà formaté en m³ (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "available": {"type": "String"}
+    }
+  },
+  "bidCreateVolumeTooLarge": "This package is {volume} and only {available} is left on this trip.",
+  "@bidCreateVolumeTooLarge": {
+    "description": "Erreur locale : le volume du colis dépasse le volume restant du trajet, déjà formatés en m³ (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "volume": {"type": "String"},
+      "available": {"type": "String"}
+    }
+  },
+  "bidCreateVolumeDimensionsHint": "Enter all three package dimensions to calculate the price.",
+  "@bidCreateVolumeDimensionsHint": {
+    "description": "Aide du bouton d'envoi grisé : dimensions du colis manquantes sur un trajet au m³ (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeSubtitleDeposit": "Paid to the carrier when you drop off the package",
+  "@bidCreateCardModeSubtitleDeposit": {
+    "description": "Sous-titre du choix de paiement par carte, trajet bateau : le transporteur est payé au dépôt du colis (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeBodyDeposit": "Locked by Yadony right away, paid to the carrier once you drop off the package.",
+  "@bidCreateCardModeBodyDeposit": {
+    "description": "Explication du mode carte d'un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeNegotiationBodyDeposit": "Paid by card once your price is agreed, then paid to the carrier when you drop off the package.",
+  "@bidCreateCardModeNegotiationBodyDeposit": {
+    "description": "Explication du mode carte d'une proposition de prix sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateMobileMoneyModeBodyDeposit": "Once the carrier agrees, you'll get a payment request on your phone. The amount is paid to the carrier when you drop off the package.",
+  "@bidCreateMobileMoneyModeBodyDeposit": {
+    "description": "Explication du mode mobile money d'un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateOfferPaidSubtitleDeposit": "Your payment is secured by Yadony until you drop off your package, then paid to the carrier. The carrier has been notified of your request.",
+  "@bidCreateOfferPaidSubtitleDeposit": {
+    "description": "Écran de succès d'un paiement par carte sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateMobileMoneySuccessSubtitleDeposit": "Mobile money payment: if the carrier accepts, you'll get a notification and have 30 minutes to confirm the payment on your phone. The amount is kept safe by Yadony until the package is dropped off.",
+  "@bidCreateMobileMoneySuccessSubtitleDeposit": {
+    "description": "Écran de succès d'une offre mobile money sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
   }
 }

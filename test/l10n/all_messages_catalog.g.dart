@@ -8575,6 +8575,27 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('total'),
   ),
   'requestCreateBoatDepositNotice': (l) => l.requestCreateBoatDepositNotice,
+  'bidCreateVolumeRateLine': (l) => l.bidCreateVolumeRateLine(
+    placeholderMarker('volume'),
+    placeholderMarker('rate'),
+  ),
+  'bidCreateVolumeAvailableLine': (l) =>
+      l.bidCreateVolumeAvailableLine(placeholderMarker('available')),
+  'bidCreateVolumeTooLarge': (l) => l.bidCreateVolumeTooLarge(
+    placeholderMarker('volume'),
+    placeholderMarker('available'),
+  ),
+  'bidCreateVolumeDimensionsHint': (l) => l.bidCreateVolumeDimensionsHint,
+  'bidCreateCardModeSubtitleDeposit': (l) => l.bidCreateCardModeSubtitleDeposit,
+  'bidCreateCardModeBodyDeposit': (l) => l.bidCreateCardModeBodyDeposit,
+  'bidCreateCardModeNegotiationBodyDeposit': (l) =>
+      l.bidCreateCardModeNegotiationBodyDeposit,
+  'bidCreateMobileMoneyModeBodyDeposit': (l) =>
+      l.bidCreateMobileMoneyModeBodyDeposit,
+  'bidCreateOfferPaidSubtitleDeposit': (l) =>
+      l.bidCreateOfferPaidSubtitleDeposit,
+  'bidCreateMobileMoneySuccessSubtitleDeposit': (l) =>
+      l.bidCreateMobileMoneySuccessSubtitleDeposit,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -9288,4 +9309,7 @@ const textParameters = <String, List<String>>{
   'requestPreviewVolumeValue': ['volume'],
   'requestCreatePriceUnitPerM3': ['symbol'],
   'requestCreatePerM3Computed': ['volume', 'perM3', 'total'],
+  'bidCreateVolumeRateLine': ['volume', 'rate'],
+  'bidCreateVolumeAvailableLine': ['available'],
+  'bidCreateVolumeTooLarge': ['volume', 'available'],
 };

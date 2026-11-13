@@ -39634,6 +39634,66 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Par bateau, comptez plusieurs semaines. Le transporteur est payé dès le dépôt de votre colis à l\'entrepôt : le paiement n\'attend pas la livraison.'**
   String get requestCreateBoatDepositNotice;
+
+  /// Ligne de calcul du prix d'une réservation au m³ : volume du colis × prix au m³, déjà formatés (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{volume} × {rate} par m³'**
+  String bidCreateVolumeRateLine(String volume, String rate);
+
+  /// Volume encore disponible sur le trajet bateau, déjà formaté en m³ (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume restant sur ce trajet : {available}'**
+  String bidCreateVolumeAvailableLine(String available);
+
+  /// Erreur locale : le volume du colis dépasse le volume restant du trajet, déjà formatés en m³ (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis fait {volume} et il ne reste que {available} sur ce trajet.'**
+  String bidCreateVolumeTooLarge(String volume, String available);
+
+  /// Aide du bouton d'envoi grisé : dimensions du colis manquantes sur un trajet au m³ (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez les trois dimensions du colis pour calculer le prix.'**
+  String get bidCreateVolumeDimensionsHint;
+
+  /// Sous-titre du choix de paiement par carte, trajet bateau : le transporteur est payé au dépôt du colis (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Versé au transporteur au dépôt du colis'**
+  String get bidCreateCardModeSubtitleDeposit;
+
+  /// Explication du mode carte d'un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloqué par Yadony dès maintenant, versé au transporteur quand vous déposez le colis.'**
+  String get bidCreateCardModeBodyDeposit;
+
+  /// Explication du mode carte d'une proposition de prix sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé par carte une fois votre prix accepté, puis versé au transporteur au dépôt du colis.'**
+  String get bidCreateCardModeNegotiationBodyDeposit;
+
+  /// Explication du mode mobile money d'un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Après l\'accord du transporteur, vous recevez une demande de paiement sur votre téléphone. Le montant est versé au transporteur au dépôt du colis.'**
+  String get bidCreateMobileMoneyModeBodyDeposit;
+
+  /// Écran de succès d'un paiement par carte sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre paiement est sécurisé par Yadony jusqu\'au dépôt de votre colis, puis versé au transporteur. Le transporteur est notifié de votre demande.'**
+  String get bidCreateOfferPaidSubtitleDeposit;
+
+  /// Écran de succès d'une offre mobile money sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement mobile money : si le transporteur accepte, vous recevrez une notification et aurez 30 minutes pour valider le paiement sur votre téléphone. Le montant est gardé en sécurité par Yadony jusqu\'au dépôt du colis.'**
+  String get bidCreateMobileMoneySuccessSubtitleDeposit;
 }
 
 class _AppLocalizationsDelegate

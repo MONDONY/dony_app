@@ -24754,4 +24754,47 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get requestCreateBoatDepositNotice =>
       'Par bateau, comptez plusieurs semaines. Le transporteur est payé dès le dépôt de votre colis à l\'entrepôt : le paiement n\'attend pas la livraison.';
+
+  @override
+  String bidCreateVolumeRateLine(String volume, String rate) {
+    return '$volume × $rate par m³';
+  }
+
+  @override
+  String bidCreateVolumeAvailableLine(String available) {
+    return 'Volume restant sur ce trajet : $available';
+  }
+
+  @override
+  String bidCreateVolumeTooLarge(String volume, String available) {
+    return 'Ce colis fait $volume et il ne reste que $available sur ce trajet.';
+  }
+
+  @override
+  String get bidCreateVolumeDimensionsHint =>
+      'Indiquez les trois dimensions du colis pour calculer le prix.';
+
+  @override
+  String get bidCreateCardModeSubtitleDeposit =>
+      'Versé au transporteur au dépôt du colis';
+
+  @override
+  String get bidCreateCardModeBodyDeposit =>
+      'Bloqué par Yadony dès maintenant, versé au transporteur quand vous déposez le colis.';
+
+  @override
+  String get bidCreateCardModeNegotiationBodyDeposit =>
+      'Payé par carte une fois votre prix accepté, puis versé au transporteur au dépôt du colis.';
+
+  @override
+  String get bidCreateMobileMoneyModeBodyDeposit =>
+      'Après l\'accord du transporteur, vous recevez une demande de paiement sur votre téléphone. Le montant est versé au transporteur au dépôt du colis.';
+
+  @override
+  String get bidCreateOfferPaidSubtitleDeposit =>
+      'Votre paiement est sécurisé par Yadony jusqu\'au dépôt de votre colis, puis versé au transporteur. Le transporteur est notifié de votre demande.';
+
+  @override
+  String get bidCreateMobileMoneySuccessSubtitleDeposit =>
+      'Paiement mobile money : si le transporteur accepte, vous recevrez une notification et aurez 30 minutes pour valider le paiement sur votre téléphone. Le montant est gardé en sécurité par Yadony jusqu\'au dépôt du colis.';
 }

@@ -4,10 +4,29 @@ import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
+import 'package:dony/features/matching/data/models/bid_volume_input.dart';
 import 'package:dony/features/matching/data/models/commission_allocation_preview.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/traveler_bids_page.dart';
+
+/// Dimensions du colis d'une réservation au m³, telles qu'elles partent au
+/// serveur (devis, paiement par carte, offre).
+///
+/// CONTRAT BB2 : c'est le SEUL endroit qui dit comment le volume voyage. Le
+/// back du lot 3 (PR A) ne lit encore aucune dimension sur un devis, un
+/// checkout ou une offre : il refuse toute réservation d'un trajet au m³ en
+/// 422 `boat-volume-booking-unavailable` (`BoatVolumeBooking`). Les noms
+/// ci-dessous sont PROVISOIRES, alignés sur ceux de la demande d'envoi
+/// (`PackageRequestCreateRequest`) ; à confirmer ou renommer ici quand BB2
+/// fixera la requête. Jamais le volume : le serveur le recalcule.
+Map<String, dynamic> volumeRequestEntries(BidVolumeInput? volume) => {
+  if (volume != null) ...{
+    'lengthCm': volume.lengthCm,
+    'widthCm': volume.widthCm,
+    'heightCm': volume.heightCm,
+  },
+};
 
 class BidRemoteDatasource {
   final ApiClient _apiClient;
@@ -33,6 +52,7 @@ class BidRemoteDatasource {
     List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
     ItemSize? itemSize,
+    BidVolumeInput? volume,
   }) async {
     final body = <String, dynamic>{
       'announcementId': announcementId,
@@ -51,6 +71,7 @@ class BidRemoteDatasource {
       body['gridItems'] = gridItems;
     }
     body.addAll(itemSizeEntry('itemSize', FieldChange.ofNullable(itemSize)));
+    body.addAll(volumeRequestEntries(volume));
     final response = await _apiClient.dio.post('/bids/checkout', data: body);
     return BidCheckoutResponseModel.fromJson(
       response.data as Map<String, dynamic>,
@@ -64,6 +85,7 @@ class BidRemoteDatasource {
     double? weightKg,
     String? promoCode,
     List<Map<String, dynamic>>? gridItems,
+    BidVolumeInput? volume,
   }) async {
     final body = <String, dynamic>{'announcementId': announcementId};
     // Poids omis en mode GRID pur (le backend exige ≥ 0.1 kg s'il est présent).
@@ -74,6 +96,7 @@ class BidRemoteDatasource {
     if (gridItems != null && gridItems.isNotEmpty) {
       body['gridItems'] = gridItems;
     }
+    body.addAll(volumeRequestEntries(volume));
     final response = await _apiClient.dio.post('/bids/quote', data: body);
     return BidQuoteResponse.fromJson(response.data as Map<String, dynamic>);
   }
@@ -91,6 +114,7 @@ class BidRemoteDatasource {
     List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
     ItemSize? itemSize,
+    BidVolumeInput? volume,
   }) async {
     final body = <String, dynamic>{
       'description': description,
@@ -113,6 +137,7 @@ class BidRemoteDatasource {
       body['gridItems'] = gridItems;
     }
     body.addAll(itemSizeEntry('itemSize', FieldChange.ofNullable(itemSize)));
+    body.addAll(volumeRequestEntries(volume));
     final response = await _apiClient.dio.post(
       '/announcements/$announcementId/bids',
       data: body,

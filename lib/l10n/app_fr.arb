@@ -24025,5 +24025,56 @@
   "requestCreateBoatDepositNotice": "Par bateau, comptez plusieurs semaines. Le transporteur est payé dès le dépôt de votre colis à l'entrepôt : le paiement n'attend pas la livraison.",
   "@requestCreateBoatDepositNotice": {
     "description": "Encadré de l'étape Prix d'une demande en bateau : délai et versement au dépôt (step_3_recap_budget.dart)"
+  },
+  "bidCreateVolumeRateLine": "{volume} × {rate} par m³",
+  "@bidCreateVolumeRateLine": {
+    "description": "Ligne de calcul du prix d'une réservation au m³ : volume du colis × prix au m³, déjà formatés (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "volume": {"type": "String"},
+      "rate": {"type": "String"}
+    }
+  },
+  "bidCreateVolumeAvailableLine": "Volume restant sur ce trajet : {available}",
+  "@bidCreateVolumeAvailableLine": {
+    "description": "Volume encore disponible sur le trajet bateau, déjà formaté en m³ (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "available": {"type": "String"}
+    }
+  },
+  "bidCreateVolumeTooLarge": "Ce colis fait {volume} et il ne reste que {available} sur ce trajet.",
+  "@bidCreateVolumeTooLarge": {
+    "description": "Erreur locale : le volume du colis dépasse le volume restant du trajet, déjà formatés en m³ (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "volume": {"type": "String"},
+      "available": {"type": "String"}
+    }
+  },
+  "bidCreateVolumeDimensionsHint": "Indiquez les trois dimensions du colis pour calculer le prix.",
+  "@bidCreateVolumeDimensionsHint": {
+    "description": "Aide du bouton d'envoi grisé : dimensions du colis manquantes sur un trajet au m³ (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeSubtitleDeposit": "Versé au transporteur au dépôt du colis",
+  "@bidCreateCardModeSubtitleDeposit": {
+    "description": "Sous-titre du choix de paiement par carte, trajet bateau : le transporteur est payé au dépôt du colis (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeBodyDeposit": "Bloqué par Yadony dès maintenant, versé au transporteur quand vous déposez le colis.",
+  "@bidCreateCardModeBodyDeposit": {
+    "description": "Explication du mode carte d'un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeNegotiationBodyDeposit": "Payé par carte une fois votre prix accepté, puis versé au transporteur au dépôt du colis.",
+  "@bidCreateCardModeNegotiationBodyDeposit": {
+    "description": "Explication du mode carte d'une proposition de prix sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateMobileMoneyModeBodyDeposit": "Après l'accord du transporteur, vous recevez une demande de paiement sur votre téléphone. Le montant est versé au transporteur au dépôt du colis.",
+  "@bidCreateMobileMoneyModeBodyDeposit": {
+    "description": "Explication du mode mobile money d'un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateOfferPaidSubtitleDeposit": "Votre paiement est sécurisé par Yadony jusqu'au dépôt de votre colis, puis versé au transporteur. Le transporteur est notifié de votre demande.",
+  "@bidCreateOfferPaidSubtitleDeposit": {
+    "description": "Écran de succès d'un paiement par carte sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateMobileMoneySuccessSubtitleDeposit": "Paiement mobile money : si le transporteur accepte, vous recevrez une notification et aurez 30 minutes pour valider le paiement sur votre téléphone. Le montant est gardé en sécurité par Yadony jusqu'au dépôt du colis.",
+  "@bidCreateMobileMoneySuccessSubtitleDeposit": {
+    "description": "Écran de succès d'une offre mobile money sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
   }
 }

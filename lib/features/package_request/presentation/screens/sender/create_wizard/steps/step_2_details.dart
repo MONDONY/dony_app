@@ -22,10 +22,10 @@ import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/data/parcel_dimensions.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/package_request_photo_section.dart';
+import 'package:dony/features/package_request/presentation/widgets/parcel_dimension_field.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Étape 2 / 3 — Détails du colis.
@@ -583,7 +583,7 @@ class _DimensionsSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: _DimensionField(
+                  child: ParcelDimensionField(
                     fieldKey: const Key('request-dimension-length'),
                     label: l10n.requestCreateDimensionLength,
                     controller: lengthCtrl,
@@ -592,7 +592,7 @@ class _DimensionsSection extends StatelessWidget {
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
-                  child: _DimensionField(
+                  child: ParcelDimensionField(
                     fieldKey: const Key('request-dimension-width'),
                     label: l10n.requestCreateDimensionWidth,
                     controller: widthCtrl,
@@ -601,7 +601,7 @@ class _DimensionsSection extends StatelessWidget {
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
-                  child: _DimensionField(
+                  child: ParcelDimensionField(
                     fieldKey: const Key('request-dimension-height'),
                     label: l10n.requestCreateDimensionHeight,
                     controller: heightCtrl,
@@ -692,95 +692,6 @@ class _DimensionsExpander extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Une dimension en centimètres : entier de 1 à 400.
-class _DimensionField extends StatelessWidget {
-  const _DimensionField({
-    required this.fieldKey,
-    required this.label,
-    required this.controller,
-    required this.validator,
-  });
-
-  final Key fieldKey;
-  final String label;
-  final TextEditingController controller;
-  final String? Function(String?) validator;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: tt.bodySmall?.copyWith(
-            color: cs.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: DonySpacing.xs),
-        DonyReplayMask(
-          child: TextFormField(
-            key: fieldKey,
-            controller: controller,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(3),
-            ],
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            scrollPadding: kDonyKeyboardScrollPadding,
-            style: tt.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: cs.onSurface,
-            ),
-            validator: validator,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: cs.surface,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.md,
-                vertical: DonySpacing.md,
-              ),
-              suffixText: 'cm',
-              suffixStyle: tt.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: cs.onSurfaceVariant,
-              ),
-              errorMaxLines: 2,
-              errorStyle: tt.bodySmall?.copyWith(color: DonyColors.error),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: cs.outline),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: cs.primary, width: 2),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: const BorderSide(
-                  color: DonyColors.error,
-                  width: 1.5,
-                ),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: const BorderSide(color: DonyColors.error, width: 2),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

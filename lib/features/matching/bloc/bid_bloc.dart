@@ -92,6 +92,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         photoKeys: event.photoKeys,
         gridItems: event.gridItems,
         itemSize: event.itemSize,
+        volume: event.volume,
       );
       emit(BidCheckoutReady(response));
       // Offre carte créée en attente de paiement : sans cet événement, une
@@ -106,6 +107,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
             'weight_kg': event.weightKg,
             'currency': response.currency,
             'payment_method': 'card',
+            if (event.volume != null) 'price_unit': 'm3',
             if (event.itemSize case final size?) 'item_size': size.wire,
           },
         ),
@@ -138,6 +140,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         photoKeys: event.photoKeys,
         gridItems: event.gridItems,
         itemSize: event.itemSize,
+        volume: event.volume,
       );
       emit(BidCreated(bid));
       unawaited(
@@ -148,6 +151,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
             'weight_kg': bid.weightKg ?? 0.0,
             'price_per_kg': bid.pricePerKg ?? 0.0,
             'payment_method': event.paymentMethod.name,
+            if (event.volume != null) 'price_unit': 'm3',
             if (event.itemSize case final size?) 'item_size': size.wire,
           },
         ),
@@ -514,6 +518,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         weightKg: event.weightKg,
         promoCode: event.promoCode,
         gridItems: event.gridItems,
+        volume: event.volume,
       );
       emit(BidQuoteLoaded(quote));
     } on DioException catch (e) {
@@ -556,6 +561,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       weightKg: event.weightKg,
       promoCode: promoCode,
       gridItems: event.gridItems,
+      volume: event.volume,
     );
     try {
       emit(

@@ -24576,4 +24576,47 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get requestCreateBoatDepositNotice =>
       'By boat, expect several weeks. The carrier is paid as soon as your package is dropped off at the warehouse: payment doesn\'t wait for delivery.';
+
+  @override
+  String bidCreateVolumeRateLine(String volume, String rate) {
+    return '$volume × $rate per m³';
+  }
+
+  @override
+  String bidCreateVolumeAvailableLine(String available) {
+    return 'Space left on this trip: $available';
+  }
+
+  @override
+  String bidCreateVolumeTooLarge(String volume, String available) {
+    return 'This package is $volume and only $available is left on this trip.';
+  }
+
+  @override
+  String get bidCreateVolumeDimensionsHint =>
+      'Enter all three package dimensions to calculate the price.';
+
+  @override
+  String get bidCreateCardModeSubtitleDeposit =>
+      'Paid to the carrier when you drop off the package';
+
+  @override
+  String get bidCreateCardModeBodyDeposit =>
+      'Locked by Yadony right away, paid to the carrier once you drop off the package.';
+
+  @override
+  String get bidCreateCardModeNegotiationBodyDeposit =>
+      'Paid by card once your price is agreed, then paid to the carrier when you drop off the package.';
+
+  @override
+  String get bidCreateMobileMoneyModeBodyDeposit =>
+      'Once the carrier agrees, you\'ll get a payment request on your phone. The amount is paid to the carrier when you drop off the package.';
+
+  @override
+  String get bidCreateOfferPaidSubtitleDeposit =>
+      'Your payment is secured by Yadony until you drop off your package, then paid to the carrier. The carrier has been notified of your request.';
+
+  @override
+  String get bidCreateMobileMoneySuccessSubtitleDeposit =>
+      'Mobile money payment: if the carrier accepts, you\'ll get a notification and have 30 minutes to confirm the payment on your phone. The amount is kept safe by Yadony until the package is dropped off.';
 }

@@ -10,6 +10,7 @@ import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/utils/weight_input_format.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
@@ -32,13 +33,17 @@ import 'package:dony/features/matching/data/grid_item_declaration_matcher.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
+import 'package:dony/features/matching/data/models/bid_volume_input.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/payout_wording.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/bid_item_size_block.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid/bid_volume_section.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/photo_section.dart';
 import 'package:dony/features/matching/presentation/widgets/custom_items_section.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reimbursement_info_banner.dart';
+import 'package:dony/features/package_request/data/per_m3_pricing.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -114,6 +119,7 @@ class _CollectedFormData {
     this.promoCode,
     this.photoKeys,
     this.itemSize,
+    this.volume,
   });
   final double weightKg;
   final String description;
@@ -126,6 +132,9 @@ class _CollectedFormData {
 
   /// Taille du colis choisie, facultative.
   final ItemSize? itemSize;
+
+  /// Dimensions du colis, trajet au m³ seulement (le poids vaut alors 0).
+  final BidVolumeInput? volume;
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────
@@ -222,6 +231,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// Taille du colis, facultative : jamais requise pour envoyer. Proposée
   /// seulement sur un trajet qui porte une taille maximum.
   final _itemSizeNotifier = ValueNotifier<ItemSize?>(null);
+
+  /// Dimensions du colis en centimètres, trajet au m³ (bateau) seulement.
+  final _lengthCtrl = TextEditingController();
+  final _widthCtrl = TextEditingController();
+  final _heightCtrl = TextEditingController();
   final _categoriesNotifier = ValueNotifier<Set<String>>({});
   // Seedé synchrone avec le catalogue embarqué (fallbackCatalog) — jamais
   // vide au premier frame — puis remplacé par le catalogue live du
@@ -254,6 +268,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _recipientPhoneCtrl.text,
     _promoCtrl.text,
     _weightNotifier.value,
+    _lengthCtrl.text,
+    _widthCtrl.text,
+    _heightCtrl.text,
     _itemSizeNotifier.value,
     (_categoriesNotifier.value.toList()..sort()).join(','),
     _disclaimerNotifier.value,
@@ -316,6 +333,36 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// rien ne part.
   ItemSize? get _chosenItemSize =>
       widget.announcement.maxItemSize == null ? null : _itemSizeNotifier.value;
+
+  /// Trajet bateau vendu au m³ : le colis se mesure (L × l × h) au lieu de se
+  /// peser, et le prix suit le volume.
+  bool get _isPerM3 => widget.announcement.isPricedPerM3;
+
+  /// Dimensions saisies, `null` tant que les trois ne sont pas valides ou que
+  /// le trajet n'est pas vendu au m³.
+  BidVolumeInput? get _volumeInput => _isPerM3
+      ? BidVolumeInput.tryCreate(
+          int.tryParse(_lengthCtrl.text.trim()),
+          int.tryParse(_widthCtrl.text.trim()),
+          int.tryParse(_heightCtrl.text.trim()),
+        )
+      : null;
+
+  /// Le colis dépasse le volume restant du trajet (contrôle local, avant tout
+  /// appel au serveur).
+  bool get _volumeTooLarge => BidVolumeSection.exceeds(
+    _volumeInput?.volumeM3,
+    widget.announcement.availableVolumeM3,
+  );
+
+  /// Prix du colis au m³ : volume × prix au m³ affiché à l'expéditeur (frais
+  /// inclus), arrondi à l'unité mineure de la devise comme le serveur. Une
+  /// estimation : le total du serveur prime dès qu'il répond.
+  double? _localVolumeTotal() => PerM3Pricing.totalFor(
+    volumeM3: _volumeInput?.volumeM3,
+    perM3: widget.announcement.pricePerM3Display,
+    currency: SupportedCurrency.fromCodeOrDefault(widget.announcement.currency),
+  );
 
   /// Net voyageur. `null` seulement pour un lecteur anonyme (le backend
   /// masque le net) ; cet écran de création d'offre exige d'être connecté,
@@ -499,6 +546,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _gridQuantitiesNotifier.addListener(_invalidateQuote);
     _weightNotifier.addListener(_scheduleAutoQuote);
     _gridQuantitiesNotifier.addListener(_scheduleAutoQuote);
+    for (final c in _dimensionCtrls) {
+      c.addListener(_syncFormButtonState);
+      c.addListener(_invalidateQuote);
+      c.addListener(_scheduleAutoQuote);
+    }
     // Poids prérempli à l'ouverture : le devis serveur part aussi sans
     // attendre un premier changement, pour que les frais de service affichés
     // soient ceux qui seront prélevés.
@@ -514,6 +566,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _weightNotifier.addListener(_syncProposal);
       _gridQuantitiesNotifier.addListener(_syncProposal);
       _quoteNotifier.addListener(_syncProposal);
+      for (final c in _dimensionCtrls) {
+        c.addListener(_syncProposal);
+      }
       _syncProposal();
       // L'ouverture du mode est un début d'entonnoir : elle se mesure même si
       // aucune proposition n'est finalement envoyée.
@@ -557,6 +612,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         _initialSignature != null && _formSignature != _initialSignature;
   }
 
+  List<TextEditingController> get _dimensionCtrls => [
+    _lengthCtrl,
+    _widthCtrl,
+    _heightCtrl,
+  ];
+
   /// Tout ce que l'utilisateur peut saisir, pour brancher `_recomputeDirty`.
   List<Listenable> get _dirtySources => [
     _descCtrl,
@@ -564,6 +625,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _recipientPhoneCtrl,
     _promoCtrl,
     _weightNotifier,
+    _lengthCtrl,
+    _widthCtrl,
+    _heightCtrl,
     _categoriesNotifier,
     _disclaimerNotifier,
     _gridQuantitiesNotifier,
@@ -605,6 +669,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _weightNotifier.removeListener(_syncProposal);
       _gridQuantitiesNotifier.removeListener(_syncProposal);
       _quoteNotifier.removeListener(_syncProposal);
+      for (final c in _dimensionCtrls) {
+        c.removeListener(_syncProposal);
+      }
       _negotiationBloc?.close();
     }
     _customItemsNotifier.dispose();
@@ -632,6 +699,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _gridQuantitiesNotifier.removeListener(_invalidateQuote);
     _weightNotifier.removeListener(_scheduleAutoQuote);
     _gridQuantitiesNotifier.removeListener(_scheduleAutoQuote);
+    for (final c in _dimensionCtrls) {
+      c.removeListener(_syncFormButtonState);
+      c.removeListener(_invalidateQuote);
+      c.removeListener(_scheduleAutoQuote);
+      c.dispose();
+    }
     _autoQuoteTimer?.cancel();
     _stepNotifier.removeListener(_onStepChanged);
     _methodNotifier.removeListener(_syncPickerButtonState);
@@ -691,19 +764,36 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         hasKgPricing && hasGridPricing && weightOk && !categoriesOk;
     final suggestions = _gridSuggestions;
     final photoOk = _hasReadyPhoto;
-    final weightHint = missingWeight
-        ? context.l10n.bidCreateWeightRequiredHint
-        : missingContent
-        ? context.l10n.bidCreateContentRequiredHint
-        : suggestions.isNotEmpty
-        ? context.l10n.bidCreateGridSuggestionPendingHint(
-            suggestions.first.label,
-          )
-        : !photoOk
-        ? context.l10n.bidCreatePhotoRequiredHint
+    // Trajet au m³ : les trois dimensions remplacent le poids, et un colis
+    // trop grand est refusé ici, sans appel.
+    final volume = _volumeInput;
+    final volumeOk = _isPerM3 && volume != null && !_volumeTooLarge;
+    final volumeHint = _isPerM3 && !volumeOk && !gridOk
+        ? (volume == null
+              ? context.l10n.bidCreateVolumeDimensionsHint
+              : context.l10n.bidCreateVolumeTooLarge(
+                  formatParcelVolumeM3(context.l10n, volume.volumeM3),
+                  formatParcelVolumeM3(
+                    context.l10n,
+                    widget.announcement.availableVolumeM3 ?? 0,
+                  ),
+                ))
         : null;
+    final weightHint =
+        volumeHint ??
+        (missingWeight
+            ? context.l10n.bidCreateWeightRequiredHint
+            : missingContent
+            ? context.l10n.bidCreateContentRequiredHint
+            : suggestions.isNotEmpty
+            ? context.l10n.bidCreateGridSuggestionPendingHint(
+                suggestions.first.label,
+              )
+            : !photoOk
+            ? context.l10n.bidCreatePhotoRequiredHint
+            : null);
     final canSubmit =
-        (weightOk || gridOk) &&
+        (weightOk || gridOk || volumeOk) &&
         categoriesOk &&
         suggestions.isEmpty &&
         photoOk &&
@@ -833,6 +923,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   /// Total expéditeur calculé localement, sans attendre le devis serveur.
   double _localSenderTotal() {
+    if (_isPerM3) return _localVolumeTotal() ?? 0.0;
     if (commissionGridActive) return _localGridPrice().gross;
     final price = _pricePerKg;
     // Sans grille : taux unique historique sur le net au kilo.
@@ -980,6 +1071,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   double _computeStripeTotal() {
     final quote = _quoteNotifier.value;
     if (quote is BidQuoteResponse) return quote.totalEur;
+    if (_isPerM3) return _localVolumeTotal() ?? 0.0;
     final data = _formData;
     if (data == null) return 0.0;
     if (commissionGridActive) return _localGridPrice().gross;
@@ -1056,6 +1148,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         weightKg: weight > 0 ? weight : null,
         promoCode: code,
         gridItems: _selectedGridItems(),
+        volume: _volumeInput,
       ),
     );
   }
@@ -1074,7 +1167,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             .map((e) => '${e.key}:${e.value}')
             .toList()
           ..sort();
-    return '${_weightNotifier.value}|${grid.join(',')}';
+    return '${_weightNotifier.value}|${grid.join(',')}|'
+        '${_volumeInput?.props.join('x') ?? ''}';
   }
 
   /// Sous grille de commission seulement : le back applique au total le taux
@@ -1085,9 +1179,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// devis ne sert qu'au code promo).
   void _scheduleAutoQuote() {
     _autoQuoteTimer?.cancel();
-    if (!commissionGridActive ||
-        _stepNotifier.value != _FormStep.form ||
-        _netTotal() <= 0) {
+    if (_stepNotifier.value != _FormStep.form) return;
+    if (_isPerM3) {
+      // Le total du serveur remplace l'estimation locale dès qu'il répond ; un
+      // colis qui ne tient pas ou sans dimensions ne part pas.
+      if (_volumeInput == null || _volumeTooLarge) return;
+    } else if (!commissionGridActive || _netTotal() <= 0) {
       return;
     }
     _autoQuoteTimer = Timer(_autoQuoteDebounce, _requestAutoQuote);
@@ -1109,6 +1206,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             ? _appliedPromoCode
             : null,
         gridItems: _selectedGridItems(),
+        volume: _volumeInput,
         backgroundKey: _quoteInputsKey,
       ),
     );
@@ -1156,6 +1254,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       promoCode: promoCode,
       photoKeys: _photosCubit.readyKeys,
       itemSize: _chosenItemSize,
+      volume: _volumeInput,
     );
 
     if (!_hasAlternativePaymentMethods) {
@@ -1187,6 +1286,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           gridItems: data.gridItems,
           photoKeys: data.photoKeys,
           itemSize: data.itemSize,
+          volume: data.volume,
         ),
       );
     } else {
@@ -1201,6 +1301,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           gridItems: data.gridItems,
           photoKeys: data.photoKeys,
           itemSize: data.itemSize,
+          volume: data.volume,
         ),
       );
     }
@@ -1294,7 +1395,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final title = l.bidCreateOfferSentTitle;
     final subtitle = switch (bid.paymentMethod) {
       BidPaymentMethod.cash => l.bidCreateCashSuccessSubtitle,
-      BidPaymentMethod.mobileMoney => l.bidCreateMobileMoneySuccessSubtitle,
+      BidPaymentMethod.mobileMoney =>
+        paidAtDeposit(widget.announcement.transportMode)
+            ? l.bidCreateMobileMoneySuccessSubtitleDeposit
+            : l.bidCreateMobileMoneySuccessSubtitle,
       _ => l.bidCreateReviewPendingSubtitle,
     };
     final ctaLabel = l.bidCreateSeeMyShipmentButton;
@@ -1457,6 +1561,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         _categoriesNotifier,
         _disclaimerNotifier,
         _gridQuantitiesNotifier,
+        ..._dimensionCtrls,
       ]),
       builder: (context, _) {
         final weightKg = _weightNotifier.value;
@@ -1616,6 +1721,19 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 isKgFree: widget.announcement.isKgFree,
                 heavy: widget.announcement.transportMode?.isHeavy ?? false,
                 onChanged: (v) => _weightNotifier.value = v,
+              ).animate().fadeIn(duration: 250.ms),
+              const SizedBox(height: DonySpacing.xxl),
+            ],
+
+            // ── Dimensions (trajet au m³) ─────────────────────────────────
+            // Le colis se mesure au lieu de se peser : le prix suit le volume.
+            if (_isPerM3) ...[
+              BidVolumeSection(
+                lengthCtrl: _lengthCtrl,
+                widthCtrl: _widthCtrl,
+                heightCtrl: _heightCtrl,
+                volumeM3: _volumeInput?.volumeM3,
+                availableVolumeM3: widget.announcement.availableVolumeM3,
               ).animate().fadeIn(duration: 250.ms),
               const SizedBox(height: DonySpacing.xxl),
             ],
@@ -1937,6 +2055,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               valueListenable: _quoteNotifier,
               builder: (_, quoteVal, _) {
                 final quote = quoteVal is BidQuoteResponse ? quoteVal : null;
+                if (_isPerM3) return _buildVolumePriceBreakdown(quote);
                 if (commissionGridActive) {
                   return _buildGridPriceBreakdown(weightKg, quote);
                 }
@@ -2019,6 +2138,34 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           ],
         );
       },
+    );
+  }
+
+  /// Récapitulatif d'un trajet au m³ : une ligne « volume × prix au m³ » et le
+  /// total. Estimation locale (volume × prix affiché, arrondi comme le
+  /// serveur) tant que le devis n'a pas répondu ; le total du serveur la
+  /// remplace dès qu'il arrive.
+  Widget _buildVolumePriceBreakdown(BidQuoteResponse? quote) {
+    final volume = _volumeInput;
+    final perM3 = widget.announcement.pricePerM3Display;
+    final total = quote?.totalEur ?? _localVolumeTotal();
+    if (volume == null || perM3 == null || total == null || total <= 0) {
+      return const SizedBox.shrink();
+    }
+    if (_volumeTooLarge) return const SizedBox.shrink();
+    final currency = quote?.currency ?? widget.announcement.currency;
+    return _PriceBreakdown(
+      weightKg: 0,
+      pricePerKg: 0,
+      kgDisplay: 0,
+      gridDisplay: 0,
+      totalPrice: total,
+      currency: currency,
+      volumeLineLabel: context.l10n.bidCreateVolumeRateLine(
+        formatParcelVolumeM3(context.l10n, volume.volumeM3),
+        formatPriceIn(perM3, currency),
+      ),
+      volumeLineAmount: total,
     );
   }
 
@@ -2161,6 +2308,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     // En négociation, aucun montant : le prix peut encore changer avant
     // l'accord.
     final total = widget.negotiation ? null : _computeStripeTotal();
+    final deposit = paidAtDeposit(widget.announcement.transportMode);
 
     return Column(
       key: const ValueKey('picker'),
@@ -2194,6 +2342,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             total: total,
             currency: widget.announcement.currency,
             negotiation: widget.negotiation,
+            paidAtDeposit: deposit,
           ),
         ),
 
@@ -2255,7 +2404,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 builder: (routeContext) => DonySuccessScreen(
                   mascotteType: DonyMascotteType.securise,
                   title: l.bidCreateOfferPaidTitle,
-                  subtitle: l.bidCreateOfferPaidSubtitle,
+                  subtitle: paidAtDeposit(widget.announcement.transportMode)
+                      ? l.bidCreateOfferPaidSubtitleDeposit
+                      : l.bidCreateOfferPaidSubtitle,
                   ctaLabel: l.bidCreateSeeMyShipmentButton,
                   onCta: () =>
                       routeContext.go('/bids/${state.bidId}?from=payment'),
@@ -3000,6 +3151,7 @@ class _PaymentMethodSelector extends StatelessWidget {
     this.total,
     this.currency,
     this.negotiation = false,
+    this.paidAtDeposit = false,
   });
 
   final BidPaymentMethod selectedMethod;
@@ -3016,6 +3168,10 @@ class _PaymentMethodSelector extends StatelessWidget {
   /// Proposition de prix : la carte n'est débitée qu'une fois le prix accepté.
   final bool negotiation;
 
+  /// Trajet bateau : le transporteur est payé au dépôt du colis, pas à la
+  /// livraison.
+  final bool paidAtDeposit;
+
   @override
   Widget build(BuildContext context) {
     // Du plus immédiat au plus manuel : carte, mobile money, espèces. Les
@@ -3026,13 +3182,16 @@ class _PaymentMethodSelector extends StatelessWidget {
         DonyChoice(
           value: BidPaymentMethod.stripe,
           title: l.paymentMethodCard,
-          subtitle: l.bidCreateCardModeSubtitle,
+          subtitle: paidAtDeposit
+              ? l.bidCreateCardModeSubtitleDeposit
+              : l.bidCreateCardModeSubtitle,
           iconAsset: 'credit-card',
           key: const Key('payment-method-stripe'),
           expanded: (context) => _CardModeContent(
             total: total,
             currency: currency,
             negotiation: negotiation,
+            paidAtDeposit: paidAtDeposit,
           ),
         ),
       if (isMobileMoneyAvailable)
@@ -3042,8 +3201,11 @@ class _PaymentMethodSelector extends StatelessWidget {
           subtitle: l.bidCreateMobileMoneySubtitle,
           iconAsset: 'smartphone',
           key: const Key('payment-method-mobile-money'),
-          expanded: (context) =>
-              _MobileMoneyModeContent(total: total, currency: currency),
+          expanded: (context) => _MobileMoneyModeContent(
+            total: total,
+            currency: currency,
+            paidAtDeposit: paidAtDeposit,
+          ),
         ),
       if (isCashAvailable)
         DonyChoice(
@@ -3103,11 +3265,13 @@ class _CardModeContent extends StatelessWidget {
     required this.total,
     required this.currency,
     this.negotiation = false,
+    this.paidAtDeposit = false,
   });
 
   final double? total;
   final String? currency;
   final bool negotiation;
+  final bool paidAtDeposit;
 
   @override
   Widget build(BuildContext context) {
@@ -3126,8 +3290,12 @@ class _CardModeContent extends StatelessWidget {
         ],
         Text(
           negotiation
-              ? context.l10n.bidCreateCardModeNegotiationBody
-              : context.l10n.bidCreateCardModeBody,
+              ? (paidAtDeposit
+                    ? context.l10n.bidCreateCardModeNegotiationBodyDeposit
+                    : context.l10n.bidCreateCardModeNegotiationBody)
+              : (paidAtDeposit
+                    ? context.l10n.bidCreateCardModeBodyDeposit
+                    : context.l10n.bidCreateCardModeBody),
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),
@@ -3140,10 +3308,15 @@ class _CardModeContent extends StatelessWidget {
 }
 
 class _MobileMoneyModeContent extends StatelessWidget {
-  const _MobileMoneyModeContent({required this.total, required this.currency});
+  const _MobileMoneyModeContent({
+    required this.total,
+    required this.currency,
+    this.paidAtDeposit = false,
+  });
 
   final double? total;
   final String? currency;
+  final bool paidAtDeposit;
 
   @override
   Widget build(BuildContext context) {
@@ -3161,7 +3334,9 @@ class _MobileMoneyModeContent extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
         ],
         Text(
-          context.l10n.bidCreateMobileMoneyModeBody,
+          paidAtDeposit
+              ? context.l10n.bidCreateMobileMoneyModeBodyDeposit
+              : context.l10n.bidCreateMobileMoneyModeBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),
@@ -3389,9 +3564,16 @@ class _PriceBreakdown extends StatelessWidget {
     this.originalTotal,
     this.promoApplied = false,
     this.serviceFee,
+    this.volumeLineLabel,
+    this.volumeLineAmount,
   });
 
   final double weightKg;
+
+  /// Ligne « volume × prix au m³ » d'un trajet vendu au m³, à la place de la
+  /// ligne poids. Le prix au m³ affiché porte déjà les frais de service.
+  final String? volumeLineLabel;
+  final double? volumeLineAmount;
 
   /// Tarif au kilo de la ligne poids. Sans grille : payé par l'expéditeur,
   /// commission comprise. Sous grille ([serviceFee] non nul) : net du
@@ -3433,6 +3615,16 @@ class _PriceBreakdown extends StatelessWidget {
     final hasRealSavings = savings > 0.005;
 
     final lines = <Widget>[];
+    if (volumeLineLabel != null && volumeLineAmount != null) {
+      lines.add(
+        _line(
+          tt,
+          volumeLineLabel!,
+          fmt(volumeLineAmount!),
+          valueKey: const Key('bid-volume-line-amount'),
+        ),
+      );
+    }
     if (weightKg > 0 && kgDisplay > 0) {
       lines.add(
         _line(
