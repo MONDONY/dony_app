@@ -144,6 +144,41 @@ void main() {
     expectNoPlaneIcon(tester);
   });
 
+  testWidgets('colis bateau : étape courte du bateau, autre mode inchangé', (
+    tester,
+  ) async {
+    const boat = Reception(
+      bidId: 'b1',
+      linkStatus: 'CONFIRMED',
+      bidStatus: 'IN_TRANSIT',
+      departureCity: 'Marseille',
+      arrivalCity: 'Dakar',
+      transportMode: TransportMode.boat,
+    );
+    const toDrop = Reception(
+      bidId: 'b2',
+      linkStatus: 'CONFIRMED',
+      bidStatus: 'ACCEPTED',
+      departureCity: 'Marseille',
+      arrivalCity: 'Dakar',
+      transportMode: TransportMode.boat,
+    );
+    const road = Reception(
+      bidId: 'r1',
+      linkStatus: 'CONFIRMED',
+      bidStatus: 'IN_TRANSIT',
+      departureCity: 'Paris',
+      arrivalCity: 'Lyon',
+      transportMode: TransportMode.car,
+    );
+    await pump(tester, const ReceptionsLoaded([boat, toDrop, road]));
+
+    expect(find.text('En mer'), findsOneWidget);
+    expect(find.text('À déposer'), findsOneWidget);
+    expect(find.text('En route'), findsOneWidget);
+    expectNoPlaneIcon(tester);
+  });
+
   testWidgets('tap : ouvre le colis puis recharge la liste au retour', (
     tester,
   ) async {

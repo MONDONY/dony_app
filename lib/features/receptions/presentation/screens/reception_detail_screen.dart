@@ -4,6 +4,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/copy_code_button.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -15,6 +16,7 @@ import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/receptions/presentation/widgets/reception_leave_confirm_sheet.dart';
 import 'package:dony/features/tracking/data/models/trip_milestones.dart';
+import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -561,8 +563,21 @@ class _ConfirmedContent extends StatelessWidget {
   final Reception reception;
   final ReceptionQrOpener openQr;
 
+  bool get _isBoat => reception.transportMode == TransportMode.boat;
+
   String _stepHeadline(AppLocalizations l) {
     final city = reception.arrivalCity;
+    if (_isBoat) {
+      // Bateau : dépôt à l'entrepôt, en mer, arrivée au port (mêmes mots que
+      // la frise de l'expéditeur).
+      return switch (reception.bidStatus) {
+        'ACCEPTED' => l.trackingBoatHeadlineAwaitingDeposit,
+        'HANDED_OVER' => l.trackingBoatStepDeposited,
+        'IN_TRANSIT' => l.trackingBoatStepAtSea,
+        'ARRIVED' => boatPortArrivalLabel(l, city),
+        _ => l.receptionStepHeadline(reception.bidStatus),
+      };
+    }
     if (reception.bidStatus == 'ARRIVED' && city != null) {
       return l.receptionStepArrivedIn(city);
     }
@@ -662,7 +677,7 @@ class _ConfirmedContent extends StatelessWidget {
               ),
             ],
             const SizedBox(height: DonySpacing.lg),
-            _ReceptionSteps(done: done, accent: heroColor),
+            _ReceptionSteps(done: done, accent: heroColor, boat: _isBoat),
           ],
         ),
         // Colis livré : le destinataire note le voyageur (FLUTTER-CA), puis
@@ -717,7 +732,14 @@ class _ConfirmedContent extends StatelessWidget {
 /// barre seule ne disait pas ce qui était fait (Sentry FLUTTER-6E, « le colis
 /// a été donné mais l'étape n'est pas complète »).
 class _ReceptionSteps extends StatelessWidget {
-  const _ReceptionSteps({required this.done, required this.accent});
+  const _ReceptionSteps({
+    required this.done,
+    required this.accent,
+    this.boat = false,
+  });
+
+  /// Colis d'un trajet bateau : étapes dépôt, en mer, arrivée au port.
+  final bool boat;
 
   /// Étapes faites (0 à 4).
   final int done;
@@ -729,9 +751,9 @@ class _ReceptionSteps extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final labels = [
-      l.receptionTimelineHandedOver,
-      l.receptionTimelineInTransit,
-      l.receptionTimelineArrived,
+      boat ? l.trackingBoatStepDeposited : l.receptionTimelineHandedOver,
+      boat ? l.trackingBoatStepAtSea : l.receptionTimelineInTransit,
+      boat ? l.trackingBoatStepAtPortNoCity : l.receptionTimelineArrived,
       l.receptionTimelineDelivered,
     ];
     return Column(

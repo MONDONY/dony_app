@@ -1195,4 +1195,76 @@ void main() {
       expect(find.text('You rated the traveler'), findsOneWidget);
     });
   });
+
+  group('trajet bateau', () {
+    testWidgets('colis en attente de dépôt : texte du dépôt, jamais le '
+        'voyageur qui récupère, aucun avion', (tester) async {
+      stub(
+        ReceptionDetailLoaded(
+          _confirmed(bidStatus: 'ACCEPTED', transportMode: TransportMode.boat),
+        ),
+      );
+      await pump(tester);
+
+      expect(find.text("En attente du dépôt à l'entrepôt"), findsOneWidget);
+      expect(find.text('Le voyageur va récupérer le colis'), findsNothing);
+      expect(find.text("Déposé à l'entrepôt"), findsOneWidget);
+      expect(find.text('En mer'), findsOneWidget);
+      expect(find.text('Arrivé au port'), findsOneWidget);
+      expect(find.text('Arrivé à destination'), findsNothing);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('en mer : titre et étape courante', (tester) async {
+      stub(
+        ReceptionDetailLoaded(_confirmed(transportMode: TransportMode.boat)),
+      );
+      await pump(tester);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('reception-step')),
+          matching: find.text('En mer'),
+        ),
+        findsWidgets,
+      );
+    });
+
+    testWidgets('arrivé : « Arrivé au port de Dakar »', (tester) async {
+      stub(
+        ReceptionDetailLoaded(
+          _confirmed(bidStatus: 'ARRIVED', transportMode: TransportMode.boat),
+        ),
+      );
+      await pump(tester);
+
+      expect(find.text('Arrivé au port de Dakar'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('anglais : textes du bateau', (tester) async {
+      stub(
+        ReceptionDetailLoaded(
+          _confirmed(bidStatus: 'ACCEPTED', transportMode: TransportMode.boat),
+        ),
+      );
+      await pump(tester, locale: AppL10n.en);
+
+      expect(
+        find.text('Waiting to be dropped off at the warehouse'),
+        findsOneWidget,
+      );
+      expect(find.text('Dropped off at the warehouse'), findsOneWidget);
+    });
+
+    testWidgets('autre mode : textes d\'avant inchangés', (tester) async {
+      stub(
+        ReceptionDetailLoaded(
+          _confirmed(bidStatus: 'ACCEPTED', transportMode: TransportMode.car),
+        ),
+      );
+      await pump(tester);
+
+      expect(find.text('Le voyageur va récupérer le colis'), findsOneWidget);
+    });
+  });
 }

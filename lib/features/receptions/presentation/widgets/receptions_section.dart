@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
@@ -136,7 +137,9 @@ class _ReceptionRow extends StatelessWidget {
                   _PendingChip(label: l.receptionsPendingChip)
                 else
                   Text(
-                    l.receptionsRowStep(reception.bidStatus),
+                    reception.transportMode == TransportMode.boat
+                        ? l.receptionsRowStepBoat(reception.bidStatus)
+                        : l.receptionsRowStep(reception.bidStatus),
                     style: tt.labelLarge?.copyWith(
                       color: moving ? DonyColors.terra700 : cs.onSurfaceVariant,
                     ),
