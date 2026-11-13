@@ -45,17 +45,17 @@ void main() {
       );
     });
 
-    test('mode absent (ancienne donnée) : lu comme avion, « escale »', () {
+    test('mode absent (ancienne donnée) : libellé neutre, jamais l\'avion', () {
       expect(
         tripDelayReasonLabel(fr, TripDelayReason.extendedStopover, null),
-        'Escale prolongée',
+        'Arrêt prolongé',
       );
       expect(
         tripDelayReasonLabel(en, TripDelayReason.extendedStopover, null),
         tripDelayReasonLabel(
           en,
           TripDelayReason.extendedStopover,
-          TransportMode.plane,
+          TransportMode.other,
         ),
       );
     });
