@@ -45,6 +45,26 @@ abstract final class AnalyticsEvents {
   /// parcours du fournisseur.
   static const kycProviderWebviewScreen = '/kyc/verify/webview';
 
+  /// Première fin de chargement de la page du fournisseur. Propriétés
+  /// `provider`, `duration_ms` (ouverture de l'écran → page affichée).
+  static const kycWebviewPageLoaded = 'kyc_webview_page_loaded';
+
+  /// La page principale du fournisseur n'a pas pu se charger. Propriétés
+  /// `provider`, `error_code` (code de la plateforme), `description`
+  /// (message technique, tronqué), `duration_ms`.
+  static const kycWebviewError = 'kyc_webview_error';
+
+  /// Caméra refusée pendant le parcours. Propriétés `provider`, `source` :
+  /// `system` (permission système refusée) / `page` (la page signale un
+  /// `NotAllowedError`).
+  static const kycWebviewCameraBlocked = 'kyc_webview_camera_blocked';
+
+  /// L'utilisateur quitte la webview sans l'avoir terminée (croix ou retour
+  /// Android). Propriétés `provider`, `via` (`button`/`system_back`),
+  /// `duration_ms`, `page_loaded`, `camera_blocked`. C'est la seule trace d'un
+  /// abandon : `kyc_failed` ne part que si la création de session échoue.
+  static const kycWebviewClosed = 'kyc_webview_closed';
+
   // Announcements
   /// Trajet créé. Propriétés : `corridor`, `available_kg`, `price_per_kg`,
   /// `is_draft`, `from_ai`, `currency`, `transport_mode`, `negotiable`,
