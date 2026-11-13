@@ -18397,6 +18397,12 @@ abstract class AppLocalizations {
   /// **'file'**
   String get scanOfflineEventDefaultLabel;
 
+  /// Phrase de la ligne d'un dépôt à l'entrepôt (colis bateau) en attente dans la file hors ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépôt enregistré'**
+  String get scanOfflineDescDeposit;
+
   /// Description de l'étape DEPART dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///
   /// In fr, this message translates to:
@@ -26323,6 +26329,12 @@ abstract class AppLocalizations {
   /// **'Seuls l\'expéditeur et le voyageur peuvent le suivre ici. Demandez le lien de suivi à l\'expéditeur.'**
   String get trackingNotLinkedBody;
 
+  /// Titre du bandeau d'une validation rapide annulable quand l'étape est le dépôt à l'entrepôt d'un colis bateau (suivi_validation_toast.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépôt de {parcel} validé'**
+  String suiviDepositValidatedToast(String parcel);
+
   /// Titre du bandeau d'une validation rapide annulable (suivi_validation_toast.dart).
   ///
   /// In fr, this message translates to:
@@ -27336,6 +27348,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'À confirmer'**
   String get receptionsPendingChip;
+
+  /// Étape courte d'un colis confirmé d'un trajet bateau, ligne « Colis à recevoir » (receptions_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{status, select, ACCEPTED{À déposer} HANDED_OVER{Déposé} IN_TRANSIT{En mer} ARRIVED{Arrivé au port} COMPLETED{Remis} other{En cours}}'**
+  String receptionsRowStepBoat(String status);
 
   /// Étape courte d'un colis confirmé, ligne « Colis à recevoir » (receptions_section.dart).
   ///
@@ -30024,12 +30042,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'2 escales et +'**
   String get tripStopsBadgeTwoOrMore;
-
-  /// Détail de trajet : intitulé de la ligne escales (FLUTTER-GE)
-  ///
-  /// In fr, this message translates to:
-  /// **'Escales'**
-  String get tripStopsDetailLabel;
 
   /// Filtres de recherche de trajets : section escales (FLUTTER-GD)
   ///
@@ -34770,10 +34782,10 @@ abstract class AppLocalizations {
   /// **'Le mobile money n\'est proposé qu\'en franc CFA : je ne l\'ai pas coché.'**
   String get aiFormDraftWarningMobileMoney;
 
-  /// Avertissement : un mode de transport pas proposé à la publication a été dit, le trajet repasse en avion.
+  /// Avertissement : un mode de transport que l'assistant ne remplit pas a été dit, il est retiré du brouillon et se choisit dans le formulaire.
   ///
   /// In fr, this message translates to:
-  /// **'Ce mode n\'est pas encore proposé : le trajet sera publié en avion.'**
+  /// **'L\'assistant ne peut pas choisir ce mode : vérifiez le mode de transport avant de publier.'**
   String get aiFormDraftWarningModeUnavailable;
 
   /// Avertissement : budget hors des bornes du formulaire.
@@ -39610,6 +39622,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Indiquez d\'abord les dimensions du colis pour fixer un prix au m³.'**
   String get requestCreatePriceBasisPerM3NeedsDimensions;
+
+  /// Exemple dans le champ du prix au m³ d'une demande bateau (étape 3 du formulaire d'une demande d'envoi).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. 600,00'**
+  String get requestCreatePerM3InputHint;
 
   /// Unité du champ prix en mode au m³ (step_3_recap_budget.dart)
   ///

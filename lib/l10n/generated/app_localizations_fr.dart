@@ -11170,6 +11170,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get scanOfflineEventDefaultLabel => 'file';
 
   @override
+  String get scanOfflineDescDeposit => 'Dépôt enregistré';
+
+  @override
   String get scanOfflineDescPickup => 'Récupération enregistrée';
 
   @override
@@ -16005,6 +16008,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Seuls l\'expéditeur et le voyageur peuvent le suivre ici. Demandez le lien de suivi à l\'expéditeur.';
 
   @override
+  String suiviDepositValidatedToast(String parcel) {
+    return 'Dépôt de $parcel validé';
+  }
+
+  @override
   String suiviStepValidatedToast(String step, String parcel) {
     String _temp0 = intl.Intl.selectLogic(step, {
       'DEPART': '$parcel récupéré',
@@ -16682,6 +16690,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get receptionsPendingChip => 'À confirmer';
+
+  @override
+  String receptionsRowStepBoat(String status) {
+    String _temp0 = intl.Intl.selectLogic(status, {
+      'ACCEPTED': 'À déposer',
+      'HANDED_OVER': 'Déposé',
+      'IN_TRANSIT': 'En mer',
+      'ARRIVED': 'Arrivé au port',
+      'COMPLETED': 'Remis',
+      'other': 'En cours',
+    });
+    return '$_temp0';
+  }
 
   @override
   String receptionsRowStep(String status) {
@@ -18348,9 +18369,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripStopsBadgeTwoOrMore => '2 escales et +';
-
-  @override
-  String get tripStopsDetailLabel => 'Escales';
 
   @override
   String get homeComposerSectionStops => 'ESCALES';
@@ -21507,7 +21525,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiFormDraftWarningModeUnavailable =>
-      'Ce mode n\'est pas encore proposé : le trajet sera publié en avion.';
+      'L\'assistant ne peut pas choisir ce mode : vérifiez le mode de transport avant de publier.';
 
   @override
   String get aiFormDraftWarningBudget =>
@@ -24736,6 +24754,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get requestCreatePriceBasisPerM3NeedsDimensions =>
       'Indiquez d\'abord les dimensions du colis pour fixer un prix au m³.';
+
+  @override
+  String get requestCreatePerM3InputHint => 'Ex. 600,00';
 
   @override
   String requestCreatePriceUnitPerM3(String symbol) {

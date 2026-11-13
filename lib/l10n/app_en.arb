@@ -6369,6 +6369,7 @@
   "@scanOfflineEventDefaultLabel": {
     "description": "Libellé court de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
   },
+  "scanOfflineDescDeposit": "Drop-off recorded",
   "scanOfflineDescPickup": "Collection recorded",
   "@scanOfflineDescPickup": {
     "description": "Description de l'étape DEPART dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
@@ -8609,6 +8610,7 @@
   "@trackingNotLinkedBody": {
     "description": "Explication du refus 403, sans « Réessayer » (parcel_not_linked_notice.dart)."
   },
+  "suiviDepositValidatedToast": "{parcel}: drop-off validated",
   "suiviStepValidatedToast": "{step, select, DEPART{{parcel}: collection validated} other{{parcel}: transit validated}}",
   "@suiviStepValidatedToast": {
     "description": "Titre du bandeau d'une validation rapide annulable (suivi_validation_toast.dart).",
@@ -9214,6 +9216,7 @@
   "receptionsSectionTitle": "Parcels coming to you",
   "receptionsRowFrom": "From {name}",
   "receptionsPendingChip": "To confirm",
+  "receptionsRowStepBoat": "{status, select, ACCEPTED{To drop off} HANDED_OVER{Dropped off} IN_TRANSIT{At sea} ARRIVED{At port} COMPLETED{Delivered} other{In progress}}",
   "receptionsRowStep": "{status, select, ACCEPTED{Pickup soon} HANDED_OVER{On the way} IN_TRANSIT{On the way} ARRIVED{Arrived} COMPLETED{Delivered} other{In progress}}",
   "receptionDetailTitle": "Incoming parcel",
   "receptionPendingHeadline": "{name} is sending you a parcel",
@@ -9788,7 +9791,6 @@
   "tripStopsBadgeDirect": "Direct flight",
   "tripStopsBadgeOne": "1 stop",
   "tripStopsBadgeTwoOrMore": "2+ stops",
-  "tripStopsDetailLabel": "Stops",
   "homeComposerSectionStops": "STOPS",
   "homeComposerStopsDirectOnly": "Direct only",
   "homeComposerStopsMaxOne": "Max 1 stop",
@@ -10918,7 +10920,7 @@
   "aiFormDraftWarningCardNotConfigured": "To get paid by card, finish setting up your payments. I will remind you at the Price step.",
   "aiFormDraftWarningCardCurrency": "Card is not available in this currency: choose another payment method.",
   "aiFormDraftWarningMobileMoney": "Mobile money is only available in CFA francs: I did not select it.",
-  "aiFormDraftWarningModeUnavailable": "This mode isn't available yet: the trip will be published as a flight.",
+  "aiFormDraftWarningModeUnavailable": "The assistant can't set this mode: check the transport mode before publishing.",
   "aiFormDraftWarningBudget": "This budget is outside the accepted amounts: enter it in step 3.",
   "aiFormDraftFilledBanner": "Filled in by AI. Check each field before publishing.",
   "aiFormDraftTalkAgain": "Talk again",
@@ -12354,6 +12356,7 @@
   "@requestCreatePriceBasisPerM3NeedsDimensions": {
     "description": "Explication quand le prix au m³ est grisé faute de dimensions (step_3_recap_budget.dart)"
   },
+  "requestCreatePerM3InputHint": "E.g. 600.00",
   "requestCreatePriceUnitPerM3": "{symbol} / m³",
   "@requestCreatePriceUnitPerM3": {
     "description": "Unité du champ prix en mode au m³ (step_3_recap_budget.dart)",

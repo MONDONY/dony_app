@@ -4016,6 +4016,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'scanTorchUnavailableTooltip': (l) => l.scanTorchUnavailableTooltip,
   'scanQrPickerHint': (l) => l.scanQrPickerHint,
   'scanOfflineEventDefaultLabel': (l) => l.scanOfflineEventDefaultLabel,
+  'scanOfflineDescDeposit': (l) => l.scanOfflineDescDeposit,
   'scanOfflineDescPickup': (l) => l.scanOfflineDescPickup,
   'scanOfflineDescTransit': (l) => l.scanOfflineDescTransit,
   'scanOfflineDescDefault': (l) => l.scanOfflineDescDefault,
@@ -5610,6 +5611,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'suiviNumberNotFound': (l) => l.suiviNumberNotFound,
   'trackingNotLinkedTitle': (l) => l.trackingNotLinkedTitle,
   'trackingNotLinkedBody': (l) => l.trackingNotLinkedBody,
+  'suiviDepositValidatedToast': (l) =>
+      l.suiviDepositValidatedToast(placeholderMarker('parcel')),
   'suiviStepValidatedToast': (l) => l.suiviStepValidatedToast(
     placeholderMarker('step'),
     placeholderMarker('parcel'),
@@ -5867,6 +5870,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'receptionsSectionTitle': (l) => l.receptionsSectionTitle,
   'receptionsRowFrom': (l) => l.receptionsRowFrom(placeholderMarker('name')),
   'receptionsPendingChip': (l) => l.receptionsPendingChip,
+  'receptionsRowStepBoat': (l) =>
+      l.receptionsRowStepBoat(placeholderMarker('status')),
   'receptionsRowStep': (l) => l.receptionsRowStep(placeholderMarker('status')),
   'receptionDetailTitle': (l) => l.receptionDetailTitle,
   'receptionPendingHeadline': (l) =>
@@ -6433,7 +6438,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripStopsBadgeDirect': (l) => l.tripStopsBadgeDirect,
   'tripStopsBadgeOne': (l) => l.tripStopsBadgeOne,
   'tripStopsBadgeTwoOrMore': (l) => l.tripStopsBadgeTwoOrMore,
-  'tripStopsDetailLabel': (l) => l.tripStopsDetailLabel,
   'homeComposerSectionStops': (l) => l.homeComposerSectionStops,
   'homeComposerStopsDirectOnly': (l) => l.homeComposerStopsDirectOnly,
   'homeComposerStopsMaxOne': (l) => l.homeComposerStopsMaxOne,
@@ -8564,6 +8568,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'requestCreatePriceBasisPerM3': (l) => l.requestCreatePriceBasisPerM3,
   'requestCreatePriceBasisPerM3NeedsDimensions': (l) =>
       l.requestCreatePriceBasisPerM3NeedsDimensions,
+  'requestCreatePerM3InputHint': (l) => l.requestCreatePerM3InputHint,
   'requestCreatePriceUnitPerM3': (l) =>
       l.requestCreatePriceUnitPerM3(placeholderMarker('symbol')),
   'requestCreatePerM3Computed': (l) => l.requestCreatePerM3Computed(
@@ -9157,6 +9162,7 @@ const textParameters = <String, List<String>>{
   'suiviPhotoAndValidate': ['step'],
   'negotiationLinkedTripParcelWeight': ['weight'],
   'suiviParcelOf': ['parcel'],
+  'suiviDepositValidatedToast': ['parcel'],
   'suiviStepValidatedToast': ['step', 'parcel'],
   'suiviToastSendingIn': ['photo'],
   'suiviStepAlreadyPending': ['parcel'],
@@ -9184,6 +9190,7 @@ const textParameters = <String, List<String>>{
   'bidRescheduleTravelerHint': ['deadline'],
   'receptionsPromptFromSender': ['name'],
   'receptionsRowFrom': ['name'],
+  'receptionsRowStepBoat': ['status'],
   'receptionsRowStep': ['status'],
   'receptionPendingHeadline': ['name'],
   'receptionDepartureOn': ['date'],

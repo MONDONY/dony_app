@@ -11971,6 +11971,8 @@
   "@scanOfflineEventDefaultLabel": {
     "description": "Libellé court de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
   },
+  "scanOfflineDescDeposit": "Dépôt enregistré",
+  "@scanOfflineDescDeposit": {"description": "Phrase de la ligne d'un dépôt à l'entrepôt (colis bateau) en attente dans la file hors ligne (offline_scan_queue_screen.dart)."},
   "scanOfflineDescPickup": "Récupération enregistrée",
   "@scanOfflineDescPickup": {
     "description": "Description de l'étape DEPART dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
@@ -17926,6 +17928,15 @@
   "@trackingNotLinkedBody": {
     "description": "Explication du refus 403, sans « Réessayer » (parcel_not_linked_notice.dart)."
   },
+  "suiviDepositValidatedToast": "Dépôt de {parcel} validé",
+  "@suiviDepositValidatedToast": {
+    "description": "Titre du bandeau d'une validation rapide annulable quand l'étape est le dépôt à l'entrepôt d'un colis bateau (suivi_validation_toast.dart).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
   "suiviStepValidatedToast": "{step, select, DEPART{{parcel} récupéré} other{Transit de {parcel} validé}}",
   "@suiviStepValidatedToast": {
     "description": "Titre du bandeau d'une validation rapide annulable (suivi_validation_toast.dart).",
@@ -18781,6 +18792,15 @@
   "receptionsPendingChip": "À confirmer",
   "@receptionsPendingChip": {
     "description": "Puce d'un colis à recevoir que l'utilisateur n'a pas encore confirmé (receptions_section.dart)."
+  },
+  "receptionsRowStepBoat": "{status, select, ACCEPTED{À déposer} HANDED_OVER{Déposé} IN_TRANSIT{En mer} ARRIVED{Arrivé au port} COMPLETED{Remis} other{En cours}}",
+  "@receptionsRowStepBoat": {
+    "description": "Étape courte d'un colis confirmé d'un trajet bateau, ligne « Colis à recevoir » (receptions_section.dart).",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
   },
   "receptionsRowStep": "{status, select, ACCEPTED{Bientôt récupéré} HANDED_OVER{En route} IN_TRANSIT{En route} ARRIVED{Arrivé} COMPLETED{Remis} other{En cours}}",
   "@receptionsRowStep": {
@@ -20421,8 +20441,6 @@
   "@tripStopsBadgeOne": {"description": "Badge de carte et détail de trajet : une escale (FLUTTER-GE)"},
   "tripStopsBadgeTwoOrMore": "2 escales et +",
   "@tripStopsBadgeTwoOrMore": {"description": "Badge de carte et détail de trajet : deux escales ou plus (FLUTTER-GE)"},
-  "tripStopsDetailLabel": "Escales",
-  "@tripStopsDetailLabel": {"description": "Détail de trajet : intitulé de la ligne escales (FLUTTER-GE)"},
   "homeComposerSectionStops": "ESCALES",
   "@homeComposerSectionStops": {"description": "Filtres de recherche de trajets : section escales (FLUTTER-GD)"},
   "homeComposerStopsDirectOnly": "Direct uniquement",
@@ -22148,8 +22166,8 @@
   "@aiFormDraftWarningCardCurrency": {"description": "Avertissement : carte demandée dans une devise sans carte (franc CFA)."},
   "aiFormDraftWarningMobileMoney": "Le mobile money n'est proposé qu'en franc CFA : je ne l'ai pas coché.",
   "@aiFormDraftWarningMobileMoney": {"description": "Avertissement : mobile money demandé hors zone CFA."},
-  "aiFormDraftWarningModeUnavailable": "Ce mode n'est pas encore proposé : le trajet sera publié en avion.",
-  "@aiFormDraftWarningModeUnavailable": {"description": "Avertissement : un mode de transport pas proposé à la publication a été dit, le trajet repasse en avion."},
+  "aiFormDraftWarningModeUnavailable": "L'assistant ne peut pas choisir ce mode : vérifiez le mode de transport avant de publier.",
+  "@aiFormDraftWarningModeUnavailable": {"description": "Avertissement : un mode de transport que l'assistant ne remplit pas a été dit, il est retiré du brouillon et se choisit dans le formulaire."},
   "aiFormDraftWarningBudget": "Ce budget sort des montants acceptés : saisissez-le à l'étape 3.",
   "@aiFormDraftWarningBudget": {"description": "Avertissement : budget hors des bornes du formulaire."},
   "aiFormDraftFilledBanner": "Rempli par l'IA. Vérifiez chaque champ avant de publier.",
@@ -24006,6 +24024,8 @@
   "@requestCreatePriceBasisPerM3NeedsDimensions": {
     "description": "Explication quand le prix au m³ est grisé faute de dimensions (step_3_recap_budget.dart)"
   },
+  "requestCreatePerM3InputHint": "Ex. 600,00",
+  "@requestCreatePerM3InputHint": {"description": "Exemple dans le champ du prix au m³ d'une demande bateau (étape 3 du formulaire d'une demande d'envoi)."},
   "requestCreatePriceUnitPerM3": "{symbol} / m³",
   "@requestCreatePriceUnitPerM3": {
     "description": "Unité du champ prix en mode au m³ (step_3_recap_budget.dart)",

@@ -11092,6 +11092,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanOfflineEventDefaultLabel => 'queued';
 
   @override
+  String get scanOfflineDescDeposit => 'Drop-off recorded';
+
+  @override
   String get scanOfflineDescPickup => 'Collection recorded';
 
   @override
@@ -15894,6 +15897,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only the sender and the traveler can track it here. Ask the sender for the tracking link.';
 
   @override
+  String suiviDepositValidatedToast(String parcel) {
+    return '$parcel: drop-off validated';
+  }
+
+  @override
   String suiviStepValidatedToast(String step, String parcel) {
     String _temp0 = intl.Intl.selectLogic(step, {
       'DEPART': '$parcel: collection validated',
@@ -16567,6 +16575,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get receptionsPendingChip => 'To confirm';
+
+  @override
+  String receptionsRowStepBoat(String status) {
+    String _temp0 = intl.Intl.selectLogic(status, {
+      'ACCEPTED': 'To drop off',
+      'HANDED_OVER': 'Dropped off',
+      'IN_TRANSIT': 'At sea',
+      'ARRIVED': 'At port',
+      'COMPLETED': 'Delivered',
+      'other': 'In progress',
+    });
+    return '$_temp0';
+  }
 
   @override
   String receptionsRowStep(String status) {
@@ -18218,9 +18239,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripStopsBadgeTwoOrMore => '2+ stops';
-
-  @override
-  String get tripStopsDetailLabel => 'Stops';
 
   @override
   String get homeComposerSectionStops => 'STOPS';
@@ -21363,7 +21381,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiFormDraftWarningModeUnavailable =>
-      'This mode isn\'t available yet: the trip will be published as a flight.';
+      'The assistant can\'t set this mode: check the transport mode before publishing.';
 
   @override
   String get aiFormDraftWarningBudget =>
@@ -24558,6 +24576,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get requestCreatePriceBasisPerM3NeedsDimensions =>
       'Enter the package dimensions first to set a price per m³.';
+
+  @override
+  String get requestCreatePerM3InputHint => 'E.g. 600.00';
 
   @override
   String requestCreatePriceUnitPerM3(String symbol) {
