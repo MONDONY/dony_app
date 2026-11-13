@@ -23350,7 +23350,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripMenuEditSubtitle =>
-      'Cities, dates, kilos, price and conditions';
+      'Cities, dates, capacity, price and conditions';
 
   @override
   String get tripMenuRecurringSubtitle => 'The same trip on other dates';

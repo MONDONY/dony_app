@@ -396,7 +396,7 @@ void main() {
       final expected = {
         TripMenuEntry.edit: (
           'Modifier',
-          'Villes, dates, kilos, prix et conditions',
+          'Villes, dates, capacité, prix et conditions',
         ),
         TripMenuEntry.unpublish: (
           'Dépublier',

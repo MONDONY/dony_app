@@ -1,12 +1,16 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 import '../../helpers/l10n_test_helpers.dart';
 import '../../helpers/plane_icon_expectations.dart';
+import 'presentation/widgets/trip_owner/trip_card_harness.dart'
+    show loadAppFonts;
 
 AnnouncementModel _announcement({
   String status = 'ACTIVE',
@@ -664,4 +668,54 @@ void main() {
       },
     );
   }
+
+  // Recette 13/11, 360 dp : « Marseil… → Dakar » et « 1500 kg disponi… ».
+  group('360 dp, vraies polices', () {
+    setUpAll(loadAppFonts);
+    for (final english in [false, true]) {
+      testWidgets('${english ? 'EN' : 'FR'} : villes et capacité entières', (
+        tester,
+      ) async {
+        if (english) useEnglish();
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light(),
+            home: Scaffold(
+              body: Padding(
+                padding: const EdgeInsets.all(16),
+                child: TripCard(
+                  viewer: TripCardViewer.owner,
+                  announcement: _announcement(
+                    departureCity: 'Marseille',
+                    totalKg: 1500,
+                    availableKg: 1500,
+                    transportMode: 'CAR',
+                  ),
+                  onTap: () {},
+                  index: 0,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+
+        for (final text in [
+          find.text('Marseille'),
+          find.text('Dakar'),
+          find.byKey(const Key('trip-card-capacity')),
+        ]) {
+          expect(text, findsOneWidget);
+          expect(
+            tester.renderObject<RenderParagraph>(text).didExceedMaxLines,
+            isFalse,
+          );
+        }
+        expect(tester.takeException(), isNull);
+      });
+    }
+  });
 }

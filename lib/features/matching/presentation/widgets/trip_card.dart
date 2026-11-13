@@ -531,46 +531,47 @@ class _ActiveCardContent extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
 
           // ── Footer: available kg + price ──
-          Row(
+          // Wrap, pas deux Flexible : la capacité n'avait que la moitié de la
+          // ligne (« 1500 kg disponi… » à 360 dp). Le prix passe à la ligne
+          // quand les deux ne tiennent pas côte à côte.
+          Wrap(
+            spacing: DonySpacing.sm,
+            runSpacing: DonySpacing.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Flexible(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const DonyEmoji.parcel(size: 14),
-                    const SizedBox(width: DonySpacing.xs),
-                    Flexible(
-                      child: Text(
-                        _footerCapacity(l, kg(availableKg)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: tt.titleSmall?.copyWith(
-                          color: cs.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const DonyEmoji.parcel(size: 14),
+                  const SizedBox(width: DonySpacing.xs),
+                  Flexible(
+                    child: Text(
+                      _footerCapacity(l, kg(availableKg)),
+                      key: const Key('trip-card-capacity'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.titleSmall?.copyWith(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: DonySpacing.sm),
-              Flexible(
-                child: Text(
-                  // Voyageur propriétaire : son net. Expéditeur : le prix frais
-                  // inclus.
-                  tripPricePerM3Text(
-                        l,
-                        announcement,
-                        net: viewer == TripCardViewer.owner,
-                      ) ??
-                      _activePriceLabel(announcement, price, l),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: tt.titleSmall?.copyWith(
-                    color: cs.primary,
-                    fontWeight: FontWeight.w700,
                   ),
+                ],
+              ),
+              Text(
+                // Voyageur propriétaire : son net. Expéditeur : le prix frais
+                // inclus.
+                tripPricePerM3Text(
+                      l,
+                      announcement,
+                      net: viewer == TripCardViewer.owner,
+                    ) ??
+                    _activePriceLabel(announcement, price, l),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: tt.titleSmall?.copyWith(
+                  color: cs.primary,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -729,28 +730,29 @@ class _RouteTitle extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    // Wrap, pas deux Flexible : chaque ville avait la moitié de la ligne,
+    // « Marseil… → Dakar » à 360 dp alors que « Dakar » laissait de la
+    // place. La ville d'arrivée passe à la ligne si le tout ne tient pas ;
+    // une ville plus large que la ligne entière reste seule à s'abréger.
+    final style = tt.headlineMedium?.copyWith(color: cs.onSurface);
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Flexible(
-          child: Text(
-            departure,
-            style: tt.headlineMedium?.copyWith(color: cs.onSurface),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
+        Text(
+          departure,
+          style: style,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
           child: DonyIcon('arrow-right', size: 16, color: cs.primary),
         ),
-        Flexible(
-          child: Text(
-            arrival,
-            style: tt.headlineMedium?.copyWith(color: cs.onSurface),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
+        Text(
+          arrival,
+          style: style,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
       ],
     );

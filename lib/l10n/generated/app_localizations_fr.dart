@@ -23516,7 +23516,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripOwnerMenuTooltip => 'Options du trajet';
 
   @override
-  String get tripMenuEditSubtitle => 'Villes, dates, kilos, prix et conditions';
+  String get tripMenuEditSubtitle =>
+      'Villes, dates, capacité, prix et conditions';
 
   @override
   String get tripMenuRecurringSubtitle => 'Le même trajet à d\'autres dates';

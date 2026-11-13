@@ -37830,10 +37830,10 @@ abstract class AppLocalizations {
   /// **'Options du trajet'**
   String get tripOwnerMenuTooltip;
 
-  /// Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Modifier », présente tant qu'aucune demande n'engage le trajet (trip_owner_options_sheet.dart).
+  /// Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Modifier », présente tant qu'aucune demande n'engage le trajet (trip_owner_options_sheet.dart). Neutre selon le mode : « capacité » couvre les kilos et le volume en m³ du bateau.
   ///
   /// In fr, this message translates to:
-  /// **'Villes, dates, kilos, prix et conditions'**
+  /// **'Villes, dates, capacité, prix et conditions'**
   String get tripMenuEditSubtitle;
 
   /// Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Rendre ce trajet récurrent » (trajet direct actif ou terminé), qui ouvre le calendrier du trajet récurrent (trip_owner_options_sheet.dart).
