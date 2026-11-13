@@ -25119,4 +25119,69 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get suiviDepositPhotoRequired =>
       'Obligatoire pour valider le dépôt à l\'entrepôt';
+
+  @override
+  String get amendmentEntryButtonVolume => 'Ajouter du volume ou des articles';
+
+  @override
+  String amendmentSheetVolumeLabel(String price, String free) {
+    return 'VOLUME EN PLUS · $price/M³ · $free M³ LIBRES';
+  }
+
+  @override
+  String amendmentSheetVolumeLabelOpen(String price) {
+    return 'VOLUME EN PLUS · $price/M³';
+  }
+
+  @override
+  String get amendmentSheetVolumeLabelPlain => 'VOLUME EN PLUS';
+
+  @override
+  String amendmentSheetVolumeValue(String volume) {
+    return '+$volume m³';
+  }
+
+  @override
+  String get amendmentTravelerParcelVolume => 'Volume du colis';
+
+  @override
+  String amendmentTravelerParcelVolumeValue(String from, String to) {
+    return '$from → $to m³';
+  }
+
+  @override
+  String get amendmentTravelerAcceptedBodyVolume =>
+      'Récupérez le volume en plus à la remise. S\'il n\'est pas là, dites-le avant de scanner le QR.';
+
+  @override
+  String get amendmentNotBroughtVolume => 'Le volume en plus n\'est pas là';
+
+  @override
+  String get amendmentNotBroughtVolumeConfirmTitle =>
+      'Le volume en plus n\'est pas là ?';
+
+  @override
+  String get amendmentNotBroughtVolumeConfirmMessage =>
+      'La modification sera annulée et l\'expéditeur remboursé. Le colis reste à son volume d\'origine.';
+
+  @override
+  String amendmentSenderNotBroughtVolumeStatus(String name) {
+    return '$name a signalé que le volume en plus n\'était pas là';
+  }
+
+  @override
+  String get amendmentDeclineConfirmMessageVolume =>
+      'Le colis garde son volume d\'origine et son prix.';
+
+  @override
+  String get amendmentPaymentHeldByCardDeposit =>
+      'Payé par carte, versé au transporteur au dépôt';
+
+  @override
+  String get amendmentPaymentHeldOnlineDeposit =>
+      'Payé en ligne, versé au transporteur au dépôt';
+
+  @override
+  String get amendmentGainPaidOutDeposit =>
+      'Versé sur votre compte au dépôt du colis';
 }

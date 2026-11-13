@@ -44,6 +44,7 @@ class AmendmentRequestState extends Equatable {
     this.status = AmendmentRequestStatus.loading,
     this.options,
     this.addedKg = 0,
+    this.addedVolumeM3 = 0,
     this.items = const {},
     this.method,
     this.grossQuote,
@@ -55,6 +56,9 @@ class AmendmentRequestState extends Equatable {
   final AmendmentOptions? options;
   final double addedKg;
 
+  /// Volume ajouté en m³ (colis d'un trajet bateau au m³), à la place des kilos.
+  final double addedVolumeM3;
+
   /// Quantité par identifiant d'article de grille (quantités > 0 seulement).
   final Map<String, int> items;
   final BidPaymentMethod? method;
@@ -64,7 +68,7 @@ class AmendmentRequestState extends Equatable {
   final AmendmentCheckout? checkout;
   final AppException? error;
 
-  bool get hasContent => addedKg > 0 || items.isNotEmpty;
+  bool get hasContent => addedKg > 0 || addedVolumeM3 > 0 || items.isNotEmpty;
 
   /// Quelque chose est ajouté, le devis du serveur est là et un moyen de
   /// paiement est choisi.
@@ -86,6 +90,7 @@ class AmendmentRequestState extends Equatable {
     AmendmentRequestStatus? status,
     AmendmentOptions? options,
     double? addedKg,
+    double? addedVolumeM3,
     Map<String, int>? items,
     BidPaymentMethod? method,
     double? Function()? grossQuote,
@@ -95,6 +100,7 @@ class AmendmentRequestState extends Equatable {
     status: status ?? this.status,
     options: options ?? this.options,
     addedKg: addedKg ?? this.addedKg,
+    addedVolumeM3: addedVolumeM3 ?? this.addedVolumeM3,
     items: items ?? this.items,
     method: method ?? this.method,
     grossQuote: grossQuote != null ? grossQuote() : this.grossQuote,
@@ -107,6 +113,7 @@ class AmendmentRequestState extends Equatable {
     status,
     options,
     addedKg,
+    addedVolumeM3,
     items,
     method,
     grossQuote,
@@ -153,6 +160,9 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
   final Duration quoteDebounce;
 
   String? _bidId;
+
+  /// Colis d'un trajet bateau au m³ : le volume part à la place des kilos.
+  bool _perM3 = false;
   Timer? _quoteTimer;
 
   /// Numéro du dernier devis demandé : une réponse périmée est ignorée.
@@ -163,6 +173,7 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
 
   Future<void> load(BidModel bid) async {
     _bidId = bid.id;
+    _perM3 = bid.isPricedPerM3;
     if (state.status != AmendmentRequestStatus.loading) {
       emit(const AmendmentRequestState());
     }
@@ -181,7 +192,10 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.bidAmendmentSheetOpened,
-          properties: {'rails_count': options.paymentMethods.length},
+          properties: {
+            'rails_count': options.paymentMethods.length,
+            'price_unit': ?_priceUnit,
+          },
         ),
       );
     } catch (e) {
@@ -203,6 +217,21 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
     if (value < 0) value = 0;
     _changed(addedKg: value);
   }
+
+  /// Volume en plus (colis au m³) : par pas de 0,1 m³, borné à
+  /// `[0, volume libre]`. Sans effet sur un colis au kilo.
+  void setVolume(double m3) {
+    if (!_perM3) return;
+    final max = _maxVolume();
+    var value = _tenth(m3);
+    if (max != null && value > max) value = (max * 10).floor() / 10;
+    if (value < 0) value = 0;
+    _changed(addedVolumeM3: value);
+  }
+
+  /// Dixième de m³ le plus proche ; la marge absorbe la dérive des flottants
+  /// (`0.1 * 3` vaut 0,30000000000000004).
+  static double _tenth(double m3) => (m3 * 10 + 1e-9).round() / 10;
 
   void setItemQuantity(String id, int quantity) {
     final unit = state.options?.gridItems
@@ -239,12 +268,29 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
     return options.maxAmount / price;
   }
 
-  void _changed({double? addedKg, Map<String, int>? items}) {
+  /// Plafond d'affichage du volume : volume libre du trajet, sinon le plafond
+  /// du net divisé par le prix au m³ (le serveur reste l'autorité).
+  double? _maxVolume() {
+    final options = state.options;
+    if (options == null) return null;
+    final free = options.availableVolumeM3;
+    if (free != null) return (free * 10 + 1e-9).floor() / 10;
+    final price = options.pricePerM3Display;
+    if (price == null || price <= 0) return null;
+    return options.maxAmount / price;
+  }
+
+  void _changed({
+    double? addedKg,
+    double? addedVolumeM3,
+    Map<String, int>? items,
+  }) {
     if (state.options == null || state.isBusy || state.checkout != null) {
       return;
     }
     final next = state.copyWith(
       addedKg: addedKg,
+      addedVolumeM3: addedVolumeM3,
       items: items,
       grossQuote: () => null,
       error: () => null,
@@ -266,6 +312,7 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
       final gross = await _repository.quote(
         bidId,
         addedKg: state.addedKg,
+        addedVolumeM3: _perM3 ? state.addedVolumeM3 : null,
         items: state.items,
       );
       if (isClosed || seq != _quoteSeq) return;
@@ -328,6 +375,7 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
       final checkout = await _repository.create(
         bidId,
         addedKg: state.addedKg,
+        addedVolumeM3: _perM3 ? state.addedVolumeM3 : null,
         items: state.items,
         method: method,
       );
@@ -426,6 +474,8 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
         properties: {
           'method': _analyticsMethod(method),
           'added_kg': state.addedKg,
+          if (_perM3) 'added_m3': state.addedVolumeM3,
+          'price_unit': ?_priceUnit,
           'items_count': state.items.length,
           'amount_bracket': analyticsAmountBracket(state.grossQuote ?? 0),
           'currency': state.options?.currency ?? 'EUR',
@@ -442,6 +492,10 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
       ),
     );
   }
+
+  /// `m3` pour un colis au m³ ; rien pour un colis au kilo (propriétés
+  /// historiques inchangées).
+  String? get _priceUnit => _perM3 ? 'm3' : null;
 
   static String _analyticsMethod(BidPaymentMethod method) => switch (method) {
     BidPaymentMethod.stripe => AnalyticsPaymentMethod.card,

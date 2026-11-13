@@ -302,7 +302,7 @@ class _SenderOptionsSheet extends StatelessWidget {
                 iconColor: cs.primary,
                 iconBg: cs.primaryContainer,
                 label: l.amendmentSheetTitle,
-                subtitle: l.amendmentEntryButton,
+                subtitle: AmendmentEntry.entryLabel(l, bid),
                 onTap: () {
                   context.pop();
                   unawaited(AmendmentEntry.open(outerContext, bid));

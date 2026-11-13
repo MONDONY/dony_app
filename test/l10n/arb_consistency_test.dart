@@ -110,6 +110,8 @@ const _sameInBothLanguages = <String>{
   'profileTravelerStatusGpPro', // « GP Pro » : nom du statut, même mot
   'profileTravelerStatusGpProNamed', // « GP Pro · {name} » : nom du statut et raison sociale
   'amendmentSheetKgValue', // « +{kg} kg » : signe, nombre et unité
+  'amendmentSheetVolumeValue', // « +{volume} m³ » : signe, nombre et unité
+  'amendmentTravelerParcelVolumeValue', // « {from} → {to} m³ » : même texte
   'amendmentRailMobileMoney', // nom de service
   'amendmentLineMethodMobileMoney', // nom de service
   'amendmentTravelerParcelWeightValue', // « {from} → {to} kg » : même texte

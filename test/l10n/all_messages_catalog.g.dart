@@ -8719,6 +8719,38 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripTilePaymentsDepositNote': (l) => l.tripTilePaymentsDepositNote,
   'scanDepositRecordedChip': (l) => l.scanDepositRecordedChip,
   'suiviDepositPhotoRequired': (l) => l.suiviDepositPhotoRequired,
+  'amendmentEntryButtonVolume': (l) => l.amendmentEntryButtonVolume,
+  'amendmentSheetVolumeLabel': (l) => l.amendmentSheetVolumeLabel(
+    placeholderMarker('price'),
+    placeholderMarker('free'),
+  ),
+  'amendmentSheetVolumeLabelOpen': (l) =>
+      l.amendmentSheetVolumeLabelOpen(placeholderMarker('price')),
+  'amendmentSheetVolumeLabelPlain': (l) => l.amendmentSheetVolumeLabelPlain,
+  'amendmentSheetVolumeValue': (l) =>
+      l.amendmentSheetVolumeValue(placeholderMarker('volume')),
+  'amendmentTravelerParcelVolume': (l) => l.amendmentTravelerParcelVolume,
+  'amendmentTravelerParcelVolumeValue': (l) =>
+      l.amendmentTravelerParcelVolumeValue(
+        placeholderMarker('from'),
+        placeholderMarker('to'),
+      ),
+  'amendmentTravelerAcceptedBodyVolume': (l) =>
+      l.amendmentTravelerAcceptedBodyVolume,
+  'amendmentNotBroughtVolume': (l) => l.amendmentNotBroughtVolume,
+  'amendmentNotBroughtVolumeConfirmTitle': (l) =>
+      l.amendmentNotBroughtVolumeConfirmTitle,
+  'amendmentNotBroughtVolumeConfirmMessage': (l) =>
+      l.amendmentNotBroughtVolumeConfirmMessage,
+  'amendmentSenderNotBroughtVolumeStatus': (l) =>
+      l.amendmentSenderNotBroughtVolumeStatus(placeholderMarker('name')),
+  'amendmentDeclineConfirmMessageVolume': (l) =>
+      l.amendmentDeclineConfirmMessageVolume,
+  'amendmentPaymentHeldByCardDeposit': (l) =>
+      l.amendmentPaymentHeldByCardDeposit,
+  'amendmentPaymentHeldOnlineDeposit': (l) =>
+      l.amendmentPaymentHeldOnlineDeposit,
+  'amendmentGainPaidOutDeposit': (l) => l.amendmentGainPaidOutDeposit,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -9460,4 +9492,9 @@ const textParameters = <String, List<String>>{
   'bidDelayReason': ['reason'],
   'tripDelayArrivalLimit': ['date'],
   'tripOwnerVolumeRemainingOf': ['total'],
+  'amendmentSheetVolumeLabel': ['price', 'free'],
+  'amendmentSheetVolumeLabelOpen': ['price'],
+  'amendmentSheetVolumeValue': ['volume'],
+  'amendmentTravelerParcelVolumeValue': ['from', 'to'],
+  'amendmentSenderNotBroughtVolumeStatus': ['name'],
 };

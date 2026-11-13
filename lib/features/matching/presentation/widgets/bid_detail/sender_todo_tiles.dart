@@ -1,4 +1,5 @@
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -105,6 +106,12 @@ String senderTodoSummary(
 String _amendmentSummary(AppLocalizations l, BidAmendment? a) {
   if (a == null) return '';
   final amount = formatSupplementAmount(a.grossAmount, a.currency);
+  if (a.isVolume) {
+    return l.senderTodoAmendmentSummary(
+      formatVolumeM3(l, a.addedVolumeM3 ?? 0),
+      amount,
+    );
+  }
   return a.addedWeightKg > 0
       ? l.senderTodoAmendmentSummary(formatWeightKg(l, a.addedWeightKg), amount)
       : l.senderTodoAmendmentAmount(amount);

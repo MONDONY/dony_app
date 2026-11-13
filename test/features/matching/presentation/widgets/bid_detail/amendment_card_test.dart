@@ -12,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
@@ -20,6 +21,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 class _MockRepository extends Mock implements BidAmendmentRepository {}
 
@@ -74,6 +77,38 @@ BidModel _bid(
   amendments: all ?? (a == null ? const [] : [a]),
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
+);
+
+BidAmendment _amVolume({
+  BidAmendmentStatus status = BidAmendmentStatus.proposed,
+  String rail = BidAmendment.railCash,
+  String? closedReason,
+}) => BidAmendment(
+  id: 'am-v',
+  status: status,
+  rail: rail,
+  addedVolumeM3: 0.3,
+  grossAmount: 36,
+  netAmount: 31.5,
+  commissionAmount: 4.5,
+  expiresAt: DateTime.now().toUtc().add(const Duration(hours: 46)),
+  closedReason: closedReason,
+  blocksHandover: status.isOpen,
+);
+
+BidModel _boatBid(BidAmendment a, {String status = 'ACCEPTED'}) => BidModel(
+  id: 'bid-1',
+  announcementId: 'ann-1',
+  senderId: 'sender-1',
+  travelerName: 'Moussa',
+  senderName: 'Aïcha',
+  weightKg: 0,
+  status: status,
+  transportMode: TransportMode.boat,
+  volumeM3: 0.5,
+  amendments: [a],
+  createdAt: DateTime(2026, 11),
+  updatedAt: DateTime(2026, 11),
 );
 
 void main() {
@@ -970,6 +1005,71 @@ void main() {
         find.textContaining(RegExp(r'avant le .+ à \d{2}:\d{2}')),
         findsOneWidget,
       );
+    });
+  });
+
+  group('colis au m³ (trajet bateau)', () {
+    testWidgets('sender_pending_showsVolumeLine_noKilos', (tester) async {
+      await pump(tester, AmendmentSenderCard(bid: _boatBid(_amVolume())));
+
+      expect(find.text('+0,3 m³'), findsOneWidget);
+      expect(find.textContaining('kg'), findsNothing);
+      // Réponse attendue : le colis « reste à » son volume, pas à 0 kg.
+      expect(find.textContaining('reste à 0,50 m³'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('sender_notBrought_saysVolume', (tester) async {
+      await pump(
+        tester,
+        AmendmentSenderCard(
+          bid: _boatBid(
+            _amVolume(
+              status: BidAmendmentStatus.refunded,
+              closedReason: 'NOT_BROUGHT',
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        find.text("Moussa a signalé que le volume en plus n'était pas là"),
+        findsOneWidget,
+      );
+      expect(find.textContaining('kilos'), findsNothing);
+    });
+
+    testWidgets('travelerProposed_showsVolumeBeforeAfter', (tester) async {
+      await pump(tester, traveler(_boatBid(_amVolume())));
+
+      expect(find.text('+0,3 m³'), findsOneWidget);
+      expect(find.text('Volume du colis'), findsOneWidget);
+      expect(find.text('0,5 → 0,8 m³'), findsOneWidget);
+      expect(find.text('Poids du colis'), findsNothing);
+      expect(find.textContaining('kg'), findsNothing);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('travelerAccepted_notBroughtSaysVolume', (tester) async {
+      await pump(
+        tester,
+        traveler(_boatBid(_amVolume(status: BidAmendmentStatus.accepted))),
+      );
+
+      expect(find.text("Le volume en plus n'est pas là"), findsOneWidget);
+      expect(
+        find.textContaining('Récupérez le volume en plus'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('kilos'), findsNothing);
+    });
+
+    testWidgets('kgAmendment_unchanged_travelerProposed', (tester) async {
+      await pump(tester, traveler(_bid(_am())));
+
+      expect(find.text('Poids du colis'), findsOneWidget);
+      expect(find.text('Volume du colis'), findsNothing);
+      expect(find.textContaining('m³'), findsNothing);
     });
   });
 }

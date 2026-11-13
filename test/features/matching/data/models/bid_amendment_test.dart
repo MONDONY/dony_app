@@ -251,4 +251,49 @@ void main() {
     expect(BidAmendmentStatus.paidOut.wire, 'PAID_OUT');
     expect(BidAmendmentStatus.unknown.wire, 'UNKNOWN');
   });
+
+  test('AmendmentOptions : volume libre et prix au m³ lus, absents sinon', () {
+    final boat = AmendmentOptions.fromJson({
+      'currency': 'EUR',
+      'availableVolumeM3': 0.85,
+      'pricePerM3Display': 120,
+      'paymentMethods': ['CASH'],
+      'minAmount': 1,
+      'maxAmount': 300,
+    });
+    expect(boat.availableVolumeM3, 0.85);
+    expect(boat.pricePerM3Display, 120.0);
+
+    final legacy = AmendmentOptions.fromJson({
+      'currency': 'EUR',
+      'paymentMethods': ['CASH'],
+      'minAmount': 1,
+      'maxAmount': 300,
+    });
+    expect(legacy.availableVolumeM3, isNull);
+    expect(legacy.pricePerM3Display, isNull);
+  });
+
+  test('BidAmendment : addedVolumeM3 lu, isVolume, conservé par copie', () {
+    final a = BidAmendment.fromJson({
+      'id': 'am-1',
+      'status': 'PROPOSED',
+      'addedVolumeM3': 0.3,
+      'grossAmount': 36,
+    });
+    expect(a.addedVolumeM3, 0.3);
+    expect(a.isVolume, isTrue);
+    expect(a.addedWeightKg, 0);
+    expect(a.withCommissionClientSecret('s').addedVolumeM3, 0.3);
+    expect(a.toJson()['addedVolumeM3'], 0.3);
+
+    final kg = BidAmendment.fromJson({
+      'id': 'am-2',
+      'status': 'PROPOSED',
+      'addedWeightKg': 2,
+      'grossAmount': 10,
+    });
+    expect(kg.addedVolumeM3, isNull);
+    expect(kg.isVolume, isFalse);
+  });
 }

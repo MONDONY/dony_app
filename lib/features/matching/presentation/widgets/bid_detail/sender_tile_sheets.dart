@@ -121,7 +121,7 @@ Widget? _stickyBottomFor(
           ? liveBid(
               (sheetContext, current) => AmendmentEntry.shouldShow(current)
                   ? DonyButton(
-                      label: l.amendmentEntryButton,
+                      label: AmendmentEntry.entryLabel(l, current),
                       iconAsset: 'plus',
                       variant: DonyButtonVariant.secondary,
                       onPressed: () => closeTileSheetThen(

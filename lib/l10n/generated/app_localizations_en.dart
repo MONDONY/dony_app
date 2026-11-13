@@ -24940,4 +24940,69 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get suiviDepositPhotoRequired =>
       'Required to confirm the warehouse drop-off';
+
+  @override
+  String get amendmentEntryButtonVolume => 'Add volume or items';
+
+  @override
+  String amendmentSheetVolumeLabel(String price, String free) {
+    return 'EXTRA VOLUME · $price/M³ · $free M³ FREE';
+  }
+
+  @override
+  String amendmentSheetVolumeLabelOpen(String price) {
+    return 'EXTRA VOLUME · $price/M³';
+  }
+
+  @override
+  String get amendmentSheetVolumeLabelPlain => 'EXTRA VOLUME';
+
+  @override
+  String amendmentSheetVolumeValue(String volume) {
+    return '+$volume m³';
+  }
+
+  @override
+  String get amendmentTravelerParcelVolume => 'Parcel volume';
+
+  @override
+  String amendmentTravelerParcelVolumeValue(String from, String to) {
+    return '$from → $to m³';
+  }
+
+  @override
+  String get amendmentTravelerAcceptedBodyVolume =>
+      'Collect the extra volume at handover. If it isn\'t there, say so before scanning the QR.';
+
+  @override
+  String get amendmentNotBroughtVolume => 'The extra volume isn\'t here';
+
+  @override
+  String get amendmentNotBroughtVolumeConfirmTitle =>
+      'The extra volume isn\'t here?';
+
+  @override
+  String get amendmentNotBroughtVolumeConfirmMessage =>
+      'The change will be cancelled and the sender refunded. The parcel stays at its original volume.';
+
+  @override
+  String amendmentSenderNotBroughtVolumeStatus(String name) {
+    return '$name reported the extra volume wasn\'t there';
+  }
+
+  @override
+  String get amendmentDeclineConfirmMessageVolume =>
+      'The parcel keeps its original volume and price.';
+
+  @override
+  String get amendmentPaymentHeldByCardDeposit =>
+      'Paid by card, paid out to the carrier at deposit';
+
+  @override
+  String get amendmentPaymentHeldOnlineDeposit =>
+      'Paid online, paid out to the carrier at deposit';
+
+  @override
+  String get amendmentGainPaidOutDeposit =>
+      'Paid to your account when the parcel is deposited';
 }

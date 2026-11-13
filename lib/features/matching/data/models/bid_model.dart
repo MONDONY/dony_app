@@ -535,6 +535,12 @@ class BidModel {
 
   bool get isSkeleton => senderId.isEmpty;
 
+  /// Colis d'un trajet bateau vendu au m³ : il porte un volume, jamais des
+  /// kilos à ajuster. Un colis au kilo, ou sans volume (back antérieur), reste
+  /// un colis au kilo.
+  bool get isPricedPerM3 =>
+      transportMode == TransportMode.boat && (volumeM3 ?? 0) > 0;
+
   /// Poids à afficher partout : celui du colis avec les kilos des modifications
   /// acquises ([totalWeightKg]), sinon [weightKg] (back antérieur). Ne sert
   /// jamais à un calcul d'argent : le serveur ventile les montants.

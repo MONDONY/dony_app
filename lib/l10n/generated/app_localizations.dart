@@ -40168,6 +40168,102 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Obligatoire pour valider le dépôt à l\'entrepôt'**
   String get suiviDepositPhotoRequired;
+
+  /// Bouton d'entrée de la modification d'un colis au m³ (trajet bateau), à la place de amendmentEntryButton
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter du volume ou des articles'**
+  String get amendmentEntryButtonVolume;
+
+  /// Titre du sélecteur de volume (colis au m³). {price} : prix au m³ formaté, {free} : volume libre en m³
+  ///
+  /// In fr, this message translates to:
+  /// **'VOLUME EN PLUS · {price}/M³ · {free} M³ LIBRES'**
+  String amendmentSheetVolumeLabel(String price, String free);
+
+  /// Titre du sélecteur de volume quand la capacité est libre. {price} : prix au m³ formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'VOLUME EN PLUS · {price}/M³'**
+  String amendmentSheetVolumeLabelOpen(String price);
+
+  /// Titre du sélecteur de volume quand le serveur ne donne pas le prix au m³
+  ///
+  /// In fr, this message translates to:
+  /// **'VOLUME EN PLUS'**
+  String get amendmentSheetVolumeLabelPlain;
+
+  /// Valeur du sélecteur de volume. {volume} : nombre de m³ déjà formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'+{volume} m³'**
+  String amendmentSheetVolumeValue(String volume);
+
+  /// Libellé du volume avant/après (vue voyageur, colis au m³)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume du colis'**
+  String get amendmentTravelerParcelVolume;
+
+  /// Volume avant → après, en m³
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} → {to} m³'**
+  String amendmentTravelerParcelVolumeValue(String from, String to);
+
+  /// Colis au m³ : consigne du voyageur après l'acceptation d'une modification
+  ///
+  /// In fr, this message translates to:
+  /// **'Récupérez le volume en plus à la remise. S\'il n\'est pas là, dites-le avant de scanner le QR.'**
+  String get amendmentTravelerAcceptedBodyVolume;
+
+  /// Bouton du voyageur (colis au m³) : le volume ajouté n'a pas été apporté
+  ///
+  /// In fr, this message translates to:
+  /// **'Le volume en plus n\'est pas là'**
+  String get amendmentNotBroughtVolume;
+
+  /// Titre de la confirmation « volume en plus absent » (colis au m³)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le volume en plus n\'est pas là ?'**
+  String get amendmentNotBroughtVolumeConfirmTitle;
+
+  /// Message de la confirmation « volume en plus absent » (colis au m³)
+  ///
+  /// In fr, this message translates to:
+  /// **'La modification sera annulée et l\'expéditeur remboursé. Le colis reste à son volume d\'origine.'**
+  String get amendmentNotBroughtVolumeConfirmMessage;
+
+  /// Statut côté expéditeur d'une modification au m³ non apportée. {name} : prénom du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} a signalé que le volume en plus n\'était pas là'**
+  String amendmentSenderNotBroughtVolumeStatus(String name);
+
+  /// Message de la confirmation de refus d'une modification au m³
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis garde son volume d\'origine et son prix.'**
+  String get amendmentDeclineConfirmMessageVolume;
+
+  /// Ligne : part payée par carte et séquestrée, colis payé au dépôt (trajet bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé par carte, versé au transporteur au dépôt'**
+  String get amendmentPaymentHeldByCardDeposit;
+
+  /// Ligne : part payée en ligne (mobile money) et séquestrée, colis payé au dépôt (trajet bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé en ligne, versé au transporteur au dépôt'**
+  String get amendmentPaymentHeldOnlineDeposit;
+
+  /// Ligne : part versée, colis payé au dépôt (trajet bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Versé sur votre compte au dépôt du colis'**
+  String get amendmentGainPaidOutDeposit;
 }
 
 class _AppLocalizationsDelegate

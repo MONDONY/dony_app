@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_properties.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_request_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
@@ -19,6 +20,9 @@ import 'package:intl/intl.dart';
 
 /// Pas d'un appui sur « + » / « − » du sélecteur de kilos.
 const double _kgStep = 0.5;
+
+/// Pas d'un appui sur « + » / « − » du sélecteur de volume (colis au m³).
+const double _volumeStep = 0.1;
 
 /// Feuille « Modifier mon colis » : l'expéditeur d'un colis accepté ajoute des
 /// kilos ou des articles de la grille du voyageur et choisit le moyen de payer
@@ -106,6 +110,7 @@ class _Content extends StatelessWidget {
           prev.status != curr.status ||
           prev.options != curr.options ||
           prev.addedKg != curr.addedKg ||
+          prev.addedVolumeM3 != curr.addedVolumeM3 ||
           prev.items != curr.items ||
           prev.method != curr.method,
       builder: (context, state) {
@@ -131,7 +136,14 @@ class _Content extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (options.pricePerKgDisplay != null) ...[
+              if (bid.isPricedPerM3) ...[
+                _VolumeSection(
+                  options: options,
+                  volume: state.addedVolumeM3,
+                  readOnly: readOnly,
+                ),
+                const SizedBox(height: DonySpacing.lg),
+              ] else if (options.pricePerKgDisplay != null) ...[
                 _KilosSection(
                   bid: bid,
                   options: options,
@@ -282,6 +294,78 @@ class _KilosSection extends StatelessWidget {
               onPressed: readOnly || atMax
                   ? null
                   : () => cubit.setKg(kg + _kgStep),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Volume en plus d'un colis au m³ (trajet bateau) : même sélecteur que les
+/// kilos, par pas de 0,1 m³. Le total vient du devis du serveur.
+class _VolumeSection extends StatelessWidget {
+  const _VolumeSection({
+    required this.options,
+    required this.volume,
+    required this.readOnly,
+  });
+
+  final AmendmentOptions options;
+  final double volume;
+  final bool readOnly;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cubit = context.read<AmendmentRequestCubit>();
+    final rawPrice = options.pricePerM3Display;
+    final price = rawPrice == null
+        ? null
+        : formatSupplementAmount(rawPrice, options.currency);
+    final rawFree = options.availableVolumeM3;
+    final free = rawFree == null ? null : (rawFree * 10 + 1e-9).floor() / 10;
+    final freeText = free == null
+        ? null
+        : formatVolumeValue(l.localeName, free);
+    final atMax = free != null && volume + _volumeStep > free + 1e-9;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionLabel(
+          price == null
+              ? l.amendmentSheetVolumeLabelPlain
+              : freeText == null
+              ? l.amendmentSheetVolumeLabelOpen(price)
+              : l.amendmentSheetVolumeLabel(price, freeText),
+        ),
+        Row(
+          children: [
+            _StepButton(
+              iconAsset: 'minus',
+              tooltip: l.amendmentQuantityLess,
+              onPressed: readOnly || volume <= 0
+                  ? null
+                  : () => cubit.setVolume(volume - _volumeStep),
+            ),
+            Expanded(
+              child: Text(
+                l.amendmentSheetVolumeValue(
+                  formatVolumeValue(l.localeName, volume),
+                ),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            _StepButton(
+              iconAsset: 'plus',
+              tooltip: l.amendmentQuantityMore,
+              onPressed: readOnly || atMax
+                  ? null
+                  : () => cubit.setVolume(volume + _volumeStep),
             ),
           ],
         ),
