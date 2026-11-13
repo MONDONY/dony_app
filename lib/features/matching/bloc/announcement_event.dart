@@ -22,9 +22,20 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final String? arrivalDate;
   final AddressData pickupAddress;
   final AddressData deliveryAddress;
-  final double availableKg;
-  final double pricePerKg;
+
+  /// Kilos et prix au kilo : `null` pour un trajet bateau vendu au m³, qui
+  /// n'envoie aucun kilo.
+  final double? availableKg;
+  final double? pricePerKg;
   final TransportMode transportMode;
+
+  /// Bateau : fin de la fourchette d'arrivée estimée (`yyyy-MM-dd`), le début
+  /// étant [arrivalDate]. `null` hors bateau.
+  final String? arrivalDateMax;
+
+  /// Bateau au m³ : volume proposé et prix net par m³. `null` sinon.
+  final double? volumeCapacityM3;
+  final double? pricePerM3;
 
   /// Escales (FLUTTER-GE), avion uniquement ; `null` = non renseigné.
   final TripStops? stops;
@@ -67,6 +78,9 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     required this.availableKg,
     required this.pricePerKg,
     required this.transportMode,
+    this.arrivalDateMax,
+    this.volumeCapacityM3,
+    this.pricePerM3,
     this.stops,
     this.description,
     this.acceptedContentTypes = const [],
@@ -236,9 +250,20 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   final String? arrivalDate;
   final AddressData pickupAddress;
   final AddressData deliveryAddress;
-  final double availableKg;
-  final double pricePerKg;
+
+  /// Kilos et prix au kilo : `null` pour un trajet bateau vendu au m³, qui
+  /// n'envoie aucun kilo.
+  final double? availableKg;
+  final double? pricePerKg;
   final TransportMode transportMode;
+
+  /// Bateau : fin de la fourchette d'arrivée estimée (`yyyy-MM-dd`), le début
+  /// étant [arrivalDate]. `null` hors bateau.
+  final String? arrivalDateMax;
+
+  /// Bateau au m³ : volume proposé et prix net par m³. `null` sinon.
+  final double? volumeCapacityM3;
+  final double? pricePerM3;
 
   /// Escales (FLUTTER-GE), avion uniquement ; `null` = non renseigné.
   final TripStops? stops;
@@ -280,6 +305,9 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     required this.availableKg,
     required this.pricePerKg,
     required this.transportMode,
+    this.arrivalDateMax,
+    this.volumeCapacityM3,
+    this.pricePerM3,
     this.stops,
     this.description,
     this.acceptedContentTypes = const [],

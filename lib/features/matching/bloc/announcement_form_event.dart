@@ -7,7 +7,7 @@ import 'package:equatable/equatable.dart';
 
 // Re-export PricingMode so callers only need to import this file
 export 'package:dony/features/matching/bloc/announcement_form_state.dart'
-    show PricingMode;
+    show BoatPriceUnit, PricingMode;
 
 abstract class AnnouncementFormEvent extends Equatable {
   const AnnouncementFormEvent();
@@ -86,8 +86,8 @@ class DescriptionChanged extends AnnouncementFormEvent {
 }
 
 /// Mode du trajet. Vers un mode sans valise (route), une capacité en valises
-/// passe en « Personnalisé » avec le même total ; vers un mode sans taille
-/// (avion, bateau...), taille et poids max par colis sont effacés.
+/// passe en « Personnalisé » avec le même total ; hors route, la taille max
+/// d'un colis est effacée, et hors route et bateau le poids max par colis.
 class TransportModeChanged extends AnnouncementFormEvent {
   final TransportMode mode;
 
@@ -107,7 +107,7 @@ class MaxItemSizeChanged extends AnnouncementFormEvent {
   List<Object?> get props => [size];
 }
 
-/// Poids max par colis en kilos (route), facultatif : `null` = aucun. Une
+/// Poids max par colis en kilos (route, bateau), facultatif : `null` = aucun. Une
 /// saisie hors bornes est gardée telle quelle : l'étape la signale
 /// (`isMaxParcelWeightValid`) au lieu de la corriger en silence.
 class MaxParcelWeightChanged extends AnnouncementFormEvent {
@@ -117,6 +117,37 @@ class MaxParcelWeightChanged extends AnnouncementFormEvent {
 
   @override
   List<Object?> get props => [kg];
+}
+
+/// Trajet bateau : vendu au m³ ou au kilo.
+class BoatPriceUnitChanged extends AnnouncementFormEvent {
+  final BoatPriceUnit unit;
+
+  const BoatPriceUnitChanged(this.unit);
+
+  @override
+  List<Object?> get props => [unit];
+}
+
+/// Trajet bateau au m³ : volume proposé, `null` tant que rien n'est saisi.
+/// Une saisie hors bornes est gardée : l'étape la signale.
+class VolumeCapacityChanged extends AnnouncementFormEvent {
+  final double? m3;
+
+  const VolumeCapacityChanged(this.m3);
+
+  @override
+  List<Object?> get props => [m3];
+}
+
+/// Trajet bateau au m³ : prix net par m³, `null` tant que rien n'est saisi.
+class PricePerM3Changed extends AnnouncementFormEvent {
+  final double? price;
+
+  const PricePerM3Changed(this.price);
+
+  @override
+  List<Object?> get props => [price];
 }
 
 /// Le formulaire modifie un trajet publié : sa capacité est le reste à

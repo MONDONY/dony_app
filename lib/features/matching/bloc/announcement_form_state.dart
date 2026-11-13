@@ -10,6 +10,32 @@ enum PricingMode { kg, mixed }
 
 enum PriceWarning { tooLow, tooHigh }
 
+/// Unité de vente d'un trajet bateau : le volume (m³, groupage en
+/// conteneur) ou le kilo. Un trajet au m³ n'a aucun kilo (ni capacité ni
+/// prix au kilo) ; le choix est figé côté serveur dès qu'un colis existe
+/// (409 `pricing-unit-locked`).
+enum BoatPriceUnit {
+  m3,
+  kg;
+
+  /// Valeur figée du brouillon local (clé `boatPriceUnit`).
+  String get wire => switch (this) {
+    BoatPriceUnit.m3 => 'M3',
+    BoatPriceUnit.kg => 'KG',
+  };
+
+  /// Valeur relue d'un brouillon ; absente ou inconnue : `null`.
+  static BoatPriceUnit? fromWire(Object? wire) => switch (wire) {
+    'M3' => BoatPriceUnit.m3,
+    'KG' => BoatPriceUnit.kg,
+    _ => null,
+  };
+}
+
+/// Plus petit prix au m³ accepté (miroir de `@DecimalMin 0.01` du back) ; pas
+/// de borne haute.
+const double minPricePerM3 = 0.01;
+
 extension CapacityUnitWire on CapacityUnit {
   String toWire() {
     switch (this) {
@@ -116,6 +142,19 @@ class AnnouncementFormState extends Equatable {
   /// seulement au maximum technique.
   final bool isEditingTrip;
 
+  /// Trajet bateau : unité de vente, posée par le formulaire de trajet (le
+  /// m³ par défaut, le groupage en conteneur). `null` : formulaire sans
+  /// vente au m³ (modèles de trajet, ancien bateau au kilo), tout reste au
+  /// kilo. Sans effet hors bateau.
+  final BoatPriceUnit? boatPriceUnit;
+
+  /// Trajet bateau au m³ : volume proposé, de 0,1 à 9 999 m³.
+  final double? volumeCapacityM3;
+
+  /// Trajet bateau au m³ : prix net par m³ (le voyageur le touche ; les frais
+  /// de service s'ajoutent pour l'expéditeur).
+  final double? pricePerM3;
+
   const AnnouncementFormState({
     this.departureCity,
     this.arrivalCity,
@@ -141,7 +180,27 @@ class AnnouncementFormState extends Equatable {
     this.maxItemSize,
     this.maxParcelWeightKg,
     this.isEditingTrip = false,
+    this.boatPriceUnit,
+    this.volumeCapacityM3,
+    this.pricePerM3,
   });
+
+  /// Trajet en bateau.
+  bool get isBoat => transportMode == TransportMode.boat;
+
+  /// Trajet bateau dont le formulaire choisit l'unité de vente (m³ ou kilo,
+  /// sans grille) : le formulaire de trajet du lot 3, jamais un modèle.
+  bool get hasBoatPricing => isBoat && boatPriceUnit != null;
+
+  /// Trajet bateau vendu au m³ : aucun kilo ne part au serveur.
+  bool get isPricedPerM3 => isBoat && boatPriceUnit == BoatPriceUnit.m3;
+
+  /// Volume proposé dans les bornes (0,1 à 9 999 m³).
+  bool get isVolumeValid => TripVolumeLimits.isValid(volumeCapacityM3);
+
+  /// Prix au m³ renseigné, d'au moins 0,01 (pas de borne haute).
+  bool get isPricePerM3Valid =>
+      pricePerM3 != null && pricePerM3! >= minPricePerM3;
 
   /// Capacité maximale saisissable pour le mode du trajet (avion par défaut
   /// tant qu'aucun mode n'est choisi).
@@ -149,19 +208,26 @@ class AnnouncementFormState extends Equatable {
       TripCapacityLimits.maxKgFor(transportModeOrPlane(transportMode));
 
   /// Capacité au-delà du plafond du mode (ex. 1 200 kg saisis en route puis
-  /// passage en avion). Le kilo libre n'a qu'une capacité technique.
+  /// passage en avion). Le kilo libre n'a qu'une capacité technique ; un
+  /// trajet au m³ n'a pas de kilos.
   bool get capacityTooHigh =>
-      capacityUnit != CapacityUnit.kgFree && (availableKg ?? 0) > capacityMaxKg;
+      !isPricedPerM3 &&
+      capacityUnit != CapacityUnit.kgFree &&
+      (availableKg ?? 0) > capacityMaxKg;
 
   /// Poids max par colis : vide, ou entre 0,5 kg et la capacité du trajet
-  /// (999 999 kg en kilo libre, dont la capacité est technique, et en
-  /// modification, où [availableKg] n'est que le reste à réserver).
+  /// (999 999 kg en kilo libre, dont la capacité est technique, au m³, sans
+  /// kilos, et en modification, où [availableKg] n'est que le reste à
+  /// réserver).
   bool get isMaxParcelWeightValid {
     final w = maxParcelWeightKg;
     if (w == null) return true;
     final kg = availableKg;
     final upper =
-        capacityUnit == CapacityUnit.kgFree || kg == null || isEditingTrip
+        isPricedPerM3 ||
+            capacityUnit == CapacityUnit.kgFree ||
+            kg == null ||
+            isEditingTrip
         ? TripCapacityLimits.heavyMaxKg.toDouble()
         : kg;
     return w >= minMaxParcelWeightKg &&
@@ -169,9 +235,12 @@ class AnnouncementFormState extends Equatable {
         w <= TripCapacityLimits.heavyMaxKg;
   }
 
-  /// « Continuer » de l'étape Capacité, côté kilos (les adresses sont
-  /// vérifiées par l'écran). La taille ne bloque jamais (C24).
-  bool get isCapacityStepValid => !capacityTooHigh && isMaxParcelWeightValid;
+  /// « Continuer » de l'étape Capacité, côté capacité (les adresses sont
+  /// vérifiées par l'écran) : kilos dans le plafond du mode, ou volume dans
+  /// ses bornes au m³. La taille ne bloque jamais (C24).
+  bool get isCapacityStepValid =>
+      (isPricedPerM3 ? isVolumeValid : !capacityTooHigh) &&
+      isMaxParcelWeightValid;
 
   bool get isFormValid =>
       departureCity != null &&
@@ -233,6 +302,9 @@ class AnnouncementFormState extends Equatable {
     ItemSize? Function()? maxItemSizeGetter,
     double? Function()? maxParcelWeightKgGetter,
     bool? isEditingTrip,
+    BoatPriceUnit? boatPriceUnit,
+    double? Function()? volumeCapacityM3Getter,
+    double? Function()? pricePerM3Getter,
   }) {
     return AnnouncementFormState(
       departureCity: departureCity ?? this.departureCity,
@@ -279,6 +351,11 @@ class AnnouncementFormState extends Equatable {
           ? maxParcelWeightKgGetter()
           : maxParcelWeightKg,
       isEditingTrip: isEditingTrip ?? this.isEditingTrip,
+      boatPriceUnit: boatPriceUnit ?? this.boatPriceUnit,
+      volumeCapacityM3: volumeCapacityM3Getter != null
+          ? volumeCapacityM3Getter()
+          : volumeCapacityM3,
+      pricePerM3: pricePerM3Getter != null ? pricePerM3Getter() : pricePerM3,
     );
   }
 
@@ -308,5 +385,8 @@ class AnnouncementFormState extends Equatable {
     maxItemSize,
     maxParcelWeightKg,
     isEditingTrip,
+    boatPriceUnit,
+    volumeCapacityM3,
+    pricePerM3,
   ];
 }

@@ -31,6 +31,17 @@ class AnnouncementFormBloc
     on<TransportModeChanged>(_onTransportModeChanged);
     on<MaxItemSizeChanged>(_onMaxItemSizeChanged);
     on<MaxParcelWeightChanged>(_onMaxParcelWeightChanged);
+    on<BoatPriceUnitChanged>(
+      (event, emit) => emit(state.copyWith(boatPriceUnit: event.unit)),
+    );
+    on<VolumeCapacityChanged>(
+      (event, emit) =>
+          emit(state.copyWith(volumeCapacityM3Getter: () => event.m3)),
+    );
+    on<PricePerM3Changed>(
+      (event, emit) =>
+          emit(state.copyWith(pricePerM3Getter: () => event.price)),
+    );
     on<EditingTripStarted>(
       (event, emit) => emit(state.copyWith(isEditingTrip: true)),
     );
@@ -167,10 +178,11 @@ class AnnouncementFormBloc
       state.copyWith(
         transportModeGetter: () => mode,
         capacityUnit: toCustom ? CapacityUnit.custom : null,
-        // Taille et poids max par colis n'existent qu'en route : jamais un
-        // champ caché envoyé après un changement de mode.
+        // Taille max d'un colis en route seulement, poids max par colis en
+        // route et en bateau : jamais un champ caché envoyé après un
+        // changement de mode.
         maxItemSizeGetter: mode.hasItemSize ? null : () => null,
-        maxParcelWeightKgGetter: mode.hasItemSize ? null : () => null,
+        maxParcelWeightKgGetter: mode.hasMaxParcelWeight ? null : () => null,
       ),
     );
   }

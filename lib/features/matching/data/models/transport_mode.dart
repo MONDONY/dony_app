@@ -87,9 +87,9 @@ extension TransportModeRules on TransportMode {
     TransportMode.boat => 120,
   };
 
-  /// Les valises (23 kg) n'ont pas de sens en voiture ni en bus : on y
-  /// compte en kilos libres ou en place, jamais en valises.
-  bool get allowsSuitcases => !isRoad;
+  /// Les valises (23 kg) n'ont pas de sens en voiture, en bus ni en bateau :
+  /// on y compte en kilos (ou en m³ en bateau), jamais en valises.
+  bool get allowsSuitcases => !isHeavy;
 
   /// Seuls la voiture et le bus portent une taille de colis (S à XL).
   bool get hasItemSize => isRoad;
@@ -100,6 +100,19 @@ extension TransportModeRules on TransportMode {
   /// Mode « lourd » (voiture, bus, bateau) : poids et capacités en tonnes.
   /// Miroir de `WeightLimits.isHeavyMode`.
   bool get isHeavy => isRoad || this == TransportMode.boat;
+
+  /// Route et bateau portent un poids max par colis, facultatif. Miroir de
+  /// `ParcelFitRules.normalizeMaxParcelWeight` (modes lourds).
+  bool get hasMaxParcelWeight => isHeavy;
+}
+
+/// Volume qu'un transporteur peut proposer sur un trajet bateau vendu au m³,
+/// une décimale (miroir des bornes de `AnnouncementRequest.volumeCapacityM3`).
+abstract final class TripVolumeLimits {
+  static const double minM3 = 0.1;
+  static const double maxM3 = 9999;
+
+  static bool isValid(double? m3) => m3 != null && m3 >= minM3 && m3 <= maxM3;
 }
 
 /// Capacité maximale qu'un voyageur peut saisir pour un trajet, en kilos
