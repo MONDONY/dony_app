@@ -26,6 +26,13 @@ class _QuoteResolved extends ChatEvent {
   const _QuoteResolved(this.id, this.message);
 }
 
+typedef _InquiryParent = ({
+  String? askerId,
+  bool quotaLifted,
+  bool exists,
+  bool fromCache,
+});
+
 /// Nouveau compteur de messages du demandeur lu dans Firestore.
 class _InquirySentChanged extends ChatEvent {
   final int sent;
@@ -89,13 +96,23 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   int _inquirySent = 0;
   String _announcementId = '';
   StreamSubscription<int>? _inquirySub;
-  StreamSubscription<({String? askerId, bool quotaLifted})>? _inquiryParentSub;
+  StreamSubscription<_InquiryParent>? _inquiryParentSub;
 
-  // Complété à la première lecture du document parent (demandeur connu) ou à
-  // la levée du quota : tout envoi en attend la fin, jamais de chemin ordinaire
-  // « par défaut ».
+  // Le document parent est suivi tant que le fil a été ouvert limité, même
+  // après une levée : le back peut reverrouiller le quota.
+  bool _inquiryWatching = false;
+
+  // Complété à la première lecture (serveur) du document parent : demandeur
+  // connu. Tout envoi en attend la fin, jamais de chemin ordinaire « par
+  // défaut ».
   Completer<void> _inquiryParentKnown = Completer<void>()..complete();
+
+  // Complété à la première valeur du compteur du demandeur.
+  Completer<void> _inquirySentKnown = Completer<void>()..complete();
+  int _inquiryGeneration = 0;
+  bool _closing = false;
   final Duration _inquiryParentTimeout;
+  final Duration _inquiryReconcileTimeout;
 
   // Envois d'une INQUIRY limitée traités l'un après l'autre : deux envois
   // rapprochés liraient sinon le même compteur.
@@ -108,9 +125,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     MessageEditRepository? editRepository,
     Duration markReadDelay = const Duration(milliseconds: 500),
     Duration inquiryParentTimeout = const Duration(seconds: 5),
+    Duration inquiryReconcileTimeout = const Duration(seconds: 10),
   }) : _editRepo = editRepository,
        _markReadDelay = markReadDelay,
        _inquiryParentTimeout = inquiryParentTimeout,
+       _inquiryReconcileTimeout = inquiryReconcileTimeout,
        super(const ChatInitial()) {
     on<ChatSubscribeRequested>(_onSubscribe);
     on<ChatTextSendRequested>(_onSendText);
@@ -131,6 +150,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatInquiryLiftedObserved>(_onInquiryLifted);
   }
 
+  /// Compteur affichable : demandeur connu et première valeur reçue.
+  bool get _inquiryShown => _inquiryCounting && _inquirySentKnown.isCompleted;
+
   int get _inquiryRemaining =>
       (_inquiryLimit - _inquirySent).clamp(0, _inquiryLimit);
 
@@ -138,8 +160,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _InquirySentChanged event,
     Emitter<ChatState> emit,
   ) {
+    if (!_inquiryCounting) return;
     _inquirySent = event.sent;
-    if (_inquiryCounting && _syncWithThread()) emit(_snapshot());
+    if (!_inquirySentKnown.isCompleted) _inquirySentKnown.complete();
+    if (_syncWithThread()) emit(_snapshot());
   }
 
   void _onInquiryChanged(_InquiryChanged event, Emitter<ChatState> emit) {
@@ -151,18 +175,25 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) {
     if (!_inquiryLimited) return;
-    unawaited(_clearInquiry());
+    _liftInquiry();
     if (_syncWithThread()) emit(_snapshot());
   }
 
-  /// Fin du quota (levé, ou fil quitté) : plus de compteur ni de verrou, les
-  /// abonnements sont annulés et les envois en attente repartent en ordinaire.
-  Future<void> _clearInquiry() async {
+  /// Quota levé : plus de compteur ni de verrou, les envois en attente
+  /// repartent en ordinaire. Le document parent reste suivi (reverrouillage).
+  void _liftInquiry() {
     _inquiryLimited = false;
     _inquiryCounting = false;
     _inquirySent = 0;
+    _completeInquiryWaiters();
+    final sub = _inquirySub;
+    _inquirySub = null;
+    unawaited(sub?.cancel());
+  }
+
+  void _completeInquiryWaiters() {
     if (!_inquiryParentKnown.isCompleted) _inquiryParentKnown.complete();
-    await _cancelInquirySubs();
+    if (!_inquirySentKnown.isCompleted) _inquirySentKnown.complete();
   }
 
   Future<void> _cancelInquirySubs() async {
@@ -174,39 +205,59 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   /// Suit le document de conversation : `askerId` dit si l'utilisateur est le
   /// demandeur (compteur suivi, plafond) ou le créateur (jamais limité) ;
-  /// `quotaLifted` lève le plafond en direct.
+  /// `quotaLifted` lève ou rétablit le plafond en direct.
   void _watchInquiryParent(String firestoreConversationId, String uid) {
+    final generation = _inquiryGeneration;
     _inquiryParentSub = _firestoreRepo
         .inquiryParentStream(firestoreConversationId)
         .listen(
           (parent) {
-            if (isClosed ||
-                firestoreConversationId != _firestoreConversationId) {
-              return;
-            }
+            if (isClosed || generation != _inquiryGeneration) return;
             _applyInquiryParent(firestoreConversationId, uid, parent);
           },
-          onError: (Object e) => AppLog.warn(
-            'chat.inquiry_parent_watch_failed',
-            data: {'reason': _reasonOf(e)},
-          ),
+          onError: (Object e) {
+            AppLog.warn(
+              'chat.inquiry_parent_watch_failed',
+              data: {'reason': _reasonOf(e)},
+            );
+            if (generation == _inquiryGeneration) _inquiryParentFailed();
+          },
         );
+  }
+
+  /// Erreur terminale du flux parent : demandeur inconnu jusqu'à un nouvel
+  /// abonnement, fait paresseusement à l'envoi suivant (pas de boucle).
+  void _inquiryParentFailed() {
+    unawaited(_inquiryParentSub?.cancel());
+    _inquiryParentSub = null;
+    if (_inquiryParentKnown.isCompleted) {
+      _inquiryParentKnown = Completer<void>();
+    }
   }
 
   void _applyInquiryParent(
     String firestoreConversationId,
     String uid,
-    ({String? askerId, bool quotaLifted}) parent,
+    _InquiryParent parent,
   ) {
-    if (!_inquiryLimited) return;
+    // Instantané vide du cache, avant la première réponse du serveur : le
+    // demandeur n'est pas encore connu.
+    if (!parent.exists && parent.fromCache) return;
     if (parent.quotaLifted) {
-      unawaited(_clearInquiry());
+      if (_inquiryLimited) {
+        _liftInquiry();
+      } else {
+        _completeInquiryWaiters();
+      }
       add(const _InquiryChanged());
       return;
     }
+    _inquiryLimited = true;
     final asker = parent.askerId != null && parent.askerId == uid;
     if (asker && !_inquiryCounting) {
       _inquiryCounting = true;
+      _inquirySent = 0;
+      _inquirySentKnown = Completer<void>();
       _inquirySub = _firestoreRepo
           .inquirySentStream(firestoreConversationId)
           .listen(
@@ -220,11 +271,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           );
     } else if (!asker && _inquiryCounting) {
       _inquiryCounting = false;
-      final sub = _inquirySub;
+      unawaited(_inquirySub?.cancel());
       _inquirySub = null;
-      unawaited(sub?.cancel());
     }
     if (!_inquiryParentKnown.isCompleted) _inquiryParentKnown.complete();
+    if (!_inquiryCounting && !_inquirySentKnown.isCompleted) {
+      _inquirySentKnown.complete();
+    }
     add(const _InquiryChanged());
   }
 
@@ -238,8 +291,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             quotedMessages: quoted,
             pendingImages: List.unmodifiable(_pendingImages),
             mediaAllowed: _mediaAllowed,
-            inquiryRemaining: _inquiryCounting ? _inquiryRemaining : null,
-            inquiryLimitReached: _inquiryCounting && _inquiryRemaining == 0,
+            inquiryRemaining: _inquiryShown ? _inquiryRemaining : null,
+            inquiryLimitReached: _inquiryShown && _inquiryRemaining == 0,
           );
   }
 
@@ -335,9 +388,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _conversationId = event.conversationId;
     _mediaAllowed = event.mediaAllowed;
     _pendingImages = const [];
+    _inquiryGeneration++;
+    _completeInquiryWaiters();
     await _cancelInquirySubs();
     _inquiryLimited = event.inquiryLimited && !event.isReadOnly;
+    _inquiryWatching = _inquiryLimited && event.currentUserUid.isNotEmpty;
     _inquiryParentKnown = Completer<void>();
+    _inquirySentKnown = Completer<void>()..complete();
     _inquiryCounting = false;
     _inquirySent = 0;
     _inquiryLimit = event.inquiryMessageLimit ?? kInquiryDefaultMessageLimit;
@@ -357,7 +414,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _watchUnreadWhileOpen();
     }
 
-    if (_inquiryLimited && _currentUserUid.isNotEmpty) {
+    if (_inquiryWatching) {
       _watchInquiryParent(event.firestoreConversationId, _currentUserUid);
     } else {
       // Pas de compte lisible ou fil non limité : rien à attendre.
@@ -400,7 +457,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatTextSendRequested event,
     Emitter<ChatState> emit,
   ) async {
-    if (!_inquiryLimited) return _sendText(event, emit);
+    // Seul le demandeur sous quota (ou tant qu'on ne sait pas qui il est) est
+    // sérialisé : un envoi ordinaire, dont un commit hors ligne peut durer, ne
+    // doit jamais bloquer la file.
+    final serialize =
+        _inquiryWatching &&
+        (_inquiryCounting || !_inquiryParentKnown.isCompleted);
+    if (!serialize) return _sendText(event, emit);
     final previous = _sendChain;
     final done = Completer<void>();
     _sendChain = done.future;
@@ -416,15 +479,23 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatTextSendRequested event,
     Emitter<ChatState> emit,
   ) async {
-    if (_inquiryLimited && !_inquiryParentKnown.isCompleted) {
-      // Le demandeur n'est pas encore connu : jamais d'envoi ordinaire à
-      // l'aveugle, les règles le refuseraient sans que l'on sache pourquoi.
+    if (_inquiryWatching && !_closing && _inquiryParentSub == null) {
+      _watchInquiryParent(_firestoreConversationId, _currentUserUid);
+    }
+    if (_inquiryWatching &&
+        (!_inquiryParentKnown.isCompleted ||
+            (_inquiryCounting && !_inquirySentKnown.isCompleted))) {
+      // Demandeur et compteur pas encore connus : jamais d'envoi ordinaire à
+      // l'aveugle, ni avec un compteur à 0 par défaut.
+      final generation = _inquiryGeneration;
       try {
-        await _inquiryParentKnown.future.timeout(_inquiryParentTimeout);
+        await _awaitInquiryReady().timeout(_inquiryParentTimeout);
       } catch (e) {
+        if (_closing || generation != _inquiryGeneration) return;
         _reportSendFailure(emit, e, event, event.body);
         return;
       }
+      if (_closing || generation != _inquiryGeneration) return;
     }
     final sent = _inquiryCounting
         ? await _sendInquiryText(event, emit)
@@ -441,6 +512,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         : event.body;
     await _updateLastMessage(event.conversationId, preview);
     unawaited(_analytics.logEvent(AnalyticsEvents.messageSent));
+  }
+
+  Future<void> _awaitInquiryReady() async {
+    await _inquiryParentKnown.future;
+    if (_inquiryCounting) await _inquirySentKnown.future;
   }
 
   Future<void> _writeText(
@@ -466,13 +542,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       return false;
     }
     final before = _inquirySent;
+    final startedAt = DateTime.now();
     try {
       await _writeText(event, inquirySentBefore: before);
     } on InquiryLimitReachedException {
-      return _reconcileAndRetry(event, emit, before);
+      return _reconcileAndRetry(event, emit, before, startedAt);
     } on FirebaseException catch (e) {
       // Compteur absent alors que le nôtre dit > 0 : même dérive.
-      if (e.code == 'not-found') return _reconcileAndRetry(event, emit, before);
+      if (e.code == 'not-found') {
+        return _reconcileAndRetry(event, emit, before, startedAt);
+      }
       _reportSendFailure(emit, e, event, event.body);
       return false;
     } catch (e) {
@@ -493,13 +572,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatTextSendRequested event,
     Emitter<ChatState> emit,
     int attempted,
+    DateTime startedAt,
   ) async {
     AppLog.warn('chat.inquiry_reconcile', data: {'attempted': attempted});
     try {
       if (_announcementId.isNotEmpty) {
-        final fresh = await _conversationRepo.openInquiry(_announcementId);
+        final fresh = await _conversationRepo
+            .openInquiry(_announcementId)
+            .timeout(_inquiryReconcileTimeout);
         if (fresh.inquiryQuotaLifted) {
-          await _clearInquiry();
+          _liftInquiry();
           if (_syncWithThread()) emit(_snapshot());
           await _writeText(event);
           return true;
@@ -508,9 +590,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final fresh = await _firestoreRepo
           .inquirySentStream(event.firestoreConversationId)
           .first
-          .timeout(const Duration(seconds: 5));
+          .timeout(_inquiryParentTimeout);
+      if (!_inquiryCounting) {
+        // Levée arrivée pendant le recalage : envoi ordinaire.
+        await _writeText(event);
+        return true;
+      }
       _inquirySent = fresh;
-      if (fresh == attempted + 1 && await _alreadyWritten(event, fresh)) {
+      if (fresh == attempted + 1 &&
+          await _alreadyWritten(event, fresh, startedAt)) {
         if (_syncWithThread()) emit(_snapshot());
         return true;
       }
@@ -539,7 +627,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   /// Le message `inq<n>` est déjà dans le fil, écrit par nous avec ce texte.
-  Future<bool> _alreadyWritten(ChatTextSendRequested event, int n) async {
+  /// Il doit avoir été écrit après le début de la tentative (marge 2 s pour
+  /// l'écart d'horloge) : un ancien message identique n'est pas un doublon.
+  Future<bool> _alreadyWritten(
+    ChatTextSendRequested event,
+    int n,
+    DateTime startedAt,
+  ) async {
     try {
       final message = await _firestoreRepo.getMessage(
         event.firestoreConversationId,
@@ -547,7 +641,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       );
       return message != null &&
           message.senderId == event.senderFirebaseUid &&
-          message.body == event.body;
+          message.body == event.body &&
+          !message.sentAt.isBefore(
+            startedAt.subtract(const Duration(seconds: 2)),
+          );
     } catch (_) {
       return false;
     }
@@ -990,6 +1087,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     await _messageSub?.cancel();
     await _deletedSub?.cancel();
     await _unreadSub?.cancel();
+    _closing = true;
+    _inquiryGeneration++;
+    _completeInquiryWaiters();
     await _cancelInquirySubs();
     _markReadTimer?.cancel();
     // Sortie du fil : dernière remise à « lu » pour un message arrivé pendant

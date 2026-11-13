@@ -168,9 +168,10 @@ void main() {
   });
 
   group('inquiryParentStream', () {
-    Future<List<({String? askerId, bool quotaLifted})>> collect(
-      Map<String, Object?>? data,
-    ) async {
+    Future<
+      List<({String? askerId, bool quotaLifted, bool exists, bool fromCache})>
+    >
+    collect(Map<String, Object?>? data) async {
       if (data != null) {
         await firestore.collection('conversations').doc('c1').set(data);
       }
@@ -186,6 +187,7 @@ void main() {
       final r = await collect({'askerId': 'u9', 'quotaLifted': true});
       expect(r.single.askerId, 'u9');
       expect(r.single.quotaLifted, isTrue);
+      expect(r.single.exists, isTrue);
     });
 
     test('champs absents : askerId nul, quota actif', () async {
@@ -205,10 +207,15 @@ void main() {
       expect(r.single.quotaLifted, isFalse);
     });
 
-    test('document absent : un événement sans demandeur', () async {
-      final r = await collect(null);
-      expect(r.single.askerId, isNull);
-    });
+    test(
+      'document absent : un événement sans demandeur, exists faux',
+      () async {
+        final r = await collect(null);
+        expect(r.single.askerId, isNull);
+        expect(r.single.exists, isFalse);
+        expect(r.single.fromCache, isFalse);
+      },
+    );
 
     test('suit les changements du document', () async {
       final seen = <bool>[];

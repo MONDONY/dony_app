@@ -42,21 +42,26 @@ class FirestoreChatRepository {
   /// demandeur (plafonné) ou le créateur de l'annonce. Flux réactif, repris à
   /// la reconnexion ; un champ absent ou d'un type inattendu donne `null` /
   /// `false`.
-  Stream<({String? askerId, bool quotaLifted})> inquiryParentStream(
-    String firestoreConversationId,
-  ) => _conversationDoc(firestoreConversationId).map((data) {
-    final asker = data?['askerId'];
-    return (
-      askerId: asker is String && asker.isNotEmpty ? asker : null,
-      quotaLifted: data?['quotaLifted'] == true,
-    );
-  });
+  ///
+  /// `exists` / `fromCache` laissent distinguer un document réellement absent
+  /// d'un instantané vide du cache local, vu avant la première réponse du
+  /// serveur.
+  Stream<({String? askerId, bool quotaLifted, bool exists, bool fromCache})>
+  inquiryParentStream(String firestoreConversationId) =>
+      _conversationSnapshots(firestoreConversationId).map((snap) {
+        final data = snap.data();
+        final asker = data?['askerId'];
+        return (
+          askerId: asker is String && asker.isNotEmpty ? asker : null,
+          quotaLifted: data?['quotaLifted'] == true,
+          exists: snap.exists,
+          fromCache: snap.metadata.isFromCache,
+        );
+      });
 
-  Stream<Map<String, dynamic>?> _conversationDoc(String id) => _firestore
-      .collection('conversations')
-      .doc(id)
-      .snapshots()
-      .map((snap) => snap.data());
+  Stream<DocumentSnapshot<Map<String, dynamic>>> _conversationSnapshots(
+    String id,
+  ) => _firestore.collection('conversations').doc(id).snapshots();
 
   /// [inquirySentBefore] non nul : message du demandeur dans une conversation
   /// INQUIRY sous quota. Les règles Firestore exigent alors, dans UN seul lot,
@@ -250,9 +255,9 @@ class FirestoreChatRepository {
   }
 
   Stream<bool> conversationDeletedStream(String firestoreConversationId) {
-    return _conversationDoc(
+    return _conversationSnapshots(
       firestoreConversationId,
-    ).map((data) => data?['deletedAt'] != null);
+    ).map((snap) => snap.data()?['deletedAt'] != null);
   }
 
   /// Zero out per-conversation unread counters whose firestoreConversationId

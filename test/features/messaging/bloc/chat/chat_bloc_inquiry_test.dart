@@ -20,7 +20,20 @@ class MockFirestoreChatRepository extends Mock
 class MockConversationRepository extends Mock
     implements ConversationRepository {}
 
-typedef _Parent = ({String? askerId, bool quotaLifted});
+typedef _Parent = ({
+  String? askerId,
+  bool quotaLifted,
+  bool exists,
+  bool fromCache,
+});
+
+_Parent _p(
+  String? asker, {
+  bool lifted = false,
+  bool exists = true,
+  bool fromCache = false,
+}) =>
+    (askerId: asker, quotaLifted: lifted, exists: exists, fromCache: fromCache);
 
 const _conv = 'conv_inq';
 const _me = 'uid-asker';
@@ -118,7 +131,7 @@ void main() {
     ).thenAnswer((_) => calls++ == 0 ? sentCtrl.stream : Stream.value(value));
   }
 
-  ChatBloc makeBloc({Duration? parentTimeout}) {
+  ChatBloc makeBloc({Duration? parentTimeout, Duration? reconcileTimeout}) {
     final backend = MockAnalyticsBackend();
     final analytics = makeDisabledAnalytics(backend);
     analytics.onConfigured();
@@ -127,6 +140,7 @@ void main() {
       conv,
       analytics,
       inquiryParentTimeout: parentTimeout ?? const Duration(seconds: 5),
+      inquiryReconcileTimeout: reconcileTimeout ?? const Duration(seconds: 10),
     );
   }
 
@@ -135,17 +149,22 @@ void main() {
     int? sent,
     String? asker = _me,
     bool parent = true,
+    bool emitSent = true,
     Duration? parentTimeout,
+    Duration? reconcileTimeout,
   }) async {
-    final bloc = makeBloc(parentTimeout: parentTimeout);
+    final bloc = makeBloc(
+      parentTimeout: parentTimeout,
+      reconcileTimeout: reconcileTimeout,
+    );
     bloc.add(event);
     await pumpEventQueue();
     if (parent) {
-      parentCtrl.add((askerId: asker, quotaLifted: false));
+      parentCtrl.add(_p(asker));
       await pumpEventQueue();
     }
-    if (sent != null) {
-      sentCtrl.add(sent);
+    if (emitSent && parent && asker == _me) {
+      sentCtrl.add(sent ?? 0);
       await pumpEventQueue();
     }
     return bloc;
@@ -328,7 +347,7 @@ void main() {
           senderId: _me,
           body: 'Bonjour',
           type: MessageType.text,
-          sentAt: DateTime(2026),
+          sentAt: DateTime.now(),
         ),
       );
       freshSent(3);
@@ -463,17 +482,18 @@ void main() {
       expect(loaded(bloc).inquiryRemaining, isNull);
       expect(loaded(bloc).inquiryLimitReached, isFalse);
       expect(sentCtrl.hasListener, isFalse);
-      expect(parentCtrl.hasListener, isFalse);
+      expect(parentCtrl.hasListener, isTrue); // gardé pour un reverrouillage
       bloc.add(_send());
       await pumpEventQueue();
       verifySentBefore(null).called(1);
       await bloc.close();
+      expect(parentCtrl.hasListener, isFalse);
     },
   );
 
   test('quotaLifted reçu du document parent : levée en direct', () async {
     final bloc = await open(_subscribe(), sent: 10);
-    parentCtrl.add((askerId: _me, quotaLifted: true));
+    parentCtrl.add(_p(_me, lifted: true));
     await pumpEventQueue();
     expect(loaded(bloc).inquiryRemaining, isNull);
     expect(loaded(bloc).inquiryLimitReached, isFalse);
@@ -511,7 +531,10 @@ void main() {
       bloc.add(_send());
       await pumpEventQueue();
       verifyNoWrite();
-      parentCtrl.add((askerId: _me, quotaLifted: false));
+      parentCtrl.add(_p(_me));
+      await pumpEventQueue();
+      verifyNoWrite(); // le compteur n'a pas encore émis
+      sentCtrl.add(0);
       await pumpEventQueue();
       verifySentBefore(0).called(1);
       await bloc.close();
@@ -632,4 +655,245 @@ void main() {
     expect(loaded(bloc).pendingImages, isEmpty);
     await bloc.close();
   });
+
+  test('restant masqué tant que le compteur n\'a pas émis', () async {
+    final bloc = await open(_subscribe(), emitSent: false);
+    expect(loaded(bloc).inquiryRemaining, isNull);
+    expect(loaded(bloc).inquiryLimitReached, isFalse);
+    sentCtrl.add(4);
+    await pumpEventQueue();
+    expect(loaded(bloc).inquiryRemaining, 6);
+    await bloc.close();
+  });
+
+  test(
+    'envoi avant le compteur serveur (1), même texte : écrit inq2, sans faux doublon',
+    () async {
+      when(() => fs.getMessage(_conv, 'inq1')).thenAnswer(
+        (_) async => MessageModel(
+          id: 'inq1',
+          senderId: _me,
+          body: 'Bonjour',
+          type: MessageType.text,
+          sentAt: DateTime.now().subtract(const Duration(hours: 1)),
+        ),
+      );
+      final bloc = await open(_subscribe(), emitSent: false);
+      bloc.add(_send());
+      await pumpEventQueue();
+      verifyNoWrite();
+      sentCtrl.add(1);
+      await pumpEventQueue();
+      verifySentBefore(1, body: 'Bonjour').called(1);
+      verifyNever(() => fs.getMessage(any(), any()));
+      expect(loaded(bloc).inquiryRemaining, 8);
+      await bloc.close();
+    },
+  );
+
+  test('compteur jamais émis : échec réessayable, texte gardé', () async {
+    final bloc = await open(
+      _subscribe(),
+      emitSent: false,
+      parentTimeout: const Duration(milliseconds: 50),
+    );
+    final emitted = <ChatState>[];
+    final sub = bloc.stream.listen(emitted.add);
+    bloc.add(_send('à garder'));
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    expect(emitted.whereType<ChatSendFailed>().single.text, 'à garder');
+    verifyNoWrite();
+    await sub.cancel();
+    await bloc.close();
+  });
+
+  test(
+    '« Merci » puis « Merci » légitimes : le 2e n\'est pas pris pour un doublon',
+    () async {
+      var calls = 0;
+      stubWrite(() async {
+        if (calls++ == 1) throw InquiryLimitReachedException();
+      });
+      when(
+        () => conv.openInquiry('ann-1'),
+      ).thenAnswer((_) async => _conversation());
+      when(() => fs.getMessage(_conv, 'inq2')).thenAnswer(
+        (_) async => MessageModel(
+          id: 'inq2',
+          senderId: _me,
+          body: 'Merci',
+          type: MessageType.text,
+          sentAt: DateTime.now().subtract(const Duration(minutes: 5)),
+        ),
+      );
+      freshSent(2);
+      final bloc = await open(_subscribe(), sent: 0);
+      bloc.add(_send('Merci'));
+      await pumpEventQueue();
+      // Le serveur est déjà à 2 (un autre appareil) : inq2 existe, ancien.
+      bloc.add(_send('Merci'));
+      await pumpEventQueue();
+      verifySentBefore(1, body: 'Merci').called(1); // tentative refusée
+      verifySentBefore(2, body: 'Merci').called(1); // nouvel essai
+      await bloc.close();
+    },
+  );
+
+  test('créateur : les envois restent concurrents', () async {
+    final gate = Completer<void>();
+    var calls = 0;
+    stubWrite(() async {
+      if (calls++ == 0) await gate.future;
+    });
+    final bloc = await open(_subscribe(), asker: 'autre-uid');
+    bloc.add(_send('un'));
+    bloc.add(_send('deux'));
+    await pumpEventQueue();
+    verifySentBefore(null, body: 'deux').called(1);
+    gate.complete();
+    await bloc.close();
+  });
+
+  test('conversation ordinaire : les envois restent concurrents', () async {
+    final gate = Completer<void>();
+    var calls = 0;
+    stubWrite(() async {
+      if (calls++ == 0) await gate.future;
+    });
+    final bloc = await open(_subscribe(limited: false), parent: false);
+    bloc.add(_send('un'));
+    bloc.add(_send('deux'));
+    await pumpEventQueue();
+    verifySentBefore(null, body: 'deux').called(1);
+    gate.complete();
+    await bloc.close();
+  });
+
+  test('quota levé pendant le recalage : envoi ordinaire', () async {
+    failFirstWrite();
+    when(() => conv.openInquiry('ann-1')).thenAnswer((_) async {
+      parentCtrl.add(_p(_me, lifted: true));
+      await Future<void>.delayed(Duration.zero);
+      return _conversation();
+    });
+    freshSent(4);
+    final bloc = await open(_subscribe(), sent: 2);
+    bloc.add(_send());
+    await pumpEventQueue();
+    verifySentBefore(2).called(1);
+    verifySentBefore(null).called(1);
+    await bloc.close();
+  });
+
+  test(
+    'instantané vide du cache ignoré, puis serveur : demandeur connu',
+    () async {
+      final bloc = await open(_subscribe(), parent: false);
+      parentCtrl.add(_p(null, exists: false, fromCache: true));
+      await pumpEventQueue();
+      bloc.add(_send());
+      await pumpEventQueue();
+      verifyNoWrite();
+      parentCtrl.add(_p(_me));
+      await pumpEventQueue();
+      sentCtrl.add(0);
+      await pumpEventQueue();
+      verifySentBefore(0).called(1);
+      await bloc.close();
+    },
+  );
+
+  test(
+    'document absent côté serveur : pas demandeur, envoi ordinaire',
+    () async {
+      final bloc = await open(_subscribe(), parent: false);
+      parentCtrl.add(_p(null, exists: false));
+      await pumpEventQueue();
+      bloc.add(_send());
+      await pumpEventQueue();
+      verifySentBefore(null).called(1);
+      await bloc.close();
+    },
+  );
+
+  test('askerId nul : jamais de compteur', () async {
+    final bloc = await open(_subscribe(), asker: null);
+    expect(loaded(bloc).inquiryRemaining, isNull);
+    verifyNever(() => fs.inquirySentStream(any()));
+    await bloc.close();
+  });
+
+  test(
+    'erreur du flux parent : inconnu, réabonnement à l\'envoi suivant',
+    () async {
+      final bloc = await open(_subscribe(), sent: 0);
+      parentCtrl.addError(Exception('hors ligne'));
+      await pumpEventQueue();
+      bloc.add(_send('x'));
+      await pumpEventQueue();
+      verifyNoWrite();
+      verify(() => fs.inquiryParentStream(_conv)).called(2);
+      parentCtrl.add(_p(_me));
+      await pumpEventQueue();
+      sentCtrl.add(0);
+      await pumpEventQueue();
+      verifySentBefore(0).called(1);
+      await bloc.close();
+    },
+  );
+
+  test(
+    'fermeture pendant l\'attente du parent : rien d\'écrit ni d\'émis',
+    () async {
+      final bloc = await open(_subscribe(), parent: false);
+      bloc.add(_send());
+      await pumpEventQueue();
+      await bloc.close();
+      await pumpEventQueue();
+      verifyNoWrite();
+    },
+  );
+
+  test(
+    'levée puis reverrouillage : de nouveau limité, compteur exact',
+    () async {
+      final bloc = await open(_subscribe(), sent: 4);
+      parentCtrl.add(_p(_me, lifted: true));
+      await pumpEventQueue();
+      expect(loaded(bloc).inquiryRemaining, isNull);
+      parentCtrl.add(_p(_me));
+      await pumpEventQueue();
+      expect(sentCtrl.hasListener, isTrue);
+      expect(loaded(bloc).inquiryRemaining, isNull); // compteur pas encore relu
+      sentCtrl.add(7);
+      await pumpEventQueue();
+      expect(loaded(bloc).inquiryRemaining, 3);
+      bloc.add(_send());
+      await pumpEventQueue();
+      verifySentBefore(7).called(1);
+      await bloc.close();
+    },
+  );
+
+  test(
+    'openInquiry réellement lent : échec réessayable, la file n\'est pas bloquée',
+    () async {
+      failFirstWrite();
+      when(
+        () => conv.openInquiry('ann-1'),
+      ).thenAnswer((_) => Completer<ConversationModel>().future);
+      final bloc = await open(
+        _subscribe(),
+        sent: 2,
+        reconcileTimeout: const Duration(milliseconds: 50),
+      );
+      final emitted = <ChatState>[];
+      final sub = bloc.stream.listen(emitted.add);
+      bloc.add(_send('un'));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      expect(emitted.whereType<ChatSendFailed>(), hasLength(1));
+      await sub.cancel();
+      await bloc.close();
+    },
+  );
 }
