@@ -3579,8 +3579,12 @@ class _TripFormContentState extends State<_TripFormContent> {
           // Un trajet dédié « peu importe » a l'étape Mode, donc pas de ligne.
           // Avion seul proposé et trajet avion : rien à choisir, pas de ligne.
           transportModeRowModes: _showModeRow ? _modeRowModes : null,
-          // Trajet dédié, ou trajet bateau modifié : le mode ne change pas.
-          transportModeRowReadOnly: _isLocked || (_isEdit && _isBoat),
+          // Trajet dédié : le mode ne change pas. Un trajet bateau modifié
+          // peut changer de mode comme un autre : le back seul refuse (409
+          // `transport-mode-locked`) quand un colis, une offre ou un fil
+          // vivant existe (recette du 13/11 : seul « Bateau » proposé sur un
+          // trajet sans colis).
+          transportModeRowReadOnly: _isLocked,
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
           onSelectDate: _selectDate,

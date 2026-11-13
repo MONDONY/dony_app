@@ -5912,13 +5912,16 @@ void main() {
       final row = tester.widget<TransportModeRow>(
         find.byType(TransportModeRow),
       );
-      // Un trajet bateau garde son mode : ligne en lecture seule, sans la
-      // puce d'un autre mode.
-      expect(row.readOnly, isTrue);
+      // Recette 13/11 : un trajet bateau sans colis peut changer de mode,
+      // comme un trajet avion ; seul le back refuse quand un colis, une
+      // offre ou un fil vivant existe (409 `transport-mode-locked`).
+      expect(row.readOnly, isFalse);
       expect(row.notifier.value, TransportMode.boat);
-      // Le mode réel est affiché, même s'il n'est pas proposable.
+      // Le mode réel est affiché, même s'il n'est pas proposable, à côté des
+      // autres modes.
       expect(find.byKey(const Key('mode-chip-boat')), findsOneWidget);
-      expect(find.byKey(const Key('mode-chip-plane')), findsNothing);
+      expect(find.byKey(const Key('mode-chip-plane')), findsOneWidget);
+      expect(find.byKey(const Key('mode-chip-car')), findsOneWidget);
 
       await _goToStep(tester, TripFormStep.conditions);
       await tester.tap(find.byKey(const Key('create-announcement-submit')));
@@ -5928,6 +5931,29 @@ void main() {
         () => announcementBloc.add(captureAny()),
       ).captured.whereType<AnnouncementUpdateRequested>().single;
       expect(sent.transportMode, TransportMode.boat);
+    });
+
+    testWidgets("modification d'un trajet BOAT sans colis : passer en Route "
+        'est possible', (tester) async {
+      roadOn();
+      final boatTrip = _makeFullAnnouncement(
+        transportMode: TransportMode.boat,
+        arrivalTime: null,
+        arrivalDate: DateTime(2026, 8, 20),
+        arrivalDateMax: DateTime(2026, 8, 30),
+      );
+      await pumpScreen(tester, CreateTripArgs(announcement: boatTrip));
+
+      final chip = find.byKey(const Key('mode-chip-car'));
+      await tester.ensureVisible(chip);
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+
+      final row = tester.widget<TransportModeRow>(
+        find.byType(TransportModeRow),
+      );
+      expect(row.notifier.value, TransportMode.car);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets("avion seul, modification d'un trajet avion : pas de ligne du "
