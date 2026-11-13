@@ -157,10 +157,9 @@ class BilletCorridor extends StatelessWidget {
               ),
               Text(city, key: cityKey, softWrap: true, style: cityStyle),
             ] else
-              Text(
-                city,
-                key: cityKey,
-                softWrap: true,
+              _BigCityName(
+                city: city,
+                textKey: cityKey,
                 style: bigCityStyle,
                 textAlign: align,
               ),
@@ -204,6 +203,72 @@ class BilletCorridor extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Nom de ville en grand (hors avion) : passe à la ligne entre les mots,
+/// jamais au milieu d'un mot (« Yamouss / oukro » à 360 dp). Quand le mot le
+/// plus long ne tient pas sur la largeur disponible, la police baisse juste
+/// assez pour qu'il tienne, sans descendre sous [_minFontSize].
+class _BigCityName extends StatelessWidget {
+  const _BigCityName({
+    required this.city,
+    required this.textKey,
+    required this.style,
+    required this.textAlign,
+  });
+
+  final String city;
+  final Key textKey;
+  final TextStyle? style;
+  final TextAlign textAlign;
+
+  static const double _minFontSize = 10;
+
+  /// Mots sur lesquels une ligne peut se couper : espaces, et tirets gardés
+  /// avec le mot qui les précède (« Fontenay- », « le- »).
+  static Iterable<String> _words(String text) =>
+      RegExp(r'[^\s-]+-?|-').allMatches(text).map((m) => m.group(0)!);
+
+  @override
+  Widget build(BuildContext context) {
+    final base = style ?? DefaultTextStyle.of(context).style;
+    final baseSize = base.fontSize ?? 22;
+    final scaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        var fontSize = baseSize;
+        final maxWidth = constraints.maxWidth;
+        if (maxWidth.isFinite && maxWidth > 0) {
+          var widest = 0.0;
+          for (final word in _words(city)) {
+            final painter = TextPainter(
+              text: TextSpan(text: word, style: base),
+              textDirection: direction,
+              textScaler: scaler,
+              maxLines: 1,
+            )..layout();
+            if (painter.width > widest) widest = painter.width;
+            painter.dispose();
+          }
+          if (widest > maxWidth) {
+            // Marge d'un pixel : l'arrondi du rendu ne doit pas recouper.
+            fontSize = (baseSize * (maxWidth - 1) / widest).clamp(
+              _minFontSize,
+              baseSize,
+            );
+          }
+        }
+        return Text(
+          city,
+          key: textKey,
+          softWrap: true,
+          style: base.copyWith(fontSize: fontSize),
+          textAlign: textAlign,
+        );
+      },
     );
   }
 }
