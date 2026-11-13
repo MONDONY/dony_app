@@ -667,6 +667,7 @@ void main() {
 
     test('invité : prix net masqué, prix affiché conservé', () {
       final json = baseAnnouncementJson()
+        ..['transportMode'] = 'BOAT'
         ..['volumeCapacityM3'] = 10
         ..['availableVolumeM3'] = 10
         ..['pricePerM3'] = null
@@ -675,6 +676,27 @@ void main() {
       expect(model.pricePerM3, isNull);
       expect(model.pricePerM3Display, 110.0);
       expect(model.isPricedPerM3, isTrue);
+    });
+
+    test('isPricedPerM3 : BOAT et prix au m³ servi, jamais le volume seul', () {
+      Map<String, dynamic> json(String mode, {num? perM3, num? display}) =>
+          baseAnnouncementJson()
+            ..['transportMode'] = mode
+            ..['volumeCapacityM3'] = 10
+            ..['availableVolumeM3'] = 10
+            ..['pricePerM3'] = perM3
+            ..['pricePerM3Display'] = display;
+      bool perM3(Map<String, dynamic> j) =>
+          AnnouncementModel.fromJson(j).isPricedPerM3;
+
+      // Bateau au kilo qui porte un volume facultatif : pas vendu au m³.
+      expect(perM3(json('BOAT')), isFalse);
+      // Prix au m³ servi (net ou seulement affiché à un invité) : vendu au m³.
+      expect(perM3(json('BOAT', perM3: 90)), isTrue);
+      expect(perM3(json('BOAT', display: 99.5)), isTrue);
+      // Hors bateau, jamais, même avec des champs au m³.
+      expect(perM3(json('PLANE', perM3: 90, display: 99.5)), isFalse);
+      expect(perM3(json('CAR', perM3: 90, display: 99.5)), isFalse);
     });
 
     test('toJson conserve les champs bateau', () {

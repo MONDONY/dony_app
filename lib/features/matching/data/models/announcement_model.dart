@@ -422,8 +422,14 @@ class AnnouncementModel {
 
   Map<String, dynamic> toJson() => _$AnnouncementModelToJson(this);
 
-  /// Trajet bateau vendu au m³ : un volume est proposé, aucun kilo.
-  bool get isPricedPerM3 => volumeCapacityM3 != null;
+  /// Trajet bateau vendu au m³ : un volume est proposé, aucun kilo. Comme le
+  /// back (BOAT et prix au m³ servi) : un volume facultatif sur un bateau au
+  /// kilo, ou un prix au m³ sur un autre mode, ne le rend pas vendu au m³.
+  /// Un invité ne reçoit que le prix affiché, jamais le net : l'un ou l'autre
+  /// suffit.
+  bool get isPricedPerM3 =>
+      transportMode == TransportMode.boat &&
+      (pricePerM3 != null || pricePerM3Display != null);
 
   /// Trajet dédié : une part de la capacité est réservée à une négociation.
   bool get isDedicated => reservedKg > 0;
