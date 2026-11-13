@@ -5231,13 +5231,13 @@ abstract class AppLocalizations {
   /// Puce « comment ça marche », rôle expéditeur : transport
   ///
   /// In fr, this message translates to:
-  /// **'Un voyageur transporte votre colis avec lui.'**
+  /// **'Un voyageur ou un transporteur achemine votre colis.'**
   String get requestPublishIntroWhyBulletCarried;
 
-  /// Puce « comment ça marche », rôle expéditeur : paiement séquestré
+  /// Puce « comment ça marche », rôle expéditeur : paiement. Vraie pour tous les modes (avion et route : versé à la livraison, bateau : au dépôt), affichée avant le choix du mode
   ///
   /// In fr, this message translates to:
-  /// **'Paiement sécurisé, libéré à la livraison confirmée.'**
+  /// **'Paiement sécurisé : vous savez avant de payer quand le transporteur est payé.'**
   String get requestPublishIntroWhyBulletPayment;
 
   /// Puce « comment ça marche », rôle expéditeur : suivi QR

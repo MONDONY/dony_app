@@ -3084,11 +3084,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestPublishIntroWhyBulletCarried =>
-      'Un voyageur transporte votre colis avec lui.';
+      'Un voyageur ou un transporteur achemine votre colis.';
 
   @override
   String get requestPublishIntroWhyBulletPayment =>
-      'Paiement sécurisé, libéré à la livraison confirmée.';
+      'Paiement sécurisé : vous savez avant de payer quand le transporteur est payé.';
 
   @override
   String get requestPublishIntroWhyBulletTracking =>

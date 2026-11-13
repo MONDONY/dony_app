@@ -3069,11 +3069,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestPublishIntroWhyBulletCarried =>
-      'A traveler carries your parcel with them.';
+      'A traveler or a carrier ships your parcel.';
 
   @override
   String get requestPublishIntroWhyBulletPayment =>
-      'Secure payment, released once delivery is confirmed.';
+      'Secure payment: you know before paying when the carrier gets paid.';
 
   @override
   String get requestPublishIntroWhyBulletTracking =>

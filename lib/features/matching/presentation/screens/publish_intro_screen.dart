@@ -251,7 +251,10 @@ class PublishIntroScreen extends StatelessWidget {
                   Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _Hero(asset: config.asset),
+                          _Hero(
+                            asset: config.asset,
+                            alignment: config.assetAlignment,
+                          ),
                           const SizedBox(height: DonySpacing.base),
                           _ConditionCallout(
                             verified: verified,
@@ -349,10 +352,14 @@ class PublishIntroScreen extends StatelessWidget {
 // Config par rôle
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Illustration de l'écran « Publier un colis », neutre pour tous les modes.
+const kSendIntroIllustration = 'assets/illustrations/onboarding-handoff.png';
+
 class _IntroConfig {
   const _IntroConfig({
     required this.title,
     required this.asset,
+    this.assetAlignment = Alignment.center,
     required this.accent,
     required this.buttonVariant,
     required this.verifiedText,
@@ -367,6 +374,9 @@ class _IntroConfig {
 
   final String title;
   final String asset;
+
+  /// Cadrage de [asset] dans le carré du héros.
+  final Alignment assetAlignment;
   final Color accent;
   final DonyButtonVariant buttonVariant;
   final String verifiedText;
@@ -414,7 +424,11 @@ class _IntroConfig {
       case PublishIntroRole.parcel:
         return _IntroConfig(
           title: l10n.requestPublishIntroTitle,
-          asset: 'assets/illustrations/envoie_colis.png',
+          // Avant le choix du mode : une remise de colis, ni aéroport ni
+          // avion (l'ancienne illustration montrait un hall de départ CDG,
+          // fausse en bateau et en route).
+          asset: kSendIntroIllustration,
+          assetAlignment: const Alignment(0, 0.3),
           accent: cs.secondary,
           buttonVariant: DonyButtonVariant.accent,
           verifiedText: l10n.requestPublishIntroVerifiedText,
@@ -455,8 +469,11 @@ class _Rule {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _Hero extends StatelessWidget {
-  const _Hero({required this.asset});
+  const _Hero({required this.asset, this.alignment = Alignment.center});
   final String asset;
+
+  /// Point gardé quand l'illustration n'est pas carrée (rognage du `cover`).
+  final Alignment alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -466,7 +483,12 @@ class _Hero extends StatelessWidget {
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: AspectRatio(
         aspectRatio: 1,
-        child: Image.asset(asset, fit: BoxFit.cover, width: double.infinity),
+        child: Image.asset(
+          asset,
+          fit: BoxFit.cover,
+          alignment: alignment,
+          width: double.infinity,
+        ),
       ),
     );
   }

@@ -668,10 +668,32 @@ void main() {
       await _pump(tester, role: PublishIntroRole.parcel, kycStatus: 'VERIFIED');
 
       expect(
-        find.text('Un voyageur transporte votre colis avec lui.'),
+        find.text('Un voyageur ou un transporteur achemine votre colis.'),
         findsOneWidget,
       );
       expect(find.textContaining('bagage'), findsNothing);
+    });
+
+    testWidgets('avant le choix du mode : ni aéroport ni versement propre à un '
+        'mode (FR et EN)', (tester) async {
+      await _pump(tester, role: PublishIntroRole.parcel, kycStatus: 'VERIFIED');
+
+      final images = tester.widgetList<Image>(find.byType(Image));
+      final assets = images
+          .map((i) => i.image)
+          .whereType<AssetImage>()
+          .map((a) => a.assetName);
+      expect(assets, contains(kSendIntroIllustration));
+      expect(assets, isNot(contains('assets/illustrations/envoie_colis.png')));
+      // « libéré à la livraison » est faux en bateau (payé au dépôt).
+      expect(find.textContaining('livraison'), findsNothing);
+      expect(
+        find.text(
+          'Paiement sécurisé : vous savez avant de payer quand le '
+          'transporteur est payé.',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('vérifié : case cochée puis Continuer ouvre le wizard', (
@@ -969,6 +991,13 @@ void main() {
       await _pump(tester, role: PublishIntroRole.parcel, kycStatus: 'VERIFIED');
 
       expect(find.text('Post a parcel'), findsOneWidget);
+      expect(find.textContaining('delivery'), findsNothing);
+      expect(
+        find.text(
+          'Secure payment: you know before paying when the carrier gets paid.',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('trajet, non vérifié : phrase complète en anglais', (

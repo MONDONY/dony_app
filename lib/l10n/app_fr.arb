@@ -1615,13 +1615,13 @@
   "@requestPublishIntroWhyTitle": {
     "description": "Titre de la section « comment ça marche », rôle expéditeur"
   },
-  "requestPublishIntroWhyBulletCarried": "Un voyageur transporte votre colis avec lui.",
+  "requestPublishIntroWhyBulletCarried": "Un voyageur ou un transporteur achemine votre colis.",
   "@requestPublishIntroWhyBulletCarried": {
     "description": "Puce « comment ça marche », rôle expéditeur : transport"
   },
-  "requestPublishIntroWhyBulletPayment": "Paiement sécurisé, libéré à la livraison confirmée.",
+  "requestPublishIntroWhyBulletPayment": "Paiement sécurisé : vous savez avant de payer quand le transporteur est payé.",
   "@requestPublishIntroWhyBulletPayment": {
-    "description": "Puce « comment ça marche », rôle expéditeur : paiement séquestré"
+    "description": "Puce « comment ça marche », rôle expéditeur : paiement. Vraie pour tous les modes (avion et route : versé à la livraison, bateau : au dépôt), affichée avant le choix du mode"
   },
   "requestPublishIntroWhyBulletTracking": "Suivi par QR de la remise jusqu'à la réception.",
   "@requestPublishIntroWhyBulletTracking": {
