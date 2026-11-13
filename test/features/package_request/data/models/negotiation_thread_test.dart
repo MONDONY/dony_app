@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -551,6 +552,24 @@ void main() {
         'depositExpiresAt': '2026-09-11T10:30:00',
       });
       expect(t1, isNot(equals(t2)));
+    });
+  });
+
+  group('transportMode', () {
+    test('lu quand le back le sert, nul sinon', () {
+      expect(
+        NegotiationThread.fromJson(
+          _baseJson(overrides: {'transportMode': 'BOAT'}),
+        ).transportMode,
+        TransportMode.boat,
+      );
+      expect(NegotiationThread.fromJson(_baseJson()).transportMode, isNull);
+      expect(
+        NegotiationThread.fromJson(
+          _baseJson(overrides: {'transportMode': null}),
+        ).transportMode,
+        isNull,
+      );
     });
   });
 }

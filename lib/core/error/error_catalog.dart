@@ -2053,11 +2053,17 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.sell_outlined,
     ),
-    'boat-volume-booking-unavailable': _Entry(
-      title: (l) => l.errorBoatVolumeBookingUnavailableTitle,
-      message: (l) => l.errorBoatVolumeBookingUnavailableMessage,
+    'volume-price-too-high': _Entry(
+      title: (l) => l.errorVolumePriceTooHighTitle,
+      message: (l) => l.errorVolumePriceTooHighMessage,
       severity: ErrorSeverity.warning,
-      icon: Icons.block_rounded,
+      icon: Icons.sell_outlined,
+    ),
+    'transport-mode-locked': _Entry(
+      title: (l) => l.errorTransportModeLockedTitle,
+      message: (l) => l.errorTransportModeLockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_outline_rounded,
     ),
     'pricing-unit-locked': _Entry(
       title: (l) => l.errorPricingUnitLockedTitle,
@@ -2187,6 +2193,9 @@ abstract final class ErrorCatalog {
     'arrival-range-invalid',
     // Retards du trajet : le `detail` du back porte le nombre de retards annoncés.
     'trip-delay-too-frequent',
+    // Colis payé au dépôt : le `detail` du back (409) dit déjà que le voyageur a
+    // été payé et que le litige passe par le support. Texte fixe en repli.
+    'deposit-paid-no-refund',
     // Bornes de poids, de capacité et de taille : `detail` localisé par le back.
     'weight-too-heavy',
     'trip-capacity-too-high',

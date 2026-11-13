@@ -65,6 +65,7 @@ BidModel _bid({
   TransportMode? mode = TransportMode.boat,
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   PayoutTrigger payoutTrigger = PayoutTrigger.delivery,
+  DateTime? depositedAt,
   TripDelayInfo? delay,
   String departureCity = 'Le Havre',
   String arrivalCity = 'Abidjan',
@@ -82,6 +83,7 @@ BidModel _bid({
   weightKg: 30,
   paymentMethod: paymentMethod,
   payoutTrigger: payoutTrigger,
+  depositedAt: depositedAt,
   totalAmountEur: 60,
   departureCity: departureCity,
   arrivalCity: arrivalCity,
@@ -259,6 +261,30 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('libéré à la livraison'), findsNothing);
+    });
+
+    testWidgets('bidDetail_depositLabel : la date servie par le colis prime, '
+        'sans lecture des étapes', (tester) async {
+      var created = 0;
+      getIt.registerFactory<TrackingBloc>(() {
+        created++;
+        return _MockTrackingBloc();
+      });
+      await _pump(
+        tester,
+        _bid(
+          payoutTrigger: PayoutTrigger.deposit,
+          depositedAt: DateTime(2026, 11, 20, 9),
+        ),
+      );
+
+      expect(
+        find.textContaining(
+          'versé au transporteur au dépôt du colis, le 20 nov.',
+        ),
+        findsOneWidget,
+      );
+      expect(created, 0);
     });
 
     testWidgets('une seule lecture des étapes, même après l\'animation '

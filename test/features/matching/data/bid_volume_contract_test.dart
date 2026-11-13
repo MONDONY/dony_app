@@ -57,7 +57,7 @@ void main() {
     });
   });
 
-  group('requêtes (contrat BB2)', () {
+  group('requêtes', () {
     late RecordingApi api;
     late BidRepository bids;
     const volume = BidVolumeInput(lengthCm: 100, widthCm: 50, heightCm: 40);

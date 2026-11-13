@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../../helpers/l10n_test_helpers.dart';
 
 void main() {
-  Widget wrap({String threadId = 't-1'}) {
+  Widget wrap({String threadId = 't-1', bool deposit = false}) {
     final router = GoRouter(
       initialLocation: '/negotiations/$threadId/paid',
       routes: [
@@ -17,6 +17,7 @@ void main() {
           path: '/negotiations/:id/paid',
           builder: (_, state) => NegotiationPaidSuccessScreen(
             threadId: state.pathParameters['id']!,
+            payoutAtDeposit: deposit,
           ),
         ),
         GoRoute(
@@ -45,6 +46,20 @@ void main() {
     );
     expect(find.text('Voir le suivi'), findsOneWidget);
   });
+
+  testWidgets(
+    'versé au dépôt (bateau) : sous-titre du dépôt, jamais la livraison',
+    (tester) async {
+      await tester.pumpWidget(wrap(deposit: true));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('versé au transporteur au dépôt de votre colis'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('confirmation de la livraison'), findsNothing);
+    },
+  );
 
   testWidgets('le CTA navigue vers le fil de négociation', (tester) async {
     await tester.pumpWidget(wrap(threadId: 'thread-42'));

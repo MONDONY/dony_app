@@ -15,6 +15,7 @@ import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/payments/bloc/payer_account_cubit.dart';
@@ -852,7 +853,9 @@ class _AwaitingBody extends StatelessWidget {
           ),
         (
           label: l.mobileMoneyPaidToTravelerLabel,
-          value: l.mobileMoneyPaidToTravelerValue,
+          value: status.payoutTrigger == PayoutTrigger.deposit
+              ? l.mobileMoneyPaidToTravelerValueDeposit
+              : l.mobileMoneyPaidToTravelerValue,
         ),
       ],
     );

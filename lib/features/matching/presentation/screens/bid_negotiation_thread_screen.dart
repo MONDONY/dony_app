@@ -23,6 +23,7 @@ import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation_pricing.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/payout_wording.dart';
 import 'package:dony/features/matching/presentation/activity_refresh.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_negotiation_parcel_sheet.dart';
@@ -853,7 +854,9 @@ class _ThreadActions extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             hint(
-              l.negotiationThreadPayHint,
+              paidAtDeposit(negotiation.transportMode)
+                  ? l.negotiationThreadPayHintDeposit
+                  : l.negotiationThreadPayHint,
               'nego-pay-hint',
               icon: 'smartphone',
               tint: DonyColors.threadStatusViolet,
@@ -898,7 +901,9 @@ class _ThreadActions extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             hint(
-              l.negotiationThreadPayHint,
+              paidAtDeposit(negotiation.transportMode)
+                  ? l.negotiationThreadPayHintDeposit
+                  : l.negotiationThreadPayHint,
               'nego-pay-hint',
               icon: 'credit-card',
               tint: DonyColors.threadStatusViolet,

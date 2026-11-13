@@ -273,19 +273,16 @@ void main() {
     'refus 422 du back : BidError avec le code, bid_submit_failed',
     () async {
       stubCheckout().thenThrow(
-        const ValidationException(
-          'raw',
-          code: 'boat-volume-booking-unavailable',
-        ),
+        const ValidationException('raw', code: 'insufficient-volume'),
       );
       final bloc = makeBloc()..add(checkout(volume: _volume));
       final state = await bloc.stream.firstWhere((s) => s is BidError);
-      expect((state as BidError).error.code, 'boat-volume-booking-unavailable');
+      expect((state as BidError).error.code, 'insufficient-volume');
       await Future<void>.delayed(Duration.zero);
       verify(
         () => backend.capture(AnalyticsEvents.bidSubmitFailed, {
           'payment_method': 'card',
-          'error_code': 'boat-volume-booking-unavailable',
+          'error_code': 'insufficient-volume',
         }),
       ).called(1);
     },

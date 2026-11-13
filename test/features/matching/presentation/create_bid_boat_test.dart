@@ -579,19 +579,12 @@ void main() {
       await fillRest(tester);
 
       bidStream.add(
-        BidError(
-          const ValidationException(
-            'raw',
-            code: 'boat-volume-booking-unavailable',
-          ),
-        ),
+        BidError(const ValidationException('raw', code: 'insufficient-volume')),
       );
       await tester.pumpAndSettle();
 
       expect(
-        find.textContaining(
-          "La réservation d'un trajet en bateau facturé au m³",
-        ),
+        find.textContaining("Ce trajet n'a pas assez de volume restant"),
         findsWidgets,
       );
       // Le formulaire reste là, saisie comprise.

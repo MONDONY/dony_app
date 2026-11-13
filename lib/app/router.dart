@@ -672,8 +672,11 @@ final GoRouter appRouter = GoRouter(
     // d'attente mobile money. Le CTA ramène sur le fil via `go`.
     GoRoute(
       path: '/negotiations/:id/paid',
-      builder: (_, state) =>
-          NegotiationPaidSuccessScreen(threadId: state.pathParameters['id']!),
+      builder: (_, state) => NegotiationPaidSuccessScreen(
+        threadId: state.pathParameters['id']!,
+        // `extra` : vrai quand le transporteur est payé au dépôt (bateau).
+        payoutAtDeposit: state.extra == true,
+      ),
     ),
     // Écran de succès « Ce colis est à toi ! » (hors shell) : poussé par le
     // fil quand le voyageur a réglé la commission d'un accord en espèces.

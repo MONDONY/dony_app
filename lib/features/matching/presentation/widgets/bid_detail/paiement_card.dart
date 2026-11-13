@@ -262,8 +262,8 @@ class _PaymentRow extends StatelessWidget {
 }
 
 /// Colis payé au dépôt et déposé : « 60,00 € versé au transporteur au dépôt
-/// du colis, le 26 nov. ». La date est celle de l'étape `DEPART`, lue une
-/// fois à l'affichage de la carte ; tant qu'elle n'est pas lue (ou si la
+/// du colis, le 26 nov. ». La date est `BidModel.depositedAt` quand le back la
+/// sert, sinon celle de l'étape `DEPART`, lue une fois à l'affichage de la carte ; tant qu'elle n'est pas lue (ou si la
 /// lecture échoue), la phrase s'affiche sans date.
 class _DepositPaidRow extends StatelessWidget {
   const _DepositPaidRow({required this.bid, required this.amount});
@@ -298,6 +298,9 @@ class _DepositPaidRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Date servie par le colis : aucune lecture des étapes nécessaire.
+    final served = bid.depositedAt;
+    if (served != null) return _row(context, served);
     // Lecture propre à la carte : le TrackingBloc de l'écran sert au talon.
     if (!getIt.isRegistered<TrackingBloc>()) return _row(context, null);
     return BlocProvider<TrackingBloc>(

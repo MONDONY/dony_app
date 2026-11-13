@@ -1170,14 +1170,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'A sea freight trip has a single price: per cubic meter or per kilo, without an item price list.';
 
   @override
-  String get errorBoatVolumeBookingUnavailableTitle =>
-      'Booking per cubic meter unavailable';
-
-  @override
-  String get errorBoatVolumeBookingUnavailableMessage =>
-      'Booking a sea freight trip priced per cubic meter is not available yet.';
-
-  @override
   String get errorPricingUnitLockedTitle => 'Pricing unit locked';
 
   @override
@@ -25005,4 +24997,58 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get amendmentGainPaidOutDeposit =>
       'Paid to your account when the parcel is deposited';
+
+  @override
+  String get errorVolumePriceTooHighTitle => 'Price per cubic meter too high';
+
+  @override
+  String get errorVolumePriceTooHighMessage =>
+      'The price per cubic meter is above the allowed limit. Lower it and try again.';
+
+  @override
+  String get errorTransportModeLockedTitle => 'Transport mode locked';
+
+  @override
+  String get errorTransportModeLockedMessage =>
+      'While parcels are still active on this trip, its mode can\'t switch to or from boat.';
+
+  @override
+  String get negotiationThreadPayHintDeposit =>
+      'Price accepted. Pay now to reserve your spot; the amount is paid out to the carrier when you drop off your parcel.';
+
+  @override
+  String get negotiationPaymentRecapSecureBannerMessageDeposit =>
+      'Secure · paid out at parcel deposit';
+
+  @override
+  String get negotiationPaymentRecapSecureNoteDeposit =>
+      'The amount is held securely. The carrier receives it when you drop off your parcel. A dispute is settled with Yadony support.';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyBannerMessageDeposit =>
+      'You approve the payment on your phone. Yadony holds the money and pays it out to the carrier when you drop off your parcel.';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyNoteDeposit =>
+      'A payment request is sent to the number below. The carrier receives the amount when you drop off your parcel.';
+
+  @override
+  String get negotiationOfferAcceptedPaidSubtitleDeposit =>
+      'Your money is secured by Yadony, then paid out to the carrier when you drop off your parcel. Follow your parcel from the thread.';
+
+  @override
+  String get mobileMoneyPaidToTravelerValueDeposit =>
+      'When the parcel is dropped off';
+
+  @override
+  String get requestPublicReassureSecuredDeposit =>
+      'Secure payment: paid out as soon as the parcel is dropped off';
+
+  @override
+  String get bidDepositPaidSupportSenderSubtitle =>
+      'The carrier was paid when the parcel was deposited: a dispute is settled with Yadony support.';
+
+  @override
+  String get bidDepositPaidSupportTravelerSubtitle =>
+      'You were paid when the parcel was deposited: a dispute is settled with Yadony support.';
 }

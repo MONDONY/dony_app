@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -87,6 +88,7 @@ class NegotiationThread extends Equatable {
     this.commissionRate,
     this.travelerCashCommissionEur,
     this.autoReminderSentAt,
+    this.transportMode,
   });
 
   final String id;
@@ -179,6 +181,12 @@ class NegotiationThread extends Equatable {
   /// sans rappel ou sur un back antérieur. Le back sérialise un `LocalDateTime`
   /// UTC sans suffixe de zone : forcé en UTC au parse.
   final DateTime? autoReminderSentAt;
+
+  /// Mode de transport du fil : celui de la demande, sinon celui du trajet lié
+  /// (offre sur une demande « peu importe »), sinon `null` (aucun trajet lié, mode
+  /// inconnu, ou back antérieur). Jamais l'avion par défaut : un fil sans mode
+  /// montre une icône neutre et garde les textes de paiement à la livraison.
+  final TransportMode? transportMode;
 
   /// Fil rangé dans les archives de l'appelant (yadony-back #423). Absent
   /// d'un backend antérieur : `false`, aucun fil n'y est alors archivé.
@@ -284,6 +292,7 @@ class NegotiationThread extends Equatable {
     travelerCashCommissionEur: (json['travelerCashCommissionEur'] as num?)
         ?.toDouble(),
     autoReminderSentAt: _parseUtc(json['autoReminderSentAt'] as String?),
+    transportMode: transportModeFromWire(json['transportMode'] as String?),
   );
 
   /// Force l'UTC sur un `LocalDateTime` back sans suffixe de zone (ex.
@@ -345,5 +354,6 @@ class NegotiationThread extends Equatable {
     commissionRate,
     travelerCashCommissionEur,
     autoReminderSentAt,
+    transportMode,
   ];
 }

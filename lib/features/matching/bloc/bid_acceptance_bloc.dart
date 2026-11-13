@@ -28,6 +28,8 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
   /// affichant « Acceptation refusée ».
   static const definitiveRefusalCodes = <String>{
     'capacity-insufficient',
+    // Colis au m³ : le volume restant du trajet ne couvre plus le colis (409).
+    'insufficient-volume',
     'announcement-not-accepting',
     'announcement-not-found',
     'bid-not-found',

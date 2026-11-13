@@ -47,8 +47,10 @@ BidModel _bid({
   String? trackingToken,
   bool amendmentAllowed = false,
   BidMoneyBreakdown? moneyBreakdown,
+  PayoutTrigger payoutTrigger = PayoutTrigger.delivery,
 }) => BidModel(
   moneyBreakdown: moneyBreakdown,
+  payoutTrigger: payoutTrigger,
   id: 'bid-42',
   announcementId: 'ann-1',
   senderId: 'sender-1',
@@ -311,6 +313,54 @@ void main() {
             any(that: isA<CancelAfterHandoverRequested>()),
           ),
         ).called(1);
+      },
+    );
+
+    testWidgets(
+      'cancelAfterHandover_hiddenForDepositPaid : le support à la place',
+      (tester) async {
+        await openOptions(
+          tester,
+          _bid(status: 'HANDED_OVER', payoutTrigger: PayoutTrigger.deposit),
+        );
+
+        expect(
+          find.text(_l.bidDetailCancelAfterHandoverOptionSubtitle),
+          findsNothing,
+        );
+        expect(find.text(_l.bidDetailCancelRequestLabel), findsNothing);
+        expect(
+          find.byKey(const Key('deposit-paid-support-tile')),
+          findsOneWidget,
+        );
+        expect(find.text(_l.supportContactCta), findsOneWidget);
+        expect(
+          find.text(_l.bidDepositPaidSupportSenderSubtitle),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'cancelAfterHandover_shownForDepositCash : espèces, rien de versé',
+      (tester) async {
+        await openOptions(
+          tester,
+          _bid(
+            status: 'HANDED_OVER',
+            method: BidPaymentMethod.cash,
+            payoutTrigger: PayoutTrigger.deposit,
+          ),
+        );
+
+        expect(
+          find.text(_l.bidDetailCancelAfterHandoverOptionSubtitle),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('deposit-paid-support-tile')),
+          findsNothing,
+        );
       },
     );
 

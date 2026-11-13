@@ -11,15 +11,10 @@ import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/traveler_bids_page.dart';
 
 /// Dimensions du colis d'une réservation au m³, telles qu'elles partent au
-/// serveur (devis, paiement par carte, offre).
-///
-/// CONTRAT BB2 : c'est le SEUL endroit qui dit comment le volume voyage. Le
-/// back du lot 3 (PR A) ne lit encore aucune dimension sur un devis, un
-/// checkout ou une offre : il refuse toute réservation d'un trajet au m³ en
-/// 422 `boat-volume-booking-unavailable` (`BoatVolumeBooking`). Les noms
-/// ci-dessous sont PROVISOIRES, alignés sur ceux de la demande d'envoi
-/// (`PackageRequestCreateRequest`) ; à confirmer ou renommer ici quand BB2
-/// fixera la requête. Jamais le volume : le serveur le recalcule.
+/// serveur (devis, paiement par carte, offre, proposition de prix et début de
+/// négociation) : `lengthCm`, `widthCm`, `heightCm`, entiers de 1 à 400. Sans
+/// elles, un trajet au m³ refuse en 422 `boat-dimensions-required`. Jamais le
+/// volume : le serveur le recalcule (`BidResponse.volumeM3`).
 Map<String, dynamic> volumeRequestEntries(BidVolumeInput? volume) => {
   if (volume != null) ...{
     'lengthCm': volume.lengthCm,

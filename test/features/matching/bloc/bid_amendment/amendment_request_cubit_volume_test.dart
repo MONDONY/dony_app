@@ -222,11 +222,7 @@ void main() {
     },
     verify: (c) {
       verify(
-        () => repository.quote(
-          'bid-1',
-          addedKg: 2,
-          items: const {},
-        ),
+        () => repository.quote('bid-1', addedKg: 2, items: const {}),
       ).called(1);
       verify(
         () => analytics.logEvent(

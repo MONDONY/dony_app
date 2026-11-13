@@ -397,6 +397,11 @@ class BidModel {
   @JsonKey(fromJson: _payoutTriggerFromJson, toJson: _payoutTriggerToJson)
   final PayoutTrigger payoutTrigger;
 
+  /// Instant du dépôt du colis à l'entrepôt (bateau), servi par le back une
+  /// fois le dépôt scanné. `null` avant le dépôt, hors bateau, ou sur un back
+  /// antérieur : la date se lit alors dans l'étape `DEPART` du suivi.
+  final DateTime? depositedAt;
+
   /// Dernier retard annoncé sur le trajet qui porte le colis. `null` sans
   /// retard, avant la remise du colis ou sur un back antérieur.
   @JsonKey(fromJson: TripDelayInfo.fromJsonOrNull, toJson: tripDelayToJson)
@@ -495,6 +500,7 @@ class BidModel {
     this.arrivalDateMax,
     this.volumeM3,
     this.payoutTrigger = PayoutTrigger.delivery,
+    this.depositedAt,
     this.latestTripDelay,
   });
 
@@ -534,6 +540,25 @@ class BidModel {
   );
 
   bool get isSkeleton => senderId.isEmpty;
+
+  /// Statuts d'un colis déposé à l'entrepôt (dépôt scanné) ou plus loin.
+  static const _depositedStatuses = {
+    'HANDED_OVER',
+    'IN_TRANSIT',
+    'ARRIVED',
+    'COMPLETED',
+    'DELIVERED',
+  };
+
+  /// Le voyageur a déjà été payé au dépôt du colis : paiement par Yadony (carte
+  /// ou mobile money, jamais des espèces, qui ne passent pas par l'app), colis
+  /// déposé. Plus aucun remboursement automatique : annulation après remise et
+  /// refus du colis sont remplacés par le support (409 `deposit-paid-no-refund`).
+  bool get isPaidOutAtDeposit =>
+      payoutTrigger == PayoutTrigger.deposit &&
+      (paymentMethod == BidPaymentMethod.stripe ||
+          paymentMethod == BidPaymentMethod.mobileMoney) &&
+      _depositedStatuses.contains(status);
 
   /// Colis d'un trajet bateau vendu au m³ : il porte un volume, jamais des
   /// kilos à ajuster. Un colis au kilo, ou sans volume (back antérieur), reste

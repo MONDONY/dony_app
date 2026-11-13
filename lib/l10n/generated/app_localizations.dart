@@ -2078,18 +2078,6 @@ abstract class AppLocalizations {
   /// **'Un trajet en bateau a un seul prix : au m³ ou au kilo, sans grille de prix par article.'**
   String get errorBoatPriceRequiredMessage;
 
-  /// Erreur boat-volume-booking-unavailable du back, titre (error_catalog.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Réservation au m³ indisponible'**
-  String get errorBoatVolumeBookingUnavailableTitle;
-
-  /// Erreur boat-volume-booking-unavailable du back, message (error_catalog.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'La réservation d\'un trajet en bateau facturé au m³ n\'est pas encore disponible.'**
-  String get errorBoatVolumeBookingUnavailableMessage;
-
   /// Erreur pricing-unit-locked du back, titre (error_catalog.dart).
   ///
   /// In fr, this message translates to:
@@ -40264,6 +40252,90 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Versé sur votre compte au dépôt du colis'**
   String get amendmentGainPaidOutDeposit;
+
+  /// Erreur volume-price-too-high du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix au m³ trop élevé'**
+  String get errorVolumePriceTooHighTitle;
+
+  /// Erreur volume-price-too-high du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le prix au m³ dépasse le plafond autorisé. Baissez-le puis réessayez.'**
+  String get errorVolumePriceTooHighMessage;
+
+  /// Erreur transport-mode-locked du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode de transport verrouillé'**
+  String get errorTransportModeLockedTitle;
+
+  /// Erreur transport-mode-locked du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tant que des colis sont en cours sur ce trajet, son mode ne peut pas passer au bateau ni le quitter.'**
+  String get errorTransportModeLockedMessage;
+
+  /// Fil de prix d'un trajet : indication de paiement quand le transporteur est payé au dépôt du colis (bateau), à la place de negotiationThreadPayHint
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix accepté. Réglez maintenant pour réserver votre place, le montant est versé au transporteur au dépôt de votre colis.'**
+  String get negotiationThreadPayHintDeposit;
+
+  /// Bandeau du récapitulatif de paiement par carte quand le transporteur est payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sécurisé · versé au dépôt du colis'**
+  String get negotiationPaymentRecapSecureBannerMessageDeposit;
+
+  /// Note du récapitulatif de paiement par carte quand le transporteur est payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant est bloqué et sécurisé. Le transporteur le reçoit au dépôt de votre colis. Un litige se règle avec le support Yadony.'**
+  String get negotiationPaymentRecapSecureNoteDeposit;
+
+  /// Bandeau du récapitulatif mobile money quand le transporteur est payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous validez le paiement sur votre téléphone. Yadony garde l\'argent et le verse au transporteur au dépôt de votre colis.'**
+  String get negotiationPaymentRecapMobileMoneyBannerMessageDeposit;
+
+  /// Note du récapitulatif mobile money quand le transporteur est payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une demande de paiement arrive sur le numéro indiqué ci-dessous. Le transporteur reçoit le montant au dépôt de votre colis.'**
+  String get negotiationPaymentRecapMobileMoneyNoteDeposit;
+
+  /// Écran de succès d'un fil payé quand le transporteur est payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre argent est sécurisé par Yadony, puis versé au transporteur au dépôt de votre colis. Suivez votre colis depuis le fil.'**
+  String get negotiationOfferAcceptedPaidSubtitleDeposit;
+
+  /// Écran d'attente mobile money : moment où le transporteur est payé, au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au dépôt du colis'**
+  String get mobileMoneyPaidToTravelerValueDeposit;
+
+  /// Fiche publique d'une demande par bateau : réassurance du voyageur, payé au dépôt
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé : versé dès le dépôt du colis'**
+  String get requestPublicReassureSecuredDeposit;
+
+  /// Menu d'options de l'expéditeur : sous-titre de l'entrée « Contacter le support » qui remplace l'annulation après remise d'un colis payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le transporteur a été payé au dépôt du colis : un litige se règle avec le support Yadony.'**
+  String get bidDepositPaidSupportSenderSubtitle;
+
+  /// Menu d'options du voyageur : sous-titre de l'entrée « Contacter le support » qui remplace le refus et l'annulation d'un colis payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez été payé au dépôt du colis : un litige se règle avec le support Yadony.'**
+  String get bidDepositPaidSupportTravelerSubtitle;
 }
 
 class _AppLocalizationsDelegate

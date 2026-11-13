@@ -2384,7 +2384,8 @@ void main() {
       'boat-volume-required',
       'boat-volume-unit-invalid',
       'boat-price-required',
-      'boat-volume-booking-unavailable',
+      'volume-price-too-high',
+      'transport-mode-locked',
       'pricing-unit-locked',
       'dimensions-incomplete',
       'boat-dimensions-required',
@@ -2417,16 +2418,33 @@ void main() {
       },
     );
 
-    test('boat-volume-booking-unavailable : message clair en anglais', () {
+    test('boat-volume-booking-unavailable : code retiré, repli générique', () {
+      expect(
+        ErrorCatalog.debugCodes,
+        isNot(contains('boat-volume-booking-unavailable')),
+      );
+    });
+
+    test('transport-mode-locked : message clair en anglais', () {
       final p = ErrorCatalog.lookup(
-        const ValidationException('', code: 'boat-volume-booking-unavailable'),
+        const ConflictException('', code: 'transport-mode-locked'),
         l10n: en,
       );
-      expect(p.title, 'Booking per cubic meter unavailable');
+      expect(p.title, 'Transport mode locked');
+      expect(p.message, contains('switch to or from boat'));
+    });
+
+    test('deposit-paid-no-refund : affiche le detail du serveur', () {
+      final p = ErrorCatalog.lookup(
+        const ConflictException(
+          'Le voyageur a été payé au dépôt : écrivez au support.',
+          code: 'deposit-paid-no-refund',
+        ),
+        l10n: fr,
+      );
       expect(
         p.message,
-        'Booking a sea freight trip priced per cubic meter is not available '
-        'yet.',
+        'Le voyageur a été payé au dépôt : écrivez au support.',
       );
     });
 

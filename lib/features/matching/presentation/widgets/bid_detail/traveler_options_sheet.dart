@@ -166,10 +166,29 @@ class _TravelerOptionsSheet extends StatelessWidget {
               const SizedBox(height: DonySpacing.sm),
             ],
 
+            // ── Colis déjà payé au voyageur au dépôt (bateau) ──────────────
+            // Plus de remboursement automatique : ni refus du colis ni annulation
+            // du transport, le litige passe par le support Yadony.
+            if (_canCancel(bid) && bid.isPaidOutAtDeposit) ...[
+              _OptionTile(
+                key: const Key('deposit-paid-support-tile'),
+                iconAsset: 'headset',
+                iconColor: cs.primary,
+                iconBg: cs.primaryContainer,
+                label: l.supportContactCta,
+                subtitle: l.bidDepositPaidSupportTravelerSubtitle,
+                onTap: () {
+                  context.pop();
+                  unawaited(outerContext.push<void>('/support'));
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+
             // ── Le colis ne correspond pas (même fenêtre que l'annulation) ──
             // Refus à l'inspection : l'expéditeur est remboursé et prévenu, le
             // voyageur n'est pas pénalisé, contrairement à l'annulation.
-            if (_canCancel(bid)) ...[
+            if (_canCancel(bid) && !bid.isPaidOutAtDeposit) ...[
               _OptionTile(
                 iconAsset: 'triangle-alert',
                 iconColor: cs.error,
@@ -186,7 +205,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
 
             // ── Annuler ce transport (ACCEPTED / HANDED_OVER avant départ) ──
             // Le voyageur renonce à transporter CE colis (pas tout son trajet).
-            if (_canCancel(bid)) ...[
+            if (_canCancel(bid) && !bid.isPaidOutAtDeposit) ...[
               _OptionTile(
                 iconAsset: 'ban',
                 iconColor: cs.error,
@@ -307,6 +326,7 @@ class _OptionTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   const _OptionTile({
+    super.key,
     this.icon,
     this.iconAsset,
     required this.iconColor,

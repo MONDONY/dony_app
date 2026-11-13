@@ -326,7 +326,24 @@ class _SenderOptionsSheet extends StatelessWidget {
             ],
             // Annulation après remise (D5) — colis déjà chez le voyageur, avant le
             // départ. L'expéditeur récupère son colis via le code de retour.
-            if (bid.canCancelAfterHandover) ...[
+            // Colis déjà payé au voyageur au dépôt (bateau) : plus de
+            // remboursement automatique, le litige passe par le support.
+            if (bid.canCancelAfterHandover && bid.isPaidOutAtDeposit) ...[
+              _OptionTile(
+                key: const Key('deposit-paid-support-tile'),
+                iconAsset: 'headset',
+                iconColor: cs.primary,
+                iconBg: cs.primaryContainer,
+                label: l.supportContactCta,
+                subtitle: l.bidDepositPaidSupportSenderSubtitle,
+                onTap: () {
+                  context.pop();
+                  unawaited(outerContext.push<void>('/support'));
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+            if (bid.canCancelAfterHandover && !bid.isPaidOutAtDeposit) ...[
               _OptionTile(
                 iconAsset: 'ban',
                 iconColor: cs.error,
@@ -429,6 +446,7 @@ class _OptionTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   const _OptionTile({
+    super.key,
     required this.iconAsset,
     required this.iconColor,
     required this.iconBg,

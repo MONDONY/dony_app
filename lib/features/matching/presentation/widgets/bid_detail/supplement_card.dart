@@ -323,7 +323,8 @@ class _TravelerContent extends StatelessWidget {
     final canRefuseParcel =
         (s.status == BidSupplementStatus.declined ||
             s.status == BidSupplementStatus.expired) &&
-        (bid.status == 'ACCEPTED' || bid.canCancelAfterHandover);
+        (bid.status == 'ACCEPTED' || bid.canCancelAfterHandover) &&
+        !bid.isPaidOutAtDeposit;
 
     return BlocBuilder<SupplementActionCubit, SupplementActionState>(
       builder: (context, action) => Column(

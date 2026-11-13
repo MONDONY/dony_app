@@ -55,8 +55,10 @@ BidModel _bid({
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   bool? contactWindowOpen,
   DateTime? returnDeadline,
+  PayoutTrigger payoutTrigger = PayoutTrigger.delivery,
 }) => BidModel(
   id: 'b1',
+  payoutTrigger: payoutTrigger,
   contactWindowOpen: contactWindowOpen,
   returnDeadline: returnDeadline,
   supplementRequestAllowed: supplementRequestAllowed,
@@ -187,6 +189,48 @@ void main() {
     expect(find.text('Annuler ce transport'), findsNothing);
     expect(find.text('Le colis ne correspond pas'), findsNothing);
     expect(find.text('Partager le suivi'), findsNothing);
+  });
+
+  group('colis payé au dépôt (bateau)', () {
+    testWidgets(
+      'refuseAndCancel_hiddenForDepositPaid : le support à la place',
+      (tester) async {
+        await _open(
+          tester,
+          _bid(status: 'HANDED_OVER', payoutTrigger: PayoutTrigger.deposit),
+        );
+
+        expect(find.text('Le colis ne correspond pas'), findsNothing);
+        expect(find.text('Annuler ce transport'), findsNothing);
+        expect(
+          find.byKey(const Key('deposit-paid-support-tile')),
+          findsOneWidget,
+        );
+        expect(find.text('Contacter le support'), findsOneWidget);
+        expect(
+          find.textContaining('un litige se règle avec le support Yadony'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('refuseAndCancel_unchangedBeforeDeposit : ACCEPTED', (
+      tester,
+    ) async {
+      await _open(tester, _bid(payoutTrigger: PayoutTrigger.deposit));
+
+      expect(find.text('Le colis ne correspond pas'), findsOneWidget);
+      expect(find.text('Annuler ce transport'), findsOneWidget);
+      expect(find.byKey(const Key('deposit-paid-support-tile')), findsNothing);
+    });
+
+    testWidgets('refuseAndCancel_unchanged_deliveryParcel', (tester) async {
+      await _open(tester, _bid(status: 'HANDED_OVER'));
+
+      expect(find.text('Le colis ne correspond pas'), findsOneWidget);
+      expect(find.text('Annuler ce transport'), findsOneWidget);
+      expect(find.byKey(const Key('deposit-paid-support-tile')), findsNothing);
+    });
   });
 
   group('Supprimer cette demande (ex-footer)', () {

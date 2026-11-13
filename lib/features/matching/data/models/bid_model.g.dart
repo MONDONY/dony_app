@@ -167,6 +167,9 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   payoutTrigger: json['payoutTrigger'] == null
       ? PayoutTrigger.delivery
       : _payoutTriggerFromJson(json['payoutTrigger']),
+  depositedAt: json['depositedAt'] == null
+      ? null
+      : DateTime.parse(json['depositedAt'] as String),
   latestTripDelay: TripDelayInfo.fromJsonOrNull(json['latestTripDelay']),
 );
 
@@ -269,6 +272,7 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'arrivalDateMax': instance.arrivalDateMax?.toIso8601String(),
   'volumeM3': instance.volumeM3,
   'payoutTrigger': _payoutTriggerToJson(instance.payoutTrigger),
+  'depositedAt': instance.depositedAt?.toIso8601String(),
   'latestTripDelay': tripDelayToJson(instance.latestTripDelay),
 };
 

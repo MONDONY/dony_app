@@ -1179,14 +1179,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Un trajet en bateau a un seul prix : au m³ ou au kilo, sans grille de prix par article.';
 
   @override
-  String get errorBoatVolumeBookingUnavailableTitle =>
-      'Réservation au m³ indisponible';
-
-  @override
-  String get errorBoatVolumeBookingUnavailableMessage =>
-      'La réservation d\'un trajet en bateau facturé au m³ n\'est pas encore disponible.';
-
-  @override
   String get errorPricingUnitLockedTitle => 'Unité de prix verrouillée';
 
   @override
@@ -25184,4 +25176,57 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get amendmentGainPaidOutDeposit =>
       'Versé sur votre compte au dépôt du colis';
+
+  @override
+  String get errorVolumePriceTooHighTitle => 'Prix au m³ trop élevé';
+
+  @override
+  String get errorVolumePriceTooHighMessage =>
+      'Le prix au m³ dépasse le plafond autorisé. Baissez-le puis réessayez.';
+
+  @override
+  String get errorTransportModeLockedTitle => 'Mode de transport verrouillé';
+
+  @override
+  String get errorTransportModeLockedMessage =>
+      'Tant que des colis sont en cours sur ce trajet, son mode ne peut pas passer au bateau ni le quitter.';
+
+  @override
+  String get negotiationThreadPayHintDeposit =>
+      'Prix accepté. Réglez maintenant pour réserver votre place, le montant est versé au transporteur au dépôt de votre colis.';
+
+  @override
+  String get negotiationPaymentRecapSecureBannerMessageDeposit =>
+      'Sécurisé · versé au dépôt du colis';
+
+  @override
+  String get negotiationPaymentRecapSecureNoteDeposit =>
+      'Le montant est bloqué et sécurisé. Le transporteur le reçoit au dépôt de votre colis. Un litige se règle avec le support Yadony.';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyBannerMessageDeposit =>
+      'Vous validez le paiement sur votre téléphone. Yadony garde l\'argent et le verse au transporteur au dépôt de votre colis.';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyNoteDeposit =>
+      'Une demande de paiement arrive sur le numéro indiqué ci-dessous. Le transporteur reçoit le montant au dépôt de votre colis.';
+
+  @override
+  String get negotiationOfferAcceptedPaidSubtitleDeposit =>
+      'Votre argent est sécurisé par Yadony, puis versé au transporteur au dépôt de votre colis. Suivez votre colis depuis le fil.';
+
+  @override
+  String get mobileMoneyPaidToTravelerValueDeposit => 'Au dépôt du colis';
+
+  @override
+  String get requestPublicReassureSecuredDeposit =>
+      'Paiement sécurisé : versé dès le dépôt du colis';
+
+  @override
+  String get bidDepositPaidSupportSenderSubtitle =>
+      'Le transporteur a été payé au dépôt du colis : un litige se règle avec le support Yadony.';
+
+  @override
+  String get bidDepositPaidSupportTravelerSubtitle =>
+      'Vous avez été payé au dépôt du colis : un litige se règle avec le support Yadony.';
 }

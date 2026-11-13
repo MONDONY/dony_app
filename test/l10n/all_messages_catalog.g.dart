@@ -439,10 +439,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorBoatVolumeUnitInvalidMessage,
   'errorBoatPriceRequiredTitle': (l) => l.errorBoatPriceRequiredTitle,
   'errorBoatPriceRequiredMessage': (l) => l.errorBoatPriceRequiredMessage,
-  'errorBoatVolumeBookingUnavailableTitle': (l) =>
-      l.errorBoatVolumeBookingUnavailableTitle,
-  'errorBoatVolumeBookingUnavailableMessage': (l) =>
-      l.errorBoatVolumeBookingUnavailableMessage,
   'errorPricingUnitLockedTitle': (l) => l.errorPricingUnitLockedTitle,
   'errorPricingUnitLockedMessage': (l) => l.errorPricingUnitLockedMessage,
   'errorDimensionsIncompleteTitle': (l) => l.errorDimensionsIncompleteTitle,
@@ -8751,6 +8747,29 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'amendmentPaymentHeldOnlineDeposit': (l) =>
       l.amendmentPaymentHeldOnlineDeposit,
   'amendmentGainPaidOutDeposit': (l) => l.amendmentGainPaidOutDeposit,
+  'errorVolumePriceTooHighTitle': (l) => l.errorVolumePriceTooHighTitle,
+  'errorVolumePriceTooHighMessage': (l) => l.errorVolumePriceTooHighMessage,
+  'errorTransportModeLockedTitle': (l) => l.errorTransportModeLockedTitle,
+  'errorTransportModeLockedMessage': (l) => l.errorTransportModeLockedMessage,
+  'negotiationThreadPayHintDeposit': (l) => l.negotiationThreadPayHintDeposit,
+  'negotiationPaymentRecapSecureBannerMessageDeposit': (l) =>
+      l.negotiationPaymentRecapSecureBannerMessageDeposit,
+  'negotiationPaymentRecapSecureNoteDeposit': (l) =>
+      l.negotiationPaymentRecapSecureNoteDeposit,
+  'negotiationPaymentRecapMobileMoneyBannerMessageDeposit': (l) =>
+      l.negotiationPaymentRecapMobileMoneyBannerMessageDeposit,
+  'negotiationPaymentRecapMobileMoneyNoteDeposit': (l) =>
+      l.negotiationPaymentRecapMobileMoneyNoteDeposit,
+  'negotiationOfferAcceptedPaidSubtitleDeposit': (l) =>
+      l.negotiationOfferAcceptedPaidSubtitleDeposit,
+  'mobileMoneyPaidToTravelerValueDeposit': (l) =>
+      l.mobileMoneyPaidToTravelerValueDeposit,
+  'requestPublicReassureSecuredDeposit': (l) =>
+      l.requestPublicReassureSecuredDeposit,
+  'bidDepositPaidSupportSenderSubtitle': (l) =>
+      l.bidDepositPaidSupportSenderSubtitle,
+  'bidDepositPaidSupportTravelerSubtitle': (l) =>
+      l.bidDepositPaidSupportTravelerSubtitle,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
