@@ -3533,7 +3533,8 @@ class _TripFormContentState extends State<_TripFormContent> {
           // Un trajet dédié « peu importe » a l'étape Mode, donc pas de ligne.
           // Avion seul proposé et trajet avion : rien à choisir, pas de ligne.
           transportModeRowModes: _showModeRow ? _modeRowModes : null,
-          transportModeRowReadOnly: _isLocked,
+          // Trajet dédié, ou trajet bateau modifié : le mode ne change pas.
+          transportModeRowReadOnly: _isLocked || (_isEdit && _isBoat),
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
           onSelectDate: _selectDate,

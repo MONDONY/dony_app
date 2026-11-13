@@ -44,7 +44,6 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/stops_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/transport_mode_row.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
@@ -478,18 +477,11 @@ void main() {
         ),
         findsNothing,
       );
-      // Seule la puce « avion » de la ligne du mode (un choix parmi les modes,
-      // en lecture seule) dessine un avion : jamais l'écran du trajet.
-      expect(
-        findPlaneDonyIcons().evaluate().length,
-        find
-            .descendant(
-              of: find.byType(TransportModeRow),
-              matching: findPlaneDonyIcons(),
-            )
-            .evaluate()
-            .length,
-      );
+      // Ligne du mode en lecture seule : la seule puce est celle du bateau,
+      // aucun avion nulle part (ni puce, ni écran du trajet).
+      expect(find.byKey(const Key('mode-chip-boat')), findsOneWidget);
+      expect(find.byKey(const Key('mode-chip-plane')), findsNothing);
+      expect(findPlaneDonyIcons(), findsNothing);
       expect(findMaterialFlightIcons(), findsNothing);
       expect(findPlaneEmojiTexts(), findsNothing);
     });

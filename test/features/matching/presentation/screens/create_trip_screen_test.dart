@@ -5912,10 +5912,13 @@ void main() {
       final row = tester.widget<TransportModeRow>(
         find.byType(TransportModeRow),
       );
-      expect(row.readOnly, isFalse);
+      // Un trajet bateau garde son mode : ligne en lecture seule, sans la
+      // puce d'un autre mode.
+      expect(row.readOnly, isTrue);
       expect(row.notifier.value, TransportMode.boat);
       // Le mode réel est affiché, même s'il n'est pas proposable.
       expect(find.byKey(const Key('mode-chip-boat')), findsOneWidget);
+      expect(find.byKey(const Key('mode-chip-plane')), findsNothing);
 
       await _goToStep(tester, TripFormStep.conditions);
       await tester.tap(find.byKey(const Key('create-announcement-submit')));
