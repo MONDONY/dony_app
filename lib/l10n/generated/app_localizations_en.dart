@@ -23990,4 +23990,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get taxInfoVatWillBeErased =>
       'Leaving this field empty deletes your saved VAT number.';
+
+  @override
+  String get inquiryAskTileTitle => 'Ask a question';
+
+  @override
+  String inquiryAskTileSubtitle(String name) {
+    return 'Write to $name before booking';
+  }
+
+  @override
+  String inquiryAskTileBadge(int limit) {
+    return '$limit messages';
+  }
+
+  @override
+  String inquiryQuotaRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages left',
+      one: '1 message left',
+      zero: 'No messages left before booking',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String inquiryIntroNote(int limit) {
+    return 'You can send $limit messages before booking. Text only, no photos.';
+  }
+
+  @override
+  String get inquiryLimitReachedNote =>
+      'Limit reached. Book to keep the conversation going.';
+
+  @override
+  String get inquiryLockedExplanation =>
+      'Photos and calls are available after booking.';
+
+  @override
+  String get inquiryBookingCardTitle => 'Ready to book?';
+
+  @override
+  String get inquiryLinkedTripLabel => 'Related trip';
+
+  @override
+  String get inquiryKycTitle => 'Verify your identity';
+
+  @override
+  String get inquiryKycBody =>
+      'To write to a traveler, we first need to verify your identity. It only takes a few minutes.';
+
+  @override
+  String get inquirySendLimitError =>
+      'Message limit reached. Book to continue.';
 }

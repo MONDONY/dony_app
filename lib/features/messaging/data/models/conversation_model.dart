@@ -54,7 +54,21 @@ class ParticipantModel {
 
 class ConversationModel {
   final String id;
-  final String bidId;
+
+  /// Commande rattachée. Nulle pour une conversation [kindInquiry] : une
+  /// question avant réservation n'a pas encore de bid.
+  final String? bidId;
+
+  /// Annonce de la question ([kindInquiry]) ; nulle pour les autres types.
+  final String? announcementId;
+
+  /// Nombre de messages que l'expéditeur peut envoyer avant réservation
+  /// ([kindInquiry]). Nul sur les autres types ou un ancien back.
+  final int? inquiryMessageLimit;
+
+  /// Quota levé (le voyageur a répondu ou une demande est acceptée) : les
+  /// messages de l'expéditeur ne sont plus comptés. Faux par défaut.
+  final bool inquiryQuotaLifted;
   final String firestoreConversationId;
   final ParticipantModel otherParticipant;
   final String? lastMessagePreview;
@@ -81,6 +95,7 @@ class ConversationModel {
 
   static const kindSenderTraveler = 'SENDER_TRAVELER';
   static const kindRecipientTraveler = 'RECIPIENT_TRAVELER';
+  static const kindInquiry = 'INQUIRY';
 
   /// Côté de l'utilisateur courant dans une conversation
   /// [kindRecipientTraveler] : `TRAVELER` ou `RECIPIENT`, `null` pour une
@@ -136,7 +151,10 @@ class ConversationModel {
 
   const ConversationModel({
     required this.id,
-    required this.bidId,
+    this.bidId,
+    this.announcementId,
+    this.inquiryMessageLimit,
+    this.inquiryQuotaLifted = false,
     required this.firestoreConversationId,
     required this.otherParticipant,
     this.lastMessagePreview,
@@ -161,6 +179,12 @@ class ConversationModel {
     this.messagesPurgeAt,
     this.messagesPurged = false,
   });
+
+  /// Question posée avant réservation, sans bid.
+  bool get isInquiry => kind == kindInquiry;
+
+  /// Question dont l'expéditeur est encore soumis au quota de messages.
+  bool get inquiryLimited => isInquiry && !inquiryQuotaLifted;
 
   /// Plus rien ne peut s'écrire dans ce fil : l'autre partie l'a quitté, ou
   /// ses messages ont été effacés après la livraison.
@@ -221,6 +245,9 @@ class ConversationModel {
   }) => ConversationModel(
     id: id,
     bidId: bidId,
+    announcementId: announcementId,
+    inquiryMessageLimit: inquiryMessageLimit,
+    inquiryQuotaLifted: inquiryQuotaLifted,
     firestoreConversationId: firestoreConversationId,
     otherParticipant: otherParticipant,
     lastMessagePreview: lastMessagePreview ?? this.lastMessagePreview,
@@ -249,7 +276,10 @@ class ConversationModel {
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
       ConversationModel(
         id: json['id'] as String,
-        bidId: json['bidId'] as String,
+        bidId: json['bidId'] as String?,
+        announcementId: json['announcementId'] as String?,
+        inquiryMessageLimit: (json['inquiryMessageLimit'] as num?)?.toInt(),
+        inquiryQuotaLifted: json['inquiryQuotaLifted'] == true,
         firestoreConversationId: json['firestoreConversationId'] as String,
         otherParticipant: ParticipantModel.fromJson(
           json['otherParticipant'] as Map<String, dynamic>,

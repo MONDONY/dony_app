@@ -362,9 +362,10 @@ class _ChatScreenState extends State<ChatScreen> {
     );
     // Le numéro n'est plus dans la conversation : on le demande au serveur, qui
     // vérifie que le deal est actif et journalise la révélation.
-    context.read<ContactRevealBloc>().add(
-      ContactRevealRequested(widget.conversation.bidId),
-    );
+    // Une question avant réservation n'a pas de bid : pas d'appel possible.
+    final bidId = widget.conversation.bidId;
+    if (bidId == null) return;
+    context.read<ContactRevealBloc>().add(ContactRevealRequested(bidId));
   }
 
   Future<void> _sendText() async {
@@ -2853,10 +2854,17 @@ class _InputBar extends StatelessWidget {
 /// Chemin du suivi du colis d'une conversation : le destinataire n'a pas accès
 /// au détail du bid, son suivi est l'écran du colis qu'il va recevoir.
 @visibleForTesting
-String trackingPathFor(ConversationModel conversation) =>
-    conversation.viewerIsRecipient
-    ? '/receptions/${conversation.bidId}'
-    : '/bids/${conversation.bidId}';
+String trackingPathFor(ConversationModel conversation) {
+  final bidId = conversation.bidId;
+  // Une question avant réservation n'a pas de bid : on renvoie à l'annonce.
+  if (bidId == null) {
+    final announcementId = conversation.announcementId;
+    return announcementId == null ? '/messages' : '/traveler/$announcementId';
+  }
+  return conversation.viewerIsRecipient
+      ? '/receptions/$bidId'
+      : '/bids/$bidId';
+}
 
 /// Message système qui renvoie au suivi du colis (FLUTTER-CD), par exemple
 /// « Votre voyageur est arrivé à destination. Consultez les instructions de

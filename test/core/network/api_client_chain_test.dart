@@ -180,6 +180,24 @@ void main() {
       },
     );
 
+    test(
+      'X-Dony-Capabilities posé sur /conversations, y compris au retry',
+      () async {
+        final dio = build([502, 200, 200]);
+
+        await dio.get<dynamic>('/conversations/archived');
+        await dio.get<dynamic>('/announcements');
+
+        expect(adapter.requests, hasLength(3));
+        expect(adapter.requests[0].headers['X-Dony-Capabilities'], 'inquiry');
+        expect(adapter.requests[1].headers['X-Dony-Capabilities'], 'inquiry');
+        expect(
+          adapter.requests[2].headers.containsKey('X-Dony-Capabilities'),
+          isFalse,
+        );
+      },
+    );
+
     test('502 puis 200 sur GET : résolu, aucun report', () async {
       final dio = build([502, 200]);
 

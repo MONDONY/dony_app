@@ -24164,4 +24164,59 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get taxInfoVatWillBeErased =>
       'Laisser ce champ vide supprime votre numéro de TVA enregistré.';
+
+  @override
+  String get inquiryAskTileTitle => 'Poser une question';
+
+  @override
+  String inquiryAskTileSubtitle(String name) {
+    return 'Écrivez à $name avant de réserver';
+  }
+
+  @override
+  String inquiryAskTileBadge(int limit) {
+    return '$limit messages';
+  }
+
+  @override
+  String inquiryQuotaRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages restants',
+      one: '1 message restant',
+      zero: 'Plus de message avant réservation',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String inquiryIntroNote(int limit) {
+    return 'Vous pouvez envoyer $limit messages avant de réserver. Texte seul, sans photo.';
+  }
+
+  @override
+  String get inquiryLimitReachedNote =>
+      'Limite atteinte. Réservez pour continuer la discussion.';
+
+  @override
+  String get inquiryLockedExplanation =>
+      'Les photos et l\'appel sont disponibles après la réservation.';
+
+  @override
+  String get inquiryBookingCardTitle => 'Prêt à réserver ?';
+
+  @override
+  String get inquiryLinkedTripLabel => 'Trajet concerné';
+
+  @override
+  String get inquiryKycTitle => 'Vérifiez votre identité';
+
+  @override
+  String get inquiryKycBody =>
+      'Pour écrire à un voyageur, nous devons d\'abord vérifier votre identité. Cela ne prend que quelques minutes.';
+
+  @override
+  String get inquirySendLimitError =>
+      'Limite de messages atteinte. Réservez pour continuer.';
 }

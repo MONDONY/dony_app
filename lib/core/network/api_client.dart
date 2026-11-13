@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/accept_language_interceptor.dart';
+import 'package:dony/core/network/capabilities_interceptor.dart';
 import 'package:dony/core/network/maintenance_signal.dart';
 import 'package:dony/core/network/metrics_interceptor.dart';
 import 'package:dony/core/network/offline_fast_fail_interceptor.dart';
@@ -92,7 +93,8 @@ class ApiClient {
     //
     //  1. OfflineFastFail : coupe sans attendre quand l'appareil n'a aucune
     //     interface (rejet en onRequest, hors chaîne d'erreur, volontairement).
-    //  2. AcceptLanguage.
+    //  2. AcceptLanguage, puis Capabilities (X-Dony-Capabilities sur
+    //     /conversations*).
     //  3. Breadcrumb : observe CHAQUE tentative, erreur brute (statut seul).
     //  4. Auth : jeton en onRequest ; en onError, conversion en AppException,
     //     une fois par tentative, et sur 401 un seul rafraîchissement du jeton.
@@ -110,6 +112,7 @@ class ApiClient {
       OfflineFastFailInterceptor(connectivity ?? Connectivity()),
     );
     _dio.interceptors.add(AcceptLanguageInterceptor());
+    _dio.interceptors.add(CapabilitiesInterceptor());
 
     // Piste HTTP dans Sentry (breadcrumbs) — active en tout mode, mais no-op
     // tant que SENTRY_DSN est absent. On ne pousse QUE méthode + chemin

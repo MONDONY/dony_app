@@ -38663,6 +38663,78 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Laisser ce champ vide supprime votre numéro de TVA enregistré.'**
   String get taxInfoVatWillBeErased;
+
+  /// Titre de la tuile « Poser une question » sur la fiche d'un trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poser une question'**
+  String get inquiryAskTileTitle;
+
+  /// Sous-titre de la tuile de question ; {name} = prénom du voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Écrivez à {name} avant de réserver'**
+  String inquiryAskTileSubtitle(String name);
+
+  /// Pastille de la tuile de question ; {limit} = quota de messages avant réservation.
+  ///
+  /// In fr, this message translates to:
+  /// **'{limit} messages'**
+  String inquiryAskTileBadge(int limit);
+
+  /// Compteur de messages restants dans une conversation de question ; {count} = messages restants.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Plus de message avant réservation} =1{1 message restant} other{{count} messages restants}}'**
+  String inquiryQuotaRemaining(int count);
+
+  /// Note d'introduction d'une conversation de question ; {limit} = quota de messages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pouvez envoyer {limit} messages avant de réserver. Texte seul, sans photo.'**
+  String inquiryIntroNote(int limit);
+
+  /// Note quand l'expéditeur a épuisé son quota de messages avant réservation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite atteinte. Réservez pour continuer la discussion.'**
+  String get inquiryLimitReachedNote;
+
+  /// Explication affichée sur le trombone ou l'appel grisés d'une conversation de question.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les photos et l\'appel sont disponibles après la réservation.'**
+  String get inquiryLockedExplanation;
+
+  /// Titre de la carte de réservation d'une conversation de question.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prêt à réserver ?'**
+  String get inquiryBookingCardTitle;
+
+  /// Étiquette de l'annonce rattachée à une conversation de question.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet concerné'**
+  String get inquiryLinkedTripLabel;
+
+  /// Titre de la feuille affichée quand la vérification d'identité est requise pour poser une question.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre identité'**
+  String get inquiryKycTitle;
+
+  /// Corps de la feuille de vérification requise pour poser une question.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour écrire à un voyageur, nous devons d\'abord vérifier votre identité. Cela ne prend que quelques minutes.'**
+  String get inquiryKycBody;
+
+  /// Erreur affichée quand l'envoi d'un message de question est refusé faute de quota.
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite de messages atteinte. Réservez pour continuer.'**
+  String get inquirySendLimitError;
 }
 
 class _AppLocalizationsDelegate

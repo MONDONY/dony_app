@@ -23415,5 +23415,73 @@
   "taxInfoNothingNew": "Nous avons bien reçu vos informations. L'équipe Yadony reviendra vers vous si besoin.",
   "@taxInfoNothingNew": {"description": "Tout ce qui est saisissable est rempli mais le dossier reste à compléter (lieu de naissance sans numéro fiscal)."},
   "taxInfoVatWillBeErased": "Laisser ce champ vide supprime votre numéro de TVA enregistré.",
-  "@taxInfoVatWillBeErased": {"description": "Aide sous la TVA quand un numéro de TVA est déjà enregistré."}
+  "@taxInfoVatWillBeErased": {"description": "Aide sous la TVA quand un numéro de TVA est déjà enregistré."},
+  "inquiryAskTileTitle": "Poser une question",
+  "@inquiryAskTileTitle": {
+      "description": "Titre de la tuile « Poser une question » sur la fiche d'un trajet."
+  },
+  "inquiryAskTileSubtitle": "Écrivez à {name} avant de réserver",
+  "@inquiryAskTileSubtitle": {
+      "description": "Sous-titre de la tuile de question ; {name} = prénom du voyageur.",
+      "placeholders": {
+          "name": {
+              "type": "String"
+          }
+      }
+  },
+  "inquiryAskTileBadge": "{limit} messages",
+  "@inquiryAskTileBadge": {
+      "description": "Pastille de la tuile de question ; {limit} = quota de messages avant réservation.",
+      "placeholders": {
+          "limit": {
+              "type": "int"
+          }
+      }
+  },
+  "inquiryQuotaRemaining": "{count, plural, =0{Plus de message avant réservation} =1{1 message restant} other{{count} messages restants}}",
+  "@inquiryQuotaRemaining": {
+      "description": "Compteur de messages restants dans une conversation de question ; {count} = messages restants.",
+      "placeholders": {
+          "count": {
+              "type": "int"
+          }
+      }
+  },
+  "inquiryIntroNote": "Vous pouvez envoyer {limit} messages avant de réserver. Texte seul, sans photo.",
+  "@inquiryIntroNote": {
+      "description": "Note d'introduction d'une conversation de question ; {limit} = quota de messages.",
+      "placeholders": {
+          "limit": {
+              "type": "int"
+          }
+      }
+  },
+  "inquiryLimitReachedNote": "Limite atteinte. Réservez pour continuer la discussion.",
+  "@inquiryLimitReachedNote": {
+      "description": "Note quand l'expéditeur a épuisé son quota de messages avant réservation."
+  },
+  "inquiryLockedExplanation": "Les photos et l'appel sont disponibles après la réservation.",
+  "@inquiryLockedExplanation": {
+      "description": "Explication affichée sur le trombone ou l'appel grisés d'une conversation de question."
+  },
+  "inquiryBookingCardTitle": "Prêt à réserver ?",
+  "@inquiryBookingCardTitle": {
+      "description": "Titre de la carte de réservation d'une conversation de question."
+  },
+  "inquiryLinkedTripLabel": "Trajet concerné",
+  "@inquiryLinkedTripLabel": {
+      "description": "Étiquette de l'annonce rattachée à une conversation de question."
+  },
+  "inquiryKycTitle": "Vérifiez votre identité",
+  "@inquiryKycTitle": {
+      "description": "Titre de la feuille affichée quand la vérification d'identité est requise pour poser une question."
+  },
+  "inquiryKycBody": "Pour écrire à un voyageur, nous devons d'abord vérifier votre identité. Cela ne prend que quelques minutes.",
+  "@inquiryKycBody": {
+      "description": "Corps de la feuille de vérification requise pour poser une question."
+  },
+  "inquirySendLimitError": "Limite de messages atteinte. Réservez pour continuer.",
+  "@inquirySendLimitError": {
+      "description": "Erreur affichée quand l'envoi d'un message de question est refusé faute de quota."
+  }
 }

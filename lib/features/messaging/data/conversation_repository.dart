@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 
@@ -73,6 +74,45 @@ class ConversationRepository {
   Future<ConversationModel> getRecipientConversation(String bidId) async {
     final response = await _api.dio.get('/conversations/bid/$bidId/recipient');
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Ouvre (ou rouvre) la conversation de question de l'utilisateur courant
+  /// sur l'annonce [announcementId], avant toute réservation
+  /// (`POST /conversations/inquiry`, idempotent côté back).
+  ///
+  /// Erreurs : 403 `kyc-required` → [InquiryKycRequiredException] ; 404
+  /// (annonce absente, bloquée ou brouillon) et 422
+  /// `inquiry-announcement-closed` → [InquiryUnavailableException]. Les autres
+  /// (403 `messaging-muted`, `inquiry-own-announcement`, réseau, 5xx) gardent
+  /// leur [DioException], déjà convertie en `AppException` par `ApiClient`.
+  Future<ConversationModel> openInquiry(String announcementId) async {
+    try {
+      final response = await _api.dio.post(
+        '/conversations/inquiry',
+        data: {'announcementId': announcementId},
+      );
+      return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final code = _problemCode(e);
+      if (status == 403 && code == 'kyc-required') {
+        throw const InquiryKycRequiredException();
+      }
+      if (status == 404 ||
+          (status == 422 && code == 'inquiry-announcement-closed')) {
+        throw const InquiryUnavailableException();
+      }
+      rethrow;
+    }
+  }
+
+  /// Code métier du problem+json : lu sur l'exception déjà convertie par
+  /// `ApiClient`, à défaut dans le corps de la réponse.
+  static String? _problemCode(DioException e) {
+    final inner = e.error;
+    if (inner is AppException && inner.code != null) return inner.code;
+    final data = e.response?.data;
+    return data is Map ? data['code'] as String? : null;
   }
 
   Future<void> updateLastMessage(String id, String preview) async {
@@ -290,6 +330,23 @@ class ConversationRepository {
     final data = response.data ?? const <int>[];
     return data is Uint8List ? data : Uint8List.fromList(data);
   }
+}
+
+/// Poser une question exige une identité vérifiée (403 `kyc-required`).
+class InquiryKycRequiredException implements Exception {
+  const InquiryKycRequiredException();
+
+  @override
+  String toString() => 'InquiryKycRequiredException';
+}
+
+/// L'annonce n'accepte plus de question : introuvable, bloquée, brouillon
+/// (404) ou fermée (422 `inquiry-announcement-closed`).
+class InquiryUnavailableException implements Exception {
+  const InquiryUnavailableException();
+
+  @override
+  String toString() => 'InquiryUnavailableException';
 }
 
 /// Variante d'une photo du chat servie par le back.
