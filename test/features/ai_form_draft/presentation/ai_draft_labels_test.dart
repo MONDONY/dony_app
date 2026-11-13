@@ -149,7 +149,7 @@ void main() {
     );
     expect(
       aiWarningText(fr, AiDraftWarning.modeUnavailable),
-      "Ce mode n'est pas encore proposé : le trajet sera publié en avion.",
+      "L'assistant ne peut pas choisir ce mode : vérifiez le mode de transport avant de publier.",
     );
   });
 
