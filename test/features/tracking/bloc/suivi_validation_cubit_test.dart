@@ -621,6 +621,53 @@ void main() {
       expect(posts, 0);
     });
 
+    test('dépôt (bateau) : jeton du QR et photo exigée écrits dans la file, '
+        'puis envoyés avec l\'étape', () async {
+      when(
+        () => repo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+          scanMethod: any(named: 'scanMethod'),
+          qrToken: any(named: 'qrToken'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).thenAnswer((_) async => _event);
+      final queue = OfflineSyncService(hive, repo);
+      final c = build(queue);
+      c.schedule(
+        bidId: 'bid-1',
+        step: 'DEPART',
+        parcelLabel: 'Madou',
+        method: ScanMethod.qr,
+        photoPath: '/tmp/colis.jpg',
+        qrToken: 'tok_abc',
+        photoRequired: true,
+      );
+      await until(() => hive.offlineQueue.length == 1);
+      final entry = onlyEntry();
+      expect(entry['qrToken'], 'tok_abc');
+      expect(entry['photoRequired'], isTrue);
+
+      await until(() => c.state.outcome != null);
+      expect(c.state.outcome, isA<SuiviValidationSent>());
+      verify(
+        () => repo.postScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          gpsLat: 14.7,
+          gpsLon: -17.4,
+          gpsLabel: 'Dakar',
+          photoUrl: 'tracking/bid-1/photo.jpg',
+          scanMethod: ScanMethod.qr,
+          qrToken: 'tok_abc',
+        ),
+      ).called(1);
+    });
+
     test('à l\'échéance : envoyée une fois, retirée de la file', () async {
       final queue = OfflineSyncService(hive, repo);
       final c = build(queue);

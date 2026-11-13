@@ -25233,4 +25233,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tripPublishLockedBoatBlocked =>
       'Cette demande est en bateau, un mode réservé aux transporteurs vérifiés. Demandez le badge GP Pro pour proposer votre trajet.';
+
+  @override
+  String get trackingDepositNeedsQr => 'Scannez le QR de l\'expéditeur';
+
+  @override
+  String get errorBoatDepositQrRequiredTitle => 'QR de l\'expéditeur requis';
+
+  @override
+  String get errorBoatDepositQrRequiredMessage =>
+      'Pour valider le dépôt, scannez le QR code de l\'expéditeur : un numéro saisi ne suffit pas.';
 }

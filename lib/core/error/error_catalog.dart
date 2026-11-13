@@ -2113,6 +2113,12 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.photo_camera_outlined,
     ),
+    'boat-deposit-qr-required': _Entry(
+      title: (l) => l.errorBoatDepositQrRequiredTitle,
+      message: (l) => l.errorBoatDepositQrRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.qr_code_scanner_rounded,
+    ),
     'deposit-paid-no-refund': _Entry(
       title: (l) => l.errorDepositPaidNoRefundTitle,
       message: (l) => l.errorDepositPaidNoRefundMessage,

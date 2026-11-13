@@ -1,9 +1,11 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/models/scanned_qr.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_identify_screen.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +23,11 @@ class MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
 /// Extras reçus par l'écran photo au dernier passage.
 Map<String, dynamic>? _photoExtra;
 
-GoRouter _router(String? etape, {bool focusNumber = false}) => GoRouter(
+GoRouter _router(
+  String? etape, {
+  bool focusNumber = false,
+  ScannedQr scanned = const ScannedQr('bid-qr-12345678'),
+}) => GoRouter(
   routes: [
     GoRoute(
       path: '/',
@@ -41,7 +47,7 @@ GoRouter _router(String? etape, {bool focusNumber = false}) => GoRouter(
       path: '/tracking/scan/qr-picker',
       builder: (ctx, _) => Scaffold(
         body: TextButton(
-          onPressed: () => ctx.pop('bid-qr-12345678'),
+          onPressed: () => ctx.pop(scanned),
           child: const Text('picker'),
         ),
       ),
@@ -69,7 +75,7 @@ GoRouter _routerWithBloc(MockTrackingBloc bloc, {String? etape}) => GoRouter(
       path: '/tracking/scan/qr-picker',
       builder: (ctx, _) => Scaffold(
         body: TextButton(
-          onPressed: () => ctx.pop('bid-qr-12345678'),
+          onPressed: () => ctx.pop(const ScannedQr('bid-qr-12345678')),
           child: const Text('picker'),
         ),
       ),
@@ -254,6 +260,81 @@ void main() {
       'packageLabel': 'bid-qr-1',
       'scanMethod': ScanMethod.qr,
     });
+  });
+
+  testWidgets('dépôt (bateau) : QR avec jeton → photo, jeton et dépôt portés', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp.router(
+        routerConfig: _router(
+          'DEPART',
+          scanned: const ScannedQr('bid-qr-12345678', qrToken: 'tok_abc'),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('Ouvrir le lecteur QR'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('picker'));
+    await tester.pumpAndSettle();
+    expect(_photoExtra, {
+      'bidId': 'bid-qr-12345678',
+      'etape': 'DEPART',
+      'packageLabel': 'bid-qr-1',
+      'scanMethod': ScanMethod.qr,
+      'qrToken': 'tok_abc',
+      'payoutTrigger': PayoutTrigger.deposit,
+    });
+  });
+
+  testWidgets('dépôt (bateau) : numéro saisi refusé, « Scannez le QR de '
+      'l\'expéditeur », pas de photo', (tester) async {
+    _photoExtra = null;
+    final bloc = MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    whenListen(
+      bloc,
+      Stream.fromIterable([
+        TrackingSearchLoaded(
+          const TrackingSearchModel(
+            trackingNumber: 'DON-DEP001',
+            bidId: 'bid-dep',
+            departureCity: 'Marseille',
+            arrivalCity: 'Abidjan',
+            currentStep: 'ACCEPTED',
+            stepLabel: 'Accepté',
+            paymentStatus: 'ESCROWED',
+            payoutTrigger: PayoutTrigger.deposit,
+          ),
+        ),
+      ]),
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(routerConfig: _routerWithBloc(bloc, etape: 'DEPART')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('photo'), findsNothing);
+    expect(_photoExtra, isNull);
+    expect(find.text("Scannez le QR de l'expéditeur"), findsOneWidget);
+  });
+
+  testWidgets('colis livré : numéro saisi toujours accepté pour DEPART', (
+    tester,
+  ) async {
+    final bloc = MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    whenListen(
+      bloc,
+      Stream.fromIterable([TrackingSearchLoaded(_fakeResult())]),
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(routerConfig: _routerWithBloc(bloc, etape: 'DEPART')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('photo'), findsOneWidget);
+    expect(_photoExtra?.containsKey('payoutTrigger'), isFalse);
   });
 
   // ─── Scanner QR button present ────────────────────────────────────────────

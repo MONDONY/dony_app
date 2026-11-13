@@ -2394,6 +2394,7 @@ void main() {
       'trip-delay-reason-invalid',
       'trip-delay-too-frequent',
       'boat-deposit-photo-required',
+      'boat-deposit-qr-required',
       'deposit-paid-no-refund',
       'supplement-after-deposit',
       'surplus/volume-trip-unsupported',

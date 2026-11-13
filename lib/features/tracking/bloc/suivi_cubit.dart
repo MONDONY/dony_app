@@ -77,6 +77,7 @@ final class SuiviValidateStep extends SuiviEffect {
     this.method = ScanMethod.qr,
     this.confirmNumber = false,
     this.trackingNumber,
+    this.qrToken,
   });
   final BidModel bid;
   final String step;
@@ -84,11 +85,31 @@ final class SuiviValidateStep extends SuiviEffect {
   final bool confirmNumber;
   final String? trackingNumber;
 
+  /// Jeton `?k=` du QR de l'expéditeur, pour le dépôt d'un colis payé au dépôt
+  /// (bateau). Part tel quel avec l'étape ; jamais affiché.
+  final String? qrToken;
+
+  /// Dépôt d'un colis payé au dépôt : la photo, preuve du dépôt, doit être
+  /// réellement téléversée avant l'envoi (sinon 422
+  /// `boat-deposit-photo-required`).
+  bool get isDeposit =>
+      step == 'DEPART' &&
+      (bid.payoutTrigger == PayoutTrigger.deposit || qrToken != null);
+
   /// Remise sans QR ni numéro saisi : le numéro doit être demandé.
   bool get needsTrackingNumber =>
       step == 'DEPART' && method == ScanMethod.manual && trackingNumber == null;
 
-  bool get photoRequired => step != 'TRANSIT' || method == ScanMethod.manual;
+  bool get photoRequired =>
+      step != 'TRANSIT' || method == ScanMethod.manual || isDeposit;
+}
+
+/// Dépôt d'un colis payé au dépôt tenté sans QR (numéro saisi, bouton d'une
+/// ligne colis) : le serveur exige le jeton du QR de l'expéditeur. L'écran dit
+/// de le scanner.
+final class SuiviDepositNeedsQr extends SuiviEffect {
+  const SuiviDepositNeedsQr(this.bid);
+  final BidModel bid;
 }
 
 /// Colis du trajet dont une validation attend déjà son envoi.
@@ -493,6 +514,7 @@ class SuiviCubit extends Cubit<SuiviState> {
   void onQrScanned(
     String bidId,
     ScanHubState? hub, {
+    String? qrToken,
     Set<String> pendingBidIds = const {},
   }) {
     if (state.busy) return;
@@ -535,7 +557,13 @@ class SuiviCubit extends Cubit<SuiviState> {
       _emitEffect(SuiviParcelUnknown(bidId));
     } else {
       _emitValidation(
-        _validationOf(located, loaded!, ScanMethod.qr, pendingBidIds),
+        _validationOf(
+          located,
+          loaded!,
+          ScanMethod.qr,
+          pendingBidIds,
+          qrToken: qrToken,
+        ),
       );
     }
   }
@@ -573,6 +601,10 @@ class SuiviCubit extends Cubit<SuiviState> {
       _emitEffect(SuiviStepPending(bid));
       return;
     }
+    if (step == 'DEPART' && bid.payoutTrigger == PayoutTrigger.deposit) {
+      _emitEffect(SuiviDepositNeedsQr(bid));
+      return;
+    }
     _emitEffect(SuiviValidateStep(bid, step, method: ScanMethod.manual));
   }
 
@@ -583,6 +615,7 @@ class SuiviCubit extends Cubit<SuiviState> {
     ScanMethod method,
     Set<String> pendingBidIds, {
     String? trackingNumber,
+    String? qrToken,
   }) {
     final bid = located.bid;
     if (located.trip.id != hub.selectedTripId) {
@@ -603,12 +636,21 @@ class SuiviCubit extends Cubit<SuiviState> {
         (forced == 'TRANSIT' && progress.transit)) {
       return SuiviStepAlreadyDone(bid, forced!);
     }
+    final step = forced ?? next;
+    // Un colis payé au dépôt ne se dépose pas par numéro saisi : seul le QR de
+    // l'expéditeur porte le jeton que le serveur vérifie.
+    if (step == 'DEPART' &&
+        method == ScanMethod.manual &&
+        bid.payoutTrigger == PayoutTrigger.deposit) {
+      return SuiviDepositNeedsQr(bid);
+    }
     return SuiviValidateStep(
       bid,
-      forced ?? next,
+      step,
       method: method,
       confirmNumber: method == ScanMethod.manual,
       trackingNumber: trackingNumber,
+      qrToken: qrToken,
     );
   }
 

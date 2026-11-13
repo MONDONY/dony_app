@@ -25055,4 +25055,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tripPublishLockedBoatBlocked =>
       'This request is for sea freight, a mode reserved for verified carriers. Request the GP Pro badge to offer your trip.';
+
+  @override
+  String get trackingDepositNeedsQr => 'Scan the sender\'s QR code';
+
+  @override
+  String get errorBoatDepositQrRequiredTitle => 'Sender\'s QR code required';
+
+  @override
+  String get errorBoatDepositQrRequiredMessage =>
+      'To confirm the deposit, scan the sender\'s QR code: a typed number is not enough.';
 }

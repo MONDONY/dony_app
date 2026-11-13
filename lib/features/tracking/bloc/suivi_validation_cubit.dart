@@ -151,6 +151,8 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     String? photoPath,
     ScanPosition? position,
     String? trackingNumber,
+    String? qrToken,
+    bool photoRequired = false,
   }) {
     // Une étape en cours d'envoi (délai écoulé, réponse pas encore reçue) ne
     // se reprogramme pas : sa ligne n'est plus « en attente » mais le back
@@ -175,6 +177,8 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
       gpsLabel: position?.label,
       scanMethod: method,
       trackingNumber: trackingNumber,
+      qrToken: qrToken,
+      photoRequired: photoRequired,
       notBefore: deadline.add(replayGrace),
     )..ignore();
     _positions[id] = position != null

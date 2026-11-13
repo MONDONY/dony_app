@@ -12962,5 +12962,11 @@
   "bidDepositPaidSupportTravelerSubtitle": "You were paid when the parcel was deposited: a dispute is settled with Yadony support.",
   "@bidDepositPaidSupportTravelerSubtitle": {"description": "Menu d'options du voyageur : sous-titre de l'entrée « Contacter le support » qui remplace le refus et l'annulation d'un colis payé au dépôt (bateau)"},
   "tripPublishLockedBoatBlocked": "This request is for sea freight, a mode reserved for verified carriers. Request the GP Pro badge to offer your trip.",
-  "@tripPublishLockedBoatBlocked": {"description": "Trajet dédié à une demande par bateau : bandeau d'un voyageur sans badge GP Pro ni compte pro, « Continuer » reste grisé"}
+  "@tripPublishLockedBoatBlocked": {"description": "Trajet dédié à une demande par bateau : bandeau d'un voyageur sans badge GP Pro ni compte pro, « Continuer » reste grisé"},
+  "trackingDepositNeedsQr": "Scan the sender's QR code",
+  "@trackingDepositNeedsQr": {"description": "Dépôt d'un colis payé au dépôt (bateau) tenté sans QR (numéro saisi, bouton d'une ligne colis) : le dépôt exige le QR de l'expéditeur"},
+  "errorBoatDepositQrRequiredTitle": "Sender's QR code required",
+  "@errorBoatDepositQrRequiredTitle": {"description": "Erreur boat-deposit-qr-required du back, titre (error_catalog.dart)."},
+  "errorBoatDepositQrRequiredMessage": "To confirm the deposit, scan the sender's QR code: a typed number is not enough.",
+  "@errorBoatDepositQrRequiredMessage": {"description": "Erreur boat-deposit-qr-required du back, message (error_catalog.dart)."}
 }

@@ -227,6 +227,8 @@ class OfflineSyncService {
     String? photoKey,
     ScanMethod? scanMethod,
     String? trackingNumber,
+    String? qrToken,
+    bool photoRequired = false,
     DateTime? notBefore,
   }) async {
     // Copiée hors du cache temporaire, que le système purge (FLUTTER-MJ).
@@ -257,6 +259,11 @@ class OfflineSyncService {
       // Numéro saisi à la remise (DEPART) : il doit survivre à un envoi
       // différé, le serveur le vérifie à la réception.
       'trackingNumber': ?trackingNumber,
+      // Dépôt d'un colis payé au dépôt : jeton du QR de l'expéditeur, il doit
+      // survivre à un envoi différé (le serveur le vérifie à la réception) ; et
+      // la photo, preuve du dépôt, sans laquelle l'étape ne part jamais.
+      'qrToken': ?qrToken,
+      if (photoRequired) 'photoRequired': true,
       'offlineTimestamp': _now().toUtc().toIso8601String(),
       'notBefore': ?notBefore?.toUtc().toIso8601String(),
     };
@@ -574,6 +581,13 @@ class OfflineSyncService {
             if (photo.lost) await _forgetLostPhoto(key, entry);
             if (photoKey != null) await _rememberPhotoKey(key, entry, photoKey);
           }
+          if (entry['photoRequired'] == true && photoKey == null) {
+            requireUploadedDepositPhoto((
+              key: null,
+              dropped: photoDropped,
+              lost: false,
+            ));
+          }
           return _repository.postScan(
             bidId: bidId,
             eventType: eventType,
@@ -583,6 +597,7 @@ class OfflineSyncService {
             photoUrl: photoKey,
             scanMethod: ScanMethod.fromWire(entry['scanMethod']),
             trackingNumber: entry['trackingNumber'] as String?,
+            qrToken: entry['qrToken'] as String?,
             offlineTimestamp: deferred
                 ? DateTime.parse(entry['offlineTimestamp'] as String)
                 : null,

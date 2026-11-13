@@ -559,6 +559,68 @@ void main() {
     );
 
     blocTest<TrackingBloc, TrackingState>(
+      'dépôt (bateau) : le jeton du QR part avec l\'étape DEPART',
+      setUp: () {
+        when(
+          () => mockRepo.uploadTrackingPhoto(any(), any()),
+        ).thenAnswer((_) async => 'tracking/bid-1/depart.jpg');
+        when(
+          () => mockRepo.postScan(
+            bidId: 'bid-1',
+            eventType: 'DEPART',
+            photoUrl: 'tracking/bid-1/depart.jpg',
+            qrToken: 'tok_abc',
+          ),
+        ).thenAnswer((_) async => _event);
+      },
+      build: () => withNetwork(online: true),
+      act: (b) => b.add(
+        QrScanSubmitRequested(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photo: XFile('/tmp/depart.jpg'),
+          qrToken: 'tok_abc',
+          photoRequired: true,
+        ),
+      ),
+      expect: () => [isA<QrScanSubmitting>(), isA<QrScanSuccess>()],
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      'dépôt (bateau) : photo refusée = QrScanError boat-deposit-photo-required, '
+      'aucun événement envoyé',
+      setUp: () {
+        when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenThrow(
+          const ValidationException('Trop lourd', code: 'file-too-large'),
+        );
+      },
+      build: () => withNetwork(online: true),
+      act: (b) => b.add(
+        QrScanSubmitRequested(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photo: XFile('/tmp/depart.jpg'),
+          qrToken: 'tok_abc',
+          photoRequired: true,
+        ),
+      ),
+      expect: () => [
+        isA<QrScanSubmitting>(),
+        isA<QrScanError>().having(
+          (s) => s.error.code,
+          'code',
+          'boat-deposit-photo-required',
+        ),
+      ],
+      verify: (_) => verifyNever(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+        ),
+      ),
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
       'en ligne, photo refusée : QrScanSuccess sans photo, photoDropped',
       setUp: () {
         when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenThrow(

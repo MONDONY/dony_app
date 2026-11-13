@@ -40342,6 +40342,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Cette demande est en bateau, un mode réservé aux transporteurs vérifiés. Demandez le badge GP Pro pour proposer votre trajet.'**
   String get tripPublishLockedBoatBlocked;
+
+  /// Dépôt d'un colis payé au dépôt (bateau) tenté sans QR (numéro saisi, bouton d'une ligne colis) : le dépôt exige le QR de l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Scannez le QR de l\'expéditeur'**
+  String get trackingDepositNeedsQr;
+
+  /// Erreur boat-deposit-qr-required du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'QR de l\'expéditeur requis'**
+  String get errorBoatDepositQrRequiredTitle;
+
+  /// Erreur boat-deposit-qr-required du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour valider le dépôt, scannez le QR code de l\'expéditeur : un numéro saisi ne suffit pas.'**
+  String get errorBoatDepositQrRequiredMessage;
 }
 
 class _AppLocalizationsDelegate

@@ -783,6 +783,7 @@ final GoRouter appRouter = GoRouter(
           payoutTrigger:
               extra['payoutTrigger'] as PayoutTrigger? ??
               PayoutTrigger.delivery,
+          qrToken: extra['qrToken'] as String?,
         );
       },
     ),
@@ -809,6 +810,7 @@ final GoRouter appRouter = GoRouter(
             payoutTrigger:
                 extra['payoutTrigger'] as PayoutTrigger? ??
                 PayoutTrigger.delivery,
+            qrToken: extra['qrToken'] as String?,
           ),
         );
       },

@@ -8771,6 +8771,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDepositPaidSupportTravelerSubtitle': (l) =>
       l.bidDepositPaidSupportTravelerSubtitle,
   'tripPublishLockedBoatBlocked': (l) => l.tripPublishLockedBoatBlocked,
+  'trackingDepositNeedsQr': (l) => l.trackingDepositNeedsQr,
+  'errorBoatDepositQrRequiredTitle': (l) => l.errorBoatDepositQrRequiredTitle,
+  'errorBoatDepositQrRequiredMessage': (l) =>
+      l.errorBoatDepositQrRequiredMessage,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

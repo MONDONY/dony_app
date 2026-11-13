@@ -32,6 +32,13 @@ class QrScanSubmitRequested extends TrackingEvent {
   /// Numéro de suivi saisi à la remise du colis (DEPART).
   final String? trackingNumber;
 
+  /// Jeton `?k=` du QR de dépôt (bateau) : part tel quel avec l'étape.
+  final String? qrToken;
+
+  /// Dépôt d'un colis payé au dépôt : l'étape ne part qu'avec une photo
+  /// réellement téléversée.
+  final bool photoRequired;
+
   QrScanSubmitRequested({
     required this.bidId,
     required this.eventType,
@@ -41,6 +48,8 @@ class QrScanSubmitRequested extends TrackingEvent {
     this.gpsLabel,
     this.scanMethod,
     this.trackingNumber,
+    this.qrToken,
+    this.photoRequired = false,
   });
 }
 

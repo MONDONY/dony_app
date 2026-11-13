@@ -26,6 +26,7 @@ class _MockAnalytics extends Mock implements AnalyticsService {}
 BidModel _bid(
   String id,
   String status, {
+  PayoutTrigger payoutTrigger = PayoutTrigger.delivery,
   String announcementId = 'trip-a',
   String? from,
   String? to,
@@ -38,6 +39,7 @@ BidModel _bid(
   senderId: 's',
   status: status,
   trackingNumber: number,
+  payoutTrigger: payoutTrigger,
   departureCity: from,
   arrivalCity: to,
   arrivalInstructions: instructions,
@@ -1234,6 +1236,75 @@ void main() {
     test('segment absent : rien ne change', () {
       final c = build()..applyRequestedSegment(null);
       expect(c.state.trackSegment, isNull);
+    });
+  });
+
+  group('dépôt d\'un colis payé au dépôt (bateau)', () {
+    ScanHubLoaded depositHub() => _hub(
+      bidsByTrip: {
+        'trip-a': [
+          _bid(
+            'dep',
+            'ACCEPTED',
+            payoutTrigger: PayoutTrigger.deposit,
+            number: 'DON-DEP001',
+          ),
+          _bid('plain', 'ACCEPTED', number: 'DON-PLN001'),
+        ],
+      },
+    );
+    SuiviCubit validating() =>
+        build()..start(canValidate: true, requested: SuiviMode.valider);
+
+    test('QR avec jeton : le jeton suit l\'étape DEPART, photo exigée', () {
+      final c = validating()
+        ..onQrScanned('dep', depositHub(), qrToken: 'tok_abc');
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.step, 'DEPART');
+      expect(effect.qrToken, 'tok_abc');
+      expect(effect.isDeposit, isTrue);
+      expect(effect.photoRequired, isTrue);
+    });
+
+    test('QR sans jeton sur un colis payé au dépôt : validé, le serveur '
+        'tranchera (422 boat-deposit-qr-required)', () {
+      final c = validating()..onQrScanned('dep', depositHub());
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.qrToken, isNull);
+      expect(effect.isDeposit, isTrue);
+    });
+
+    test('colis livré (avion) : aucun jeton, pas de dépôt', () {
+      final c = validating()..onQrScanned('plain', depositHub());
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.qrToken, isNull);
+      expect(effect.isDeposit, isFalse);
+    });
+
+    test('numéro saisi : « Scannez le QR de l\'expéditeur »', () async {
+      final c = validating();
+      await c.validateNumber('DON-DEP001', depositHub());
+      expect(c.state.effect, isA<SuiviDepositNeedsQr>());
+      expect((c.state.effect! as SuiviDepositNeedsQr).bid.id, 'dep');
+    });
+
+    test('numéro saisi sur un colis livré : inchangé', () async {
+      final c = validating();
+      await c.validateNumber('DON-PLN001', depositHub());
+      expect(c.state.effect, isA<SuiviValidateStep>());
+    });
+
+    test('bouton d\'une ligne colis : DEPART refusé sans QR, ARRIVEE ok', () {
+      final bid = _bid('dep', 'ACCEPTED', payoutTrigger: PayoutTrigger.deposit);
+      final c = validating()..validateParcel(bid, 'DEPART');
+      expect(c.state.effect, isA<SuiviDepositNeedsQr>());
+
+      final other = validating()
+        ..validateParcel(
+          _bid('dep2', 'HANDED_OVER', payoutTrigger: PayoutTrigger.deposit),
+          'ARRIVEE',
+        );
+      expect(other.state.effect, isA<SuiviValidateStep>());
     });
   });
 }

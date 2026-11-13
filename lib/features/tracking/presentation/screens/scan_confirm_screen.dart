@@ -39,9 +39,13 @@ class ScanConfirmScreen extends StatefulWidget {
     this.deliveryWindow,
     this.transportMode,
     this.payoutTrigger = PayoutTrigger.delivery,
+    this.qrToken,
   });
 
   final String bidId;
+
+  /// Jeton `?k=` du QR de dépôt (bateau), envoyé tel quel avec l'étape DEPART.
+  final String? qrToken;
   final String etape;
   final String packageLabel;
   final String? photoPath;
@@ -119,6 +123,12 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
           gpsLon: widget.gpsLon,
           gpsLabel: widget.gpsLabel,
           scanMethod: widget.scanMethod,
+          qrToken: widget.qrToken,
+          // Dépôt d'un colis payé au dépôt : pas d'envoi sans photo
+          // réellement téléversée.
+          photoRequired:
+              widget.etape == 'DEPART' &&
+              widget.payoutTrigger == PayoutTrigger.deposit,
         ),
       );
     }

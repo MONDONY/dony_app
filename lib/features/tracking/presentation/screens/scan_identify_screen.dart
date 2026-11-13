@@ -1,10 +1,12 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/models/scanned_qr.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -52,8 +54,9 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
   }
 
   Future<void> _openQrPicker() async {
-    final bidId = await context.push<String?>('/tracking/scan/qr-picker');
-    if (!mounted || bidId == null) return;
+    final scanned = await context.push<ScannedQr?>('/tracking/scan/qr-picker');
+    if (!mounted || scanned == null) return;
+    final bidId = scanned.bidId;
 
     String? etape = _selectedEtape;
     if (etape == null) {
@@ -70,6 +73,12 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
         'etape': etape,
         'packageLabel': bidId.substring(0, 8),
         'scanMethod': ScanMethod.qr,
+        // QR de dépôt (bateau) : jeton de l'expéditeur, envoyé tel quel avec
+        // l'étape. Seul un colis payé au dépôt en porte un.
+        if (scanned.qrToken != null) ...{
+          'qrToken': scanned.qrToken,
+          'payoutTrigger': PayoutTrigger.deposit,
+        },
       },
     );
   }
@@ -91,6 +100,17 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
       _selectedEtape = etape;
     }
     if (!mounted) return;
+    // Un colis payé au dépôt ne se dépose pas par numéro saisi : seul le QR de
+    // l'expéditeur porte le jeton que le serveur vérifie.
+    if (etape == 'DEPART' &&
+        state.result.payoutTrigger == PayoutTrigger.deposit) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.trackingDepositNeedsQr,
+        type: DonySnackbarType.warning,
+      );
+      return;
+    }
     await context.push<void>(
       '/tracking/scan/photo',
       extra: <String, dynamic>{

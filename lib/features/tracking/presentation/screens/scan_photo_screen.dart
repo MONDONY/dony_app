@@ -40,11 +40,16 @@ class ScanPhotoScreen extends StatefulWidget {
     this.locator = const ScanLocator(),
     this.transportMode,
     this.payoutTrigger = PayoutTrigger.delivery,
+    this.qrToken,
   });
 
   final String bidId;
   final String etape;
   final String packageLabel;
+
+  /// Jeton `?k=` du QR de dépôt (bateau), transmis à la confirmation qui
+  /// l'envoie avec l'étape. Jamais affiché.
+  final String? qrToken;
 
   /// Onglet Suivi : la photo (obligatoire) est rendue à l'appelant par
   /// `context.pop(ScanPhotoResult)` au lieu d'ouvrir la confirmation.
@@ -213,6 +218,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
         'transportMode': ?widget.transportMode,
         if (widget.payoutTrigger == PayoutTrigger.deposit)
           'payoutTrigger': widget.payoutTrigger,
+        'qrToken': ?widget.qrToken,
       },
     );
   }
