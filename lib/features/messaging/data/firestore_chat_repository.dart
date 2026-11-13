@@ -1,6 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 
+/// Plafond de messages d'une conversation INQUIRY atteint (refus des règles).
+class InquiryLimitReachedException implements Exception {
+  @override
+  String toString() => 'InquiryLimitReachedException';
+}
+
 class FirestoreChatRepository {
   final FirebaseFirestore _firestore;
   FirestoreChatRepository(this._firestore);
@@ -20,25 +26,63 @@ class FirestoreChatRepository {
         );
   }
 
+  /// Nombre de messages déjà envoyés par le demandeur dans une conversation
+  /// INQUIRY (`inquiryQuota/{id}.sent`), 0 tant que le document n'existe pas.
+  Stream<int> inquirySentStream(String firestoreConversationId) {
+    return _firestore
+        .collection('inquiryQuota')
+        .doc(firestoreConversationId)
+        .snapshots()
+        .map((snap) => (snap.data()?['sent'] as num?)?.toInt() ?? 0);
+  }
+
+  /// [inquirySentBefore] non nul : message du demandeur dans une conversation
+  /// INQUIRY sous quota. Les règles Firestore exigent alors, dans UN seul lot,
+  /// le message à l'id `inq<n>` (n = nouvelle valeur de `sent`) et le compteur
+  /// `inquiryQuota/{id} = {sent: n}`. Un refus `permission-denied` signifie
+  /// que le plafond est atteint ([InquiryLimitReachedException]).
   Future<void> sendTextMessage({
     required String firestoreConversationId,
     required String senderFirebaseUid,
     required String body,
     String? replyToId,
+    int? inquirySentBefore,
   }) async {
-    await _firestore
+    final messages = _firestore
         .collection('conversations')
         .doc(firestoreConversationId)
-        .collection('messages')
-        .add({
-          'senderId': senderFirebaseUid,
-          'body': body,
-          'imageUrl': null,
-          'type': 'TEXT',
-          'sentAt': DateTime.now().toUtc().toIso8601String(),
-          'readAt': null,
-          ..._replyTo(replyToId),
-        });
+        .collection('messages');
+    final data = <String, Object?>{
+      'senderId': senderFirebaseUid,
+      'body': body,
+      'imageUrl': null,
+      'type': 'TEXT',
+      'sentAt': DateTime.now().toUtc().toIso8601String(),
+      'readAt': null,
+      ..._replyTo(replyToId),
+    };
+    if (inquirySentBefore == null) {
+      await messages.add(data);
+      return;
+    }
+    final sent = inquirySentBefore + 1;
+    final quota = _firestore
+        .collection('inquiryQuota')
+        .doc(firestoreConversationId);
+    final batch = _firestore.batch()..set(messages.doc('inq$sent'), data);
+    if (inquirySentBefore == 0) {
+      batch.set(quota, {'sent': sent});
+    } else {
+      batch.update(quota, {'sent': sent});
+    }
+    try {
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        throw InquiryLimitReachedException();
+      }
+      rethrow;
+    }
   }
 
   Future<void> sendLocationMessage({
