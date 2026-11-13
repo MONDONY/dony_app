@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 enum TripMenuEntry {
   edit,
   reschedule,
+  announceDelay,
   unpublish,
   sharePoster,
   arrivalInstructions,
@@ -42,6 +43,8 @@ const _reusableStatuses = {'ACTIVE', 'COMPLETED'};
 ///
 /// - `edit` : trajet modifiable ([canEditTrip]) ;
 /// - `reschedule` : trajet reportable ([tripCanReschedule]) ;
+/// - `announceDelay` : trajet parti ([tripCanAnnounceDelay], tous modes),
+///   même quand le report est verrouillé par des colis à bord ;
 /// - `unpublish` : ACTIVE sans demande ;
 /// - `sharePoster` : ACTIVE ([canShareTripPoster]) ;
 /// - `arrivalInstructions` : instructions de retrait ou colis arrivé (la
@@ -73,6 +76,7 @@ List<TripMenuEntry> tripMenuEntriesFor({
   return [
     if (canEdit) TripMenuEntry.edit,
     if (tripCanReschedule(trip, hasBids)) TripMenuEntry.reschedule,
+    if (tripCanAnnounceDelay(trip)) TripMenuEntry.announceDelay,
     if (active && !hasBids) TripMenuEntry.unpublish,
     if (canShareTripPoster(trip)) TripMenuEntry.sharePoster,
     if (tripTilesFor(
@@ -130,6 +134,7 @@ class TripOwnerOptionsButton extends StatelessWidget {
 /// depuis [context], le contexte de l'écran, qui porte ses blocs et en écoute
 /// les suites :
 /// - Modifier : [openTripEdit] ; Reporter : `TripRescheduleBottomSheet` ;
+///   Annoncer un retard : [openTripDelay] ;
 ///   Dépublier, Supprimer : [confirmTripUnpublish], [confirmTripDelete]
 ///   (confirmation, étapes suivantes d'un voyage) ; Annuler le voyage :
 ///   [openTripCancellation] (colis déjà remis annoncés) ; Partager
@@ -238,6 +243,11 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
             ? l.tripRescheduleSubtitle
             : tripRescheduleBlockMessage(l, block),
       ),
+      TripMenuEntry.announceDelay => (
+        'hourglass',
+        l.tripDelaySheetTitle,
+        l.tripMenuAnnounceDelaySubtitle,
+      ),
       TripMenuEntry.unpublish => (
         'eye-off',
         l.tripOwnerUnpublishTile,
@@ -304,6 +314,8 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
         unawaited(openTripEdit(ctx, trip));
       case TripMenuEntry.reschedule:
         unawaited(TripRescheduleBottomSheet.show(ctx, announcement: trip));
+      case TripMenuEntry.announceDelay:
+        unawaited(openTripDelay(ctx, trip, bids));
       case TripMenuEntry.unpublish:
         unawaited(confirmTripUnpublish(ctx, trip));
       case TripMenuEntry.sharePoster:

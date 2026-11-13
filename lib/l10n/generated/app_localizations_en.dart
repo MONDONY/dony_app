@@ -24859,4 +24859,85 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorArrivalTimeBeforeDepartureMessage =>
       'On the same day, the arrival time must be after the departure time.';
+
+  @override
+  String get tripDelaySheetTitle => 'Announce a delay';
+
+  @override
+  String tripDelaySheetSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'All $count senders on this trip are notified at once.',
+      one: 'The sender with a parcel on board is notified.',
+      zero: 'Senders with a parcel on board are notified at once.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripDelayReasonSection => 'Reason';
+
+  @override
+  String get tripDelayArrivalSection => 'New estimated arrival';
+
+  @override
+  String get tripDelayFromLabel => 'From';
+
+  @override
+  String get tripDelayToLabel => 'To';
+
+  @override
+  String tripDelayArrivalLimit(String date) {
+    return 'No later than $date for this trip';
+  }
+
+  @override
+  String get tripDelayMessageSection => 'Message to senders';
+
+  @override
+  String get tripDelayMessageHintBoat =>
+      'E.g. waiting at Tanger Med, departure expected Thursday';
+
+  @override
+  String get tripDelayMessageHintPlane =>
+      'E.g. flight delayed, new schedule announced tomorrow';
+
+  @override
+  String get tripDelayMessageHint =>
+      'E.g. unexpected hold-up, back on the way Thursday';
+
+  @override
+  String get tripDelayInfo =>
+      'Rescheduling is locked once parcels are on board; you can still announce a delay until arrival.';
+
+  @override
+  String get tripDelaySubmit => 'Notify senders';
+
+  @override
+  String get tripDelaySentSnackbar =>
+      'Delay announced: senders have been notified.';
+
+  @override
+  String get tripMenuAnnounceDelaySubtitle =>
+      'Tell senders the new estimated arrival';
+
+  @override
+  String tripOwnerVolumeRemainingOf(String total) {
+    return 'left of $total';
+  }
+
+  @override
+  String get tripTilePaymentsDeposit => 'Paid as each parcel is dropped off';
+
+  @override
+  String get tripTilePaymentsDepositNote =>
+      'Each parcel is paid to you as soon as it is dropped off at the warehouse.';
+
+  @override
+  String get scanDepositRecordedChip => 'Drop-off recorded';
+
+  @override
+  String get suiviDepositPhotoRequired =>
+      'Required to confirm the warehouse drop-off';
 }

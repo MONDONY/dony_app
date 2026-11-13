@@ -8696,6 +8696,29 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorArrivalTimeBeforeDepartureTitle,
   'errorArrivalTimeBeforeDepartureMessage': (l) =>
       l.errorArrivalTimeBeforeDepartureMessage,
+  'tripDelaySheetTitle': (l) => l.tripDelaySheetTitle,
+  'tripDelaySheetSubtitle': (l) =>
+      l.tripDelaySheetSubtitle(intPlaceholderValue),
+  'tripDelayReasonSection': (l) => l.tripDelayReasonSection,
+  'tripDelayArrivalSection': (l) => l.tripDelayArrivalSection,
+  'tripDelayFromLabel': (l) => l.tripDelayFromLabel,
+  'tripDelayToLabel': (l) => l.tripDelayToLabel,
+  'tripDelayArrivalLimit': (l) =>
+      l.tripDelayArrivalLimit(placeholderMarker('date')),
+  'tripDelayMessageSection': (l) => l.tripDelayMessageSection,
+  'tripDelayMessageHintBoat': (l) => l.tripDelayMessageHintBoat,
+  'tripDelayMessageHintPlane': (l) => l.tripDelayMessageHintPlane,
+  'tripDelayMessageHint': (l) => l.tripDelayMessageHint,
+  'tripDelayInfo': (l) => l.tripDelayInfo,
+  'tripDelaySubmit': (l) => l.tripDelaySubmit,
+  'tripDelaySentSnackbar': (l) => l.tripDelaySentSnackbar,
+  'tripMenuAnnounceDelaySubtitle': (l) => l.tripMenuAnnounceDelaySubtitle,
+  'tripOwnerVolumeRemainingOf': (l) =>
+      l.tripOwnerVolumeRemainingOf(placeholderMarker('total')),
+  'tripTilePaymentsDeposit': (l) => l.tripTilePaymentsDeposit,
+  'tripTilePaymentsDepositNote': (l) => l.tripTilePaymentsDepositNote,
+  'scanDepositRecordedChip': (l) => l.scanDepositRecordedChip,
+  'suiviDepositPhotoRequired': (l) => l.suiviDepositPhotoRequired,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -9435,4 +9458,6 @@ const textParameters = <String, List<String>>{
   'bidDelayNewRange': ['from', 'to'],
   'bidDelayNewDate': ['date'],
   'bidDelayReason': ['reason'],
+  'tripDelayArrivalLimit': ['date'],
+  'tripOwnerVolumeRemainingOf': ['total'],
 };

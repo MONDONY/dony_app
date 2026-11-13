@@ -317,6 +317,14 @@ class _TripTileContent extends StatelessWidget {
           ),
         ],
         TripTile.payments => [
+          if (tripPaidAtDeposit(trip)) ...[
+            Text(
+              l.tripTilePaymentsDepositNote,
+              key: const Key('trip-tile-payments-deposit-note'),
+              style: tt.bodyMedium,
+            ),
+            const SizedBox(height: DonySpacing.md),
+          ],
           TripPaymentsSection(trip: trip),
           TripMobileMoneyNetworksSection(trip: trip),
           if (live.cardTodoShown)

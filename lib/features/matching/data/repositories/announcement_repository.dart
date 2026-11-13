@@ -8,6 +8,7 @@ import 'package:dony/features/matching/data/models/kg_sold_model.dart';
 import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
+import 'package:dony/features/matching/data/models/trip_delay_info.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/models/trip_series_result.dart';
@@ -415,5 +416,20 @@ class AnnouncementRepository {
     handoverDeadline: handoverDeadline,
     reason: reason,
     note: note,
+  );
+
+  /// Retard annoncé sur un trajet parti (`POST /announcements/{id}/delays`).
+  Future<TripDelayInfo> announceDelay({
+    required String announcementId,
+    required TripDelayReason reason,
+    required DateTime arrivalDate,
+    required DateTime arrivalDateMax,
+    String? message,
+  }) => _remoteDatasource.announceDelay(
+    announcementId: announcementId,
+    reason: reason,
+    arrivalDate: arrivalDate,
+    arrivalDateMax: arrivalDateMax,
+    message: message,
   );
 }

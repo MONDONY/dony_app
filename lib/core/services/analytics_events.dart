@@ -1174,6 +1174,16 @@ abstract final class AnalyticsEvents {
   static const tripRescheduled = 'trip_rescheduled';
   static const tripRescheduleDecided = 'trip_reschedule_decided';
   static const arrivalInstructionsUpdated = 'arrival_instructions_updated';
+
+  /// Retard annoncé par le voyageur d'un trajet parti, accepté par le serveur
+  /// (`POST /announcements/{id}/delays`, `TripDelayCubit`). Propriétés
+  /// `reason`, `transport_mode`, `range_days`, `has_message`. Jamais de date
+  /// ni de texte.
+  static const tripDelayAnnounced = 'trip_delay_announced';
+
+  /// Annonce de retard refusée ou impossible. Propriétés `reason`,
+  /// `transport_mode`, `error_code`.
+  static const tripDelayAnnounceFailed = 'trip_delay_announce_failed';
   // Négociation du prix d'un trajet. L'entonnoir se lit dans cet ordre :
   // ouverture du mode → première proposition → contre-offres → issue.
   // Bascule « J'accepte les propositions de prix » à la création du trajet.

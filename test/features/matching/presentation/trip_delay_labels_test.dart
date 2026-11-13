@@ -29,7 +29,7 @@ void main() {
       );
       expect(
         tripDelayReasonLabel(fr, TripDelayReason.transportDisruption, boat),
-        'Transport perturbé',
+        'Perturbation du transport',
       );
       expect(
         tripDelayReasonLabel(fr, TripDelayReason.other, boat),
@@ -66,7 +66,7 @@ void main() {
         // Motif neutre, le même partout.
         expect(
           tripDelayReasonLabel(fr, TripDelayReason.transportDisruption, mode),
-          'Transport perturbé',
+          'Perturbation du transport',
         );
       }
     });

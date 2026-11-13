@@ -447,6 +447,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
           'packageLabel': label,
           'scanMethod': method,
           'deliveryWindow': DeliveryWindow.fromBid(bid),
+          'transportMode': ?bid.transportMode,
         },
       );
       if (mounted) _reloadTrips();
@@ -475,6 +476,11 @@ class _SuiviBodyState extends State<_SuiviBody> {
           'etape': step,
           'packageLabel': label,
           'returnResult': true,
+          // Bateau : « Dépôt à l'entrepôt » ; colis payé au dépôt : appareil
+          // photo ouvert d'office. Absents : comportement d'avant.
+          'transportMode': ?bid.transportMode,
+          if (bid.payoutTrigger == PayoutTrigger.deposit)
+            'payoutTrigger': bid.payoutTrigger,
         },
       );
       if (!mounted || photo == null) return;

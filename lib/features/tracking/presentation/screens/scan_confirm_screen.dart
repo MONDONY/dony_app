@@ -5,6 +5,8 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -35,6 +37,8 @@ class ScanConfirmScreen extends StatefulWidget {
     this.gpsLabel,
     this.scanMethod,
     this.deliveryWindow,
+    this.transportMode,
+    this.payoutTrigger = PayoutTrigger.delivery,
   });
 
   final String bidId;
@@ -52,6 +56,19 @@ class ScanConfirmScreen extends StatefulWidget {
   /// pas atteint (422 `trip-not-departed`, FLUTTER-CB). `null` : inconnu, le
   /// serveur tranche.
   final DeliveryWindow? deliveryWindow;
+
+  /// Mode du trajet du colis quand il est connu : en bateau, `DEPART` est le
+  /// dépôt à l'entrepôt.
+  final TransportMode? transportMode;
+
+  /// Versement du colis ; absent (back sans la PR B) : livraison.
+  final PayoutTrigger payoutTrigger;
+
+  /// Mode qui nomme l'étape : un colis payé au dépôt voyage en bateau.
+  TransportMode? get stepMode =>
+      etape == 'DEPART' && payoutTrigger == PayoutTrigger.deposit
+      ? TransportMode.boat
+      : transportMode;
 
   @override
   State<ScanConfirmScreen> createState() => _ScanConfirmScreenState();
@@ -113,7 +130,13 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
     final etapeIcon = kTrackingStepIcons[widget.etape];
-    final etapeLabel = trackingStepLabel(l, widget.etape);
+    final etapeLabel = trackingStepLabel(
+      l,
+      widget.etape,
+      mode: widget.stepMode,
+    );
+    final depositStep =
+        widget.etape == 'DEPART' && widget.stepMode == TransportMode.boat;
     final locationLabel = _displayLocationLabel(l);
 
     return BlocConsumer<TrackingBloc, TrackingState>(
@@ -266,7 +289,11 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                     alignment: Alignment.centerLeft,
                     child: Chip(
                       avatar: DonyIcon(etapeIcon, size: 14, color: cs.primary),
-                      label: Text(l.scanStepRecorded(widget.etape)),
+                      label: Text(
+                        depositStep
+                            ? l.scanDepositRecordedChip
+                            : l.scanStepRecorded(widget.etape),
+                      ),
                       labelStyle: tt.labelSmall?.copyWith(
                         color: cs.primary,
                         fontWeight: FontWeight.w700,

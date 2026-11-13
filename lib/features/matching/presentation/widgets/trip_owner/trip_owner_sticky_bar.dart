@@ -192,6 +192,7 @@ class TripOwnerStickyBar extends StatelessWidget {
       pending: pending,
       todo: first,
       cardReady: live.cardReady,
+      trip: trip,
     );
     void act(TripFooterButton button) =>
         _act(context, button, live: live, todo: first);
@@ -291,8 +292,14 @@ class TripOwnerStickyBar extends StatelessWidget {
     required int pending,
     required TripTodoItem? todo,
     required bool cardReady,
+    required AnnouncementModel trip,
   }) => switch (button) {
-    TripFooterButton.todo => tripTodoButton(l, todo!, cardReady: cardReady),
+    TripFooterButton.todo => tripTodoButton(
+      l,
+      todo!,
+      cardReady: cardReady,
+      trip: trip,
+    ),
     TripFooterButton.edit => l.commonEdit,
     TripFooterButton.seeRequests => l.listingSeeRequestsButton(pending),
     TripFooterButton.sharePoster => l.tripPosterShareButton,

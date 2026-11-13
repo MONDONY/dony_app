@@ -98,6 +98,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
         'etape': etape,
         'packageLabel': state.result.trackingNumber,
         'scanMethod': ScanMethod.manual,
+        'transportMode': ?state.result.transportMode,
       },
     );
   }

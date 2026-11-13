@@ -136,17 +136,26 @@ class TripRescheduleCard extends StatelessWidget {
 /// (`latestTripDelay`, servi une fois le colis remis) : même carte que le
 /// report, sans décision à prendre. Motif (selon le mode du trajet), nouvelle
 /// arrivée estimée, message du voyageur. Un report efface les retards côté
-/// back : la carte disparaît d'elle-même.
+/// back : la carte disparaît d'elle-même. Aussi sur l'écran du trajet vu par
+/// son voyageur (`latestTripDelay` du détail du trajet), pour relire ce qu'il
+/// a annoncé.
 class TripDelayCard extends StatelessWidget {
-  const TripDelayCard({super.key, required this.bid});
+  const TripDelayCard({super.key, required this.delay, this.mode});
 
-  final BidModel bid;
+  /// Carte du dernier retard du trajet de [bid] (`latestTripDelay` non nul,
+  /// [shouldShow]).
+  TripDelayCard.forBid({Key? key, required BidModel bid})
+    : this(key: key, delay: bid.latestTripDelay!, mode: bid.transportMode);
+
+  final TripDelayInfo delay;
+
+  /// Mode du trajet, qui choisit le libellé du motif (`trip_delay_labels`).
+  final TransportMode? mode;
 
   static bool shouldShow(BidModel bid) => bid.latestTripDelay != null;
 
   @override
   Widget build(BuildContext context) {
-    final TripDelayInfo delay = bid.latestTripDelay!;
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
@@ -175,9 +184,7 @@ class TripDelayCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            l.bidDelayReason(
-              tripDelayInfoReasonLabel(l, delay, bid.transportMode),
-            ),
+            l.bidDelayReason(tripDelayInfoReasonLabel(l, delay, mode)),
             key: const Key('trip-delay-reason'),
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),

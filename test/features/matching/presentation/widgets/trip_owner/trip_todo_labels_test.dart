@@ -240,7 +240,8 @@ void main() {
       }
     });
 
-    test('« Je pars » prend l\'icône du mode, « Arrivé » le drapeau', () {
+    test('« Je pars » prend l\'icône du mode, « Arrivé » le drapeau (le '
+        'bateau en bateau : « Arrivé au port »)', () {
       expect(tripTodoIcon(TripTodoKind.depart, TransportMode.plane), 'plane');
       expect(tripTodoIcon(TripTodoKind.depart, TransportMode.car), 'car');
       expect(tripTodoIcon(TripTodoKind.depart, TransportMode.bus), 'car');
@@ -250,7 +251,11 @@ void main() {
         kNeutralTripIconAsset,
       );
       for (final mode in TransportMode.values) {
-        expect(tripTodoIcon(TripTodoKind.arrive, mode), 'flag');
+        expect(
+          tripTodoIcon(TripTodoKind.arrive, mode),
+          mode == TransportMode.boat ? 'ship' : 'flag',
+          reason: mode.name,
+        );
       }
     });
 

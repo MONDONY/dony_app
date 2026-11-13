@@ -776,6 +776,10 @@ final GoRouter appRouter = GoRouter(
           returnResult: extra['returnResult'] as bool? ?? false,
           scanMethod: _scanMethodExtra(extra),
           deliveryWindow: extra['deliveryWindow'] as DeliveryWindow?,
+          transportMode: extra['transportMode'] as TransportMode?,
+          payoutTrigger:
+              extra['payoutTrigger'] as PayoutTrigger? ??
+              PayoutTrigger.delivery,
         );
       },
     ),
@@ -798,6 +802,10 @@ final GoRouter appRouter = GoRouter(
             packageLabel: extra['packageLabel'] as String? ?? '',
             scanMethod: _scanMethodExtra(extra),
             deliveryWindow: extra['deliveryWindow'] as DeliveryWindow?,
+            transportMode: extra['transportMode'] as TransportMode?,
+            payoutTrigger:
+                extra['payoutTrigger'] as PayoutTrigger? ??
+                PayoutTrigger.delivery,
           ),
         );
       },

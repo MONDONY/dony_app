@@ -9,6 +9,7 @@ import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
+import 'package:dony/features/matching/data/models/trip_delay_info.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/models/trip_series_result.dart';
@@ -646,5 +647,38 @@ class AnnouncementRemoteDatasource {
       },
     );
     return TripRescheduleResult.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Annonce d'un retard sur un trajet parti (`POST
+  /// /announcements/{id}/delays`, 201) : nouvelle arrivée estimée (début et
+  /// fin, jours calendaires), motif, message facultatif (300 caractères au
+  /// plus). Un rejeu identique de moins de 10 minutes rend le retard déjà
+  /// créé. Une réponse illisible (back plus récent) rend le retard demandé :
+  /// le serveur l'a accepté.
+  Future<TripDelayInfo> announceDelay({
+    required String announcementId,
+    required TripDelayReason reason,
+    required DateTime arrivalDate,
+    required DateTime arrivalDateMax,
+    String? message,
+  }) async {
+    final text = message?.trim() ?? '';
+    final response = await _apiClient.dio.post(
+      '/announcements/$announcementId/delays',
+      data: {
+        'reason': reason.wire,
+        'arrivalDate': DateFormat('yyyy-MM-dd').format(arrivalDate),
+        'arrivalDateMax': DateFormat('yyyy-MM-dd').format(arrivalDateMax),
+        if (text.isNotEmpty) 'message': text,
+      },
+    );
+    return TripDelayInfo.fromJsonOrNull(response.data) ??
+        TripDelayInfo(
+          reason: reason.wire,
+          arrivalDate: arrivalDate,
+          arrivalDateMax: arrivalDateMax,
+          message: text.isEmpty ? null : text,
+          announcedAt: DateTime.now(),
+        );
   }
 }

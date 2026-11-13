@@ -59,6 +59,7 @@ void main() {
   group('tripMenuEntriesFor', () {
     const edit = TripMenuEntry.edit;
     const reschedule = TripMenuEntry.reschedule;
+    const delay = TripMenuEntry.announceDelay;
     const unpublish = TripMenuEntry.unpublish;
     const poster = TripMenuEntry.sharePoster;
     const arrival = TripMenuEntry.arrivalInstructions;
@@ -147,13 +148,13 @@ void main() {
         'IN_PROGRESS avec un colis remis',
         ownerTrip(status: 'IN_PROGRESS'),
         handedOver,
-        [reschedule],
+        [reschedule, delay],
       ),
       (
         'IN_PROGRESS avec instructions et colis arrivé',
         ownerTrip(status: 'IN_PROGRESS', arrivalInstructions: 'Rue 10'),
         arrived,
-        [reschedule, arrival],
+        [reschedule, delay, arrival],
       ),
       (
         'COMPLETED sans colis',

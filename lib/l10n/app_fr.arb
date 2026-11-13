@@ -24243,7 +24243,7 @@
   },
   "trackingBoatStepDeparted": "Bateau parti",
   "@trackingBoatStepDeparted": {
-    "description": "Frise de suivi d'un colis bateau : jalon du trajet fait, le bateau est parti."
+    "description": "Frise de suivi d'un colis bateau : jalon du trajet fait, le bateau est parti. Aussi titre et bouton de l'action « Je pars » d'un trajet bateau (trip_todo_labels.dart, trip_depart_action.dart)."
   },
   "trackingBoatStepAtSea": "En mer",
   "@trackingBoatStepAtSea": {
@@ -24251,7 +24251,7 @@
   },
   "trackingBoatStepAtPort": "Arrivé au port de {city}",
   "@trackingBoatStepAtPort": {
-    "description": "Frise de suivi d'un colis bateau : jalon de l'arrivée au port (à venir ou fait), aussi phrase d'état une fois arrivé. Ville commençant par une consonne.",
+    "description": "Frise de suivi d'un colis bateau : jalon de l'arrivée au port (à venir ou fait), aussi phrase d'état une fois arrivé, et titre de l'action « Arrivé » d'un trajet bateau (trip_todo_labels.dart). Ville commençant par une consonne.",
     "placeholders": {
       "city": {
         "type": "String"
@@ -24269,7 +24269,7 @@
   },
   "trackingBoatStepAtPortNoCity": "Arrivé au port",
   "@trackingBoatStepAtPortNoCity": {
-    "description": "Comme trackingBoatStepAtPort, quand la ville d'arrivée n'est pas connue (colis lu par QR)."
+    "description": "Comme trackingBoatStepAtPort, quand la ville d'arrivée n'est pas connue (colis lu par QR). Aussi bouton de l'action « Arrivé » d'un trajet bateau (trip_todo_labels.dart)."
   },
   "trackingBoatHeadlineAwaitingDeposit": "En attente du dépôt à l'entrepôt",
   "@trackingBoatHeadlineAwaitingDeposit": {
@@ -24446,7 +24446,7 @@
   "@tripDelayReasonExtendedStop": {
     "description": "Motif de retard EXTENDED_STOPOVER sur la route ou un mode inconnu : jamais « escale » hors bateau et avion (trip_delay_labels.dart)."
   },
-  "tripDelayReasonTransportDisruption": "Transport perturbé",
+  "tripDelayReasonTransportDisruption": "Perturbation du transport",
   "@tripDelayReasonTransportDisruption": {
     "description": "Motif de retard TRANSPORT_DISRUPTION, neutre, tous modes (trip_delay_labels.dart)."
   },
@@ -24461,5 +24461,100 @@
   "errorArrivalTimeBeforeDepartureMessage": "Le même jour, l'heure d'arrivée doit suivre l'heure de départ.",
   "@errorArrivalTimeBeforeDepartureMessage": {
     "description": "Erreur arrival-time-before-departure du back, message de repli (error_catalog.dart)."
+  },
+  "tripDelaySheetTitle": "Annoncer un retard",
+  "@tripDelaySheetTitle": {
+    "description": "Titre de la feuille d'annonce de retard (trip_delay_bottom_sheet.dart) et entrée du menu ⋮ de l'écran du trajet (trip_owner_options_sheet.dart), tous modes."
+  },
+  "tripDelaySheetSubtitle": "{count, plural, =0{Les expéditeurs dont le colis est à bord sont prévenus en une fois.} =1{L'expéditeur dont le colis est à bord est prévenu.} other{Les {count} expéditeurs de ce trajet sont prévenus en une fois.}}",
+  "@tripDelaySheetSubtitle": {
+    "description": "Sous-titre de la feuille d'annonce de retard : expéditeurs distincts des colis remis, en transit ou arrivés (0 tant que les colis ne sont pas chargés).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripDelayReasonSection": "Motif",
+  "@tripDelayReasonSection": {
+    "description": "Feuille d'annonce de retard : titre de la section des motifs."
+  },
+  "tripDelayArrivalSection": "Nouvelle arrivée estimée",
+  "@tripDelayArrivalSection": {
+    "description": "Feuille d'annonce de retard : titre de la section des dates (début et fin de la fourchette)."
+  },
+  "tripDelayFromLabel": "Du",
+  "@tripDelayFromLabel": {
+    "description": "Feuille d'annonce de retard : libellé court du début de la nouvelle arrivée estimée."
+  },
+  "tripDelayToLabel": "Au",
+  "@tripDelayToLabel": {
+    "description": "Feuille d'annonce de retard : libellé court de la fin de la nouvelle arrivée estimée."
+  },
+  "tripDelayArrivalLimit": "Au plus tard le {date} pour ce trajet",
+  "@tripDelayArrivalLimit": {
+    "description": "Feuille d'annonce de retard : dernière date d'arrivée possible (départ + durée maximale du mode), sous les dates.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "tripDelayMessageSection": "Message aux expéditeurs",
+  "@tripDelayMessageSection": {
+    "description": "Feuille d'annonce de retard : titre du champ de message libre (300 caractères)."
+  },
+  "tripDelayMessageHintBoat": "Ex. : attente à Tanger Med, départ prévu jeudi",
+  "@tripDelayMessageHintBoat": {
+    "description": "Aide du message de retard, trajet bateau."
+  },
+  "tripDelayMessageHintPlane": "Ex. : vol retardé, nouvel horaire annoncé demain",
+  "@tripDelayMessageHintPlane": {
+    "description": "Aide du message de retard, trajet avion seulement (« vol »)."
+  },
+  "tripDelayMessageHint": "Ex. : contretemps, reprise prévue jeudi",
+  "@tripDelayMessageHint": {
+    "description": "Aide du message de retard, route ou mode inconnu : neutre, ni vol ni port."
+  },
+  "tripDelayInfo": "Le report du trajet reste bloqué une fois les colis à bord ; l'annonce de retard, elle, reste possible jusqu'à l'arrivée.",
+  "@tripDelayInfo": {
+    "description": "Feuille d'annonce de retard : encadré d'information, tous modes."
+  },
+  "tripDelaySubmit": "Prévenir les expéditeurs",
+  "@tripDelaySubmit": {
+    "description": "Bouton du pied de la feuille d'annonce de retard (stickyBottom)."
+  },
+  "tripDelaySentSnackbar": "Retard annoncé : les expéditeurs sont prévenus.",
+  "@tripDelaySentSnackbar": {
+    "description": "Confirmation après l'annonce d'un retard (trip_owner_actions.dart)."
+  },
+  "tripMenuAnnounceDelaySubtitle": "Prévenez les expéditeurs de la nouvelle arrivée estimée",
+  "@tripMenuAnnounceDelaySubtitle": {
+    "description": "Sous-titre de l'entrée « Annoncer un retard » du menu ⋮ de l'écran du trajet (trajet parti)."
+  },
+  "tripOwnerVolumeRemainingOf": "restants sur {total}",
+  "@tripOwnerVolumeRemainingOf": {
+    "description": "Pastille de capacité de l'écran du trajet bateau vendu au m³ (trip_owner_header.dart), sous le volume restant : « 0,4 m³ » puis « restants sur 2 m³ ».",
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "tripTilePaymentsDeposit": "Payé au dépôt de chaque colis",
+  "@tripTilePaymentsDeposit": {
+    "description": "Sous-titre de la tuile Paiements de l'écran du trajet bateau (interrupteur bateau allumé, trip_tiles.dart)."
+  },
+  "tripTilePaymentsDepositNote": "Chaque colis vous est versé dès son dépôt à l'entrepôt.",
+  "@tripTilePaymentsDepositNote": {
+    "description": "Feuille de la tuile Paiements d'un trajet bateau (trip_tile_sheets.dart)."
+  },
+  "scanDepositRecordedChip": "Dépôt enregistré",
+  "@scanDepositRecordedChip": {
+    "description": "Pastille de l'étape sur la confirmation d'une lecture (scan_confirm_screen.dart) quand DEPART est le dépôt à l'entrepôt (bateau, colis payé au dépôt)."
+  },
+  "suiviDepositPhotoRequired": "Obligatoire pour valider le dépôt à l'entrepôt",
+  "@suiviDepositPhotoRequired": {
+    "description": "Sous-titre de l'écran photo en mode retour de résultat (scan_photo_screen.dart) quand DEPART est le dépôt à l'entrepôt."
   }
 }

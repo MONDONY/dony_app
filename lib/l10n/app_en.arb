@@ -12591,7 +12591,7 @@
   },
   "trackingBoatStepDeparted": "Ship departed",
   "@trackingBoatStepDeparted": {
-    "description": "Frise de suivi d'un colis bateau : jalon du trajet fait, le bateau est parti."
+    "description": "Frise de suivi d'un colis bateau : jalon du trajet fait, le bateau est parti. Aussi titre et bouton de l'action « Je pars » d'un trajet bateau (trip_todo_labels.dart, trip_depart_action.dart)."
   },
   "trackingBoatStepAtSea": "At sea",
   "@trackingBoatStepAtSea": {
@@ -12599,7 +12599,7 @@
   },
   "trackingBoatStepAtPort": "Arrived at the port of {city}",
   "@trackingBoatStepAtPort": {
-    "description": "Frise de suivi d'un colis bateau : jalon de l'arrivée au port (à venir ou fait), aussi phrase d'état une fois arrivé. Ville commençant par une consonne.",
+    "description": "Frise de suivi d'un colis bateau : jalon de l'arrivée au port (à venir ou fait), aussi phrase d'état une fois arrivé, et titre de l'action « Arrivé » d'un trajet bateau (trip_todo_labels.dart). Ville commençant par une consonne.",
     "placeholders": {
       "city": {
         "type": "String"
@@ -12617,7 +12617,7 @@
   },
   "trackingBoatStepAtPortNoCity": "Arrived at port",
   "@trackingBoatStepAtPortNoCity": {
-    "description": "Comme trackingBoatStepAtPort, quand la ville d'arrivée n'est pas connue (colis lu par QR)."
+    "description": "Comme trackingBoatStepAtPort, quand la ville d'arrivée n'est pas connue (colis lu par QR). Aussi bouton de l'action « Arrivé » d'un trajet bateau (trip_todo_labels.dart)."
   },
   "trackingBoatHeadlineAwaitingDeposit": "Waiting to be dropped off at the warehouse",
   "@trackingBoatHeadlineAwaitingDeposit": {
@@ -12809,5 +12809,100 @@
   "errorArrivalTimeBeforeDepartureMessage": "On the same day, the arrival time must be after the departure time.",
   "@errorArrivalTimeBeforeDepartureMessage": {
     "description": "Erreur arrival-time-before-departure du back, message de repli (error_catalog.dart)."
+  },
+  "tripDelaySheetTitle": "Announce a delay",
+  "@tripDelaySheetTitle": {
+    "description": "Titre de la feuille d'annonce de retard (trip_delay_bottom_sheet.dart) et entrée du menu ⋮ de l'écran du trajet (trip_owner_options_sheet.dart), tous modes."
+  },
+  "tripDelaySheetSubtitle": "{count, plural, =0{Senders with a parcel on board are notified at once.} =1{The sender with a parcel on board is notified.} other{All {count} senders on this trip are notified at once.}}",
+  "@tripDelaySheetSubtitle": {
+    "description": "Sous-titre de la feuille d'annonce de retard : expéditeurs distincts des colis remis, en transit ou arrivés (0 tant que les colis ne sont pas chargés).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripDelayReasonSection": "Reason",
+  "@tripDelayReasonSection": {
+    "description": "Feuille d'annonce de retard : titre de la section des motifs."
+  },
+  "tripDelayArrivalSection": "New estimated arrival",
+  "@tripDelayArrivalSection": {
+    "description": "Feuille d'annonce de retard : titre de la section des dates (début et fin de la fourchette)."
+  },
+  "tripDelayFromLabel": "From",
+  "@tripDelayFromLabel": {
+    "description": "Feuille d'annonce de retard : libellé court du début de la nouvelle arrivée estimée."
+  },
+  "tripDelayToLabel": "To",
+  "@tripDelayToLabel": {
+    "description": "Feuille d'annonce de retard : libellé court de la fin de la nouvelle arrivée estimée."
+  },
+  "tripDelayArrivalLimit": "No later than {date} for this trip",
+  "@tripDelayArrivalLimit": {
+    "description": "Feuille d'annonce de retard : dernière date d'arrivée possible (départ + durée maximale du mode), sous les dates.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "tripDelayMessageSection": "Message to senders",
+  "@tripDelayMessageSection": {
+    "description": "Feuille d'annonce de retard : titre du champ de message libre (300 caractères)."
+  },
+  "tripDelayMessageHintBoat": "E.g. waiting at Tanger Med, departure expected Thursday",
+  "@tripDelayMessageHintBoat": {
+    "description": "Aide du message de retard, trajet bateau."
+  },
+  "tripDelayMessageHintPlane": "E.g. flight delayed, new schedule announced tomorrow",
+  "@tripDelayMessageHintPlane": {
+    "description": "Aide du message de retard, trajet avion seulement (« vol »)."
+  },
+  "tripDelayMessageHint": "E.g. unexpected hold-up, back on the way Thursday",
+  "@tripDelayMessageHint": {
+    "description": "Aide du message de retard, route ou mode inconnu : neutre, ni vol ni port."
+  },
+  "tripDelayInfo": "Rescheduling is locked once parcels are on board; you can still announce a delay until arrival.",
+  "@tripDelayInfo": {
+    "description": "Feuille d'annonce de retard : encadré d'information, tous modes."
+  },
+  "tripDelaySubmit": "Notify senders",
+  "@tripDelaySubmit": {
+    "description": "Bouton du pied de la feuille d'annonce de retard (stickyBottom)."
+  },
+  "tripDelaySentSnackbar": "Delay announced: senders have been notified.",
+  "@tripDelaySentSnackbar": {
+    "description": "Confirmation après l'annonce d'un retard (trip_owner_actions.dart)."
+  },
+  "tripMenuAnnounceDelaySubtitle": "Tell senders the new estimated arrival",
+  "@tripMenuAnnounceDelaySubtitle": {
+    "description": "Sous-titre de l'entrée « Annoncer un retard » du menu ⋮ de l'écran du trajet (trajet parti)."
+  },
+  "tripOwnerVolumeRemainingOf": "left of {total}",
+  "@tripOwnerVolumeRemainingOf": {
+    "description": "Pastille de capacité de l'écran du trajet bateau vendu au m³ (trip_owner_header.dart), sous le volume restant : « 0,4 m³ » puis « restants sur 2 m³ ».",
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "tripTilePaymentsDeposit": "Paid as each parcel is dropped off",
+  "@tripTilePaymentsDeposit": {
+    "description": "Sous-titre de la tuile Paiements de l'écran du trajet bateau (interrupteur bateau allumé, trip_tiles.dart)."
+  },
+  "tripTilePaymentsDepositNote": "Each parcel is paid to you as soon as it is dropped off at the warehouse.",
+  "@tripTilePaymentsDepositNote": {
+    "description": "Feuille de la tuile Paiements d'un trajet bateau (trip_tile_sheets.dart)."
+  },
+  "scanDepositRecordedChip": "Drop-off recorded",
+  "@scanDepositRecordedChip": {
+    "description": "Pastille de l'étape sur la confirmation d'une lecture (scan_confirm_screen.dart) quand DEPART est le dépôt à l'entrepôt (bateau, colis payé au dépôt)."
+  },
+  "suiviDepositPhotoRequired": "Required to confirm the warehouse drop-off",
+  "@suiviDepositPhotoRequired": {
+    "description": "Sous-titre de l'écran photo en mode retour de résultat (scan_photo_screen.dart) quand DEPART est le dépôt à l'entrepôt."
   }
 }

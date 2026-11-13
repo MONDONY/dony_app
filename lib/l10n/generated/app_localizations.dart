@@ -39869,7 +39869,7 @@ abstract class AppLocalizations {
   /// **'Départ du bateau'**
   String get trackingBoatStepDeparture;
 
-  /// Frise de suivi d'un colis bateau : jalon du trajet fait, le bateau est parti.
+  /// Frise de suivi d'un colis bateau : jalon du trajet fait, le bateau est parti. Aussi titre et bouton de l'action « Je pars » d'un trajet bateau (trip_todo_labels.dart, trip_depart_action.dart).
   ///
   /// In fr, this message translates to:
   /// **'Bateau parti'**
@@ -39881,7 +39881,7 @@ abstract class AppLocalizations {
   /// **'En mer'**
   String get trackingBoatStepAtSea;
 
-  /// Frise de suivi d'un colis bateau : jalon de l'arrivée au port (à venir ou fait), aussi phrase d'état une fois arrivé. Ville commençant par une consonne.
+  /// Frise de suivi d'un colis bateau : jalon de l'arrivée au port (à venir ou fait), aussi phrase d'état une fois arrivé, et titre de l'action « Arrivé » d'un trajet bateau (trip_todo_labels.dart). Ville commençant par une consonne.
   ///
   /// In fr, this message translates to:
   /// **'Arrivé au port de {city}'**
@@ -39893,7 +39893,7 @@ abstract class AppLocalizations {
   /// **'Arrivé au port d\'{city}'**
   String trackingBoatStepAtPortElided(String city);
 
-  /// Comme trackingBoatStepAtPort, quand la ville d'arrivée n'est pas connue (colis lu par QR).
+  /// Comme trackingBoatStepAtPort, quand la ville d'arrivée n'est pas connue (colis lu par QR). Aussi bouton de l'action « Arrivé » d'un trajet bateau (trip_todo_labels.dart).
   ///
   /// In fr, this message translates to:
   /// **'Arrivé au port'**
@@ -40028,7 +40028,7 @@ abstract class AppLocalizations {
   /// Motif de retard TRANSPORT_DISRUPTION, neutre, tous modes (trip_delay_labels.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Transport perturbé'**
+  /// **'Perturbation du transport'**
   String get tripDelayReasonTransportDisruption;
 
   /// Carte de prix de la fiche d'un trajet bateau vendu au m³, vue expéditeur (traveler_announcement_bottom_sheet.dart), sous le prix frais inclus.
@@ -40048,6 +40048,126 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le même jour, l\'heure d\'arrivée doit suivre l\'heure de départ.'**
   String get errorArrivalTimeBeforeDepartureMessage;
+
+  /// Titre de la feuille d'annonce de retard (trip_delay_bottom_sheet.dart) et entrée du menu ⋮ de l'écran du trajet (trip_owner_options_sheet.dart), tous modes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annoncer un retard'**
+  String get tripDelaySheetTitle;
+
+  /// Sous-titre de la feuille d'annonce de retard : expéditeurs distincts des colis remis, en transit ou arrivés (0 tant que les colis ne sont pas chargés).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Les expéditeurs dont le colis est à bord sont prévenus en une fois.} =1{L\'expéditeur dont le colis est à bord est prévenu.} other{Les {count} expéditeurs de ce trajet sont prévenus en une fois.}}'**
+  String tripDelaySheetSubtitle(int count);
+
+  /// Feuille d'annonce de retard : titre de la section des motifs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif'**
+  String get tripDelayReasonSection;
+
+  /// Feuille d'annonce de retard : titre de la section des dates (début et fin de la fourchette).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle arrivée estimée'**
+  String get tripDelayArrivalSection;
+
+  /// Feuille d'annonce de retard : libellé court du début de la nouvelle arrivée estimée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Du'**
+  String get tripDelayFromLabel;
+
+  /// Feuille d'annonce de retard : libellé court de la fin de la nouvelle arrivée estimée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Au'**
+  String get tripDelayToLabel;
+
+  /// Feuille d'annonce de retard : dernière date d'arrivée possible (départ + durée maximale du mode), sous les dates.
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus tard le {date} pour ce trajet'**
+  String tripDelayArrivalLimit(String date);
+
+  /// Feuille d'annonce de retard : titre du champ de message libre (300 caractères).
+  ///
+  /// In fr, this message translates to:
+  /// **'Message aux expéditeurs'**
+  String get tripDelayMessageSection;
+
+  /// Aide du message de retard, trajet bateau.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. : attente à Tanger Med, départ prévu jeudi'**
+  String get tripDelayMessageHintBoat;
+
+  /// Aide du message de retard, trajet avion seulement (« vol »).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. : vol retardé, nouvel horaire annoncé demain'**
+  String get tripDelayMessageHintPlane;
+
+  /// Aide du message de retard, route ou mode inconnu : neutre, ni vol ni port.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. : contretemps, reprise prévue jeudi'**
+  String get tripDelayMessageHint;
+
+  /// Feuille d'annonce de retard : encadré d'information, tous modes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le report du trajet reste bloqué une fois les colis à bord ; l\'annonce de retard, elle, reste possible jusqu\'à l\'arrivée.'**
+  String get tripDelayInfo;
+
+  /// Bouton du pied de la feuille d'annonce de retard (stickyBottom).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prévenir les expéditeurs'**
+  String get tripDelaySubmit;
+
+  /// Confirmation après l'annonce d'un retard (trip_owner_actions.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retard annoncé : les expéditeurs sont prévenus.'**
+  String get tripDelaySentSnackbar;
+
+  /// Sous-titre de l'entrée « Annoncer un retard » du menu ⋮ de l'écran du trajet (trajet parti).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prévenez les expéditeurs de la nouvelle arrivée estimée'**
+  String get tripMenuAnnounceDelaySubtitle;
+
+  /// Pastille de capacité de l'écran du trajet bateau vendu au m³ (trip_owner_header.dart), sous le volume restant : « 0,4 m³ » puis « restants sur 2 m³ ».
+  ///
+  /// In fr, this message translates to:
+  /// **'restants sur {total}'**
+  String tripOwnerVolumeRemainingOf(String total);
+
+  /// Sous-titre de la tuile Paiements de l'écran du trajet bateau (interrupteur bateau allumé, trip_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé au dépôt de chaque colis'**
+  String get tripTilePaymentsDeposit;
+
+  /// Feuille de la tuile Paiements d'un trajet bateau (trip_tile_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque colis vous est versé dès son dépôt à l\'entrepôt.'**
+  String get tripTilePaymentsDepositNote;
+
+  /// Pastille de l'étape sur la confirmation d'une lecture (scan_confirm_screen.dart) quand DEPART est le dépôt à l'entrepôt (bateau, colis payé au dépôt).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépôt enregistré'**
+  String get scanDepositRecordedChip;
+
+  /// Sous-titre de l'écran photo en mode retour de résultat (scan_photo_screen.dart) quand DEPART est le dépôt à l'entrepôt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Obligatoire pour valider le dépôt à l\'entrepôt'**
+  String get suiviDepositPhotoRequired;
 }
 
 class _AppLocalizationsDelegate

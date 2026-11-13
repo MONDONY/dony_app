@@ -25026,7 +25026,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripDelayReasonExtendedStop => 'Arrêt prolongé';
 
   @override
-  String get tripDelayReasonTransportDisruption => 'Transport perturbé';
+  String get tripDelayReasonTransportDisruption => 'Perturbation du transport';
 
   @override
   String get listingPricePerM3Label => 'par m³';
@@ -25038,4 +25038,85 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorArrivalTimeBeforeDepartureMessage =>
       'Le même jour, l\'heure d\'arrivée doit suivre l\'heure de départ.';
+
+  @override
+  String get tripDelaySheetTitle => 'Annoncer un retard';
+
+  @override
+  String tripDelaySheetSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Les $count expéditeurs de ce trajet sont prévenus en une fois.',
+      one: 'L\'expéditeur dont le colis est à bord est prévenu.',
+      zero:
+          'Les expéditeurs dont le colis est à bord sont prévenus en une fois.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripDelayReasonSection => 'Motif';
+
+  @override
+  String get tripDelayArrivalSection => 'Nouvelle arrivée estimée';
+
+  @override
+  String get tripDelayFromLabel => 'Du';
+
+  @override
+  String get tripDelayToLabel => 'Au';
+
+  @override
+  String tripDelayArrivalLimit(String date) {
+    return 'Au plus tard le $date pour ce trajet';
+  }
+
+  @override
+  String get tripDelayMessageSection => 'Message aux expéditeurs';
+
+  @override
+  String get tripDelayMessageHintBoat =>
+      'Ex. : attente à Tanger Med, départ prévu jeudi';
+
+  @override
+  String get tripDelayMessageHintPlane =>
+      'Ex. : vol retardé, nouvel horaire annoncé demain';
+
+  @override
+  String get tripDelayMessageHint => 'Ex. : contretemps, reprise prévue jeudi';
+
+  @override
+  String get tripDelayInfo =>
+      'Le report du trajet reste bloqué une fois les colis à bord ; l\'annonce de retard, elle, reste possible jusqu\'à l\'arrivée.';
+
+  @override
+  String get tripDelaySubmit => 'Prévenir les expéditeurs';
+
+  @override
+  String get tripDelaySentSnackbar =>
+      'Retard annoncé : les expéditeurs sont prévenus.';
+
+  @override
+  String get tripMenuAnnounceDelaySubtitle =>
+      'Prévenez les expéditeurs de la nouvelle arrivée estimée';
+
+  @override
+  String tripOwnerVolumeRemainingOf(String total) {
+    return 'restants sur $total';
+  }
+
+  @override
+  String get tripTilePaymentsDeposit => 'Payé au dépôt de chaque colis';
+
+  @override
+  String get tripTilePaymentsDepositNote =>
+      'Chaque colis vous est versé dès son dépôt à l\'entrepôt.';
+
+  @override
+  String get scanDepositRecordedChip => 'Dépôt enregistré';
+
+  @override
+  String get suiviDepositPhotoRequired =>
+      'Obligatoire pour valider le dépôt à l\'entrepôt';
 }

@@ -382,7 +382,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // Dernier retard annoncé sur le trajet (bateau, route, avion) : sous le
       // billet, avant tout le reste, comme le report (maquette FicheMer).
       if (TripDelayCard.shouldShow(bid))
-        ('info-delay', TripDelayCard(bid: bid)),
+        ('info-delay', TripDelayCard.forBid(bid: bid)),
       // Remise bloquée par une déclaration d'absence examinée par l'équipe :
       // ni QR au footer ni au talon, la carte dit pourquoi.
       if (SenderHandoverBlockedCard.shouldShow(bid))
