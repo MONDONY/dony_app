@@ -1994,6 +1994,234 @@ abstract class AppLocalizations {
   /// **'La date d\'arrivée est trop loin après le départ pour ce mode.'**
   String get errorArrivalTooFarMessage;
 
+  /// Erreur boat-carrier-not-verified du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Fret par bateau réservé'**
+  String get errorBoatCarrierNotVerifiedTitle;
+
+  /// Erreur boat-carrier-not-verified du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le transport par bateau est réservé aux professionnels et aux voyageurs vérifiés (badge GP Pro).'**
+  String get errorBoatCarrierNotVerifiedMessage;
+
+  /// Erreur boat-template-unsupported du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modèles indisponibles en bateau'**
+  String get errorBoatTemplateUnsupportedTitle;
+
+  /// Erreur boat-template-unsupported du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les modèles et les trajets récurrents ne sont pas disponibles pour le bateau.'**
+  String get errorBoatTemplateUnsupportedMessage;
+
+  /// Erreur arrival-range-invalid du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée incomplète'**
+  String get errorArrivalRangeInvalidTitle;
+
+  /// Erreur arrival-range-invalid du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez l\'arrivée au plus tôt et au plus tard ; la seconde ne peut pas précéder la première.'**
+  String get errorArrivalRangeInvalidMessage;
+
+  /// Erreur arrival-range-past du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée dépassée'**
+  String get errorArrivalRangePastTitle;
+
+  /// Erreur arrival-range-past du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La fin de l\'arrivée estimée ne peut pas être antérieure à aujourd\'hui.'**
+  String get errorArrivalRangePastMessage;
+
+  /// Erreur boat-volume-required du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume requis'**
+  String get errorBoatVolumeRequiredTitle;
+
+  /// Erreur boat-volume-required du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un trajet en bateau facturé au m³ doit indiquer le volume proposé.'**
+  String get errorBoatVolumeRequiredMessage;
+
+  /// Erreur boat-volume-unit-invalid du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Unité de capacité incompatible'**
+  String get errorBoatVolumeUnitInvalidTitle;
+
+  /// Erreur boat-volume-unit-invalid du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un trajet facturé au m³ ne peut pas avoir une capacité en kilos libres : indiquez le volume proposé.'**
+  String get errorBoatVolumeUnitInvalidMessage;
+
+  /// Erreur boat-price-required du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix du trajet en bateau'**
+  String get errorBoatPriceRequiredTitle;
+
+  /// Erreur boat-price-required du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un trajet en bateau a un seul prix : au m³ ou au kilo, sans grille de prix par article.'**
+  String get errorBoatPriceRequiredMessage;
+
+  /// Erreur boat-volume-booking-unavailable du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réservation au m³ indisponible'**
+  String get errorBoatVolumeBookingUnavailableTitle;
+
+  /// Erreur boat-volume-booking-unavailable du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La réservation d\'un trajet en bateau facturé au m³ n\'est pas encore disponible.'**
+  String get errorBoatVolumeBookingUnavailableMessage;
+
+  /// Erreur pricing-unit-locked du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Unité de prix verrouillée'**
+  String get errorPricingUnitLockedTitle;
+
+  /// Erreur pricing-unit-locked du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le prix au m³ ou au kilo ne peut plus changer : ce trajet a déjà reçu une demande ou une offre.'**
+  String get errorPricingUnitLockedMessage;
+
+  /// Erreur dimensions-incomplete du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dimensions incomplètes'**
+  String get errorDimensionsIncompleteTitle;
+
+  /// Erreur dimensions-incomplete du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez la longueur, la largeur et la hauteur du colis, ou aucune des trois.'**
+  String get errorDimensionsIncompleteMessage;
+
+  /// Erreur boat-dimensions-required du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dimensions requises'**
+  String get errorBoatDimensionsRequiredTitle;
+
+  /// Erreur boat-dimensions-required du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour un envoi par bateau, indiquez la longueur, la largeur et la hauteur du colis.'**
+  String get errorBoatDimensionsRequiredMessage;
+
+  /// Erreur insufficient-volume du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume insuffisant'**
+  String get errorInsufficientVolumeTitle;
+
+  /// Erreur insufficient-volume du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet n\'a pas assez de volume restant pour ce colis.'**
+  String get errorInsufficientVolumeMessage;
+
+  /// Erreur trip-delay-not-allowed du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retard impossible'**
+  String get errorTripDelayNotAllowedTitle;
+
+  /// Erreur trip-delay-not-allowed du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un retard ne peut être annoncé que sur un trajet en cours : il doit être parti et ne pas être terminé.'**
+  String get errorTripDelayNotAllowedMessage;
+
+  /// Erreur trip-delay-reason-invalid du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif non applicable'**
+  String get errorTripDelayReasonInvalidTitle;
+
+  /// Erreur trip-delay-reason-invalid du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce motif ne s\'applique pas au mode de transport de ce trajet. Choisissez-en un autre.'**
+  String get errorTripDelayReasonInvalidMessage;
+
+  /// Erreur trip-delay-too-frequent du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de retards annoncés'**
+  String get errorTripDelayTooFrequentTitle;
+
+  /// Erreur trip-delay-too-frequent du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez annoncé trop de retards sur ce trajet ces dernières 24 heures. Réessayez plus tard ou contactez le support.'**
+  String get errorTripDelayTooFrequentMessage;
+
+  /// Erreur boat-deposit-photo-required du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo de dépôt requise'**
+  String get errorBoatDepositPhotoRequiredTitle;
+
+  /// Erreur boat-deposit-photo-required du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez une photo du colis au dépôt pour valider cette étape.'**
+  String get errorBoatDepositPhotoRequiredMessage;
+
+  /// Erreur deposit-paid-no-refund du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement impossible'**
+  String get errorDepositPaidNoRefundTitle;
+
+  /// Erreur deposit-paid-no-refund du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur a déjà été payé au dépôt : ce colis ne peut plus être remboursé automatiquement.'**
+  String get errorDepositPaidNoRefundMessage;
+
+  /// Erreur supplement-after-deposit du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément impossible'**
+  String get errorSupplementAfterDepositTitle;
+
+  /// Erreur supplement-after-deposit du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un supplément ne peut plus être demandé une fois le colis déposé.'**
+  String get errorSupplementAfterDepositMessage;
+
+  /// Erreur surplus/volume-trip-unsupported du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Surplus indisponible'**
+  String get errorSurplusVolumeTripUnsupportedTitle;
+
+  /// Erreur surplus/volume-trip-unsupported du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le surplus de capacité n\'est pas disponible pour un trajet facturé au m³.'**
+  String get errorSurplusVolumeTripUnsupportedMessage;
+
   /// Erreur weight-too-heavy du back : le poids dépasse le maximum du mode de transport (error_catalog.dart).
   ///
   /// In fr, this message translates to:

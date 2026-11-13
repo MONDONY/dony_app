@@ -1997,6 +1997,123 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.schedule_rounded,
     ),
+    // Bateau (lot 3 du back) : gardes de publication, de réservation et de
+    // retard. Textes de repli ; seul `trip-delay-too-frequent` lit le `detail`
+    // du serveur (nombre de retards inclus).
+    'boat-carrier-not-verified': _Entry(
+      title: (l) => l.errorBoatCarrierNotVerifiedTitle,
+      message: (l) => l.errorBoatCarrierNotVerifiedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.verified_user_outlined,
+    ),
+    'boat-template-unsupported': _Entry(
+      title: (l) => l.errorBoatTemplateUnsupportedTitle,
+      message: (l) => l.errorBoatTemplateUnsupportedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'arrival-range-invalid': _Entry(
+      title: (l) => l.errorArrivalRangeInvalidTitle,
+      message: (l) => l.errorArrivalRangeInvalidMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.date_range_rounded,
+    ),
+    'arrival-range-past': _Entry(
+      title: (l) => l.errorArrivalRangePastTitle,
+      message: (l) => l.errorArrivalRangePastMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.date_range_rounded,
+    ),
+    'boat-volume-required': _Entry(
+      title: (l) => l.errorBoatVolumeRequiredTitle,
+      message: (l) => l.errorBoatVolumeRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.straighten_rounded,
+    ),
+    'boat-volume-unit-invalid': _Entry(
+      title: (l) => l.errorBoatVolumeUnitInvalidTitle,
+      message: (l) => l.errorBoatVolumeUnitInvalidMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.straighten_rounded,
+    ),
+    'boat-price-required': _Entry(
+      title: (l) => l.errorBoatPriceRequiredTitle,
+      message: (l) => l.errorBoatPriceRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.sell_outlined,
+    ),
+    'boat-volume-booking-unavailable': _Entry(
+      title: (l) => l.errorBoatVolumeBookingUnavailableTitle,
+      message: (l) => l.errorBoatVolumeBookingUnavailableMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'pricing-unit-locked': _Entry(
+      title: (l) => l.errorPricingUnitLockedTitle,
+      message: (l) => l.errorPricingUnitLockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_outline_rounded,
+    ),
+    'dimensions-incomplete': _Entry(
+      title: (l) => l.errorDimensionsIncompleteTitle,
+      message: (l) => l.errorDimensionsIncompleteMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.straighten_rounded,
+    ),
+    'boat-dimensions-required': _Entry(
+      title: (l) => l.errorBoatDimensionsRequiredTitle,
+      message: (l) => l.errorBoatDimensionsRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.straighten_rounded,
+    ),
+    'insufficient-volume': _Entry(
+      title: (l) => l.errorInsufficientVolumeTitle,
+      message: (l) => l.errorInsufficientVolumeMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.straighten_rounded,
+    ),
+    'trip-delay-not-allowed': _Entry(
+      title: (l) => l.errorTripDelayNotAllowedTitle,
+      message: (l) => l.errorTripDelayNotAllowedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.schedule_rounded,
+    ),
+    'trip-delay-reason-invalid': _Entry(
+      title: (l) => l.errorTripDelayReasonInvalidTitle,
+      message: (l) => l.errorTripDelayReasonInvalidMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.schedule_rounded,
+    ),
+    'trip-delay-too-frequent': _Entry(
+      title: (l) => l.errorTripDelayTooFrequentTitle,
+      message: (l) => l.errorTripDelayTooFrequentMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.schedule_rounded,
+    ),
+    'boat-deposit-photo-required': _Entry(
+      title: (l) => l.errorBoatDepositPhotoRequiredTitle,
+      message: (l) => l.errorBoatDepositPhotoRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.photo_camera_outlined,
+    ),
+    'deposit-paid-no-refund': _Entry(
+      title: (l) => l.errorDepositPaidNoRefundTitle,
+      message: (l) => l.errorDepositPaidNoRefundMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'supplement-after-deposit': _Entry(
+      title: (l) => l.errorSupplementAfterDepositTitle,
+      message: (l) => l.errorSupplementAfterDepositMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'surplus/volume-trip-unsupported': _Entry(
+      title: (l) => l.errorSurplusVolumeTripUnsupportedTitle,
+      message: (l) => l.errorSurplusVolumeTripUnsupportedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
     // Bornes de poids, de capacité et de taille (422, lot « route » du back) :
     // `weight-too-heavy` (demande ou offre au-dessus du maximum du mode),
     // `trip-capacity-too-high` (capacité du trajet), `parcel-too-heavy` et
@@ -2051,6 +2168,8 @@ abstract final class ErrorCatalog {
     'transport-mode-disabled',
     'invalid-transport-mode',
     'arrival-too-far',
+    // Retards du trajet : le `detail` du back porte le nombre de retards annoncés.
+    'trip-delay-too-frequent',
     // Bornes de poids, de capacité et de taille : `detail` localisé par le back.
     'weight-too-heavy',
     'trip-capacity-too-high',

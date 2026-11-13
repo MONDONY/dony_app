@@ -1120,6 +1120,142 @@ class AppLocalizationsEn extends AppLocalizations {
       'The arrival date is too far after departure for this mode.';
 
   @override
+  String get errorBoatCarrierNotVerifiedTitle => 'Sea freight reserved';
+
+  @override
+  String get errorBoatCarrierNotVerifiedMessage =>
+      'Sea freight is reserved for businesses and verified carriers (GP Pro badge).';
+
+  @override
+  String get errorBoatTemplateUnsupportedTitle =>
+      'Templates not available for boats';
+
+  @override
+  String get errorBoatTemplateUnsupportedMessage =>
+      'Templates and recurring trips are not available for sea freight.';
+
+  @override
+  String get errorArrivalRangeInvalidTitle => 'Estimated arrival incomplete';
+
+  @override
+  String get errorArrivalRangeInvalidMessage =>
+      'Enter the earliest and the latest estimated arrival. The latest cannot be before the earliest.';
+
+  @override
+  String get errorArrivalRangePastTitle => 'Estimated arrival already passed';
+
+  @override
+  String get errorArrivalRangePastMessage =>
+      'The latest estimated arrival cannot be earlier than today.';
+
+  @override
+  String get errorBoatVolumeRequiredTitle => 'Volume required';
+
+  @override
+  String get errorBoatVolumeRequiredMessage =>
+      'A sea freight trip priced per cubic meter must state the volume offered.';
+
+  @override
+  String get errorBoatVolumeUnitInvalidTitle => 'Incompatible capacity unit';
+
+  @override
+  String get errorBoatVolumeUnitInvalidMessage =>
+      'A trip priced per cubic meter cannot use free-kilo capacity. Enter the volume offered.';
+
+  @override
+  String get errorBoatPriceRequiredTitle => 'Sea freight trip price';
+
+  @override
+  String get errorBoatPriceRequiredMessage =>
+      'A sea freight trip has a single price: per cubic meter or per kilo, without an item price list.';
+
+  @override
+  String get errorBoatVolumeBookingUnavailableTitle =>
+      'Booking per cubic meter unavailable';
+
+  @override
+  String get errorBoatVolumeBookingUnavailableMessage =>
+      'Booking a sea freight trip priced per cubic meter is not available yet.';
+
+  @override
+  String get errorPricingUnitLockedTitle => 'Pricing unit locked';
+
+  @override
+  String get errorPricingUnitLockedMessage =>
+      'The price per cubic meter or per kilo can no longer change: this trip has already received a request or an offer.';
+
+  @override
+  String get errorDimensionsIncompleteTitle => 'Incomplete dimensions';
+
+  @override
+  String get errorDimensionsIncompleteMessage =>
+      'Enter the length, width and height of the parcel, or none of the three.';
+
+  @override
+  String get errorBoatDimensionsRequiredTitle => 'Dimensions required';
+
+  @override
+  String get errorBoatDimensionsRequiredMessage =>
+      'For a sea freight shipment, enter the length, width and height of the parcel.';
+
+  @override
+  String get errorInsufficientVolumeTitle => 'Not enough volume';
+
+  @override
+  String get errorInsufficientVolumeMessage =>
+      'This trip does not have enough volume left for this parcel.';
+
+  @override
+  String get errorTripDelayNotAllowedTitle => 'Delay not allowed';
+
+  @override
+  String get errorTripDelayNotAllowedMessage =>
+      'A delay can only be announced on a trip in progress: it must have departed and not be finished.';
+
+  @override
+  String get errorTripDelayReasonInvalidTitle => 'Reason not applicable';
+
+  @override
+  String get errorTripDelayReasonInvalidMessage =>
+      'This reason does not apply to the transport mode of this trip. Choose another reason.';
+
+  @override
+  String get errorTripDelayTooFrequentTitle => 'Too many delays announced';
+
+  @override
+  String get errorTripDelayTooFrequentMessage =>
+      'You have announced too many delays on this trip in the last 24 hours. Try again later or contact support.';
+
+  @override
+  String get errorBoatDepositPhotoRequiredTitle => 'Deposit photo required';
+
+  @override
+  String get errorBoatDepositPhotoRequiredMessage =>
+      'Add a photo of the parcel at drop-off to confirm this step.';
+
+  @override
+  String get errorDepositPaidNoRefundTitle => 'Refund not possible';
+
+  @override
+  String get errorDepositPaidNoRefundMessage =>
+      'The carrier was already paid at drop-off: this parcel can no longer be refunded automatically.';
+
+  @override
+  String get errorSupplementAfterDepositTitle => 'Supplement not possible';
+
+  @override
+  String get errorSupplementAfterDepositMessage =>
+      'A supplement can no longer be requested once the parcel has been dropped off.';
+
+  @override
+  String get errorSurplusVolumeTripUnsupportedTitle =>
+      'Extra capacity unavailable';
+
+  @override
+  String get errorSurplusVolumeTripUnsupportedMessage =>
+      'Extra capacity cannot be opened on a trip priced per cubic meter.';
+
+  @override
   String get errorWeightTooHeavyTitle => 'Weight too high';
 
   @override

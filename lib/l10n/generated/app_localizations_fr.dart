@@ -1128,6 +1128,142 @@ class AppLocalizationsFr extends AppLocalizations {
       'La date d\'arrivée est trop loin après le départ pour ce mode.';
 
   @override
+  String get errorBoatCarrierNotVerifiedTitle => 'Fret par bateau réservé';
+
+  @override
+  String get errorBoatCarrierNotVerifiedMessage =>
+      'Le transport par bateau est réservé aux professionnels et aux voyageurs vérifiés (badge GP Pro).';
+
+  @override
+  String get errorBoatTemplateUnsupportedTitle =>
+      'Modèles indisponibles en bateau';
+
+  @override
+  String get errorBoatTemplateUnsupportedMessage =>
+      'Les modèles et les trajets récurrents ne sont pas disponibles pour le bateau.';
+
+  @override
+  String get errorArrivalRangeInvalidTitle => 'Arrivée estimée incomplète';
+
+  @override
+  String get errorArrivalRangeInvalidMessage =>
+      'Indiquez l\'arrivée au plus tôt et au plus tard ; la seconde ne peut pas précéder la première.';
+
+  @override
+  String get errorArrivalRangePastTitle => 'Arrivée estimée dépassée';
+
+  @override
+  String get errorArrivalRangePastMessage =>
+      'La fin de l\'arrivée estimée ne peut pas être antérieure à aujourd\'hui.';
+
+  @override
+  String get errorBoatVolumeRequiredTitle => 'Volume requis';
+
+  @override
+  String get errorBoatVolumeRequiredMessage =>
+      'Un trajet en bateau facturé au m³ doit indiquer le volume proposé.';
+
+  @override
+  String get errorBoatVolumeUnitInvalidTitle =>
+      'Unité de capacité incompatible';
+
+  @override
+  String get errorBoatVolumeUnitInvalidMessage =>
+      'Un trajet facturé au m³ ne peut pas avoir une capacité en kilos libres : indiquez le volume proposé.';
+
+  @override
+  String get errorBoatPriceRequiredTitle => 'Prix du trajet en bateau';
+
+  @override
+  String get errorBoatPriceRequiredMessage =>
+      'Un trajet en bateau a un seul prix : au m³ ou au kilo, sans grille de prix par article.';
+
+  @override
+  String get errorBoatVolumeBookingUnavailableTitle =>
+      'Réservation au m³ indisponible';
+
+  @override
+  String get errorBoatVolumeBookingUnavailableMessage =>
+      'La réservation d\'un trajet en bateau facturé au m³ n\'est pas encore disponible.';
+
+  @override
+  String get errorPricingUnitLockedTitle => 'Unité de prix verrouillée';
+
+  @override
+  String get errorPricingUnitLockedMessage =>
+      'Le prix au m³ ou au kilo ne peut plus changer : ce trajet a déjà reçu une demande ou une offre.';
+
+  @override
+  String get errorDimensionsIncompleteTitle => 'Dimensions incomplètes';
+
+  @override
+  String get errorDimensionsIncompleteMessage =>
+      'Indiquez la longueur, la largeur et la hauteur du colis, ou aucune des trois.';
+
+  @override
+  String get errorBoatDimensionsRequiredTitle => 'Dimensions requises';
+
+  @override
+  String get errorBoatDimensionsRequiredMessage =>
+      'Pour un envoi par bateau, indiquez la longueur, la largeur et la hauteur du colis.';
+
+  @override
+  String get errorInsufficientVolumeTitle => 'Volume insuffisant';
+
+  @override
+  String get errorInsufficientVolumeMessage =>
+      'Ce trajet n\'a pas assez de volume restant pour ce colis.';
+
+  @override
+  String get errorTripDelayNotAllowedTitle => 'Retard impossible';
+
+  @override
+  String get errorTripDelayNotAllowedMessage =>
+      'Un retard ne peut être annoncé que sur un trajet en cours : il doit être parti et ne pas être terminé.';
+
+  @override
+  String get errorTripDelayReasonInvalidTitle => 'Motif non applicable';
+
+  @override
+  String get errorTripDelayReasonInvalidMessage =>
+      'Ce motif ne s\'applique pas au mode de transport de ce trajet. Choisissez-en un autre.';
+
+  @override
+  String get errorTripDelayTooFrequentTitle => 'Trop de retards annoncés';
+
+  @override
+  String get errorTripDelayTooFrequentMessage =>
+      'Vous avez annoncé trop de retards sur ce trajet ces dernières 24 heures. Réessayez plus tard ou contactez le support.';
+
+  @override
+  String get errorBoatDepositPhotoRequiredTitle => 'Photo de dépôt requise';
+
+  @override
+  String get errorBoatDepositPhotoRequiredMessage =>
+      'Ajoutez une photo du colis au dépôt pour valider cette étape.';
+
+  @override
+  String get errorDepositPaidNoRefundTitle => 'Remboursement impossible';
+
+  @override
+  String get errorDepositPaidNoRefundMessage =>
+      'Le voyageur a déjà été payé au dépôt : ce colis ne peut plus être remboursé automatiquement.';
+
+  @override
+  String get errorSupplementAfterDepositTitle => 'Supplément impossible';
+
+  @override
+  String get errorSupplementAfterDepositMessage =>
+      'Un supplément ne peut plus être demandé une fois le colis déposé.';
+
+  @override
+  String get errorSurplusVolumeTripUnsupportedTitle => 'Surplus indisponible';
+
+  @override
+  String get errorSurplusVolumeTripUnsupportedMessage =>
+      'Le surplus de capacité n\'est pas disponible pour un trajet facturé au m³.';
+
+  @override
   String get errorWeightTooHeavyTitle => 'Poids trop élevé';
 
   @override

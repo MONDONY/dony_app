@@ -7,6 +7,7 @@ import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_delay_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -25,6 +26,29 @@ enum BidPaymentMethod {
   @JsonValue('MOBILE_MONEY')
   mobileMoney,
 }
+
+/// Moment où le voyageur est payé. Livraison par défaut ; le bateau paie au
+/// dépôt du colis à l'entrepôt. Une clé absente ou inconnue (back antérieur)
+/// vaut [delivery].
+enum PayoutTrigger {
+  delivery,
+  deposit;
+
+  static PayoutTrigger fromWire(Object? wire) => switch (wire) {
+    'DEPOSIT' => PayoutTrigger.deposit,
+    _ => PayoutTrigger.delivery,
+  };
+
+  String get wire => switch (this) {
+    PayoutTrigger.delivery => 'DELIVERY',
+    PayoutTrigger.deposit => 'DEPOSIT',
+  };
+}
+
+PayoutTrigger _payoutTriggerFromJson(Object? wire) =>
+    PayoutTrigger.fromWire(wire);
+
+String _payoutTriggerToJson(PayoutTrigger trigger) => trigger.wire;
 
 /// Extension exposing the canonical API string value for each [BidPaymentMethod].
 ///
@@ -361,6 +385,23 @@ class BidModel {
   )
   final TravelerTrackingModel? travelerTracking;
 
+  /// Fin de la fourchette d'arrivée estimée (bateau). `null` : date fixe
+  /// ([arrivalDate]), ou back antérieur au lot 3.
+  final DateTime? arrivalDateMax;
+
+  /// Volume du colis en m³ (bateau). `null` pour un colis au kilo, ou sur un
+  /// back antérieur.
+  final double? volumeM3;
+
+  /// Quand le voyageur est payé : livraison (défaut) ou dépôt (bateau).
+  @JsonKey(fromJson: _payoutTriggerFromJson, toJson: _payoutTriggerToJson)
+  final PayoutTrigger payoutTrigger;
+
+  /// Dernier retard annoncé sur le trajet qui porte le colis. `null` sans
+  /// retard, avant la remise du colis ou sur un back antérieur.
+  @JsonKey(fromJson: TripDelayInfo.fromJsonOrNull, toJson: tripDelayToJson)
+  final TripDelayInfo? latestTripDelay;
+
   const BidModel({
     required this.id,
     required this.announcementId,
@@ -451,6 +492,10 @@ class BidModel {
     this.totalWeightKg,
     this.moneyBreakdown,
     this.travelerTracking,
+    this.arrivalDateMax,
+    this.volumeM3,
+    this.payoutTrigger = PayoutTrigger.delivery,
+    this.latestTripDelay,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>

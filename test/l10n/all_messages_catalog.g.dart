@@ -420,6 +420,57 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorTransportModeDisabledMessage,
   'errorArrivalTooFarTitle': (l) => l.errorArrivalTooFarTitle,
   'errorArrivalTooFarMessage': (l) => l.errorArrivalTooFarMessage,
+  'errorBoatCarrierNotVerifiedTitle': (l) => l.errorBoatCarrierNotVerifiedTitle,
+  'errorBoatCarrierNotVerifiedMessage': (l) =>
+      l.errorBoatCarrierNotVerifiedMessage,
+  'errorBoatTemplateUnsupportedTitle': (l) =>
+      l.errorBoatTemplateUnsupportedTitle,
+  'errorBoatTemplateUnsupportedMessage': (l) =>
+      l.errorBoatTemplateUnsupportedMessage,
+  'errorArrivalRangeInvalidTitle': (l) => l.errorArrivalRangeInvalidTitle,
+  'errorArrivalRangeInvalidMessage': (l) => l.errorArrivalRangeInvalidMessage,
+  'errorArrivalRangePastTitle': (l) => l.errorArrivalRangePastTitle,
+  'errorArrivalRangePastMessage': (l) => l.errorArrivalRangePastMessage,
+  'errorBoatVolumeRequiredTitle': (l) => l.errorBoatVolumeRequiredTitle,
+  'errorBoatVolumeRequiredMessage': (l) => l.errorBoatVolumeRequiredMessage,
+  'errorBoatVolumeUnitInvalidTitle': (l) => l.errorBoatVolumeUnitInvalidTitle,
+  'errorBoatVolumeUnitInvalidMessage': (l) =>
+      l.errorBoatVolumeUnitInvalidMessage,
+  'errorBoatPriceRequiredTitle': (l) => l.errorBoatPriceRequiredTitle,
+  'errorBoatPriceRequiredMessage': (l) => l.errorBoatPriceRequiredMessage,
+  'errorBoatVolumeBookingUnavailableTitle': (l) =>
+      l.errorBoatVolumeBookingUnavailableTitle,
+  'errorBoatVolumeBookingUnavailableMessage': (l) =>
+      l.errorBoatVolumeBookingUnavailableMessage,
+  'errorPricingUnitLockedTitle': (l) => l.errorPricingUnitLockedTitle,
+  'errorPricingUnitLockedMessage': (l) => l.errorPricingUnitLockedMessage,
+  'errorDimensionsIncompleteTitle': (l) => l.errorDimensionsIncompleteTitle,
+  'errorDimensionsIncompleteMessage': (l) => l.errorDimensionsIncompleteMessage,
+  'errorBoatDimensionsRequiredTitle': (l) => l.errorBoatDimensionsRequiredTitle,
+  'errorBoatDimensionsRequiredMessage': (l) =>
+      l.errorBoatDimensionsRequiredMessage,
+  'errorInsufficientVolumeTitle': (l) => l.errorInsufficientVolumeTitle,
+  'errorInsufficientVolumeMessage': (l) => l.errorInsufficientVolumeMessage,
+  'errorTripDelayNotAllowedTitle': (l) => l.errorTripDelayNotAllowedTitle,
+  'errorTripDelayNotAllowedMessage': (l) => l.errorTripDelayNotAllowedMessage,
+  'errorTripDelayReasonInvalidTitle': (l) => l.errorTripDelayReasonInvalidTitle,
+  'errorTripDelayReasonInvalidMessage': (l) =>
+      l.errorTripDelayReasonInvalidMessage,
+  'errorTripDelayTooFrequentTitle': (l) => l.errorTripDelayTooFrequentTitle,
+  'errorTripDelayTooFrequentMessage': (l) => l.errorTripDelayTooFrequentMessage,
+  'errorBoatDepositPhotoRequiredTitle': (l) =>
+      l.errorBoatDepositPhotoRequiredTitle,
+  'errorBoatDepositPhotoRequiredMessage': (l) =>
+      l.errorBoatDepositPhotoRequiredMessage,
+  'errorDepositPaidNoRefundTitle': (l) => l.errorDepositPaidNoRefundTitle,
+  'errorDepositPaidNoRefundMessage': (l) => l.errorDepositPaidNoRefundMessage,
+  'errorSupplementAfterDepositTitle': (l) => l.errorSupplementAfterDepositTitle,
+  'errorSupplementAfterDepositMessage': (l) =>
+      l.errorSupplementAfterDepositMessage,
+  'errorSurplusVolumeTripUnsupportedTitle': (l) =>
+      l.errorSurplusVolumeTripUnsupportedTitle,
+  'errorSurplusVolumeTripUnsupportedMessage': (l) =>
+      l.errorSurplusVolumeTripUnsupportedMessage,
   'errorWeightTooHeavyTitle': (l) => l.errorWeightTooHeavyTitle,
   'errorWeightTooHeavyMessage': (l) => l.errorWeightTooHeavyMessage,
   'errorTripCapacityTooHighTitle': (l) => l.errorTripCapacityTooHighTitle,

@@ -2371,4 +2371,82 @@ void main() {
       expect(en.message, contains('GP Pro application'));
     });
   });
+
+  group('ErrorCatalog — bateau (lot 3)', () {
+    final fr = lookupAppLocalizations(AppL10n.fr);
+    final en = lookupAppLocalizations(AppL10n.en);
+
+    const codes = [
+      'boat-carrier-not-verified',
+      'boat-template-unsupported',
+      'arrival-range-invalid',
+      'arrival-range-past',
+      'boat-volume-required',
+      'boat-volume-unit-invalid',
+      'boat-price-required',
+      'boat-volume-booking-unavailable',
+      'pricing-unit-locked',
+      'dimensions-incomplete',
+      'boat-dimensions-required',
+      'insufficient-volume',
+      'trip-delay-not-allowed',
+      'trip-delay-reason-invalid',
+      'trip-delay-too-frequent',
+      'boat-deposit-photo-required',
+      'deposit-paid-no-refund',
+      'supplement-after-deposit',
+      'surplus/volume-trip-unsupported',
+    ];
+
+    test(
+      'errorCatalog_hasBoatCodes : chaque code a un texte FR et EN propre',
+      () {
+        for (final code in codes) {
+          expect(ErrorCatalog.debugCodes, contains(code), reason: code);
+          final error = ValidationException('', code: code);
+          final pFr = ErrorCatalog.lookup(error, l10n: fr);
+          final pEn = ErrorCatalog.lookup(error, l10n: en);
+            expect(pFr.message, isNotEmpty, reason: code);
+          expect(pEn.message, isNotEmpty, reason: code);
+          expect(pEn.message, isNot(pFr.message), reason: code);
+          expect(pEn.severity, ErrorSeverity.warning, reason: code);
+          for (final text in [pFr.title, pFr.message, pEn.title, pEn.message]) {
+            expect(text.contains('\u2014'), isFalse, reason: code);
+          }
+        }
+      },
+    );
+
+    test('boat-volume-booking-unavailable : message clair en anglais', () {
+      final p = ErrorCatalog.lookup(
+        const ValidationException('', code: 'boat-volume-booking-unavailable'),
+        l10n: en,
+      );
+      expect(p.title, 'Booking per cubic meter unavailable');
+      expect(
+        p.message,
+        'Booking a sea freight trip priced per cubic meter is not available '
+        'yet.',
+      );
+    });
+
+    test('trip-delay-too-frequent : affiche le detail du serveur', () {
+      final p = ErrorCatalog.lookup(
+        const ConflictException(
+          'Vous avez annoncé 5 retards sur ce trajet.',
+          code: 'trip-delay-too-frequent',
+        ),
+        l10n: fr,
+      );
+      expect(p.message, 'Vous avez annoncé 5 retards sur ce trajet.');
+    });
+
+    test('trip-delay-too-frequent : detail vide, texte de repli', () {
+      final p = ErrorCatalog.lookup(
+        const ConflictException('', code: 'trip-delay-too-frequent'),
+        l10n: fr,
+      );
+      expect(p.title, 'Trop de retards annoncés');
+    });
+  });
 }
