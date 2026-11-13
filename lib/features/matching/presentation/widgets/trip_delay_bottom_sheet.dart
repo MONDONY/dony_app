@@ -191,6 +191,7 @@ class _TripDelayBottomSheetState extends State<TripDelayBottomSheet> {
       initialDate: _clamp(_from.value ?? _currentArrival, _first),
       firstDate: _first,
       lastDate: _limit,
+      builder: arrivalPickerBuilder,
       errorInvalidText: _outOfRange(_first),
     );
     if (picked == null || !mounted) return;
@@ -207,6 +208,7 @@ class _TripDelayBottomSheetState extends State<TripDelayBottomSheet> {
       initialDate: _clamp(_to.value ?? _from.value ?? _currentArrival, low),
       firstDate: low,
       lastDate: _limit,
+      builder: arrivalPickerBuilder,
       errorInvalidText: _outOfRange(low),
     );
     if (picked == null || !mounted) return;

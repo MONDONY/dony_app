@@ -104,6 +104,7 @@ class ArrivalDayChips extends StatelessWidget {
         lastDate: _dayAt(departure, maxDays),
         // Le « Hors de portée. » du sélecteur ne disait pas pourquoi : la
         // borne est le plafond du mode (14 jours en route).
+        builder: arrivalPickerBuilder,
         errorInvalidText: arrivalOutOfRangeText(
           context.l10n,
           first: _dayAt(departure, first),

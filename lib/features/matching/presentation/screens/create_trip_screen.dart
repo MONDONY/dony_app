@@ -2833,11 +2833,14 @@ class _TripFormContentState extends State<_TripFormContent> {
         last: last,
         maxDays: TransportMode.boat.maxArrivalDays,
       ),
-      builder: (ctx, child) => Theme(
-        data: Theme.of(
-          ctx,
-        ).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
-        child: child!,
+      builder: (ctx, child) => arrivalPickerBuilder(
+        ctx,
+        Theme(
+          data: Theme.of(
+            ctx,
+          ).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
+          child: child!,
+        ),
       ),
     );
     if (picked != null && mounted) notifier.value = DateUtils.dateOnly(picked);

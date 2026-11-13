@@ -1,4 +1,5 @@
 import 'package:dony/l10n/l10n.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 /// Arrivée estimée mise en jours lisibles (« 11 janv. », « 18 janv. »).
@@ -48,5 +49,21 @@ String arrivalOutOfRangeText(
     days.from,
     days.to ?? days.from,
     maxDays,
+  );
+}
+
+/// Le message de plafond du sélecteur (saisie au clavier) tient sur plusieurs
+/// lignes : sans cela Material le coupe sur une seule (« Choisissez entre le
+/// 25 nov. et le 25 mar… », recette du 13/11) et la règle ne se lit pas.
+/// À passer en `builder` de `showDatePicker`.
+Widget arrivalPickerBuilder(BuildContext context, Widget? child) {
+  final theme = Theme.of(context);
+  return Theme(
+    data: theme.copyWith(
+      datePickerTheme: theme.datePickerTheme.copyWith(
+        inputDecorationTheme: const InputDecorationTheme(errorMaxLines: 5),
+      ),
+    ),
+    child: child ?? const SizedBox.shrink(),
   );
 }
