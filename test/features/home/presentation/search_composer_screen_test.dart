@@ -41,6 +41,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/label_fit_expectations.dart';
 import '../../../helpers/mock_recent_city_store.dart';
 import '../../../helpers/plane_icon_expectations.dart';
 
@@ -1145,10 +1146,7 @@ void main() {
         // le bouton garde sa hauteur de 48 à 56.
         expect(label, findsOneWidget);
         expect(tester.getSize(label).height, lessThan(15 * 1.6));
-        expect(
-          tester.getSize(label).width,
-          lessThanOrEqualTo(tester.getSize(button).width),
-        );
+        expectButtonLabelNominal(tester, button, reason: 'Rechercher');
         expect(tester.getSize(button).height, inInclusiveRange(48, 56));
       });
     }
@@ -1537,10 +1535,8 @@ void main() {
         final label = find.descendant(of: button, matching: find.byType(Text));
         expect(label, findsOneWidget);
         expect(tester.getSize(label).height, lessThan(15 * 1.6));
-        expect(
-          tester.getSize(label).width,
-          lessThanOrEqualTo(tester.getSize(button).width),
-        );
+        // Taille nominale : le FittedBox du bouton ne rétrécit pas le libellé.
+        expectButtonLabelNominal(tester, button, reason: 'Rechercher');
         expect(tester.getSize(button).height, inInclusiveRange(48, 56));
 
         // Feuille du volume : bouton « Appliquer » sur une ligne.
@@ -1553,10 +1549,7 @@ void main() {
         );
         expect(applyLabel, findsOneWidget);
         expect(tester.getSize(applyLabel).height, lessThan(15 * 1.6));
-        expect(
-          tester.getSize(applyLabel).width,
-          lessThanOrEqualTo(tester.getSize(apply).width),
-        );
+        expectButtonLabelNominal(tester, apply, reason: 'Appliquer');
         expect(tester.takeException(), isNull);
       });
     }

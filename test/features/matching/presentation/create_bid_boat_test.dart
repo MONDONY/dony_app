@@ -28,12 +28,12 @@ import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/label_fit_expectations.dart';
 import '../../../helpers/plane_icon_expectations.dart';
 import 'widgets/trip_owner/trip_card_harness.dart' show loadAppFonts;
 
@@ -117,21 +117,6 @@ BidQuoteResponse _quote({double total = 118.5}) => BidQuoteResponse(
   promoApplied: false,
   currency: 'EUR',
 );
-
-/// Le libellé de [finder] tient sur une ligne dans sa boîte, sans coupe. Un
-/// `Text` en `softWrap: false` est mis en page sur une largeur infinie :
-/// `didExceedMaxLines` vaut toujours faux, il faut donc comparer la largeur
-/// réelle du texte à celle de sa boîte.
-void _expectLabelFits(WidgetTester tester, Finder finder, {String? reason}) {
-  final paragraph = tester.renderObject<RenderParagraph>(
-    find.descendant(of: finder, matching: find.byType(RichText)).first,
-  );
-  expect(
-    paragraph.textSize.width,
-    lessThanOrEqualTo(paragraph.size.width),
-    reason: reason,
-  );
-}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -691,7 +676,7 @@ void main() {
           final formButton = tester.getSize(
             find.byKey(const Key('bid-submit-btn')),
           );
-          _expectLabelFits(
+          expectButtonLabelNominal(
             tester,
             find.byKey(const Key('bid-submit-btn')),
             reason: 'formulaire',
@@ -700,7 +685,7 @@ void main() {
           await tester.tap(find.byKey(const Key('bid-submit-btn')));
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
-          _expectLabelFits(
+          expectButtonLabelNominal(
             tester,
             find.byKey(const Key('bid-submit-btn')),
             reason: 'carte',
@@ -713,7 +698,7 @@ void main() {
           await tester.tap(find.byKey(const Key('payment-method-cash')));
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
-          _expectLabelFits(
+          expectButtonLabelNominal(
             tester,
             find.byKey(const Key('bid-submit-btn')),
             reason: 'espèces',

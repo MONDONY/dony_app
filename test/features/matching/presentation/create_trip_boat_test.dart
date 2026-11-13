@@ -54,7 +54,6 @@ import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -66,6 +65,7 @@ import 'package:mocktail/mocktail.dart';
 import '../../../helpers/currency_test_doubles.dart';
 import '../../../helpers/form_draft_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/label_fit_expectations.dart';
 import '../../../helpers/mock_recent_city_store.dart';
 import '../../../helpers/plane_icon_expectations.dart';
 import 'widgets/trip_owner/trip_card_harness.dart' show loadAppFonts;
@@ -172,22 +172,6 @@ Widget _app(Widget child, {required UserModel user, required Locale locale}) {
     locale: locale,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-  );
-}
-
-/// Le libellé de [finder] tient sur une ligne dans sa boîte, sans coupe.
-/// `didExceedMaxLines` ne dit rien ici : un `Text` en `softWrap: false` est
-/// mis en page sur une largeur infinie, il vaut toujours faux et une coupe
-/// (`TextOverflow.clip`/`ellipsis`) passerait. La largeur réelle du texte
-/// doit donc rentrer dans la largeur du paragraphe.
-void _expectLabelFits(WidgetTester tester, Finder finder, {String? reason}) {
-  final paragraph = tester.renderObject<RenderParagraph>(
-    find.descendant(of: finder, matching: find.byType(RichText)).first,
-  );
-  expect(
-    paragraph.textSize.width,
-    lessThanOrEqualTo(paragraph.size.width),
-    reason: reason,
   );
 }
 
@@ -1038,7 +1022,7 @@ void main() {
           matching: find.byType(Text),
         );
         expect(link, findsOneWidget);
-        _expectLabelFits(tester, link, reason: 'lien GP Pro');
+        expectPlainLabelFits(tester, link, reason: 'lien GP Pro');
 
         // Capacité puis Prix d'un bateau : segment et boutons du bas.
         await tester.pumpWidget(const SizedBox());
@@ -1052,13 +1036,23 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         for (final key in ['boat-unit-m3', 'boat-unit-kg']) {
-          _expectLabelFits(tester, find.byKey(Key(key)), reason: key);
+          expectPlainLabelFits(tester, find.byKey(Key(key)), reason: key);
         }
         final heightCapacity = tester
             .getSize(find.byKey(const Key('trip-form-continue')))
             .height;
+        expectButtonLabelNominal(
+          tester,
+          find.byKey(const Key('trip-form-continue')),
+          reason: 'Continuer (Capacité)',
+        );
         await goToStep(tester, TripFormStep.prix);
         expect(tester.takeException(), isNull);
+        expectButtonLabelNominal(
+          tester,
+          find.byKey(const Key('trip-form-continue')),
+          reason: 'Continuer (Prix)',
+        );
         expect(
           tester.getSize(find.byKey(const Key('trip-form-continue'))).height,
           heightCapacity,

@@ -100,6 +100,7 @@ import '../../../../helpers/ai_form_draft_test_doubles.dart';
 import '../../../../helpers/currency_test_doubles.dart';
 import '../../../../helpers/form_draft_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/label_fit_expectations.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/mock_recent_city_store.dart';
 import '../../../video_modal/moment_test_support.dart';
@@ -6406,20 +6407,26 @@ void main() {
 
         /// Libellé sur une ligne, à sa taille : ni retour à la ligne, ni
         /// police rétrécie par le `FittedBox` du bouton.
-        void expectOneLine(Finder text) {
+        void expectOneLine(Finder text, {Finder? button}) {
           expect(text, findsOneWidget);
           final style = DefaultTextStyle.of(
             tester.element(text),
           ).style.merge(tester.widget<Text>(text).style);
-          final laidOut = tester.getSize(text);
-          expect(laidOut.height, lessThan((style.fontSize ?? 14) * 2));
-          expect(tester.getRect(text).width, closeTo(laidOut.width, 0.5));
+          expect(
+            tester.getSize(text).height,
+            lessThan((style.fontSize ?? 14) * 2),
+          );
+          if (button != null) {
+            expectButtonLabelNominal(tester, button);
+          } else {
+            expectPlainLabelFits(tester, text);
+          }
         }
 
-        Finder buttonLabel(String label) => find.descendant(
-          of: find.widgetWithText(DonyButton, label),
-          matching: find.text(label),
-        );
+        Finder buttonOf(String label) => find.widgetWithText(DonyButton, label);
+
+        Finder buttonLabel(String label) =>
+            find.descendant(of: buttonOf(label), matching: find.text(label));
 
         expect(header(tester).current, TripFormStep.trajet);
         expect(tester.takeException(), isNull);
@@ -6430,8 +6437,8 @@ void main() {
           tester.getSize(find.widgetWithText(DonyButton, cont)).height,
           backHeight,
         );
-        expectOneLine(buttonLabel(back));
-        expectOneLine(buttonLabel(cont));
+        expectOneLine(buttonLabel(back), button: buttonOf(back));
+        expectOneLine(buttonLabel(cont), button: buttonOf(cont));
 
         await _goToStep(tester, TripFormStep.conditions);
         expect(tester.takeException(), isNull);
@@ -6445,7 +6452,8 @@ void main() {
             matching: find.text(skip),
           ),
         );
-        expectOneLine(buttonLabel(english ? 'Preview' : 'Aperçu'));
+        final preview = english ? 'Preview' : 'Aperçu';
+        expectOneLine(buttonLabel(preview), button: buttonOf(preview));
         await tester.pump(const Duration(seconds: 5));
       });
     }
@@ -6484,10 +6492,13 @@ void main() {
               matching: find.text(label),
             );
             expect(text, findsOneWidget);
-            final laidOut = tester.getSize(text);
             // Ni rétréci par le FittedBox, ni sur deux lignes.
-            expect(tester.getRect(text).width, closeTo(laidOut.width, 0.5));
-            expect(laidOut.height, lessThan(30));
+            expectButtonLabelNominal(
+              tester,
+              find.widgetWithText(DonyButton, label),
+              reason: label,
+            );
+            expect(tester.getSize(text).height, lessThan(30));
           }
         });
       }
@@ -7177,10 +7188,13 @@ void main() {
             of: find.widgetWithText(DonyButton, label),
             matching: find.text(label),
           );
-          final laidOut = tester.getSize(text);
           // Ni rétréci par le FittedBox, ni sur deux lignes.
-          expect(tester.getRect(text).width, closeTo(laidOut.width, 0.5));
-          expect(laidOut.height, lessThan(30));
+          expectButtonLabelNominal(
+            tester,
+            find.widgetWithText(DonyButton, label),
+            reason: label,
+          );
+          expect(tester.getSize(text).height, lessThan(30));
         }
       });
     }
