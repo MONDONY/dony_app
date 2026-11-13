@@ -38,9 +38,9 @@ class ParcelDimensionField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: DonySpacing.xs),
-        DonyReplayMask(
-          child: Semantics(
-            label: label,
+        Semantics(
+          label: label,
+          child: DonyReplayMask(
             child: TextFormField(
               key: fieldKey,
               controller: controller,

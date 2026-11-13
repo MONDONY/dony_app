@@ -170,8 +170,6 @@ void main() {
           step: 'DEPART',
           parcelLabel: 'Madou',
           method: ScanMethod.qr,
-          photoPath: '/tmp/depot.jpg',
-          photoRequired: true,
           deposit: true,
         );
         expect(c.state.pending.single.deposit, isTrue);

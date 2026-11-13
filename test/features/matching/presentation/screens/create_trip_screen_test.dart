@@ -6006,9 +6006,10 @@ void main() {
       expect(row.readOnly, isTrue);
       expect(row.notifier.value, TransportMode.plane);
 
-      // Toucher une autre puce ne change rien : le mode vient de la demande.
-      await tester.tap(find.byKey(const Key('mode-chip-car')));
-      await tester.pump();
+      // Seule la puce du mode de la demande est montrée : aucune autre à
+      // toucher, le mode ne change pas.
+      expect(find.byKey(const Key('mode-chip-plane')), findsOneWidget);
+      expect(find.byKey(const Key('mode-chip-car')), findsNothing);
       expect(row.notifier.value, TransportMode.plane);
     });
 

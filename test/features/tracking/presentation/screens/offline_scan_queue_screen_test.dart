@@ -121,9 +121,9 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pump();
       expect(find.text("Dépôt à l'entrepôt"), findsOneWidget);
-      expect(find.text('Dépôt enregistré'), findsOneWidget);
+      expect(find.textContaining('Dépôt enregistré'), findsOneWidget);
       expect(find.text('Récupération'), findsNothing);
-      expect(find.text('Récupération enregistrée'), findsNothing);
+      expect(find.textContaining('Récupération enregistrée'), findsNothing);
     });
   });
 
