@@ -2861,9 +2861,7 @@ String trackingPathFor(ConversationModel conversation) {
     final announcementId = conversation.announcementId;
     return announcementId == null ? '/messages' : '/traveler/$announcementId';
   }
-  return conversation.viewerIsRecipient
-      ? '/receptions/$bidId'
-      : '/bids/$bidId';
+  return conversation.viewerIsRecipient ? '/receptions/$bidId' : '/bids/$bidId';
 }
 
 /// Message système qui renvoie au suivi du colis (FLUTTER-CD), par exemple

@@ -34,12 +34,22 @@ class ChatLoaded extends ChatState {
   /// Photos permises dans ce fil : valeur de la conversation à l'ouverture,
   /// relue auprès du back après un refus `media-not-allowed`.
   final bool mediaAllowed;
+
+  /// Messages restants du demandeur dans une conversation de questions sous
+  /// quota ; `null` hors de ce cas (conversation ordinaire, créateur de
+  /// l'annonce, quota levé).
+  final int? inquiryRemaining;
+
+  /// Le demandeur a épuisé son quota : le champ de saisie se verrouille.
+  final bool inquiryLimitReached;
   const ChatLoaded(
     this.messages, {
     this.replyingTo,
     this.quotedMessages = const {},
     this.pendingImages = const [],
     this.mediaAllowed = false,
+    this.inquiryRemaining,
+    this.inquiryLimitReached = false,
   });
 }
 
@@ -131,7 +141,11 @@ class ChatConversationDeleted extends ChatState {
 class ChatSendRejected extends ChatState {
   final ChatState previous;
   final String? text;
-  const ChatSendRejected(this.previous, {this.text});
+
+  /// Refus dû au plafond de messages d'une conversation de questions : l'écran
+  /// affiche `inquirySendLimitError` plutôt que le message générique.
+  final bool inquiryLimit;
+  const ChatSendRejected(this.previous, {this.text, this.inquiryLimit = false});
 }
 
 /// Envoi d'un texte ou d'une position échoué hors refus des règles (réseau,

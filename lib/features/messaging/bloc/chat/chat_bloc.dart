@@ -25,6 +25,16 @@ class _QuoteResolved extends ChatEvent {
   const _QuoteResolved(this.id, this.message);
 }
 
+/// Nouveau compteur de messages du demandeur lu dans Firestore.
+class _InquirySentChanged extends ChatEvent {
+  final int sent;
+  const _InquirySentChanged(this.sent);
+}
+
+/// Plafond de messages du demandeur quand le back ne le sert pas (même valeur
+/// que `InquiryPolicy.MESSAGE_LIMIT` du back).
+const int kInquiryDefaultMessageLimit = 10;
+
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final FirestoreChatRepository _firestoreRepo;
   final ConversationRepository _conversationRepo;
@@ -62,6 +72,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   List<PendingChatImage> _pendingImages = const [];
   int _localImageSeq = 0;
 
+  // Conversation de questions avant réservation (quota non levé) : seul le
+  // texte est écrit dans le fil (règles Firestore), pour les deux parties.
+  bool _inquiryLimited = false;
+
+  // L'utilisateur est le demandeur d'une telle conversation : ses messages
+  // sont comptés et plafonnés. Le créateur de l'annonce ne l'est jamais.
+  bool _inquiryCounting = false;
+  int _inquiryLimit = kInquiryDefaultMessageLimit;
+  int _inquirySent = 0;
+  String _announcementId = '';
+  StreamSubscription<int>? _inquirySub;
+
   ChatBloc(
     this._firestoreRepo,
     this._conversationRepo,
@@ -85,6 +107,69 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatMessageEditRequested>(_onEditMessage);
     on<ChatMessageDeleteRequested>(_onDeleteMessage);
     on<ChatAppVisibilityChanged>(_onAppVisibilityChanged);
+    on<_InquirySentChanged>(_onInquirySentChanged);
+    on<ChatInquiryLiftedObserved>(_onInquiryLifted);
+  }
+
+  int get _inquiryRemaining =>
+      (_inquiryLimit - _inquirySent).clamp(0, _inquiryLimit);
+
+  void _onInquirySentChanged(
+    _InquirySentChanged event,
+    Emitter<ChatState> emit,
+  ) {
+    _inquirySent = event.sent;
+    if (_inquiryCounting && _syncWithThread()) emit(_snapshot());
+  }
+
+  void _onInquiryLifted(
+    ChatInquiryLiftedObserved event,
+    Emitter<ChatState> emit,
+  ) {
+    if (!_inquiryLimited) return;
+    unawaited(_clearInquiry());
+    if (_syncWithThread()) emit(_snapshot());
+  }
+
+  Future<void> _clearInquiry() async {
+    _inquiryLimited = false;
+    _inquiryCounting = false;
+    _inquirySent = 0;
+    final sub = _inquirySub;
+    _inquirySub = null;
+    await sub?.cancel();
+  }
+
+  /// Cherche si l'utilisateur est le demandeur (`askerId` du document de
+  /// conversation) et, si oui, suit son compteur. Échec de lecture : pas de
+  /// compteur, les règles Firestore restent seules juges.
+  Future<void> _startInquiry(String firestoreConversationId, String uid) async {
+    try {
+      final asker = await _firestoreRepo.inquiryAskerId(
+        firestoreConversationId,
+      );
+      if (isClosed ||
+          firestoreConversationId != _firestoreConversationId ||
+          !_inquiryLimited ||
+          asker == null ||
+          asker != uid) {
+        return;
+      }
+      _inquiryCounting = true;
+      _inquirySub = _firestoreRepo
+          .inquirySentStream(firestoreConversationId)
+          .listen(
+            (sent) {
+              if (!isClosed) add(_InquirySentChanged(sent));
+            },
+            onError: (Object e) => AppLog.warn(
+              'chat.inquiry_quota_watch_failed',
+              data: {'reason': _reasonOf(e)},
+            ),
+          );
+    } catch (e) {
+      AppLog.warn('chat.inquiry_asker_failed', data: {'reason': _reasonOf(e)});
+    }
   }
 
   ChatState _snapshot() {
@@ -97,6 +182,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             quotedMessages: quoted,
             pendingImages: List.unmodifiable(_pendingImages),
             mediaAllowed: _mediaAllowed,
+            inquiryRemaining: _inquiryCounting ? _inquiryRemaining : null,
+            inquiryLimitReached: _inquiryCounting && _inquiryRemaining == 0,
           );
   }
 
@@ -192,6 +279,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _conversationId = event.conversationId;
     _mediaAllowed = event.mediaAllowed;
     _pendingImages = const [];
+    await _inquirySub?.cancel();
+    _inquirySub = null;
+    _inquiryLimited = event.inquiryLimited && !event.isReadOnly;
+    _inquiryCounting = false;
+    _inquirySent = 0;
+    _inquiryLimit = event.inquiryMessageLimit ?? kInquiryDefaultMessageLimit;
+    _announcementId = event.announcementId;
     await _messageSub?.cancel();
     await _deletedSub?.cancel();
 
@@ -205,6 +299,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (_currentUserUid.isNotEmpty) {
       _markRead();
       _watchUnreadWhileOpen();
+    }
+
+    if (_inquiryLimited && _currentUserUid.isNotEmpty) {
+      unawaited(_startInquiry(event.firestoreConversationId, _currentUserUid));
     }
 
     // Only watch deletion stream when NOT already in read-only
@@ -243,17 +341,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatTextSendRequested event,
     Emitter<ChatState> emit,
   ) async {
-    final sent = await _rejectable(
-      emit,
-      () => _firestoreRepo.sendTextMessage(
-        firestoreConversationId: event.firestoreConversationId,
-        senderFirebaseUid: event.senderFirebaseUid,
-        body: event.body,
-        replyToId: event.replyToId,
-      ),
-      retry: event,
-      text: event.body,
-    );
+    final sent = _inquiryCounting
+        ? await _sendInquiryText(event, emit)
+        : await _rejectable(
+            emit,
+            () => _writeText(event),
+            retry: event,
+            text: event.body,
+          );
     if (!sent) return;
     _clearReplyAfterSend(event.replyToId, emit);
     final preview = event.body.length > 80
@@ -261,6 +356,86 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         : event.body;
     await _updateLastMessage(event.conversationId, preview);
     unawaited(_analytics.logEvent(AnalyticsEvents.messageSent));
+  }
+
+  Future<void> _writeText(
+    ChatTextSendRequested event, {
+    int? inquirySentBefore,
+  }) => _firestoreRepo.sendTextMessage(
+    firestoreConversationId: event.firestoreConversationId,
+    senderFirebaseUid: event.senderFirebaseUid,
+    body: event.body,
+    replyToId: event.replyToId,
+    inquirySentBefore: inquirySentBefore,
+  );
+
+  /// Envoi du demandeur dans une conversation de questions sous quota : le
+  /// compteur est écrit avec le message. À 0 restant, refus local sans appel
+  /// réseau.
+  Future<bool> _sendInquiryText(
+    ChatTextSendRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    if (_inquiryRemaining == 0) {
+      _rejectInquiryLimit(emit, event.body);
+      return false;
+    }
+    final before = _inquirySent;
+    try {
+      await _writeText(event, inquirySentBefore: before);
+    } on InquiryLimitReachedException {
+      return _reconcileAndRetry(event, emit);
+    } catch (e) {
+      _reportSendFailure(emit, e, event, event.body);
+      return false;
+    }
+    _inquirySent = before + 1;
+    if (_syncWithThread()) emit(_snapshot());
+    return true;
+  }
+
+  /// Les règles ont refusé l'envoi alors que le compteur local laissait de la
+  /// place : il a dérivé. `openInquiry` fait recaler Firestore par le back (et
+  /// dit si le quota est levé), puis un seul nouvel essai part avec le compteur
+  /// frais. Un second refus rend le texte avec le message de limite.
+  Future<bool> _reconcileAndRetry(
+    ChatTextSendRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    try {
+      final fresh = await _conversationRepo.openInquiry(_announcementId);
+      if (fresh.inquiryQuotaLifted) {
+        await _clearInquiry();
+        if (_syncWithThread()) emit(_snapshot());
+        await _writeText(event);
+        return true;
+      }
+      _inquirySent = await _firestoreRepo
+          .inquirySentStream(event.firestoreConversationId)
+          .first
+          .timeout(const Duration(seconds: 5));
+      if (_inquiryRemaining == 0) {
+        _rejectInquiryLimit(emit, event.body);
+        return false;
+      }
+      final before = _inquirySent;
+      await _writeText(event, inquirySentBefore: before);
+      _inquirySent = before + 1;
+      if (_syncWithThread()) emit(_snapshot());
+      return true;
+    } on InquiryLimitReachedException {
+      _rejectInquiryLimit(emit, event.body);
+      return false;
+    } catch (e) {
+      _reportSendFailure(emit, e, event, event.body);
+      return false;
+    }
+  }
+
+  void _rejectInquiryLimit(Emitter<ChatState> emit, String text) {
+    final previous = _syncWithThread() ? _snapshot() : state;
+    emit(ChatSendRejected(previous, text: text, inquiryLimit: true));
+    emit(previous);
   }
 
   /// Aperçu « dernier message » de la liste des conversations : opération
@@ -385,7 +560,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatImageSendRequested event,
     Emitter<ChatState> emit,
   ) async {
-    if (!_syncWithThread() || _readOnly) return;
+    // Les règles n'acceptent que du texte dans une conversation de questions.
+    if (_inquiryLimited || !_syncWithThread() || _readOnly) return;
     if (event.conversationId.isNotEmpty) _conversationId = event.conversationId;
     final pending = PendingChatImage(
       localId: 'local-${++_localImageSeq}',
@@ -499,6 +675,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatLocationSendRequested event,
     Emitter<ChatState> emit,
   ) async {
+    if (_inquiryLimited) return;
     final sent = await _rejectable(
       emit,
       () => _firestoreRepo.sendLocationMessage(
@@ -533,16 +710,25 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       await write();
       return true;
     } catch (e) {
-      final previous = state;
-      if (e is FirebaseException && e.code == 'permission-denied') {
-        emit(ChatSendRejected(previous, text: text));
-      } else {
-        AppLog.warn('chat.send_failed', data: {'reason': _reasonOf(e)});
-        emit(ChatSendFailed(previous, retry: retry, text: text));
-      }
-      emit(previous);
+      _reportSendFailure(emit, e, retry, text);
       return false;
     }
+  }
+
+  void _reportSendFailure(
+    Emitter<ChatState> emit,
+    Object e,
+    ChatEvent retry,
+    String? text,
+  ) {
+    final previous = state;
+    if (e is FirebaseException && e.code == 'permission-denied') {
+      emit(ChatSendRejected(previous, text: text));
+    } else {
+      AppLog.warn('chat.send_failed', data: {'reason': _reasonOf(e)});
+      emit(ChatSendFailed(previous, retry: retry, text: text));
+    }
+    emit(previous);
   }
 
   Future<void> _onEditMessage(
@@ -679,6 +865,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     await _messageSub?.cancel();
     await _deletedSub?.cancel();
     await _unreadSub?.cancel();
+    await _inquirySub?.cancel();
     _markReadTimer?.cancel();
     // Sortie du fil : dernière remise à « lu » pour un message arrivé pendant
     // le délai anti-rebond, sinon il resterait compté à l'arrivée sur la liste.

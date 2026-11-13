@@ -17,12 +17,26 @@ class ChatSubscribeRequested extends ChatEvent {
 
   /// Photos permises à l'ouverture (`ConversationModel.mediaAllowed`).
   final bool mediaAllowed;
+
+  /// Conversation de questions avant réservation dont le quota n'est pas levé
+  /// (`ConversationModel.inquiryLimited`). Le bloc cherche alors lui-même si
+  /// l'utilisateur est le demandeur (soumis au plafond) ou le créateur.
+  final bool inquiryLimited;
+
+  /// Plafond servi par le back ; `null` : 10 (`InquiryPolicy` du back).
+  final int? inquiryMessageLimit;
+
+  /// Annonce de la question, nécessaire au recalage du quota.
+  final String announcementId;
   const ChatSubscribeRequested(
     this.firestoreConversationId, {
     this.currentUserUid = '',
     this.isReadOnly = false,
     this.conversationId = '',
     this.mediaAllowed = false,
+    this.inquiryLimited = false,
+    this.inquiryMessageLimit,
+    this.announcementId = '',
   });
 }
 
@@ -128,4 +142,10 @@ class ChatMessageDeleteRequested extends ChatEvent {
 class ChatAppVisibilityChanged extends ChatEvent {
   final bool visible;
   const ChatAppVisibilityChanged({required this.visible});
+}
+
+/// La conversation rechargée annonce `inquiryQuotaLifted = true` (un bid existe
+/// ou le voyageur a répondu) : le compteur et le verrou disparaissent.
+class ChatInquiryLiftedObserved extends ChatEvent {
+  const ChatInquiryLiftedObserved();
 }

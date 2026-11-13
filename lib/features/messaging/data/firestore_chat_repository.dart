@@ -36,6 +36,20 @@ class FirestoreChatRepository {
         .map((snap) => (snap.data()?['sent'] as num?)?.toInt() ?? 0);
   }
 
+  /// UID Firebase du demandeur d'une conversation INQUIRY (`askerId` du
+  /// document de conversation, posé par le back), `null` s'il est absent.
+  /// Le back ne le sert pas dans la réponse API : c'est la seule façon de
+  /// savoir si l'utilisateur courant est le demandeur (soumis au plafond) ou le
+  /// créateur de l'annonce (jamais limité).
+  Future<String?> inquiryAskerId(String firestoreConversationId) async {
+    final snap = await _firestore
+        .collection('conversations')
+        .doc(firestoreConversationId)
+        .get();
+    final asker = snap.data()?['askerId'];
+    return asker is String && asker.isNotEmpty ? asker : null;
+  }
+
   /// [inquirySentBefore] non nul : message du demandeur dans une conversation
   /// INQUIRY sous quota. Les règles Firestore exigent alors, dans UN seul lot,
   /// le message à l'id `inq<n>` (n = nouvelle valeur de `sent`) et le compteur
