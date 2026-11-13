@@ -216,6 +216,31 @@ void main() {
       );
     });
 
+    testWidgets('boatAmendment_cancelledParcel_noDepositWording', (
+      tester,
+    ) async {
+      final b = BidMoneyBreakdown(
+        lines: [_line(MoneyLineKind.principal, 'STRIPE', 61.2)],
+        total: 61.2,
+        onlineAmount: 61.2,
+        cashAmount: 0,
+      );
+      for (final isSender in [true, false]) {
+        await _pump(
+          tester,
+          MoneyBreakdownCard(
+            bid: _bid(
+              b,
+              status: 'CANCELLED',
+              payoutTrigger: PayoutTrigger.deposit,
+            ),
+            isSender: isSender,
+          ),
+        );
+        expect(find.textContaining('au dépôt'), findsNothing);
+      }
+    });
+
     testWidgets('deliveryWording_unchanged_sender', (tester) async {
       await _pump(
         tester,

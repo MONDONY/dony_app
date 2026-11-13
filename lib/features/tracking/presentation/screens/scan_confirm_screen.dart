@@ -153,14 +153,17 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
       listener: (context, state) {
         if (state is QrScanSuccess) {
           if (state.photoDropped) warnTrackingPhotoDropped(context);
-          _showSuccess(context, state.event.stepLabel(l));
+          _showSuccess(
+            context,
+            state.event.stepLabel(l, mode: widget.stepMode),
+          );
         } else if (state is QrScanQueued) {
           _showQueued(context);
         } else if (state is DeliveryConfirmSuccess) {
           if (state.photoDropped) warnTrackingPhotoDropped(context);
           _navigateToDeliverySuccess(
             context,
-            state.event.stepLabel(l),
+            state.event.stepLabel(l, mode: widget.stepMode),
             finalBidId: state.event.bidId,
           );
         }

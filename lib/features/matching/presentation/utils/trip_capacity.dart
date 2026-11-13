@@ -114,9 +114,10 @@ String tripCapacityLine(
 /// autre trajet (kilos, kilo libre). Le volume restant est arrondi vers le bas.
 String? tripVolumeRemainingText(AppLocalizations l, AnnouncementModel a) {
   if (!a.isPricedPerM3) return null;
-  return l.listingBoatVolumeRemaining(
-    formatVolumeRemainingM3(l, a.availableVolumeM3 ?? 0),
-  );
+  // Volume non servi : pas de ligne plutôt qu'un « 0 m³ restants » (complet).
+  final remaining = a.availableVolumeM3;
+  if (remaining == null) return null;
+  return l.listingBoatVolumeRemaining(formatVolumeRemainingM3(l, remaining));
 }
 
 /// Prix au m³ d'un trajet bateau (« 600 €/m³ ») ; `null` pour un trajet au

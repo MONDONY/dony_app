@@ -360,9 +360,15 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// estimation : le total du serveur prime dès qu'il répond.
   double? _localVolumeTotal() => PerM3Pricing.totalFor(
     volumeM3: _volumeInput?.volumeM3,
-    perM3: widget.announcement.pricePerM3Display,
+    perM3: _pricePerM3Shown,
     currency: SupportedCurrency.fromCodeOrDefault(widget.announcement.currency),
   );
+
+  /// Prix au m³ lu par l'expéditeur : celui frais inclus, avec le même repli
+  /// que la carte et la fiche (`tripPricePerM3Text`) sur le net d'un back qui
+  /// ne sert que celui-là : un trajet au m³ montre toujours un prix.
+  double? get _pricePerM3Shown =>
+      widget.announcement.pricePerM3Display ?? widget.announcement.pricePerM3;
 
   /// Net voyageur. `null` seulement pour un lecteur anonyme (le backend
   /// masque le net) ; cet écran de création d'offre exige d'être connecté,
@@ -1839,8 +1845,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             const SizedBox(height: DonySpacing.xxl),
 
             // ── Politique de remboursement ────────────────────────────────
-            const ReimbursementInfoBanner().animate().fadeIn(delay: 140.ms),
-            const SizedBox(height: DonySpacing.xxl),
+            // Absente d'un colis payé au dépôt : aucun remboursement
+            // automatique, un litige se règle avec le support.
+            if (!paidAtDeposit(widget.announcement.transportMode)) ...[
+              const ReimbursementInfoBanner().animate().fadeIn(delay: 140.ms),
+              const SizedBox(height: DonySpacing.xxl),
+            ],
 
             // ── Destinataire ──────────────────────────────────────────────
             _SectionLabel(label: context.l10n.bidCreateRecipientSectionLabel),
@@ -2161,7 +2171,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// remplace dès qu'il arrive.
   Widget _buildVolumePriceBreakdown(BidQuoteResponse? quote) {
     final volume = _volumeInput;
-    final perM3 = widget.announcement.pricePerM3Display;
+    final perM3 = _pricePerM3Shown;
     final total = quote?.totalEur ?? _localVolumeTotal();
     if (volume == null || perM3 == null || total == null || total <= 0) {
       return const SizedBox.shrink();

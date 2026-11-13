@@ -189,7 +189,8 @@ void main() {
       c.setVolume(9);
     },
     wait: settle,
-    verify: (c) => expect(c.state.addedVolumeM3, 2.5),
+    // 250 × 1,05 / 100 = 2,625 -> 2,6 (plafond net passé à la base brute)
+    verify: (c) => expect(c.state.addedVolumeM3, 2.6),
   );
 
   blocTest<AmendmentRequestCubit, AmendmentRequestState>(

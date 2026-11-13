@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -125,6 +126,46 @@ void main() {
 
     test('provenance inconnue : étape seule', () {
       expect(recentScanStepLabel(fr, entry(null)), 'Transit');
+    });
+
+    test('bateau : la remise se lit « Dépôt », les autres modes inchangés', () {
+      final depart = TripScanHistoryEntryModel(
+        eventType: 'DEPART',
+        scannedAt: DateTime(2026, 9, 28),
+        scanMethod: ScanMethod.qr,
+      );
+      expect(
+        recentScanStepLabel(fr, depart, mode: TransportMode.boat),
+        "Dépôt à l'entrepôt · QR",
+      );
+      expect(
+        recentScanStepLabel(en, depart, mode: TransportMode.boat),
+        'Drop-off at the warehouse · QR',
+      );
+      expect(
+        recentScanStepLabel(fr, depart, mode: TransportMode.plane),
+        'Récupération · QR',
+      );
+      expect(recentScanStepLabel(fr, depart), 'Récupération · QR');
+    });
+  });
+
+  group('TrackingEventL10n.stepLabel', () {
+    final event = TrackingEventModel(
+      id: 'e',
+      bidId: 'b',
+      eventType: 'DEPART',
+      scannedAt: DateTime(2026, 9, 28),
+      createdAt: DateTime(2026, 9, 28),
+    );
+
+    test('bateau : Dépôt ; sans mode ou autre mode : inchangé', () {
+      expect(
+        event.stepLabel(fr, mode: TransportMode.boat),
+        "Dépôt à l'entrepôt",
+      );
+      expect(event.stepLabel(fr), 'Colis récupéré');
+      expect(event.stepLabel(en, mode: TransportMode.car), 'Parcel collected');
     });
   });
 

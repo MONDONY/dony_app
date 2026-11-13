@@ -271,6 +271,12 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
     // Bateau : volume, prix au m³ et arrivée au lieu de « Urgent », de la
     // valise et des escales.
     final boat = f.transportMode == TransportMode.boat;
+    // Valise de 23 kg : propre à l'avion. « Peu importe » (aucun mode) ne la
+    // propose que si l'avion est le seul mode offert à la recherche.
+    final suitcase =
+        f.transportMode == TransportMode.plane ||
+        (f.transportMode == null &&
+            transportModesListenable.value.searchModes.length < 2);
     return [
       SearchSectionLabel(l.homeComposerSectionWeightPrice),
       Row(
@@ -411,7 +417,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
               active: f.urgentOnly,
               onChanged: (v) => _update(f.copyWith(urgentOnly: v)),
             ),
-          if (!road && !boat)
+          if (suitcase)
             QuickChip(
               key: const Key('composer-suitcase-23'),
               label: l.homeFilterChipsSuitcase23,

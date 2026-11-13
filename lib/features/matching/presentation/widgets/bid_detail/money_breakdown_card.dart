@@ -29,8 +29,10 @@ class MoneyBreakdownCard extends StatelessWidget {
   /// de scanner la remise.
   bool get _beforeHandover => bid.status == 'ACCEPTED';
 
-  /// Le voyageur est payé au dépôt du colis (bateau), pas à la livraison.
-  bool get _paidAtDeposit => bid.payoutTrigger == PayoutTrigger.deposit;
+  /// Le voyageur est payé au dépôt du colis (bateau), pas à la livraison :
+  /// mêmes gardes que `PaiementCard` (un colis annulé, refusé ou à régler ne
+  /// dit pas « versé au dépôt »).
+  bool get _paidAtDeposit => bid.isDepositPayoutOpen;
 
   @override
   Widget build(BuildContext context) {

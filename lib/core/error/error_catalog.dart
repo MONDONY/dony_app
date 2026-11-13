@@ -736,7 +736,7 @@ abstract final class ErrorCatalog {
       title: (l) => l.errorCapacityInsufficientTitle,
       message: (l) => l.errorCapacityInsufficientMessage,
       severity: ErrorSeverity.warning,
-      icon: Icons.luggage_outlined,
+      icon: Icons.inventory_2_outlined,
     ),
     'announcement-not-accepting': _Entry(
       title: (l) => l.errorAnnouncementNotAcceptingTitle,
@@ -1646,7 +1646,7 @@ abstract final class ErrorCatalog {
       title: (l) => l.errorSurplusNotOpenTitle,
       message: (l) => l.errorSurplusNotOpenMessage,
       severity: ErrorSeverity.info,
-      icon: Icons.luggage_outlined,
+      icon: Icons.inventory_2_outlined,
     ),
     'reserved-sender-cannot-bid': _Entry(
       title: (l) => l.errorReservedSenderCannotBidTitle,

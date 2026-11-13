@@ -264,6 +264,11 @@ class HomeFilterChipsRow extends StatelessWidget {
     final hasCapacity = filters.weightMin != null || filters.weightMax != null;
     final isRoad = filters.transportMode?.isRoad ?? false;
     final isBoat = filters.transportMode == TransportMode.boat;
+    // Valise de 23 kg : propre à l'avion. « Peu importe » ne la propose que si
+    // l'avion est le seul mode offert à la recherche.
+    final showSuitcase =
+        filters.transportMode == TransportMode.plane ||
+        (filters.transportMode == null && transportModes.length < 2);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -321,7 +326,7 @@ class HomeFilterChipsRow extends StatelessWidget {
                 // porte des centaines de kilos) : la taille du colis la
                 // remplace.
                 _itemSizeChip(l)
-              else
+              else if (showSuitcase)
                 // Le besoin le plus courant de la diaspora (une valise en
                 // soute), en un toucher (YADONY-FLUTTER-PROD-Z).
                 HomeSmallChip(

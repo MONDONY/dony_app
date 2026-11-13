@@ -73,11 +73,7 @@ class PaiementCard extends StatelessWidget {
   /// espèces ne passent jamais par Yadony), ni annulé, ni à régler, ni en
   /// échec de paiement.
   bool get _paidAtDeposit =>
-      bid.payoutTrigger == PayoutTrigger.deposit &&
-      (bid.paymentMethod == BidPaymentMethod.stripe ||
-          bid.paymentMethod == BidPaymentMethod.mobileMoney) &&
-      !_cancelledStatuses.contains(bid.status) &&
-      bid.status != _awaitingPaymentStatus &&
+      bid.isDepositPayoutOpen &&
       existingPayment?.status != PaymentStatus.failed;
 
   @override

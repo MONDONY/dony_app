@@ -750,8 +750,10 @@ void main() {
       expect(find.byKey(const Key('chip-stops-directOnly')), findsNothing);
     });
 
-    testWidgets('composeur avion (et « tous ») : inchangé, Valise 23 kg et '
-        'ESCALES, ni TAILLE ni PASSE PAR', (tester) async {
+    testWidgets('composeur avion (et « tous ») : inchangé, ESCALES, ni TAILLE '
+        'ni PASSE PAR ; la Valise 23 kg reste propre à l\'avion', (
+      tester,
+    ) async {
       roadOn();
       _vueHaute(tester);
       for (final mode in [TransportMode.plane, null]) {
@@ -765,8 +767,21 @@ void main() {
 
         expect(find.text('TAILLE DU COLIS'), findsNothing, reason: '$mode');
         expect(find.byKey(const Key('item-size-L')), findsNothing);
-        await _scrollTo(tester, find.byKey(const Key('composer-suitcase-23')));
-        expect(find.byKey(const Key('composer-suitcase-23')), findsOneWidget);
+        // « Peu importe » (plusieurs modes offerts) : pas de valise, propre à
+        // l'avion.
+        if (mode == null) {
+          expect(
+            find.byKey(const Key('composer-suitcase-23')),
+            findsNothing,
+            reason: 'peu importe',
+          );
+        } else {
+          await _scrollTo(
+            tester,
+            find.byKey(const Key('composer-suitcase-23')),
+          );
+          expect(find.byKey(const Key('composer-suitcase-23')), findsOneWidget);
+        }
         expect(
           find.text('Type de contenu, note, escales, paiement'),
           findsOneWidget,

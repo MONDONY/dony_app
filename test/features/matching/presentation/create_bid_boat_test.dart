@@ -23,6 +23,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/reimbursement_info_banner.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
@@ -66,6 +67,7 @@ class _FakeContentCategoryRepository implements IContentCategoryRepository {
 /// au m³ affiché à l'expéditeur (frais inclus) 600.
 AnnouncementModel _boatM3({
   double availableM3 = 5,
+  double? pricePerM3Display = 600,
   Set<BidPaymentMethod> methods = const {BidPaymentMethod.stripe},
 }) => AnnouncementModel(
   id: 'boat-m3-1',
@@ -79,7 +81,7 @@ AnnouncementModel _boatM3({
   volumeCapacityM3: 20,
   availableVolumeM3: availableM3,
   pricePerM3: 500,
-  pricePerM3Display: 600,
+  pricePerM3Display: pricePerM3Display,
   status: 'ACTIVE',
   createdAt: DateTime(2026, 11),
   updatedAt: DateTime(2026, 11),
@@ -362,10 +364,7 @@ void main() {
         tester.widget<Text>(find.byKey(const Key('bid-total-amount'))).data,
         contains('120,00'),
       );
-      expect(
-        find.text('Volume restant sur ce trajet : 5,00 m³'),
-        findsOneWidget,
-      );
+      expect(find.text('Volume restant sur ce trajet : 5 m³'), findsOneWidget);
     });
 
     testWidgets('prix arrondi à l\'unité mineure de la devise', (tester) async {
@@ -604,6 +603,27 @@ void main() {
       await openSheet(tester, _boatM3());
       await typeDimensions(tester);
       expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('payé au dépôt : pas de bandeau « Yadony rembourse »', (
+      tester,
+    ) async {
+      setTransportModes(
+        const TransportModesAvailability(road: false, boat: true),
+      );
+      await openSheet(tester, _boatM3());
+      expect(
+        find.byType(ReimbursementInfoBanner, skipOffstage: false),
+        findsNothing,
+      );
+    });
+
+    testWidgets('back qui ne sert que le net au m³ : le prix reste affiché '
+        '(repli, comme la carte)', (tester) async {
+      await openSheet(tester, _boatM3(pricePerM3Display: null));
+      await typeDimensions(tester);
+      // 0,2 m³ × 500 (net servi) : une ligne de prix, jamais rien.
+      expect(find.textContaining('0,20 m³ × 500'), findsOneWidget);
     });
   });
 

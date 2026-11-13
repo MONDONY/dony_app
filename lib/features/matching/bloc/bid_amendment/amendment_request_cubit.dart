@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -163,6 +164,10 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
 
   /// Colis d'un trajet bateau au m³ : le volume part à la place des kilos.
   bool _perM3 = false;
+
+  /// Devise du colis : sert à passer le plafond (un net) à la base des prix
+  /// affichés.
+  String? _currency;
   Timer? _quoteTimer;
 
   /// Numéro du dernier devis demandé : une réponse périmée est ignorée.
@@ -174,6 +179,7 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
   Future<void> load(BidModel bid) async {
     _bidId = bid.id;
     _perM3 = bid.isPricedPerM3;
+    _currency = bid.currency;
     if (state.status != AmendmentRequestStatus.loading) {
       emit(const AmendmentRequestState());
     }
@@ -238,7 +244,7 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
         .where((g) => g.id == id)
         .map((g) => g.unitPriceDisplay)
         .firstOrNull;
-    final max = state.options?.maxAmount;
+    final max = _maxAmountShown();
     if (unit != null && unit > 0 && max != null && quantity > max ~/ unit) {
       quantity = max ~/ unit;
     }
@@ -257,6 +263,15 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
     emit(state.copyWith(method: method));
   }
 
+  /// Plafond du serveur (un net) passé à la base des prix que l'écran compare
+  /// (`pricePerKgDisplay`, `pricePerM3Display`, `unitPriceDisplay` : ceux de
+  /// l'expéditeur), pour comparer des montants de même base. Le serveur reste
+  /// l'autorité.
+  double? _maxAmountShown() {
+    final max = state.options?.maxAmount;
+    return max == null ? null : listUnitPrice(max, _currency);
+  }
+
   /// Plafond d'affichage des kilos : kilos libres, sinon le plafond du net
   /// divisé par le prix au kilo (le serveur reste l'autorité).
   double? _maxKg() {
@@ -264,8 +279,9 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
     if (options == null) return null;
     if (options.availableKg != null) return options.availableKg;
     final price = options.pricePerKgDisplay;
-    if (price == null || price <= 0) return null;
-    return options.maxAmount / price;
+    final max = _maxAmountShown();
+    if (price == null || price <= 0 || max == null) return null;
+    return max / price;
   }
 
   /// Plafond d'affichage du volume : volume libre du trajet, sinon le plafond
@@ -276,8 +292,9 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
     final free = options.availableVolumeM3;
     if (free != null) return (free * 10 + 1e-9).floor() / 10;
     final price = options.pricePerM3Display;
-    if (price == null || price <= 0) return null;
-    return options.maxAmount / price;
+    final max = _maxAmountShown();
+    if (price == null || price <= 0 || max == null) return null;
+    return max / price;
   }
 
   void _changed({
@@ -311,7 +328,7 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
     try {
       final gross = await _repository.quote(
         bidId,
-        addedKg: state.addedKg,
+        addedKg: _perM3 ? 0 : state.addedKg,
         addedVolumeM3: _perM3 ? state.addedVolumeM3 : null,
         items: state.items,
       );
@@ -374,7 +391,7 @@ class AmendmentRequestCubit extends Cubit<AmendmentRequestState> {
     try {
       final checkout = await _repository.create(
         bidId,
-        addedKg: state.addedKg,
+        addedKg: _perM3 ? 0 : state.addedKg,
         addedVolumeM3: _perM3 ? state.addedVolumeM3 : null,
         items: state.items,
         method: method,

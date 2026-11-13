@@ -54,9 +54,10 @@ const kTrackingStepIcons = <String, String>{
 /// inconnue.
 String recentScanStepLabel(
   AppLocalizations l,
-  TripScanHistoryEntryModel entry,
-) {
-  final step = trackingStepLabel(l, entry.eventType);
+  TripScanHistoryEntryModel entry, {
+  TransportMode? mode,
+}) {
+  final step = trackingStepLabel(l, entry.eventType, mode: mode);
   return switch (entry.scanMethod) {
     ScanMethod.qr => l.suiviRecentScanStepByQr(step),
     ScanMethod.manual => l.suiviRecentScanStepByNumber(step),
@@ -93,12 +94,16 @@ String travelerTrackingAge(AppLocalizations l, DateTime at, DateTime now) {
 /// `gpsLabel`, `gpsLat`, `gpsLon` restent des valeurs de donnée, seul
 /// l'affichage passe par cette extension.
 extension TrackingEventL10n on TrackingEventModel {
-  String stepLabel(AppLocalizations l) => switch (eventType) {
-    'DEPART' => l.trackingEventDepartureConfirmed,
-    'TRANSIT' => l.trackingEventInTransit,
-    'ARRIVEE' => l.trackingEventArrivalConfirmed,
-    _ => eventType,
-  };
+  /// [mode] : mode du trajet quand il est connu ; en bateau l'étape `DEPART`
+  /// est le dépôt du colis à l'entrepôt, comme partout ailleurs.
+  String stepLabel(AppLocalizations l, {TransportMode? mode}) =>
+      switch (eventType) {
+        'DEPART' when mode == TransportMode.boat => l.trackingBoatStepDeposit,
+        'DEPART' => l.trackingEventDepartureConfirmed,
+        'TRANSIT' => l.trackingEventInTransit,
+        'ARRIVEE' => l.trackingEventArrivalConfirmed,
+        _ => eventType,
+      };
 
   String? locationLabel(AppLocalizations l) {
     final label = gpsLabel?.trim();

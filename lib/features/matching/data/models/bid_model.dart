@@ -560,6 +560,25 @@ class BidModel {
           paymentMethod == BidPaymentMethod.mobileMoney) &&
       _depositedStatuses.contains(status);
 
+  static const _noDepositPayoutStatuses = {
+    'CANCELLED',
+    'REJECTED',
+    'NO_SHOW',
+    'EXPIRED',
+    'PARCEL_REFUSED',
+    'AWAITING_PAYMENT',
+  };
+
+  /// Le transporteur sera (ou a été) payé au dépôt : paiement par Yadony (carte
+  /// ou mobile money, jamais des espèces), ni annulé, ni refusé, ni encore à
+  /// régler. Règle commune aux cartes de paiement du détail du colis (le
+  /// paiement en échec s'y ajoute côté `PaiementCard`).
+  bool get isDepositPayoutOpen =>
+      payoutTrigger == PayoutTrigger.deposit &&
+      (paymentMethod == BidPaymentMethod.stripe ||
+          paymentMethod == BidPaymentMethod.mobileMoney) &&
+      !_noDepositPayoutStatuses.contains(status);
+
   /// Colis d'un trajet bateau vendu au m³ : il porte un volume, jamais des
   /// kilos à ajuster. Un colis au kilo, ou sans volume (back antérieur), reste
   /// un colis au kilo.

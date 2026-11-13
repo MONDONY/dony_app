@@ -45,12 +45,26 @@ void main() {
       );
     });
 
-    test('route et mode inconnu : jamais « escale »', () {
+    test('mode absent (ancienne donnée) : lu comme avion, « escale »', () {
+      expect(
+        tripDelayReasonLabel(fr, TripDelayReason.extendedStopover, null),
+        'Escale prolongée',
+      );
+      expect(
+        tripDelayReasonLabel(en, TripDelayReason.extendedStopover, null),
+        tripDelayReasonLabel(
+          en,
+          TripDelayReason.extendedStopover,
+          TransportMode.plane,
+        ),
+      );
+    });
+
+    test('route et autre mode : jamais « escale »', () {
       for (final mode in [
         TransportMode.car,
         TransportMode.bus,
         TransportMode.other,
-        null,
       ]) {
         final fr0 = tripDelayReasonLabel(
           fr,

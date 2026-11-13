@@ -117,7 +117,9 @@ class BidVolumeSection extends StatelessWidget {
             padding: const EdgeInsets.only(top: DonySpacing.xs),
             child: Text(
               l10n.bidCreateVolumeAvailableLine(
-                formatParcelVolumeM3(l10n, available),
+                // Volume restant du trajet : même format que la carte
+                // (arrondi vers le bas, jamais plus qu'il n'en reste).
+                formatVolumeRemainingM3(l10n, available),
               ),
               key: const Key('bid-volume-available'),
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
