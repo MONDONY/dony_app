@@ -144,8 +144,10 @@ class LieuxCapaciteStep extends StatelessWidget {
           fields: const ['availableKg', 'capacityUnit'],
           child: CaSectionLabel(
             label: l.tripPublishCapacityAvailableLabel,
-            // Pas de valise en bateau : le colis.
-            iconAsset: isBoat ? 'package' : 'luggage',
+            // Pas de valise en route ni en bateau : le colis (comme l'aperçu).
+            iconAsset: transportModeOrPlane(transportMode).isHeavy
+                ? 'package'
+                : 'luggage',
           ),
         ),
         const SizedBox(height: DonySpacing.base),

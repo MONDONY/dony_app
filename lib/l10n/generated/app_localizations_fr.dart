@@ -24656,6 +24656,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Indiquez votre prix par m³ pour voir l\'estimation';
 
   @override
+  String tripPublishBoatPriceTooHigh(String max) {
+    return 'Le prix par m³ ne peut pas dépasser $max';
+  }
+
+  @override
   String tripPublishBoatPriceEstimateLine(String net, String total) {
     return 'Vous touchez $net par m³ · l\'expéditeur paie $total';
   }

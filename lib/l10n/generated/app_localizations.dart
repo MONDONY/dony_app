@@ -39486,6 +39486,12 @@ abstract class AppLocalizations {
   /// **'Indiquez votre prix par m³ pour voir l\'estimation'**
   String get tripPublishBoatPricePrompt;
 
+  /// Erreur sous le champ du prix au m³ au-dessus du plafond du serveur, montant déjà formaté dans la devise (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le prix par m³ ne peut pas dépasser {max}'**
+  String tripPublishBoatPriceTooHigh(String max);
+
   /// Estimation du prix au m³, montants déjà formatés dans la devise (prix_step.dart)
   ///
   /// In fr, this message translates to:

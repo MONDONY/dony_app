@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/boat_price_unit.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -10,31 +11,12 @@ enum PricingMode { kg, mixed }
 
 enum PriceWarning { tooLow, tooHigh }
 
-/// Unité de vente d'un trajet bateau : le volume (m³, groupage en
-/// conteneur) ou le kilo. Un trajet au m³ n'a aucun kilo (ni capacité ni
-/// prix au kilo) ; le choix est figé côté serveur dès qu'un colis existe
-/// (409 `pricing-unit-locked`).
-enum BoatPriceUnit {
-  m3,
-  kg;
-
-  /// Valeur figée du brouillon local (clé `boatPriceUnit`).
-  String get wire => switch (this) {
-    BoatPriceUnit.m3 => 'M3',
-    BoatPriceUnit.kg => 'KG',
-  };
-
-  /// Valeur relue d'un brouillon ; absente ou inconnue : `null`.
-  static BoatPriceUnit? fromWire(Object? wire) => switch (wire) {
-    'M3' => BoatPriceUnit.m3,
-    'KG' => BoatPriceUnit.kg,
-    _ => null,
-  };
-}
-
-/// Plus petit prix au m³ accepté (miroir de `@DecimalMin 0.01` du back) ; pas
-/// de borne haute.
+/// Plus petit prix au m³ accepté (miroir de `@DecimalMin 0.01` du back).
 const double minPricePerM3 = 0.01;
+
+/// Plus grand prix au m³ accepté : le plafond technique du back
+/// (99 999 999,99). Au-delà, le serveur répond par un 422 sans détail.
+const double maxPricePerM3 = 99999999.99;
 
 extension CapacityUnitWire on CapacityUnit {
   String toWire() {
@@ -142,6 +124,12 @@ class AnnouncementFormState extends Equatable {
   /// seulement au maximum technique.
   final bool isEditingTrip;
 
+  /// Modification d'un trajet bateau vendu au m³ : il n'a aucun kilo (le
+  /// back n'en garde pas, l'app lit 0). Passé au kilo ou en avion, il exige
+  /// des kilos saisis, sinon le PUT partirait avec 0 kg (422 générique sur
+  /// `availableKg`).
+  final bool editedFromVolumeSale;
+
   /// Trajet bateau : unité de vente, posée par le formulaire de trajet (le
   /// m³ par défaut, le groupage en conteneur). `null` : formulaire sans
   /// vente au m³ (modèles de trajet, ancien bateau au kilo), tout reste au
@@ -180,6 +168,7 @@ class AnnouncementFormState extends Equatable {
     this.maxItemSize,
     this.maxParcelWeightKg,
     this.isEditingTrip = false,
+    this.editedFromVolumeSale = false,
     this.boatPriceUnit,
     this.volumeCapacityM3,
     this.pricePerM3,
@@ -198,9 +187,15 @@ class AnnouncementFormState extends Equatable {
   /// Volume proposé dans les bornes (0,1 à 9 999 m³).
   bool get isVolumeValid => TripVolumeLimits.isValid(volumeCapacityM3);
 
-  /// Prix au m³ renseigné, d'au moins 0,01 (pas de borne haute).
+  /// Prix au m³ renseigné, de 0,01 à 99 999 999,99.
   bool get isPricePerM3Valid =>
-      pricePerM3 != null && pricePerM3! >= minPricePerM3;
+      pricePerM3 != null &&
+      pricePerM3! >= minPricePerM3 &&
+      pricePerM3! <= maxPricePerM3;
+
+  /// Prix au m³ saisi au-dessus du plafond (message dédié sous le champ).
+  bool get isPricePerM3TooHigh =>
+      pricePerM3 != null && pricePerM3! > maxPricePerM3;
 
   /// Capacité maximale saisissable pour le mode du trajet (avion par défaut
   /// tant qu'aucun mode n'est choisi).
@@ -235,11 +230,17 @@ class AnnouncementFormState extends Equatable {
         w <= TripCapacityLimits.heavyMaxKg;
   }
 
+  /// Un trajet vendu au m³ passé au kilo ou en avion en modification : les
+  /// kilos restent à saisir (au moins 1).
+  bool get kilosMissing =>
+      editedFromVolumeSale && !isPricedPerM3 && (availableKg ?? 0) < 1;
+
   /// « Continuer » de l'étape Capacité, côté capacité (les adresses sont
-  /// vérifiées par l'écran) : kilos dans le plafond du mode, ou volume dans
-  /// ses bornes au m³. La taille ne bloque jamais (C24).
+  /// vérifiées par l'écran) : kilos dans le plafond du mode (et saisis, pour
+  /// un trajet passé du m³ au kilo), ou volume dans ses bornes au m³. La
+  /// taille ne bloque jamais (C24).
   bool get isCapacityStepValid =>
-      (isPricedPerM3 ? isVolumeValid : !capacityTooHigh) &&
+      (isPricedPerM3 ? isVolumeValid : !capacityTooHigh && !kilosMissing) &&
       isMaxParcelWeightValid;
 
   bool get isFormValid =>
@@ -302,6 +303,7 @@ class AnnouncementFormState extends Equatable {
     ItemSize? Function()? maxItemSizeGetter,
     double? Function()? maxParcelWeightKgGetter,
     bool? isEditingTrip,
+    bool? editedFromVolumeSale,
     BoatPriceUnit? boatPriceUnit,
     double? Function()? volumeCapacityM3Getter,
     double? Function()? pricePerM3Getter,
@@ -351,6 +353,7 @@ class AnnouncementFormState extends Equatable {
           ? maxParcelWeightKgGetter()
           : maxParcelWeightKg,
       isEditingTrip: isEditingTrip ?? this.isEditingTrip,
+      editedFromVolumeSale: editedFromVolumeSale ?? this.editedFromVolumeSale,
       boatPriceUnit: boatPriceUnit ?? this.boatPriceUnit,
       volumeCapacityM3: volumeCapacityM3Getter != null
           ? volumeCapacityM3Getter()
@@ -385,6 +388,7 @@ class AnnouncementFormState extends Equatable {
     maxItemSize,
     maxParcelWeightKg,
     isEditingTrip,
+    editedFromVolumeSale,
     boatPriceUnit,
     volumeCapacityM3,
     pricePerM3,

@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/boat_price_unit.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -967,6 +968,51 @@ void main() {
       verify: (bloc) => expect(bloc.state.isEditingTrip, isTrue),
     );
 
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'EditingTripStarted(fromVolumeSale) pose editedFromVolumeSale',
+      build: _makeBloc,
+      act: (bloc) => bloc.add(const EditingTripStarted(fromVolumeSale: true)),
+      verify: (bloc) {
+        expect(bloc.state.isEditingTrip, isTrue);
+        expect(bloc.state.editedFromVolumeSale, isTrue);
+      },
+    );
+
+    test('trajet au m³ passé au kilo ou en avion : kilos exigés (M8)', () {
+      const base = AnnouncementFormState(
+        transportMode: TransportMode.boat,
+        boatPriceUnit: BoatPriceUnit.kg,
+        isEditingTrip: true,
+        editedFromVolumeSale: true,
+        availableKg: 0,
+        capacityUnit: CapacityUnit.custom,
+      );
+      expect(base.kilosMissing, isTrue);
+      expect(base.isCapacityStepValid, isFalse);
+      expect(
+        base.copyWith(availableKgGetter: () => 40).isCapacityStepValid,
+        isTrue,
+      );
+      expect(
+        base
+            .copyWith(transportModeGetter: () => TransportMode.plane)
+            .isCapacityStepValid,
+        isFalse,
+      );
+      // Toujours au m³ : aucun kilo à saisir.
+      final m3 = base.copyWith(
+        boatPriceUnit: BoatPriceUnit.m3,
+        volumeCapacityM3Getter: () => 12,
+      );
+      expect(m3.kilosMissing, isFalse);
+      expect(m3.isCapacityStepValid, isTrue);
+      // Un trajet au kilo déjà complet (reste 0) reste modifiable.
+      expect(
+        base.copyWith(editedFromVolumeSale: false).isCapacityStepValid,
+        isTrue,
+      );
+    });
+
     test('poids max par colis : vide, 0,5, capacité, au-delà', () {
       AnnouncementFormState s(
         double? w, {
@@ -1076,7 +1122,7 @@ void main() {
       );
     });
 
-    test('prix au m³ : au moins 0,01, sans borne haute', () {
+    test('prix au m³ : de 0,01 à 99 999 999,99', () {
       const s = AnnouncementFormState(transportMode: TransportMode.boat);
       expect(s.isPricePerM3Valid, isFalse);
       expect(
@@ -1091,6 +1137,14 @@ void main() {
         s.copyWith(pricePerM3Getter: () => 25000000).isPricePerM3Valid,
         isTrue,
       );
+      expect(
+        s.copyWith(pricePerM3Getter: () => maxPricePerM3).isPricePerM3Valid,
+        isTrue,
+      );
+      final tooHigh = s.copyWith(pricePerM3Getter: () => 100000000);
+      expect(tooHigh.isPricePerM3Valid, isFalse);
+      expect(tooHigh.isPricePerM3TooHigh, isTrue);
+      expect(s.isPricePerM3TooHigh, isFalse);
     });
 
     test('bateau au kilo, ou sans unité (modèle) : règles du kilo', () {

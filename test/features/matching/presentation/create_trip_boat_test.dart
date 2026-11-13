@@ -10,6 +10,7 @@ import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -28,7 +29,6 @@ import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
-import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
@@ -36,9 +36,11 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/announcement_payload.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart'
     show BidPaymentMethod;
+import 'package:dony/features/matching/data/models/boat_price_unit.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/stops_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
@@ -66,6 +68,7 @@ import '../../../helpers/form_draft_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_recent_city_store.dart';
 import '../../../helpers/plane_icon_expectations.dart';
+import 'widgets/trip_owner/trip_card_harness.dart' show loadAppFonts;
 
 class _MockAnnouncementBloc
     extends MockBloc<AnnouncementEvent, AnnouncementState>
@@ -172,6 +175,58 @@ Widget _app(Widget child, {required UserModel user, required Locale locale}) {
   );
 }
 
+/// Le libellé de [finder] tient sur une ligne dans sa boîte, sans coupe.
+/// `didExceedMaxLines` ne dit rien ici : un `Text` en `softWrap: false` est
+/// mis en page sur une largeur infinie, il vaut toujours faux et une coupe
+/// (`TextOverflow.clip`/`ellipsis`) passerait. La largeur réelle du texte
+/// doit donc rentrer dans la largeur du paragraphe.
+void _expectLabelFits(WidgetTester tester, Finder finder, {String? reason}) {
+  final paragraph = tester.renderObject<RenderParagraph>(
+    find.descendant(of: finder, matching: find.byType(RichText)).first,
+  );
+  expect(
+    paragraph.textSize.width,
+    lessThanOrEqualTo(paragraph.size.width),
+    reason: reason,
+  );
+}
+
+AnnouncementModel _editedBoatTrip({double? maxParcelWeightKg = 30}) =>
+    AnnouncementModel(
+      id: 'boat-edit-1',
+      travelerId: 'user-boat-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: _inDays(30),
+      departureTime: '10:00',
+      arrivalDate: _inDays(50),
+      arrivalDateMax: _inDays(65),
+      availableKg: 0,
+      totalKg: 0,
+      status: 'ACTIVE',
+      bidsCount: 0,
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+      handoverDeadline: _inDays(29),
+      pickupAddress: const AddressData(
+        label: 'Entrepôt',
+        lat: 48.93,
+        lng: 2.29,
+      ),
+      deliveryAddress: const AddressData(
+        label: 'Port de Dakar',
+        lat: 14.67,
+        lng: -17.43,
+      ),
+      transportMode: TransportMode.boat,
+      acceptedPaymentMethods: const {BidPaymentMethod.cash},
+      capacityUnit: 'KG_EXACT',
+      volumeCapacityM3: 20,
+      availableVolumeM3: 20,
+      pricePerM3: 120,
+      maxParcelWeightKg: maxParcelWeightKg,
+    );
+
 DateTime _inDays(int days) {
   final now = DateTime.now();
   return DateTime(now.year, now.month, now.day + days);
@@ -188,6 +243,7 @@ TripFormDraft _boatDraft({
   double? volume = 12.5,
   double? pricePerM3 = 150,
   int priceOption = -1,
+  bool modeChosen = true,
 }) {
   final departure = _inDays(30);
   return TripFormDraft(
@@ -200,7 +256,7 @@ TripFormDraft _boatDraft({
     departureDate: departure,
     departureTime: '10:00',
     handoverDeadline: departure.subtract(const Duration(days: 1)),
-    transportMode: 'BOAT',
+    transportMode: modeChosen ? 'BOAT' : null,
     priceOption: priceOption,
     cashEnabled: true,
     pickupAddress: const AddressData(
@@ -217,7 +273,7 @@ TripFormDraft _boatDraft({
     arrivalDateMax: withRange ? (arrivalMax ?? _inDays(65)) : null,
     volumeM3: volume,
     pricePerM3: pricePerM3,
-    boatPriceUnit: unit,
+    boatPriceUnit: modeChosen ? unit : null,
     availableKg: unit == BoatPriceUnit.kg ? 300 : null,
     capacityUnit: unit == BoatPriceUnit.kg ? 'KG_EXACT' : null,
   );
@@ -381,6 +437,12 @@ void main() {
       await tester.tap(find.byKey(const Key('mode-badge-link-boat')));
       await tester.pumpAndSettle();
       expect(find.text('gp-pro-stub'), findsOneWidget);
+      // Mesure : combien de voyageurs non vérifiés butent sur le bateau.
+      verify(
+        () => getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.tripBoatBadgeRequestTapped,
+        ),
+      ).called(1);
     });
 
     testWidgets('voyageur GP Pro : la carte Bateau se choisit', (tester) async {
@@ -443,6 +505,7 @@ void main() {
       expect(find.textContaining('CDG'), findsNothing);
       expect(find.textContaining('DSS'), findsNothing);
       // Ni escales, ni heure ni jour d'arrivée : la fourchette.
+      expect(find.byType(StopsChips), findsNothing);
       expect(find.byKey(const Key('arrival-day-chips')), findsNothing);
       expect(find.byKey(const Key('arrivalTimeField')), findsNothing);
       expect(find.text('Arrivée estimée'), findsOneWidget);
@@ -515,6 +578,50 @@ void main() {
     });
   });
 
+  group('calendrier de l\'arrivée estimée', () {
+    CalendarDatePicker picker(WidgetTester tester) =>
+        tester.widget<CalendarDatePicker>(find.byType(CalendarDatePicker));
+
+    Future<void> open(WidgetTester tester, String key) async {
+      final field = find.byKey(Key(key));
+      await tester.ensureVisible(field);
+      await tester.pump();
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('au plus tôt : du jour du départ à départ + 120 jours', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: _boatDraft(
+            stepId: TripFormStep.trajet,
+            withRange: false,
+          ),
+        ),
+      );
+      await open(tester, 'boatArrivalMinField');
+      expect(picker(tester).firstDate, _inDays(30));
+      expect(picker(tester).lastDate, _inDays(30 + 120));
+    });
+
+    testWidgets(
+      'au plus tard : de l\'arrivée au plus tôt à départ + 120 jours',
+      (tester) async {
+        await pumpScreen(
+          tester,
+          CreateTripArgs(resumeDraft: _boatDraft(stepId: TripFormStep.trajet)),
+        );
+        await open(tester, 'boatArrivalMaxField');
+        expect(picker(tester).firstDate, _inDays(50));
+        expect(picker(tester).lastDate, _inDays(30 + 120));
+        expect(picker(tester).initialDate, _inDays(65));
+      },
+    );
+  });
+
   group('étape Capacité en bateau', () {
     testWidgets('volume au m³ : bornes, entrepôt et retrait, pas de valise', (
       tester,
@@ -550,11 +657,62 @@ void main() {
       expect(find.byKey(const Key('boat-volume-error')), findsNothing);
       expect(continueButton(tester).onPressed, isNotNull);
 
+      // Une seule décimale : la seconde est refusée à la frappe.
+      await tester.enterText(
+        find.byKey(const Key('boat-volume-field')),
+        '12.55',
+      );
+      await tester.pump();
+      expect(
+        tester
+            .widget<TextField>(
+              find.descendant(
+                of: find.byKey(const Key('boat-volume-field')),
+                matching: find.byType(TextField),
+              ),
+            )
+            .controller!
+            .text,
+        isNot('12.55'),
+      );
+      await tester.enterText(
+        find.byKey(const Key('boat-volume-field')),
+        '12.5',
+      );
+      await tester.pump();
+
       // Au kilo : les kilos, jamais de valise en bateau.
       await tester.tap(find.byKey(const Key('boat-unit-kg')));
       await tester.pump();
       expect(find.byKey(const Key('boat-volume-field')), findsNothing);
       expect(find.textContaining('Valise'), findsNothing);
+      expectNoPlaneIcon(tester);
+    });
+  });
+
+  group('étape Mode puis Capacité', () {
+    testWidgets('boatChosenAtModeStep_defaultsToM3 : le m³ est l\'unité par '
+        'défaut, sans kilos ni valise', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: _boatDraft(
+            stepId: TripFormStep.mode,
+            modeChosen: false,
+            volume: null,
+          ),
+        ),
+      );
+      expect(currentStep(tester), TripFormStep.mode);
+      await tester.tap(find.byKey(const Key('mode-card-boat')));
+      await tester.pump();
+      await goToStep(tester, TripFormStep.capacite);
+
+      expect(find.byKey(const Key('boat-volume-field')), findsOneWidget);
+      expect(find.byKey(const Key('capacity-kg-field')), findsNothing);
+      expect(find.textContaining('Valise'), findsNothing);
+      // Titre de la capacité : le colis, pas la valise.
+      expect(findDonyIcon('luggage'), findsNothing);
       expectNoPlaneIcon(tester);
     });
   });
@@ -593,6 +751,47 @@ void main() {
       expectNoPlaneIcon(tester);
     });
 
+    testWidgets('prix au m³ : plafond 99 999 999,99, message et « Continuer » '
+        'grisé', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: _boatDraft(stepId: TripFormStep.prix, pricePerM3: null),
+        ),
+      );
+      final field = find.byKey(const Key('trip-price-per-m3'));
+      await tester.enterText(field, '99999999.99');
+      await tester.pump();
+      await tester.pump();
+      expect(continueButton(tester).onPressed, isNotNull);
+      expect(find.textContaining('ne peut pas dépasser'), findsNothing);
+
+      await tester.enterText(field, '100000000');
+      await tester.pump();
+      await tester.pump();
+      expect(find.textContaining('ne peut pas dépasser'), findsOneWidget);
+      expect(find.textContaining('Vous touchez'), findsNothing);
+      expect(continueButton(tester).onPressed, isNull);
+
+      await tester.enterText(field, '0.001');
+      await tester.pump();
+      await tester.pump();
+      expect(continueButton(tester).onPressed, isNull);
+      expect(find.textContaining('ne peut pas dépasser'), findsNothing);
+    });
+
+    testWidgets('encadré « payé au dépôt » : absent pour un trajet bateau '
+        'd\'un voyageur sans badge', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(announcement: _editedBoatTrip()),
+        user: _traveler(gpPro: false),
+      );
+      await goToStep(tester, TripFormStep.prix);
+      expect(find.byKey(const Key('trip-price-per-m3')), findsOneWidget);
+      expect(find.byKey(const Key('boat-deposit-notice')), findsNothing);
+    });
+
     testWidgets('au kilo : puces de prix au kilo, toujours le versement au '
         'dépôt', (tester) async {
       await pumpScreen(
@@ -619,8 +818,9 @@ void main() {
     ) async {
       await pumpScreen(tester, CreateTripArgs(resumeDraft: _boatDraft()));
       expect(currentStep(tester), TripFormStep.conditions);
-      // Ni escales ni étapes en bateau.
+      // Ni escales ni étapes en bateau, ni avion sur l'étape Conditions.
       expect(find.text('Ajouter une étape'), findsNothing);
+      expectNoPlaneIcon(tester);
       await publish(tester);
 
       final sent = sentCreate();
@@ -712,21 +912,25 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
     });
 
-    testWidgets('422 arrivée estimée refusée : message du catalogue, '
+    testWidgets('422 arrivée estimée refusée : detail du serveur relayé, '
         'formulaire gardé', (tester) async {
       await pumpScreen(tester, CreateTripArgs(resumeDraft: _boatDraft()));
       await publish(tester);
 
       states.add(
         AnnouncementError(
-          const ValidationException('raw', code: 'arrival-range-invalid'),
+          const ValidationException(
+            "L'arrivée estimée au plus tard ne peut pas être antérieure à "
+            "aujourd'hui.",
+            code: 'arrival-range-invalid',
+          ),
         ),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(
-        find.textContaining("Indiquez l'arrivée au plus tôt et au plus tard ;"),
+        find.textContaining("ne peut pas être antérieure à aujourd'hui"),
         findsOneWidget,
       );
       expect(find.byType(CreateTripScreen), findsOneWidget);
@@ -765,45 +969,9 @@ void main() {
   });
 
   group('modification d\'un trajet bateau', () {
-    AnnouncementModel boatTrip({double? maxParcelWeightKg = 30}) =>
-        AnnouncementModel(
-          id: 'boat-edit-1',
-          travelerId: 'user-boat-1',
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          departureDate: _inDays(30),
-          departureTime: '10:00',
-          arrivalDate: _inDays(50),
-          arrivalDateMax: _inDays(65),
-          availableKg: 0,
-          totalKg: 0,
-          status: 'ACTIVE',
-          bidsCount: 0,
-          createdAt: DateTime(2026),
-          updatedAt: DateTime(2026),
-          handoverDeadline: _inDays(29),
-          pickupAddress: const AddressData(
-            label: 'Entrepôt',
-            lat: 48.93,
-            lng: 2.29,
-          ),
-          deliveryAddress: const AddressData(
-            label: 'Port de Dakar',
-            lat: 14.67,
-            lng: -17.43,
-          ),
-          transportMode: TransportMode.boat,
-          acceptedPaymentMethods: const {BidPaymentMethod.cash},
-          capacityUnit: 'KG_EXACT',
-          volumeCapacityM3: 20,
-          availableVolumeM3: 20,
-          pricePerM3: 120,
-          maxParcelWeightKg: maxParcelWeightKg,
-        );
-
     testWidgets('PUT au m³ : fourchette, volume, prix au m³, poids max par '
         'colis gardé', (tester) async {
-      await pumpScreen(tester, CreateTripArgs(announcement: boatTrip()));
+      await pumpScreen(tester, CreateTripArgs(announcement: _editedBoatTrip()));
       expect(trajet(tester).boatArrivalMaxNotifier!.value, _inDays(65));
 
       await goToStep(tester, TripFormStep.conditions);
@@ -826,7 +994,31 @@ void main() {
     });
   });
 
+  group('modification : du m³ au kilo', () {
+    testWidgets('kilos exigés : « Continuer » grisé tant qu\'aucun kilo n\'est '
+        'saisi (jamais un PUT à 0 kg)', (tester) async {
+      await pumpScreen(tester, CreateTripArgs(announcement: _editedBoatTrip()));
+      await goToStep(tester, TripFormStep.capacite);
+      expect(find.byKey(const Key('boat-volume-field')), findsOneWidget);
+      expect(continueButton(tester).onPressed, isNotNull);
+
+      await tester.tap(find.byKey(const Key('boat-unit-kg')));
+      await tester.pump();
+      expect(find.byKey(const Key('capacity-kg-field')), findsOneWidget);
+      expect(continueButton(tester).onPressed, isNull);
+
+      await tester.enterText(find.byKey(const Key('capacity-kg-field')), '40');
+      await tester.pump();
+      await tester.pump();
+      expect(continueButton(tester).onPressed, isNotNull);
+    });
+  });
+
   group('boutons à 360 dp', () {
+    // Vraies polices : celle de repli des tests (carrés pleins) fausserait la
+    // largeur des libellés mesurés.
+    setUpAll(loadAppFonts);
+
     for (final locale in [AppL10n.fr, AppL10n.en]) {
       testWidgets('buttons_360dp_fr_en : ${locale.languageCode}', (
         tester,
@@ -846,10 +1038,7 @@ void main() {
           matching: find.byType(Text),
         );
         expect(link, findsOneWidget);
-        final paragraph = tester.renderObject<RenderParagraph>(
-          find.descendant(of: link, matching: find.byType(RichText)),
-        );
-        expect(paragraph.didExceedMaxLines, isFalse);
+        _expectLabelFits(tester, link, reason: 'lien GP Pro');
 
         // Capacité puis Prix d'un bateau : segment et boutons du bas.
         await tester.pumpWidget(const SizedBox());
@@ -863,13 +1052,7 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         for (final key in ['boat-unit-m3', 'boat-unit-kg']) {
-          final label = tester.renderObject<RenderParagraph>(
-            find.descendant(
-              of: find.byKey(Key(key)),
-              matching: find.byType(RichText),
-            ),
-          );
-          expect(label.didExceedMaxLines, isFalse, reason: key);
+          _expectLabelFits(tester, find.byKey(Key(key)), reason: key);
         }
         final heightCapacity = tester
             .getSize(find.byKey(const Key('trip-form-continue')))

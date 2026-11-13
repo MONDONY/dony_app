@@ -1,6 +1,5 @@
-import 'package:dony/features/matching/bloc/announcement_form_state.dart'
-    show BoatPriceUnit;
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/boat_price_unit.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';

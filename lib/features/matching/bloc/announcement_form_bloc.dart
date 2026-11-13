@@ -43,7 +43,12 @@ class AnnouncementFormBloc
           emit(state.copyWith(pricePerM3Getter: () => event.price)),
     );
     on<EditingTripStarted>(
-      (event, emit) => emit(state.copyWith(isEditingTrip: true)),
+      (event, emit) => emit(
+        state.copyWith(
+          isEditingTrip: true,
+          editedFromVolumeSale: event.fromVolumeSale,
+        ),
+      ),
     );
     on<PickupAddressChanged>(_onPickupAddressChanged);
     on<DeliveryAddressChanged>(_onDeliveryAddressChanged);

@@ -118,6 +118,12 @@ class PrixStep extends StatelessWidget {
   /// comme [customPriceCtrl]. Null : le prix au m³ n'est jamais proposé.
   final TextEditingController? pricePerM3Ctrl;
 
+  /// Encadré « versé au dépôt » d'un trajet bateau : seulement pour un
+  /// voyageur qui peut publier en bateau (badge GP Pro ou compte pro), le seul
+  /// à qui le serveur applique le versement au dépôt (C15). Faux : jamais
+  /// affiché, une promesse fausse sinon.
+  final bool showBoatDepositNotice;
+
   const PrixStep({
     super.key,
     this.currency,
@@ -141,6 +147,7 @@ class PrixStep extends StatelessWidget {
     this.showPaymentMethods = true,
     this.currencyLocked = false,
     this.pricePerM3Ctrl,
+    this.showBoatDepositNotice = false,
   });
 
   /// Repères de la devise de l'annonce : chips, médiane, fourchette.
@@ -560,7 +567,8 @@ class PrixStep extends StatelessWidget {
           // ── VERSEMENT AU DÉPÔT (bateau) ───────────────────────────────────
           BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
             buildWhen: (p, c) => p.hasBoatPricing != c.hasBoatPricing,
-            builder: (context, formState) => formState.hasBoatPricing
+            builder: (context, formState) =>
+                showBoatDepositNotice && formState.hasBoatPricing
                 ? const Padding(
                     padding: EdgeInsets.only(top: DonySpacing.md),
                     child: _BoatDepositNotice(),
@@ -1249,8 +1257,8 @@ class _LockedAgreedPriceCard extends StatelessWidget {
   }
 }
 
-/// Prix net par m³ d'un trajet bateau au m³ : sans borne haute, au moins
-/// 0,01. L'estimation dit ce que touche le transporteur et ce que paie
+/// Prix net par m³ d'un trajet bateau au m³ : de 0,01 à 99 999 999,99 (règle
+/// du bloc, `isPricePerM3Valid`). L'estimation dit ce que touche le transporteur et ce que paie
 /// l'expéditeur, frais de service inclus, pour un m³.
 class _BoatPricePerM3Section extends StatelessWidget {
   const _BoatPricePerM3Section({
@@ -1275,11 +1283,12 @@ class _BoatPricePerM3Section extends StatelessWidget {
           iconAsset: 'tag',
         ),
         const SizedBox(height: DonySpacing.md),
-        ValueListenableBuilder<TextEditingValue>(
-          valueListenable: controller,
-          builder: (context, value, _) {
-            final net = parsePriceInput(value.text);
-            final valid = net != null && net >= minPricePerM3;
+        BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+          buildWhen: (p, c) => p.pricePerM3 != c.pricePerM3,
+          builder: (context, formState) {
+            final net = formState.pricePerM3;
+            final valid = formState.isPricePerM3Valid;
+            final tooHigh = formState.isPricePerM3TooHigh;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1308,9 +1317,16 @@ class _BoatPricePerM3Section extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.sm),
                 Text(
-                  valid
+                  tooHigh
+                      ? l.tripPublishBoatPriceTooHigh(
+                          CurrencyFormatter.formatOrPlain(
+                            maxPricePerM3,
+                            currency,
+                          ),
+                        )
+                      : valid
                       ? l.tripPublishBoatPriceEstimateLine(
-                          CurrencyFormatter.formatOrPlain(net, currency),
+                          CurrencyFormatter.formatOrPlain(net!, currency),
                           CurrencyFormatter.formatOrPlain(
                             senderPriceForNet(net, currency?.code).gross,
                             currency,
@@ -1321,7 +1337,7 @@ class _BoatPricePerM3Section extends StatelessWidget {
                   style: tt.bodySmall?.copyWith(
                     color: valid
                         ? cs.onSurfaceVariant
-                        : cs.error.withValues(alpha: 0.7),
+                        : cs.error.withValues(alpha: tooHigh ? 1 : 0.7),
                   ),
                 ),
               ],

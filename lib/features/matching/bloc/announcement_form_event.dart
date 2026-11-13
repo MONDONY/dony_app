@@ -1,13 +1,14 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/boat_price_unit.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 
 // Re-export PricingMode so callers only need to import this file
 export 'package:dony/features/matching/bloc/announcement_form_state.dart'
-    show BoatPriceUnit, PricingMode;
+    show PricingMode;
 
 abstract class AnnouncementFormEvent extends Equatable {
   const AnnouncementFormEvent();
@@ -152,11 +153,16 @@ class PricePerM3Changed extends AnnouncementFormEvent {
 
 /// Le formulaire modifie un trajet publié : sa capacité est le reste à
 /// réserver, pas le total (voir `AnnouncementFormState.isEditingTrip`).
+///
+/// [fromVolumeSale] : le trajet modifié était vendu au m³ et n'a donc aucun
+/// kilo (voir `AnnouncementFormState.editedFromVolumeSale`).
 class EditingTripStarted extends AnnouncementFormEvent {
-  const EditingTripStarted();
+  final bool fromVolumeSale;
+
+  const EditingTripStarted({this.fromVolumeSale = false});
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [fromVolumeSale];
 }
 
 class PickupAddressChanged extends AnnouncementFormEvent {

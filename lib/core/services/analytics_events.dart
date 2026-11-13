@@ -1343,6 +1343,10 @@ abstract final class AnalyticsEvents {
   /// `active` (badge accordé). Jamais d'information d'entreprise.
   static const profileGpProRowTapped = 'profile_gp_pro_row_tapped';
 
+  /// Lien « Demander le badge GP Pro » de la carte Bateau grisée (étape Mode
+  /// du formulaire de trajet, voyageur non vérifié) touché. Aucune propriété.
+  static const tripBoatBadgeRequestTapped = 'trip_boat_badge_request_tapped';
+
   // ── Suivi approximatif du voyageur ─────────────────────────────────────
   /// « Je pars » confirmé depuis l'écran du trajet (propriété `has_position`).
   /// Jamais de coordonnées.

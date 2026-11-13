@@ -8528,6 +8528,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPublishBoatVolumeInvalid': (l) => l.tripPublishBoatVolumeInvalid,
   'tripPublishBoatPricePerM3Label': (l) => l.tripPublishBoatPricePerM3Label,
   'tripPublishBoatPricePrompt': (l) => l.tripPublishBoatPricePrompt,
+  'tripPublishBoatPriceTooHigh': (l) =>
+      l.tripPublishBoatPriceTooHigh(placeholderMarker('max')),
   'tripPublishBoatPriceEstimateLine': (l) => l.tripPublishBoatPriceEstimateLine(
     placeholderMarker('net'),
     placeholderMarker('total'),
@@ -9278,6 +9280,7 @@ const textParameters = <String, List<String>>{
   'parcelSizeLabel': ['size'],
   'requestCreateBudgetMinOnly': ['min'],
   'requestCreateBudgetTechnicalMax': ['max'],
+  'tripPublishBoatPriceTooHigh': ['max'],
   'tripPublishBoatPriceEstimateLine': ['net', 'total'],
   'tripPublishPerM3Value': ['value'],
   'requestCreateVolumeLine': ['volume'],

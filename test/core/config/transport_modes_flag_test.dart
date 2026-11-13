@@ -48,7 +48,7 @@ void main() {
     expect(a.hasRequestChoice, isTrue);
   });
 
-  test('modèles et trajet dédié : jamais le bateau (C16, A9)', () {
+  test('modèles et trajet dédié : jamais le bateau (C16, A10)', () {
     const a = TransportModesAvailability(road: true, boat: true);
     expect(a.templateModes, [TransportMode.plane, TransportMode.car]);
     expect(a.withoutBoat.tripCreationModes, a.templateModes);

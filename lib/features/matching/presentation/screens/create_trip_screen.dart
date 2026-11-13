@@ -38,6 +38,7 @@ import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/boat_price_unit.dart';
 import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
@@ -226,7 +227,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     super.initState();
     final args = widget.args;
     // Trajet dédié à une demande : pas encore de bateau (son volume et sa
-    // fourchette d'arrivée viennent de la demande, tâche A9).
+    // fourchette d'arrivée viennent de la demande, tâche A10).
     final modes = args?.lockContext != null
         ? transportModes.withoutBoat
         : transportModes;
@@ -1067,7 +1068,7 @@ class _TripFormContentState extends State<_TripFormContent> {
   bool get _isLocked => widget.lockContext != null;
 
   /// Trajet en bateau (mode choisi ou du trajet modifié). Un trajet dédié à
-  /// une demande bateau garde le formulaire d'avant le lot 3 (tâche A9).
+  /// une demande bateau garde le formulaire d'avant le lot 3 (tâche A10).
   bool get _isBoat =>
       !_isLocked && _transportModeNotifier.value == TransportMode.boat;
 
@@ -1114,10 +1115,18 @@ class _TripFormContentState extends State<_TripFormContent> {
   //   8 XOF/kg saisis en croyant taper des euros (FLUTTER-GK).
   bool get _isPriceValid {
     if (_isLocked) return true;
-    // Bateau au m³ : un prix d'au moins 0,01, sans borne haute.
+    // Bateau au m³ : la règle du bloc (0,01 à 99 999 999,99), appliquée à la
+    // saisie courante. Le bloc ne reçoit la saisie qu'un instant plus tard
+    // (événement asynchrone) alors que la reprise d'un brouillon lit ce
+    // résultat tout de suite : on évalue donc l'état avec le prix du champ.
     if (_isBoatPerM3) {
-      final price = parsePriceInput(_pricePerM3Ctrl.text);
-      return price != null && price >= minPricePerM3;
+      return context
+          .read<AnnouncementFormBloc>()
+          .state
+          .copyWith(
+            pricePerM3Getter: () => parsePriceInput(_pricePerM3Ctrl.text),
+          )
+          .isPricePerM3Valid;
     }
     if (!_kgPriceEnabledNotifier.value) return true;
     final idx = _priceOptionNotifier.value;
@@ -1285,7 +1294,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         // trajet passe ensuite, sinon un trajet de deux valises, ou déjà
         // en partie réservé, s'enregistrait à une seule valise pleine.
         formBloc
-          ..add(const EditingTripStarted())
+          ..add(EditingTripStarted(fromVolumeSale: a.isPricedPerM3))
           ..add(AvailableKgChanged(a.availableKg));
         // Taille (route) et poids max par colis (route, bateau) : relus tels
         // quels, renvoyés seulement si le voyageur les change (cf. _submit).
@@ -1906,7 +1915,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (mode != null) {
       final bloc = context.read<AnnouncementFormBloc>();
       bloc.add(TransportModeChanged(mode));
-      // Trajet dédié bateau : formulaire d'avant le lot 3 (tâche A9).
+      // Trajet dédié bateau : formulaire d'avant le lot 3 (tâche A10).
       if (mode == TransportMode.boat && !_isLocked) {
         // Vendu au m³ par défaut (groupage en conteneur), tant que rien
         // n'est choisi (modification, brouillon : l'unité du trajet).
@@ -3449,7 +3458,14 @@ class _TripFormContentState extends State<_TripFormContent> {
           // Bateau réservé aux transporteurs vérifiés (C15) : carte grisée et
           // lien vers la demande de badge GP Pro.
           boatLocked: user == null || !canPublishBoat(user),
-          onRequestBoatBadge: () => unawaited(context.push('/profile/gp-pro')),
+          onRequestBoatBadge: () {
+            unawaited(
+              getIt<AnalyticsService>().logEvent(
+                AnalyticsEvents.tripBoatBadgeRequestTapped,
+              ),
+            );
+            unawaited(context.push('/profile/gp-pro'));
+          },
         );
       },
     ),
@@ -3518,7 +3534,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             _step0ErrorsNotifier.value,
             _Step0Field.departureTime,
           ),
-          // Trajet dédié bateau : pas encore de fourchette (tâche A9).
+          // Trajet dédié bateau : pas encore de fourchette (tâche A10).
           boatArrivalMinNotifier: _isLocked ? null : _boatArrivalMinNotifier,
           boatArrivalMaxNotifier: _isLocked ? null : _boatArrivalMaxNotifier,
           onSelectBoatArrivalMin: () => _selectBoatArrival(latest: false),
@@ -3704,6 +3720,8 @@ class _TripFormContentState extends State<_TripFormContent> {
                   : null,
               showPaymentMethods: !_isLocked,
               pricePerM3Ctrl: _pricePerM3Ctrl,
+              // Hors bateau, rien à lire (aucun AuthBloc requis).
+              showBoatDepositNotice: _isBoat && _canPublishBoat,
               // En modification, la devise ne change que si le serveur le
               // permet (`currencyEditable`, FLUTTER-KV) : le PUT l'envoie
               // alors. Sinon elle reste figée, sans quoi l'écran validait le

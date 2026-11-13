@@ -23891,6 +23891,15 @@
   "@tripPublishBoatPricePrompt": {
     "description": "Invite sous le champ du prix au m³ encore vide (prix_step.dart)"
   },
+  "tripPublishBoatPriceTooHigh": "Le prix par m³ ne peut pas dépasser {max}",
+  "@tripPublishBoatPriceTooHigh": {
+    "description": "Erreur sous le champ du prix au m³ au-dessus du plafond du serveur, montant déjà formaté dans la devise (prix_step.dart)",
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
   "tripPublishBoatPriceEstimateLine": "Vous touchez {net} par m³ · l'expéditeur paie {total}",
   "@tripPublishBoatPriceEstimateLine": {
     "description": "Estimation du prix au m³, montants déjà formatés dans la devise (prix_step.dart)",

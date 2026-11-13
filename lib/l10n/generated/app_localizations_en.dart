@@ -24478,6 +24478,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter your price per m³ to see the estimate';
 
   @override
+  String tripPublishBoatPriceTooHigh(String max) {
+    return 'The price per m³ can\'t be higher than $max';
+  }
+
+  @override
   String tripPublishBoatPriceEstimateLine(String net, String total) {
     return 'You get $net per m³ · the sender pays $total';
   }
