@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -740,11 +741,43 @@ void main() {
 
       expect(find.text('Terminer un trajet commencé ?'), findsOneWidget);
       expect(find.textContaining('Marseille → Douala'), findsOneWidget);
-      expect(find.textContaining('étape 2 sur 3'), findsOneWidget);
+      // Ancien brouillon (index à trois étapes) relu sur le formulaire sans
+      // étape Mode (un seul mode proposé) : Capacité, 2e de 4.
+      expect(find.textContaining('étape 2 sur 4'), findsOneWidget);
       expect(find.textContaining('Paris → Dakar'), findsOneWidget);
       expect(find.text('Brouillon complet, prêt à publier'), findsOneWidget);
       expect(find.text('Créer un nouveau trajet'), findsOneWidget);
     });
+
+    // Recette 13/11 : « étape 3 sur 3 » pour une saisie quittée à l'étape 5.
+    for (final english in [false, true]) {
+      testWidgets('trajet ${english ? 'EN' : 'FR'}, modes ouverts : brouillon '
+          'quitté aux Conditions, étape 5 sur 5', (tester) async {
+        if (english) useEnglish();
+        setTransportModes(
+          const TransportModesAvailability(road: true, boat: false),
+        );
+        addTearDown(resetTransportModesForTest);
+        await _pump(
+          tester,
+          role: PublishIntroRole.trip,
+          kycStatus: 'VERIFIED',
+          commitmentRequired: false,
+          localDraft: {
+            'stepId': 'conditions',
+            'step': 2,
+            'departureCity': 'Marseille',
+            'arrivalCity': 'Douala',
+          },
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining(english ? 'step 5 of 5' : 'étape 5 sur 5'),
+          findsOneWidget,
+        );
+      });
+    }
 
     testWidgets('trajet : terminer le brouillon local le recharge', (
       tester,
