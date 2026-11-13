@@ -85,6 +85,7 @@ Future<void> main() async {
               announcement: _fakeAnnouncement(index),
               onTap: () {},
               index: index,
+              viewer: TripCardViewer.owner,
               // showFavorite defaults to false — no FavoriteIdsCubit needed.
             ),
           ),
@@ -93,18 +94,15 @@ Future<void> main() async {
     );
     await tester.pump();
 
-    await binding.traceAction(
-      () async {
-        final scrollable = find.byType(Scrollable).first;
-        for (var i = 0; i < 8; i++) {
-          await tester.fling(scrollable, const Offset(0, -600), 3000);
-          await tester.pump(const Duration(milliseconds: 300));
-          await tester.fling(scrollable, const Offset(0, 600), 3000);
-          await tester.pump(const Duration(milliseconds: 300));
-        }
-      },
-      reportKey: scenario,
-    );
+    await binding.traceAction(() async {
+      final scrollable = find.byType(Scrollable).first;
+      for (var i = 0; i < 8; i++) {
+        await tester.fling(scrollable, const Offset(0, -600), 3000);
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.fling(scrollable, const Offset(0, 600), 3000);
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+    }, reportKey: scenario);
     await dumpNetwork(scenario);
   });
 
@@ -158,18 +156,15 @@ Future<void> main() async {
     );
     await tester.pump();
 
-    await binding.traceAction(
-      () async {
-        // Trigger 30 setState-equivalent repositions via ValueNotifier.
-        for (var step = 0; step < 30; step++) {
-          positionNotifier.value = (step % 5) * 10.0;
-          await tester.pump(const Duration(milliseconds: 16));
-        }
-        positionNotifier.value = 0;
-        await tester.pump();
-      },
-      reportKey: scenario,
-    );
+    await binding.traceAction(() async {
+      // Trigger 30 setState-equivalent repositions via ValueNotifier.
+      for (var step = 0; step < 30; step++) {
+        positionNotifier.value = (step % 5) * 10.0;
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      positionNotifier.value = 0;
+      await tester.pump();
+    }, reportKey: scenario);
     await dumpNetwork(scenario);
 
     positionNotifier.dispose();
@@ -189,17 +184,14 @@ Future<void> main() async {
     // Capture RSS before the navigation loop.
     final rssBefore = ProcessInfo.currentRss;
 
-    await binding.traceAction(
-      () async {
-        for (var i = 0; i < 50; i++) {
-          appRouter.go('/favoris');
-          await tester.pumpAndSettle(const Duration(milliseconds: 300));
-          appRouter.go('/home');
-          await tester.pumpAndSettle(const Duration(milliseconds: 300));
-        }
-      },
-      reportKey: scenario,
-    );
+    await binding.traceAction(() async {
+      for (var i = 0; i < 50; i++) {
+        appRouter.go('/favoris');
+        await tester.pumpAndSettle(const Duration(milliseconds: 300));
+        appRouter.go('/home');
+        await tester.pumpAndSettle(const Duration(milliseconds: 300));
+      }
+    }, reportKey: scenario);
 
     // Capture RSS after the loop and store delta in reportData.
     final rssAfter = ProcessInfo.currentRss;
