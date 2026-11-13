@@ -297,6 +297,9 @@ class TravelerCard extends StatelessWidget {
                           color: cs.onSurfaceVariant,
                         ),
                         text: arrivalText,
+                        // La fourchette porte deux dates : elle passe à la
+                        // ligne plutôt que de perdre sa date de fin.
+                        wrap: true,
                       ),
                     if (OwnerViewsLabel.isVisible(
                       count: announcement.uniqueViewerCount,
@@ -639,10 +642,18 @@ class TravelerCard extends StatelessWidget {
 /// Un élément de la ligne de méta de la carte compacte : icône et texte, le
 /// texte s'abrège avec des points de suspension plutôt que de déborder.
 class _MetaItem extends StatelessWidget {
-  const _MetaItem({super.key, required this.icon, required this.text});
+  const _MetaItem({
+    super.key,
+    required this.icon,
+    required this.text,
+    this.wrap = false,
+  });
 
   final Widget icon;
   final String text;
+
+  /// Le texte passe à la ligne au lieu d'être coupé d'une ellipse.
+  final bool wrap;
 
   @override
   Widget build(BuildContext context) {
@@ -656,8 +667,8 @@ class _MetaItem extends StatelessWidget {
         Flexible(
           child: Text(
             text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            maxLines: wrap ? null : 1,
+            overflow: wrap ? TextOverflow.clip : TextOverflow.ellipsis,
             style: tt.bodySmall?.copyWith(
               color: cs.onSurfaceVariant,
               fontFeatures: const [FontFeature.tabularFigures()],

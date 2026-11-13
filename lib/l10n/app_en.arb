@@ -12433,15 +12433,6 @@
   "@homeFilterChipsVolume": {
     "description": "Puce de l'accueil (mode Trajets filtré sur le bateau) : volume restant minimal en m³, remplace « Urgent » et « Valise 23 kg »."
   },
-  "homeFilterChipsVolumeActive": "≥ {volume}",
-  "@homeFilterChipsVolumeActive": {
-    "description": "Puce Volume active : le volume minimal choisi, déjà formaté en m³.",
-    "placeholders": {
-      "volume": {
-        "type": "String"
-      }
-    }
-  },
   "homeFilterChipsArrival": "Arrival",
   "@homeFilterChipsArrival": {
     "description": "Puce de l'accueil (mode Trajets filtré sur le bateau) : arrivée estimée au plus tard."
@@ -12457,7 +12448,7 @@
   },
   "homeFilterBoatVolumeValue": "≥ {volume}",
   "@homeFilterBoatVolumeValue": {
-    "description": "Valeur du champ du volume minimal du composeur de recherche bateau, volume déjà formaté en m³.",
+    "description": "Valeur du volume minimal de la recherche bateau (champ du composeur et puce Volume de l'accueil), volume déjà formaté en m³.",
     "placeholders": {
       "volume": {
         "type": "String"

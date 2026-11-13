@@ -309,6 +309,13 @@ class TripPinButton extends StatelessWidget {
 // Active card content
 // ─────────────────────────────────────────────────────────────
 
+/// Volume déjà vendu d'un trajet bateau au m³ : capacité moins volume restant.
+double _volumeSoldOf(AnnouncementModel a) {
+  final capacity = a.volumeCapacityM3 ?? 0;
+  final available = a.availableVolumeM3 ?? capacity;
+  return (capacity - available).clamp(0, capacity).toDouble();
+}
+
 class _ActiveCardContent extends StatelessWidget {
   const _ActiveCardContent({
     required this.announcement,
@@ -341,11 +348,7 @@ class _ActiveCardContent extends StatelessWidget {
   final Widget? pinButton;
 
   /// Volume vendu d'un trajet bateau au m³ (proposé moins restant).
-  double get _volumeSold {
-    final capacity = announcement.volumeCapacityM3 ?? 0;
-    final available = announcement.availableVolumeM3 ?? capacity;
-    return (capacity - available).clamp(0, capacity).toDouble();
-  }
+  double get _volumeSold => _volumeSoldOf(announcement);
 
   double get _volumeProgress {
     final capacity = announcement.volumeCapacityM3 ?? 0;
@@ -482,7 +485,7 @@ class _ActiveCardContent extends StatelessWidget {
 
             Text(
               l.listingSoldOfTotalLabel(
-                formatVolumeM3(l, _volumeSold),
+                formatVolumeSoldM3(l, _volumeSold),
                 formatVolumeM3(l, announcement.volumeCapacityM3 ?? 0),
               ),
               key: const Key('trip-card-volume-sold'),
@@ -648,13 +651,7 @@ class _PastCardContent extends StatelessWidget {
                   [
                     if (announcement.isPricedPerM3)
                       l.listingSoldLabel(
-                        formatVolumeM3(
-                          l,
-                          (announcement.volumeCapacityM3 ?? 0) -
-                              (announcement.availableVolumeM3 ??
-                                  announcement.volumeCapacityM3 ??
-                                  0),
-                        ),
+                        formatVolumeSoldM3(l, _volumeSoldOf(announcement)),
                       )
                     else if (announcement.isKgFree)
                       l.tripKgFree

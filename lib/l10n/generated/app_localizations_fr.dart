@@ -24806,11 +24806,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeFilterChipsVolume => 'Volume';
 
   @override
-  String homeFilterChipsVolumeActive(String volume) {
-    return '≥ $volume';
-  }
-
-  @override
   String get homeFilterChipsArrival => 'Arrivée';
 
   @override

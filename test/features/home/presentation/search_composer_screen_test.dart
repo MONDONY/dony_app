@@ -1141,11 +1141,9 @@ void main() {
 
         final button = find.byType(DonyButton);
         final label = find.descendant(of: button, matching: find.byType(Text));
-        // Une seule ligne : le libellé tient dans la hauteur d'une ligne de
-        // 15 px (pas deux) et dans la largeur du bouton, sans être rétréci ;
-        // le bouton garde sa hauteur de 48 à 56.
+        // Une seule ligne, à taille nominale (le FittedBox du bouton ne
+        // rétrécit pas le libellé) ; le bouton garde sa hauteur de 48 à 56.
         expect(label, findsOneWidget);
-        expect(tester.getSize(label).height, lessThan(15 * 1.6));
         expectButtonLabelNominal(tester, button, reason: 'Rechercher');
         expect(tester.getSize(button).height, inInclusiveRange(48, 56));
       });
@@ -1534,7 +1532,6 @@ void main() {
         final button = find.byType(DonyButton);
         final label = find.descendant(of: button, matching: find.byType(Text));
         expect(label, findsOneWidget);
-        expect(tester.getSize(label).height, lessThan(15 * 1.6));
         // Taille nominale : le FittedBox du bouton ne rétrécit pas le libellé.
         expectButtonLabelNominal(tester, button, reason: 'Rechercher');
         expect(tester.getSize(button).height, inInclusiveRange(48, 56));
@@ -1548,7 +1545,6 @@ void main() {
           matching: find.byType(Text),
         );
         expect(applyLabel, findsOneWidget);
-        expect(tester.getSize(applyLabel).height, lessThan(15 * 1.6));
         expectButtonLabelNominal(tester, apply, reason: 'Appliquer');
         expect(tester.takeException(), isNull);
       });

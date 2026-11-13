@@ -214,7 +214,7 @@ class HomeFilterChipsRow extends StatelessWidget {
     return HomeSmallChip(
       key: const Key('home-chip-volume'),
       label: volume != null
-          ? l.homeFilterChipsVolumeActive(formatVolumeM3(l, volume))
+          ? l.homeFilterBoatVolumeValue(formatVolumeM3(l, volume))
           : l.homeFilterChipsVolume,
       isActive: volume != null,
       iconAsset: 'package',

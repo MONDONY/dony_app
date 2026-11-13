@@ -168,9 +168,10 @@ Future<_Picked?> _showNumberSheet(
   required double? Function(String raw) parse,
   required IconData prefixIcon,
 }) {
-  // Seul le bouton lit ce notifier, il n'est jamais réabonné après la
-  // fermeture : on peut le libérer ici. Les contrôleurs de texte vivent dans le
-  // `State` du contenu (voir `_NumberForm`).
+  // Le `State` du contenu (`_NumberForm`) possède ce notifier et le libère dans
+  // `dispose()` : il est écrit après une frame, donc potentiellement pendant
+  // l'animation de sortie de la feuille, alors que `whenComplete` s'est déjà
+  // déclenché au `pop`. Les contrôleurs de texte y vivent aussi.
   final submitNotifier = ValueNotifier<VoidCallback?>(null);
   final l = context.l10n;
   return DonyBottomSheet.show<_Picked>(
@@ -192,11 +193,9 @@ Future<_Picked?> _showNumberSheet(
       initial: initial,
       parse: parse,
       prefixIcon: prefixIcon,
-      onSubmitReady: (fn) => WidgetsBinding.instance.addPostFrameCallback(
-        (_) => submitNotifier.value = fn,
-      ),
+      submitNotifier: submitNotifier,
     ),
-  ).whenComplete(submitNotifier.dispose);
+  );
 }
 
 class _NumberForm extends StatefulWidget {
@@ -208,7 +207,7 @@ class _NumberForm extends StatefulWidget {
     required this.initial,
     required this.parse,
     required this.prefixIcon,
-    required this.onSubmitReady,
+    required this.submitNotifier,
   });
 
   final Key fieldKey;
@@ -218,7 +217,10 @@ class _NumberForm extends StatefulWidget {
   final String initial;
   final double? Function(String raw) parse;
   final IconData prefixIcon;
-  final void Function(VoidCallback?) onSubmitReady;
+
+  /// Soumission lue par le bouton « Appliquer » du `stickyBottom` ; ce `State`
+  /// en est propriétaire et le libère.
+  final ValueNotifier<VoidCallback?> submitNotifier;
 
   @override
   State<_NumberForm> createState() => _NumberFormState();
@@ -247,6 +249,7 @@ class _NumberFormState extends State<_NumberForm> {
   void dispose() {
     _controller.dispose();
     _invalid.dispose();
+    widget.submitNotifier.dispose();
     super.dispose();
   }
 
@@ -262,7 +265,12 @@ class _NumberFormState extends State<_NumberForm> {
     _invalid.value = !valid;
     if (!force && valid == _submittable) return;
     _submittable = valid;
-    widget.onSubmitReady(valid ? _submit : null);
+    final submit = valid ? _submit : null;
+    // Écrit après la frame, et seulement tant que la feuille existe : le
+    // notifier est libéré avec ce `State`.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.submitNotifier.value = submit;
+    });
   }
 
   void _submit() {

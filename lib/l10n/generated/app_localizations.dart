@@ -39707,12 +39707,6 @@ abstract class AppLocalizations {
   /// **'Volume'**
   String get homeFilterChipsVolume;
 
-  /// Puce Volume active : le volume minimal choisi, déjà formaté en m³.
-  ///
-  /// In fr, this message translates to:
-  /// **'≥ {volume}'**
-  String homeFilterChipsVolumeActive(String volume);
-
   /// Puce de l'accueil (mode Trajets filtré sur le bateau) : arrivée estimée au plus tard.
   ///
   /// In fr, this message translates to:
@@ -39725,7 +39719,7 @@ abstract class AppLocalizations {
   /// **'Arrivée ≤ {weeks} sem.'**
   String homeFilterChipsArrivalActive(int weeks);
 
-  /// Valeur du champ du volume minimal du composeur de recherche bateau, volume déjà formaté en m³.
+  /// Valeur du volume minimal de la recherche bateau (champ du composeur et puce Volume de l'accueil), volume déjà formaté en m³.
   ///
   /// In fr, this message translates to:
   /// **'≥ {volume}'**

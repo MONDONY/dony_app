@@ -13,6 +13,7 @@ import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
@@ -294,6 +295,40 @@ void main() {
           expect(tester.getSize(_text(line)).height, lessThan(14 * 1.5 * 2));
         }
       });
+
+      testWidgets('360 dp ${english ? 'EN' : 'FR'} : fourchette d\'années '
+          'différentes jamais coupée d\'une ellipse', (tester) async {
+        if (english) useEnglish();
+        await loadAppFonts();
+        final nextYear = DateTime.now().year + 1;
+        final a = _boat(
+          arrivalDate: DateTime(nextYear, 1, 12),
+          arrivalDateMax: DateTime(nextYear + 1, 2, 25),
+        );
+        final locale = english ? 'en' : 'fr';
+        final line = english
+            ? 'Estimated arrival ${_day(a.arrivalDate!, locale)} to '
+                  '${_day(a.arrivalDateMax!, locale)}'
+            : 'Arrivée estimée du ${_day(a.arrivalDate!, locale)} au '
+                  '${_day(a.arrivalDateMax!, locale)}';
+        for (final compact in [false, true]) {
+          await _pumpCard(tester, _traveler(a, compact: compact), width: 360);
+          expect(tester.takeException(), isNull);
+          expect(_text(line), findsOneWidget, reason: 'compact=$compact');
+          final paragraph = tester.renderObject<RenderParagraph>(
+            find
+                .descendant(of: _text(line), matching: find.byType(RichText))
+                .first,
+          );
+          expect(paragraph.didExceedMaxLines, isFalse);
+          expect(
+            paragraph.maxLines,
+            isNull,
+            reason: 'compact=$compact : ni ligne unique ni ellipse',
+          );
+          expect(paragraph.overflow, isNot(TextOverflow.ellipsis));
+        }
+      });
     }
   });
 
@@ -316,6 +351,26 @@ void main() {
       expect(find.textContaining('Grille tarifaire'), findsNothing);
       expectNoPlaneIcon(tester);
       expect(findDonyIcon('ship'), findsOneWidget);
+    });
+
+    testWidgets('vendu et restant : mêmes décimales, ils somment la capacité', (
+      tester,
+    ) async {
+      final a = _boat(availableVolumeM3: 0.29);
+      await _pumpCard(
+        tester,
+        TripCard(announcement: a, onTap: () {}, index: 0),
+      );
+      expect(_text('11,71 m³ vendus sur 12 m³'), findsOneWidget);
+      expect(_text('0,29 m³ restants'), findsOneWidget);
+
+      final b = _boat(availableVolumeM3: 8.2);
+      await _pumpCard(
+        tester,
+        TripCard(announcement: b, onTap: () {}, index: 0),
+      );
+      expect(_text('3,8 m³ vendus sur 12 m³'), findsOneWidget);
+      expect(_text('8,2 m³ restants'), findsOneWidget);
     });
 
     testWidgets('trajet passé au m³ : volume vendu, jamais « 0 kg vendus »', (

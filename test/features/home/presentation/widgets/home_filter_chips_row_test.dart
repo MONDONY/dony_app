@@ -901,9 +901,13 @@ void _boatChipTests() {
     expect(arrival, 1);
   });
 
+  // La rangée est un défilement horizontal : un libellé n'y passe jamais à la
+  // ligne ni ne rétrécit, une mesure de hauteur ne prouverait rien. Ce qui peut
+  // casser à 360 dp, c'est une puce hors d'atteinte : la rangée doit déborder
+  // la largeur et permettre d'amener chaque puce bateau dans l'écran.
   for (final english in [false, true]) {
-    testWidgets('360 dp ${english ? 'EN' : 'FR'} : libellé sur une ligne, '
-        'même hauteur que les autres puces', (tester) async {
+    testWidgets('360 dp ${english ? 'EN' : 'FR'} : les puces Volume et Arrivée '
+        'restent atteignables par défilement', (tester) async {
       if (english) useEnglish();
       await tester.pumpWidget(
         _wrap(
@@ -913,15 +917,20 @@ void _boatChipTests() {
         ),
       );
       expect(tester.takeException(), isNull);
-      final heights = {
-        for (final key in const [
-          Key('home-chip-volume'),
-          Key('home-chip-arrival'),
-          Key('chip-date'),
-        ])
-          tester.getSize(find.byKey(key)).height,
-      };
-      expect(heights.length, 1, reason: 'une ligne, même hauteur');
+      final scroller = tester.widget<SingleChildScrollView>(
+        find.byType(SingleChildScrollView),
+      );
+      expect(scroller.scrollDirection, Axis.horizontal);
+      for (final key in const [
+        Key('home-chip-volume'),
+        Key('home-chip-arrival'),
+      ]) {
+        await tester.ensureVisible(find.byKey(key));
+        await tester.pump();
+        final box = tester.getRect(find.byKey(key));
+        expect(box.left, greaterThanOrEqualTo(-0.5), reason: '$key');
+        expect(box.right, lessThanOrEqualTo(360.5), reason: '$key');
+      }
     });
   }
 

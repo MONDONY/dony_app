@@ -8598,8 +8598,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidCreateMobileMoneySuccessSubtitleDeposit': (l) =>
       l.bidCreateMobileMoneySuccessSubtitleDeposit,
   'homeFilterChipsVolume': (l) => l.homeFilterChipsVolume,
-  'homeFilterChipsVolumeActive': (l) =>
-      l.homeFilterChipsVolumeActive(placeholderMarker('volume')),
   'homeFilterChipsArrival': (l) => l.homeFilterChipsArrival,
   'homeFilterChipsArrivalActive': (l) =>
       l.homeFilterChipsArrivalActive(intPlaceholderValue),
@@ -9351,7 +9349,6 @@ const textParameters = <String, List<String>>{
   'bidCreateVolumeRateLine': ['volume', 'rate'],
   'bidCreateVolumeAvailableLine': ['available'],
   'bidCreateVolumeTooLarge': ['volume', 'available'],
-  'homeFilterChipsVolumeActive': ['volume'],
   'homeFilterBoatVolumeValue': ['volume'],
   'homeFilterBoatPriceValue': ['price'],
   'homeFilterBoatPriceFieldLabel': ['symbol'],
