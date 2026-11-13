@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -339,9 +340,24 @@ class _ActiveCardContent extends StatelessWidget {
   final bool showFavorite;
   final Widget? pinButton;
 
+  /// Volume vendu d'un trajet bateau au m³ (proposé moins restant).
+  double get _volumeSold {
+    final capacity = announcement.volumeCapacityM3 ?? 0;
+    final available = announcement.availableVolumeM3 ?? capacity;
+    return (capacity - available).clamp(0, capacity).toDouble();
+  }
+
+  double get _volumeProgress {
+    final capacity = announcement.volumeCapacityM3 ?? 0;
+    return capacity > 0 ? (_volumeSold / capacity).clamp(0.0, 1.0) : 0.0;
+  }
+
   /// Pied de carte : kilos disponibles (ou kilo libre), suivis de la taille
-  /// maximale de colis d'un trajet en route.
+  /// maximale de colis d'un trajet en route. Un bateau au m³ dit son volume
+  /// restant, jamais des kilos.
   String _footerCapacity(AppLocalizations l, String availableLabel) {
+    final volume = tripVolumeRemainingText(l, announcement);
+    if (volume != null) return volume;
     final size = tripShownItemSize(announcement);
     if (announcement.isKgFree) {
       return size == null
@@ -458,8 +474,23 @@ class _ActiveCardContent extends StatelessWidget {
 
           const SizedBox(height: DonySpacing.md),
 
-          // ── Progress bar (hidden for KG_FREE) ──
-          if (!announcement.isKgFree) ...[
+          // ── Progress bar (hidden for KG_FREE ; en m³ pour un bateau au m³) ──
+          if (announcement.isPricedPerM3) ...[
+            _KgProgressBar(progress: _volumeProgress),
+
+            const SizedBox(height: DonySpacing.xs),
+
+            Text(
+              l.listingSoldOfTotalLabel(
+                formatVolumeM3(l, _volumeSold),
+                formatVolumeM3(l, announcement.volumeCapacityM3 ?? 0),
+              ),
+              key: const Key('trip-card-volume-sold'),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+
+            const SizedBox(height: DonySpacing.md),
+          ] else if (!announcement.isKgFree) ...[
             _KgProgressBar(progress: progress),
 
             const SizedBox(height: DonySpacing.xs),
@@ -504,7 +535,8 @@ class _ActiveCardContent extends StatelessWidget {
               const SizedBox(width: DonySpacing.sm),
               Flexible(
                 child: Text(
-                  _activePriceLabel(announcement, price, l),
+                  tripPricePerM3Text(l, announcement, net: true) ??
+                      _activePriceLabel(announcement, price, l),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.right,
@@ -614,11 +646,22 @@ class _PastCardContent extends StatelessWidget {
                 // badge de statut (FLUTTER-WM).
                 Text(
                   [
-                    if (announcement.isKgFree)
+                    if (announcement.isPricedPerM3)
+                      l.listingSoldLabel(
+                        formatVolumeM3(
+                          l,
+                          (announcement.volumeCapacityM3 ?? 0) -
+                              (announcement.availableVolumeM3 ??
+                                  announcement.volumeCapacityM3 ??
+                                  0),
+                        ),
+                      )
+                    else if (announcement.isKgFree)
                       l.tripKgFree
                     else
                       l.listingSoldLabel(kg(soldKg)),
-                    if (!announcement.isKgFree &&
+                    if (!announcement.isPricedPerM3 &&
+                        !announcement.isKgFree &&
                         isCompleted &&
                         soldKg > 0 &&
                         earned != null)

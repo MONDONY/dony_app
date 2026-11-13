@@ -24619,4 +24619,107 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidCreateMobileMoneySuccessSubtitleDeposit =>
       'Mobile money payment: if the carrier accepts, you\'ll get a notification and have 30 minutes to confirm the payment on your phone. The amount is kept safe by Yadony until the package is dropped off.';
+
+  @override
+  String get homeFilterChipsVolume => 'Volume';
+
+  @override
+  String homeFilterChipsVolumeActive(String volume) {
+    return '≥ $volume';
+  }
+
+  @override
+  String get homeFilterChipsArrival => 'Arrival';
+
+  @override
+  String homeFilterChipsArrivalActive(int weeks) {
+    return 'Arrival ≤ $weeks wks';
+  }
+
+  @override
+  String homeFilterBoatVolumeValue(String volume) {
+    return '≥ $volume';
+  }
+
+  @override
+  String homeFilterBoatPriceValue(String price) {
+    return '≤ $price';
+  }
+
+  @override
+  String get homeFilterFieldsMinVolume => 'MIN VOLUME';
+
+  @override
+  String get homeFilterFieldsMaxPricePerM3 => 'MAX PRICE PER M³';
+
+  @override
+  String get homeFilterBoatVolumeTitle => 'Minimum volume';
+
+  @override
+  String get homeFilterBoatVolumeFieldLabel => 'Minimum volume (m³)';
+
+  @override
+  String get homeFilterBoatVolumeHint =>
+      'From 0.1 to 9,999 m³. Leave empty to see all trips.';
+
+  @override
+  String get homeFilterBoatVolumeInvalid =>
+      'Enter a volume between 0.1 and 9,999 m³';
+
+  @override
+  String get homeFilterBoatPriceTitle => 'Maximum price per m³';
+
+  @override
+  String homeFilterBoatPriceFieldLabel(String symbol) {
+    return 'Maximum price per m³ ($symbol)';
+  }
+
+  @override
+  String get homeFilterBoatPriceHint =>
+      'In your currency. Leave empty to see all prices.';
+
+  @override
+  String homeFilterBoatPriceInvalid(String max) {
+    return 'Enter a price above zero, $max at most';
+  }
+
+  @override
+  String get homeFilterBoatArrivalTitle => 'Estimated arrival';
+
+  @override
+  String homeFilterBoatArrivalOption(int weeks) {
+    return 'Within $weeks weeks';
+  }
+
+  @override
+  String get homeFilterBoatArrivalHelp =>
+      'Based on the arrival estimated by the carrier.';
+
+  @override
+  String get homeComposerSectionVolumePrice => 'VOLUME AND PRICE';
+
+  @override
+  String get homeComposerSectionArrival => 'ESTIMATED ARRIVAL';
+
+  @override
+  String get homeComposerVolumeHint =>
+      'These filters only show trips billed per m³.';
+
+  @override
+  String get homeComposerMoreFiltersHintBoat => 'Content type, rating, payment';
+
+  @override
+  String listingBoatArrivalRange(String from, String to) {
+    return 'Estimated arrival $from to $to';
+  }
+
+  @override
+  String listingBoatArrivalDate(String date) {
+    return 'Estimated arrival $date';
+  }
+
+  @override
+  String listingBoatVolumeRemaining(String volume) {
+    return '$volume left';
+  }
 }

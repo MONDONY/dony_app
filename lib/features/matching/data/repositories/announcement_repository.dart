@@ -153,6 +153,9 @@ class AnnouncementRepository {
     List<String>? paymentMethods,
     ItemSize? minItemSize,
     String? viaCity,
+    double? minVolumeM3,
+    double? maxPricePerM3,
+    DateTime? arrivalBefore,
   }) {
     return _remoteDatasource.searchAnnouncements(
       departureCity: departureCity,
@@ -178,6 +181,9 @@ class AnnouncementRepository {
       paymentMethods: paymentMethods,
       minItemSize: minItemSize,
       viaCity: viaCity,
+      minVolumeM3: minVolumeM3,
+      maxPricePerM3: maxPricePerM3,
+      arrivalBefore: arrivalBefore,
     );
   }
 
@@ -206,6 +212,9 @@ class AnnouncementRepository {
     List<String>? paymentMethods,
     ItemSize? minItemSize,
     String? viaCity,
+    double? minVolumeM3,
+    double? maxPricePerM3,
+    DateTime? arrivalBefore,
     int page = 0,
     bool includeFull = false,
   }) {
@@ -233,6 +242,9 @@ class AnnouncementRepository {
       paymentMethods: paymentMethods,
       minItemSize: minItemSize,
       viaCity: viaCity,
+      minVolumeM3: minVolumeM3,
+      maxPricePerM3: maxPricePerM3,
+      arrivalBefore: arrivalBefore,
       page: page,
       includeFull: includeFull,
     );
@@ -262,6 +274,9 @@ class AnnouncementRepository {
     List<String>? paymentMethods,
     ItemSize? minItemSize,
     String? viaCity,
+    double? minVolumeM3,
+    double? maxPricePerM3,
+    DateTime? arrivalBefore,
   }) {
     return _remoteDatasource.countAnnouncements(
       departureCity: departureCity,
@@ -285,6 +300,9 @@ class AnnouncementRepository {
       paymentMethods: paymentMethods,
       minItemSize: minItemSize,
       viaCity: viaCity,
+      minVolumeM3: minVolumeM3,
+      maxPricePerM3: maxPricePerM3,
+      arrivalBefore: arrivalBefore,
     );
   }
 

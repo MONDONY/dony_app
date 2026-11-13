@@ -29,6 +29,10 @@ Widget _wrap({
   VoidCallback? onTransportClear,
   VoidCallback? onItemSizeTap,
   VoidCallback? onItemSizeClear,
+  VoidCallback? onVolumeTap,
+  VoidCallback? onVolumeClear,
+  VoidCallback? onArrivalTap,
+  VoidCallback? onArrivalClear,
   double width = 800,
 }) => MaterialApp(
   home: Scaffold(
@@ -54,6 +58,10 @@ Widget _wrap({
         onSuitcase23Toggle: onSuitcase23Toggle ?? () {},
         onItemSizeTap: onItemSizeTap ?? () {},
         onItemSizeClear: onItemSizeClear ?? () {},
+        onVolumeTap: onVolumeTap ?? () {},
+        onVolumeClear: onVolumeClear ?? () {},
+        onArrivalTap: onArrivalTap ?? () {},
+        onArrivalClear: onArrivalClear ?? () {},
         onMaxWeightTap: () {},
         onMaxWeightClear: () {},
         onParcelSizeTap: () {},
@@ -82,6 +90,7 @@ void main() {
   group('ordre des puces', _chipOrderTests);
   group('puce Transport', _transportChipTests);
   group('puce Taille (route)', _itemSizeChipTests);
+  group('puces Volume et Arrivée (bateau)', _boatChipTests);
 }
 
 const _route = HomeSearchFilters(transportMode: TransportMode.car);
@@ -113,7 +122,7 @@ void _itemSizeChipTests() {
     expect(find.byKey(suitcaseKey), findsNothing);
   });
 
-  for (final mode in [null, TransportMode.plane, TransportMode.boat]) {
+  for (final mode in [null, TransportMode.plane]) {
     testWidgets('mode $mode : Valise 23 kg, pas de Taille', (tester) async {
       await tester.pumpWidget(
         _wrap(
@@ -803,5 +812,128 @@ void _nearMeChipTests() {
 
     expect(find.text('Near me · 50 km'), findsOneWidget);
     expect(find.text('Près de moi · 50 km'), findsNothing);
+  });
+}
+
+const _boat = HomeSearchFilters(transportMode: TransportMode.boat);
+
+void _boatChipTests() {
+  const volumeKey = Key('home-chip-volume');
+  const arrivalKey = Key('home-chip-arrival');
+
+  HomeSmallChip chip(WidgetTester tester, Key key) =>
+      tester.widget<HomeSmallChip>(find.byKey(key));
+
+  testWidgets('boatHidesEscalesAndUrgent : Volume et Arrivée remplacent '
+      'Urgent et Valise 23 kg', (tester) async {
+    await tester.pumpWidget(_wrap(mode: SearchMode.trips, filters: _boat));
+
+    expect(find.byKey(volumeKey), findsOneWidget);
+    expect(find.byKey(arrivalKey), findsOneWidget);
+    expect(chip(tester, volumeKey).label, 'Volume');
+    expect(chip(tester, arrivalKey).label, 'Arrivée');
+    expect(chip(tester, volumeKey).isActive, isFalse);
+    expect(find.byKey(const Key('chip-urgent')), findsNothing);
+    expect(find.byKey(const Key('chip-suitcase-23')), findsNothing);
+    expect(find.byKey(const Key('home-chip-item-size')), findsNothing);
+    // Les kilos, la note, le prix au kilo et GP Pro restent.
+    expect(find.byKey(const Key('chip-capacity')), findsOneWidget);
+    expectNoPlaneIcon(tester);
+  });
+
+  testWidgets('planeFiltersUnchanged : avion et tous les modes gardent Urgent '
+      'et Valise, sans Volume ni Arrivée', (tester) async {
+    for (final mode in [null, TransportMode.plane, TransportMode.car]) {
+      await tester.pumpWidget(
+        _wrap(
+          mode: SearchMode.trips,
+          filters: HomeSearchFilters(transportMode: mode),
+        ),
+      );
+      expect(find.byKey(const Key('chip-urgent')), findsOneWidget);
+      expect(find.byKey(volumeKey), findsNothing);
+      expect(find.byKey(arrivalKey), findsNothing);
+    }
+  });
+
+  testWidgets('mode Colis : aucune puce bateau', (tester) async {
+    await tester.pumpWidget(_wrap(filters: _boat));
+    expect(find.byKey(volumeKey), findsNothing);
+    expect(find.byKey(arrivalKey), findsNothing);
+  });
+
+  testWidgets('actives : valeurs affichées, un tap retire le filtre', (
+    tester,
+  ) async {
+    var cleared = 0;
+    var arrivalCleared = 0;
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: _boat.copyWith(minVolumeM3: 2.5, arrivalWithinWeeks: 6),
+        onVolumeClear: () => cleared++,
+        onArrivalClear: () => arrivalCleared++,
+      ),
+    );
+    expect(chip(tester, volumeKey).label, '≥ 2,5 m³');
+    expect(chip(tester, volumeKey).isActive, isTrue);
+    expect(chip(tester, arrivalKey).label, 'Arrivée ≤ 6 sem.');
+    await tester.tap(find.byKey(volumeKey));
+    await tester.tap(find.byKey(arrivalKey));
+    expect(cleared, 1);
+    expect(arrivalCleared, 1);
+  });
+
+  testWidgets('inactives : un tap ouvre le choix', (tester) async {
+    var volume = 0;
+    var arrival = 0;
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: _boat,
+        onVolumeTap: () => volume++,
+        onArrivalTap: () => arrival++,
+      ),
+    );
+    await tester.tap(find.byKey(volumeKey));
+    await tester.tap(find.byKey(arrivalKey));
+    expect(volume, 1);
+    expect(arrival, 1);
+  });
+
+  for (final english in [false, true]) {
+    testWidgets('360 dp ${english ? 'EN' : 'FR'} : libellé sur une ligne, '
+        'même hauteur que les autres puces', (tester) async {
+      if (english) useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          mode: SearchMode.trips,
+          filters: _boat.copyWith(minVolumeM3: 1234.5, arrivalWithinWeeks: 6),
+          width: 360,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      final heights = {
+        for (final key in const [
+          Key('home-chip-volume'),
+          Key('home-chip-arrival'),
+          Key('chip-date'),
+        ])
+          tester.getSize(find.byKey(key)).height,
+      };
+      expect(heights.length, 1, reason: 'une ligne, même hauteur');
+    });
+  }
+
+  testWidgets('anglais : libellés traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: _boat.copyWith(minVolumeM3: 12, arrivalWithinWeeks: 8),
+      ),
+    );
+    expect(chip(tester, volumeKey).label, '≥ 12 m³');
+    expect(chip(tester, arrivalKey).label, 'Arrival ≤ 8 wks');
   });
 }

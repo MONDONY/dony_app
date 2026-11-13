@@ -116,6 +116,10 @@ const _sameInBothLanguages = <String>{
   'requestPosterDateFlexibleValue', // « Flexible » se dit pareil
   'tripPosterTimeRange', // « {departure} → {arrival} » : heures déjà localisées
   'tripPosterPricePerKgShort', // « {price}/kg » : montant et unité
+  'homeFilterChipsVolume', // « Volume » : même mot en français et en anglais
+  'homeFilterChipsVolumeActive', // « ≥ {volume} » : signe et volume déjà formaté
+  'homeFilterBoatVolumeValue', // « ≥ {volume} » : signe et volume déjà formaté
+  'homeFilterBoatPriceValue', // « ≤ {price} » : signe et prix déjà formaté
   'tripPublishPerM3Value', // « {value}/m³ » : montant et unité
   'requestCreateWeightAndVolume', // « {weight} · {volume} » : valeurs déjà localisées
   'requestPreviewVolumeLabel', // « Volume » : même mot en français et en anglais

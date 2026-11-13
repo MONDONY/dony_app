@@ -166,6 +166,13 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   /// Route : ville où une étape publiée du voyage s'arrête ; `null` = aucune.
   final String? viaCity;
 
+  /// Bateau : volume restant minimal (m³), prix maximal au m³ (devise du
+  /// lecteur) et arrivée estimée au plus tard ; `null` = peu importe. Stricts
+  /// côté back : un trajet au kilo n'y passe pas.
+  final double? minVolumeM3;
+  final double? maxPricePerM3;
+  final DateTime? arrivalBefore;
+
   AnnouncementSearchRequested({
     this.departureCity,
     this.arrivalCity,
@@ -190,6 +197,9 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.paymentMethods,
     this.minItemSize,
     this.viaCity,
+    this.minVolumeM3,
+    this.maxPricePerM3,
+    this.arrivalBefore,
   });
 }
 

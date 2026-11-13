@@ -1,3 +1,5 @@
+import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
@@ -89,6 +91,10 @@ String tripCapacityLine(
   AnnouncementModel a, {
   bool detailed = false,
 }) {
+  // Bateau au m³ : le volume restant, jamais un kilo (le trajet n'en porte
+  // aucun, `availableKg` y vaut 0 par repli).
+  final volume = tripVolumeRemainingText(l, a);
+  if (volume != null) return volume;
   final size = tripShownItemSize(a);
   if (a.isKgFree) {
     return size == null ? l.tripKgFree : l.tripCapacityFreeUpToSize(size.code);
@@ -101,6 +107,60 @@ String tripCapacityLine(
       ? '${l.listingSuitcaseCapacityLabel(capacity.count, capacity.unitKg)} · $kg'
       : l.listingSuitcaseCapacityLabel(capacity.count, capacity.unitKg);
   return size == null ? base : l.tripCapacityUpToSize(base, size.code);
+}
+
+/// « 0,4 m³ restants » pour un trajet bateau vendu au m³ ; `null` pour tout
+/// autre trajet (kilos, kilo libre). Le volume restant est arrondi vers le bas.
+String? tripVolumeRemainingText(AppLocalizations l, AnnouncementModel a) {
+  if (!a.isPricedPerM3) return null;
+  return l.listingBoatVolumeRemaining(
+    formatVolumeRemainingM3(l, a.availableVolumeM3 ?? 0),
+  );
+}
+
+/// Prix au m³ d'un trajet bateau tel que l'EXPÉDITEUR le lit, frais inclus
+/// (« 600 €/m³ ») ; `null` pour un trajet au kilo, `unavailable` pour un trajet
+/// au m³ sans prix servi.
+String? tripPricePerM3Text(
+  AppLocalizations l,
+  AnnouncementModel a, {
+  bool net = false,
+}) {
+  if (!a.isPricedPerM3) return null;
+  final price = net
+      ? (a.pricePerM3 ?? a.pricePerM3Display)
+      : a.pricePerM3Display;
+  if (price == null || price <= 0) return l.tripPosterPriceUnavailable;
+  return l.tripPublishPerM3Value(formatPriceIn(price, a.currency));
+}
+
+/// Arrivée estimée d'un trajet bateau : « Arrivée estimée du 12 déc. au 28
+/// déc. » (fourchette) ou « Arrivée estimée le 12 déc. » (date seule) ; `null`
+/// hors bateau ou sans date d'arrivée. Dates lues en jours calendaires, comme
+/// [tripRoadDays]. Un jour d'une autre année que [now] porte son année.
+String? tripBoatArrivalText(
+  AppLocalizations l,
+  AnnouncementModel a, {
+  DateTime? now,
+}) {
+  final arrival = a.arrivalDate;
+  if (a.transportMode != TransportMode.boat || arrival == null) return null;
+  final year = (now ?? DateTime.now()).year;
+  String day(DateTime d) =>
+      (d.year == year
+              ? DateFormat.MMMd(l.localeName)
+              : DateFormat.yMMMd(l.localeName))
+          .format(d);
+  final max = a.arrivalDateMax;
+  final sameDay =
+      max != null &&
+      max.year == arrival.year &&
+      max.month == arrival.month &&
+      max.day == arrival.day;
+  if (max == null || sameDay || max.isBefore(arrival)) {
+    return l.listingBoatArrivalDate(day(arrival));
+  }
+  return l.listingBoatArrivalRange(day(arrival), day(max));
 }
 
 /// « 120 kg max par colis », quand le trajet en route fixe un poids maximal

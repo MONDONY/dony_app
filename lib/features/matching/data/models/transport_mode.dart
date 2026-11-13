@@ -115,6 +115,57 @@ abstract final class TripVolumeLimits {
   static bool isValid(double? m3) => m3 != null && m3 >= minM3 && m3 <= maxM3;
 }
 
+/// Bornes des filtres de recherche bateau (volume minimal, prix maximal au
+/// m³), miroir de `PublicAnnouncementQuery` côté back : une valeur négative, au
+/// dessus de la borne ou à plus de 4 décimales y répond 400 `invalid-search`.
+/// Toute valeur passe par ces bornes avant de partir, jamais une erreur
+/// serveur pour une saisie.
+abstract final class BoatSearchLimits {
+  /// Volume minimal cherché, en m³ (0,1 comme un volume proposé, 9 999 au
+  /// plus : plus qu'un navire n'en propose).
+  static const double minVolumeM3 = TripVolumeLimits.minM3;
+  static const double maxVolumeM3 = TripVolumeLimits.maxM3;
+
+  /// Prix maximal au m³, dans la devise du lecteur (borne du back : 10 000 000).
+  static const double maxPricePerM3 = 10000000;
+
+  /// Décimales acceptées par le back.
+  static const int maxDecimals = 4;
+
+  /// Arrivée au plus tard cherchée, en semaines à partir d'aujourd'hui.
+  static const List<int> arrivalWeeks = [4, 6, 8];
+
+  static double _rounded(double value) =>
+      double.parse(value.toStringAsFixed(maxDecimals));
+
+  /// Volume minimal valide, arrondi à 4 décimales ; `null` hors bornes.
+  static double? volume(double? value) {
+    if (value == null || !value.isFinite) return null;
+    final v = _rounded(value);
+    return v >= minVolumeM3 && v <= maxVolumeM3 ? v : null;
+  }
+
+  /// Prix maximal au m³ valide, arrondi à 4 décimales ; `null` hors bornes.
+  static double? pricePerM3(double? value) {
+    if (value == null || !value.isFinite) return null;
+    final v = _rounded(value);
+    return v > 0 && v <= maxPricePerM3 ? v : null;
+  }
+
+  /// Nombre de semaines d'arrivée proposé ; `null` pour toute autre valeur.
+  static int? weeks(int? value) =>
+      value != null && arrivalWeeks.contains(value) ? value : null;
+
+  /// Écriture d'un décimal pour le serveur : jamais de notation scientifique,
+  /// jamais plus de 4 décimales, zéros de fin retirés (« 2.5 », « 600 »).
+  static String wire(double value) {
+    final text = _rounded(value).toStringAsFixed(maxDecimals);
+    return text
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'\.$'), '');
+  }
+}
+
 /// Capacité maximale qu'un voyageur peut saisir pour un trajet, en kilos
 /// entiers (miroir de `WeightLimits.maxTripCapacity`).
 abstract final class TripCapacityLimits {

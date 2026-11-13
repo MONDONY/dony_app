@@ -8596,6 +8596,44 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidCreateOfferPaidSubtitleDeposit,
   'bidCreateMobileMoneySuccessSubtitleDeposit': (l) =>
       l.bidCreateMobileMoneySuccessSubtitleDeposit,
+  'homeFilterChipsVolume': (l) => l.homeFilterChipsVolume,
+  'homeFilterChipsVolumeActive': (l) =>
+      l.homeFilterChipsVolumeActive(placeholderMarker('volume')),
+  'homeFilterChipsArrival': (l) => l.homeFilterChipsArrival,
+  'homeFilterChipsArrivalActive': (l) =>
+      l.homeFilterChipsArrivalActive(intPlaceholderValue),
+  'homeFilterBoatVolumeValue': (l) =>
+      l.homeFilterBoatVolumeValue(placeholderMarker('volume')),
+  'homeFilterBoatPriceValue': (l) =>
+      l.homeFilterBoatPriceValue(placeholderMarker('price')),
+  'homeFilterFieldsMinVolume': (l) => l.homeFilterFieldsMinVolume,
+  'homeFilterFieldsMaxPricePerM3': (l) => l.homeFilterFieldsMaxPricePerM3,
+  'homeFilterBoatVolumeTitle': (l) => l.homeFilterBoatVolumeTitle,
+  'homeFilterBoatVolumeFieldLabel': (l) => l.homeFilterBoatVolumeFieldLabel,
+  'homeFilterBoatVolumeHint': (l) => l.homeFilterBoatVolumeHint,
+  'homeFilterBoatVolumeInvalid': (l) => l.homeFilterBoatVolumeInvalid,
+  'homeFilterBoatPriceTitle': (l) => l.homeFilterBoatPriceTitle,
+  'homeFilterBoatPriceFieldLabel': (l) =>
+      l.homeFilterBoatPriceFieldLabel(placeholderMarker('symbol')),
+  'homeFilterBoatPriceHint': (l) => l.homeFilterBoatPriceHint,
+  'homeFilterBoatPriceInvalid': (l) =>
+      l.homeFilterBoatPriceInvalid(placeholderMarker('max')),
+  'homeFilterBoatArrivalTitle': (l) => l.homeFilterBoatArrivalTitle,
+  'homeFilterBoatArrivalOption': (l) =>
+      l.homeFilterBoatArrivalOption(intPlaceholderValue),
+  'homeFilterBoatArrivalHelp': (l) => l.homeFilterBoatArrivalHelp,
+  'homeComposerSectionVolumePrice': (l) => l.homeComposerSectionVolumePrice,
+  'homeComposerSectionArrival': (l) => l.homeComposerSectionArrival,
+  'homeComposerVolumeHint': (l) => l.homeComposerVolumeHint,
+  'homeComposerMoreFiltersHintBoat': (l) => l.homeComposerMoreFiltersHintBoat,
+  'listingBoatArrivalRange': (l) => l.listingBoatArrivalRange(
+    placeholderMarker('from'),
+    placeholderMarker('to'),
+  ),
+  'listingBoatArrivalDate': (l) =>
+      l.listingBoatArrivalDate(placeholderMarker('date')),
+  'listingBoatVolumeRemaining': (l) =>
+      l.listingBoatVolumeRemaining(placeholderMarker('volume')),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -9312,4 +9350,12 @@ const textParameters = <String, List<String>>{
   'bidCreateVolumeRateLine': ['volume', 'rate'],
   'bidCreateVolumeAvailableLine': ['available'],
   'bidCreateVolumeTooLarge': ['volume', 'available'],
+  'homeFilterChipsVolumeActive': ['volume'],
+  'homeFilterBoatVolumeValue': ['volume'],
+  'homeFilterBoatPriceValue': ['price'],
+  'homeFilterBoatPriceFieldLabel': ['symbol'],
+  'homeFilterBoatPriceInvalid': ['max'],
+  'listingBoatArrivalRange': ['from', 'to'],
+  'listingBoatArrivalDate': ['date'],
+  'listingBoatVolumeRemaining': ['volume'],
 };

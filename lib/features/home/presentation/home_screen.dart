@@ -26,6 +26,7 @@ import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/home_sheet_session.dart';
 import 'package:dony/features/home/presentation/sheet_controller_guard.dart';
+import 'package:dony/features/home/presentation/widgets/boat_search_fields.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
 import 'package:dony/features/home/presentation/widgets/home_publish_button.dart';
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
@@ -726,6 +727,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
         paymentMethods: q.paymentMethods,
         minItemSize: q.minItemSize,
         viaCity: q.viaCity,
+        minVolumeM3: q.minVolumeM3,
+        maxPricePerM3: q.maxPricePerM3,
+        arrivalBefore: q.arrivalBefore,
       ),
     );
   }
@@ -829,6 +833,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
           paymentMethods: q.paymentMethods,
           minItemSize: q.minItemSize,
           viaCity: q.viaCity,
+          minVolumeM3: q.minVolumeM3,
+          maxPricePerM3: q.maxPricePerM3,
+          arrivalBefore: q.arrivalBefore,
         );
       }
       if (mounted) {
@@ -1321,6 +1328,35 @@ class _MapSenderViewState extends State<_MapSenderView> {
         size == null
             ? _filters.copyWith(clearMinItemSize: true)
             : _filters.copyWith(minItemSize: size),
+      );
+    },
+  );
+
+  /// Puce Volume (bateau) : volume restant minimal, en m³. Un champ laissé vide
+  /// retire le filtre.
+  Future<void> _showBoatVolumeSheet() => showBoatVolumePicker(
+    context,
+    volumeM3: _filters.minVolumeM3,
+    onApply: (volume) {
+      if (!mounted) return;
+      _onFiltersChanged(
+        volume == null
+            ? _filters.copyWith(clearMinVolumeM3: true)
+            : _filters.copyWith(minVolumeM3: volume),
+      );
+    },
+  );
+
+  /// Puce Arrivée (bateau) : arrivée estimée au plus tard, 4, 6 ou 8 semaines.
+  Future<void> _showBoatArrivalSheet() => showBoatArrivalPicker(
+    context,
+    weeks: _filters.arrivalWithinWeeks,
+    onApply: (weeks) {
+      if (!mounted) return;
+      _onFiltersChanged(
+        weeks == null
+            ? _filters.copyWith(clearArrivalWeeks: true)
+            : _filters.copyWith(arrivalWithinWeeks: weeks),
       );
     },
   );
@@ -2057,6 +2093,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
               clearWeight: true,
               clearMinItemSize: true,
               clearViaCity: true,
+              clearMinVolumeM3: true,
+              clearMaxPricePerM3: true,
+              clearArrivalWeeks: true,
               gpProOnly: false,
               suitcase23Only: false,
               clearMinRating: true,
@@ -2176,6 +2215,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
       onSuitcase23Toggle: () => _onFiltersChanged(
         _filters.copyWith(suitcase23Only: !_filters.suitcase23Only),
       ),
+      onVolumeTap: () => unawaited(_showBoatVolumeSheet()),
+      onVolumeClear: () =>
+          _onFiltersChanged(_filters.copyWith(clearMinVolumeM3: true)),
+      onArrivalTap: () => unawaited(_showBoatArrivalSheet()),
+      onArrivalClear: () =>
+          _onFiltersChanged(_filters.copyWith(clearArrivalWeeks: true)),
       onItemSizeTap: () => unawaited(_showItemSizeSheet()),
       onItemSizeClear: () =>
           _onFiltersChanged(_filters.copyWith(clearMinItemSize: true)),

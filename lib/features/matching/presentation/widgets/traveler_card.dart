@@ -154,6 +154,13 @@ class TravelerCard extends StatelessWidget {
               ' → '
               '${DateFormat.MMMd(l.localeName).format(announcement.arrivalDate!)}';
     final roadDuration = roadDays == null ? null : l.tripRoadDuration(roadDays);
+    // Bateau : fourchette d'arrivée estimée (les retards au port sont
+    // fréquents) et, au m³, prix au m³ ; jamais de kilos pour un trajet au m³.
+    final arrivalText = tripBoatArrivalText(l, announcement);
+    final perM3Price = tripPricePerM3Text(l, announcement);
+    final modeIconAsset = transportModeOrPlane(
+      announcement.transportMode,
+    ).iconAsset;
     final categories = announcement.acceptedContentTypes ?? [];
     final capacity = TripCapacity.fromAnnouncement(announcement);
     // Valises : le restant en kilos n'est que dans le détail, la card reste
@@ -189,11 +196,13 @@ class TravelerCard extends StatelessWidget {
     // Un seul prix, frais de service inclus (taux du premier palier de la
     // grille) : pas de mention séparée des frais ni du minimum.
     final senderPricePerKg = announcement.searchCardPricePerKg;
-    final priceLabel = announcement.pricingMode == 'MIXED'
-        ? l.listingPriceGridLabel
-        : !announcement.hasKgPrice
-        ? l.tripPosterPriceUnavailable
-        : '${formatPriceIn(senderPricePerKg!, announcement.currency)}/kg';
+    final priceLabel =
+        perM3Price ??
+        (announcement.pricingMode == 'MIXED'
+            ? l.listingPriceGridLabel
+            : !announcement.hasKgPrice
+            ? l.tripPosterPriceUnavailable
+            : '${formatPriceIn(senderPricePerKg!, announcement.currency)}/kg');
     // YADONY-FLUTTER-PROD-1J : la mention « + frais de service Yadony
     // (min. 650 F CFA) » élargissait la colonne du prix au point d'écraser la
     // note et le nom du voyageur, rendus un caractère par ligne. La carte
@@ -279,6 +288,16 @@ class TravelerCard extends StatelessWidget {
                         ),
                         text: roadDuration,
                       ),
+                    if (arrivalText != null)
+                      _MetaItem(
+                        key: const Key('traveler-card-boat-arrival'),
+                        icon: DonyIcon(
+                          modeIconAsset,
+                          size: 13,
+                          color: cs.onSurfaceVariant,
+                        ),
+                        text: arrivalText,
+                      ),
                     if (OwnerViewsLabel.isVisible(
                       count: announcement.uniqueViewerCount,
                       isOwner: isOwnAnnouncement,
@@ -343,6 +362,29 @@ class TravelerCard extends StatelessWidget {
                         ],
                       ],
                     ),
+                    // Arrivée estimée d'un bateau, sur sa propre ligne.
+                    if (arrivalText != null) ...[
+                      const SizedBox(height: DonySpacing.xxs),
+                      Row(
+                        key: const Key('traveler-card-boat-arrival'),
+                        children: [
+                          DonyIcon(
+                            modeIconAsset,
+                            size: 13,
+                            color: cs.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: DonySpacing.xs),
+                          Flexible(
+                            child: Text(
+                              arrivalText,
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     // Durée d'une route à arrivée datée, sur sa propre ligne.
                     if (roadDuration != null) ...[
                       const SizedBox(height: DonySpacing.xxs),
@@ -459,7 +501,8 @@ class TravelerCard extends StatelessWidget {
                           ),
                           // Mode MIXED : le prix est une grille, pas un montant
                           // unique au kilo, donc pas d'équivalent converti ici.
-                          if (announcement.pricingMode != 'MIXED')
+                          if (announcement.pricingMode != 'MIXED' &&
+                              perM3Price == null)
                             ConvertedPriceLabel(
                               originalCurrency: announcement.currency,
                               // Le prix d'origine affiché ci-dessus
@@ -596,7 +639,7 @@ class TravelerCard extends StatelessWidget {
 /// Un élément de la ligne de méta de la carte compacte : icône et texte, le
 /// texte s'abrège avec des points de suspension plutôt que de déborder.
 class _MetaItem extends StatelessWidget {
-  const _MetaItem({required this.icon, required this.text});
+  const _MetaItem({super.key, required this.icon, required this.text});
 
   final Widget icon;
   final String text;

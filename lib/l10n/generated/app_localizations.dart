@@ -39694,6 +39694,162 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Paiement mobile money : si le transporteur accepte, vous recevrez une notification et aurez 30 minutes pour valider le paiement sur votre téléphone. Le montant est gardé en sécurité par Yadony jusqu\'au dépôt du colis.'**
   String get bidCreateMobileMoneySuccessSubtitleDeposit;
+
+  /// Puce de l'accueil (mode Trajets filtré sur le bateau) : volume restant minimal en m³, remplace « Urgent » et « Valise 23 kg ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume'**
+  String get homeFilterChipsVolume;
+
+  /// Puce Volume active : le volume minimal choisi, déjà formaté en m³.
+  ///
+  /// In fr, this message translates to:
+  /// **'≥ {volume}'**
+  String homeFilterChipsVolumeActive(String volume);
+
+  /// Puce de l'accueil (mode Trajets filtré sur le bateau) : arrivée estimée au plus tard.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get homeFilterChipsArrival;
+
+  /// Puce Arrivée active : arrivée estimée sous N semaines (4, 6 ou 8).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée ≤ {weeks} sem.'**
+  String homeFilterChipsArrivalActive(int weeks);
+
+  /// Valeur du champ du volume minimal du composeur de recherche bateau, volume déjà formaté en m³.
+  ///
+  /// In fr, this message translates to:
+  /// **'≥ {volume}'**
+  String homeFilterBoatVolumeValue(String volume);
+
+  /// Valeur du champ du prix maximal au m³ du composeur de recherche bateau, prix déjà formaté avec « /m³ ».
+  ///
+  /// In fr, this message translates to:
+  /// **'≤ {price}'**
+  String homeFilterBoatPriceValue(String price);
+
+  /// Libellé du champ du volume restant minimal (composeur de recherche, bateau).
+  ///
+  /// In fr, this message translates to:
+  /// **'VOLUME MIN'**
+  String get homeFilterFieldsMinVolume;
+
+  /// Libellé du champ du prix maximal au m³ (composeur de recherche, bateau).
+  ///
+  /// In fr, this message translates to:
+  /// **'PRIX MAX AU M³'**
+  String get homeFilterFieldsMaxPricePerM3;
+
+  /// Titre de la feuille du volume restant minimal d'un trajet bateau (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume minimum'**
+  String get homeFilterBoatVolumeTitle;
+
+  /// Champ de la feuille du volume minimal (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume minimum (m³)'**
+  String get homeFilterBoatVolumeFieldLabel;
+
+  /// Aide sous le champ du volume minimal (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'De 0,1 à 9 999 m³. Laissez vide pour tous les trajets.'**
+  String get homeFilterBoatVolumeHint;
+
+  /// Erreur : volume minimal hors bornes (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un volume entre 0,1 et 9 999 m³'**
+  String get homeFilterBoatVolumeInvalid;
+
+  /// Titre de la feuille du prix maximal au m³ d'un trajet bateau (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix maximum au m³'**
+  String get homeFilterBoatPriceTitle;
+
+  /// Champ de la feuille du prix maximal ; {symbol} est le symbole de la devise du lecteur (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix maximum par m³ ({symbol})'**
+  String homeFilterBoatPriceFieldLabel(String symbol);
+
+  /// Aide sous le champ du prix maximal au m³ (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans votre devise. Laissez vide pour tous les prix.'**
+  String get homeFilterBoatPriceHint;
+
+  /// Erreur : prix maximal au m³ hors bornes, plafond déjà formaté dans la devise (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un prix supérieur à zéro, {max} au plus'**
+  String homeFilterBoatPriceInvalid(String max);
+
+  /// Titre de la feuille de l'arrivée estimée au plus tard (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée'**
+  String get homeFilterBoatArrivalTitle;
+
+  /// Pastille de l'arrivée estimée au plus tard : 4, 6 ou 8 semaines à partir d'aujourd'hui (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sous {weeks} semaines'**
+  String homeFilterBoatArrivalOption(int weeks);
+
+  /// Aide sous le filtre d'arrivée d'un trajet bateau (feuille et composeur).
+  ///
+  /// In fr, this message translates to:
+  /// **'Selon l\'arrivée estimée annoncée par le transporteur.'**
+  String get homeFilterBoatArrivalHelp;
+
+  /// Composeur de recherche de trajets, bateau seulement : section du volume minimal et du prix maximal au m³.
+  ///
+  /// In fr, this message translates to:
+  /// **'VOLUME ET PRIX'**
+  String get homeComposerSectionVolumePrice;
+
+  /// Composeur de recherche de trajets, bateau seulement : section de l'arrivée estimée au plus tard.
+  ///
+  /// In fr, this message translates to:
+  /// **'ARRIVÉE ESTIMÉE'**
+  String get homeComposerSectionArrival;
+
+  /// Composeur de recherche, bateau : explication des filtres de volume et de prix au m³ (le serveur n'y laisse passer qu'un trajet au m³).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces filtres ne montrent que les trajets facturés au m³.'**
+  String get homeComposerVolumeHint;
+
+  /// Sous-titre de « Plus de filtres » du composeur de recherche quand le filtre Transport est le bateau : pas d'escales.
+  ///
+  /// In fr, this message translates to:
+  /// **'Type de contenu, note, paiement'**
+  String get homeComposerMoreFiltersHintBoat;
+
+  /// Carte de recherche d'un trajet bateau : fourchette d'arrivée, dates déjà formatées.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée du {from} au {to}'**
+  String listingBoatArrivalRange(String from, String to);
+
+  /// Carte de recherche d'un trajet bateau sans fourchette : une date d'arrivée estimée, déjà formatée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée le {date}'**
+  String listingBoatArrivalDate(String date);
+
+  /// Carte de recherche d'un trajet bateau au m³ : volume encore disponible, déjà formaté en m³.
+  ///
+  /// In fr, this message translates to:
+  /// **'{volume} restants'**
+  String listingBoatVolumeRemaining(String volume);
 }
 
 class _AppLocalizationsDelegate

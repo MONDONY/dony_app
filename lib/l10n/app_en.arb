@@ -12424,5 +12424,162 @@
   "bidCreateMobileMoneySuccessSubtitleDeposit": "Mobile money payment: if the carrier accepts, you'll get a notification and have 30 minutes to confirm the payment on your phone. The amount is kept safe by Yadony until the package is dropped off.",
   "@bidCreateMobileMoneySuccessSubtitleDeposit": {
     "description": "Écran de succès d'une offre mobile money sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "homeFilterChipsVolume": "Volume",
+  "@homeFilterChipsVolume": {
+    "description": "Puce de l'accueil (mode Trajets filtré sur le bateau) : volume restant minimal en m³, remplace « Urgent » et « Valise 23 kg »."
+  },
+  "homeFilterChipsVolumeActive": "≥ {volume}",
+  "@homeFilterChipsVolumeActive": {
+    "description": "Puce Volume active : le volume minimal choisi, déjà formaté en m³.",
+    "placeholders": {
+      "volume": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFilterChipsArrival": "Arrival",
+  "@homeFilterChipsArrival": {
+    "description": "Puce de l'accueil (mode Trajets filtré sur le bateau) : arrivée estimée au plus tard."
+  },
+  "homeFilterChipsArrivalActive": "Arrival ≤ {weeks} wks",
+  "@homeFilterChipsArrivalActive": {
+    "description": "Puce Arrivée active : arrivée estimée sous N semaines (4, 6 ou 8).",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFilterBoatVolumeValue": "≥ {volume}",
+  "@homeFilterBoatVolumeValue": {
+    "description": "Valeur du champ du volume minimal du composeur de recherche bateau, volume déjà formaté en m³.",
+    "placeholders": {
+      "volume": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFilterBoatPriceValue": "≤ {price}",
+  "@homeFilterBoatPriceValue": {
+    "description": "Valeur du champ du prix maximal au m³ du composeur de recherche bateau, prix déjà formaté avec « /m³ ».",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFilterFieldsMinVolume": "MIN VOLUME",
+  "@homeFilterFieldsMinVolume": {
+    "description": "Libellé du champ du volume restant minimal (composeur de recherche, bateau)."
+  },
+  "homeFilterFieldsMaxPricePerM3": "MAX PRICE PER M³",
+  "@homeFilterFieldsMaxPricePerM3": {
+    "description": "Libellé du champ du prix maximal au m³ (composeur de recherche, bateau)."
+  },
+  "homeFilterBoatVolumeTitle": "Minimum volume",
+  "@homeFilterBoatVolumeTitle": {
+    "description": "Titre de la feuille du volume restant minimal d'un trajet bateau (boat_search_fields.dart)."
+  },
+  "homeFilterBoatVolumeFieldLabel": "Minimum volume (m³)",
+  "@homeFilterBoatVolumeFieldLabel": {
+    "description": "Champ de la feuille du volume minimal (boat_search_fields.dart)."
+  },
+  "homeFilterBoatVolumeHint": "From 0.1 to 9,999 m³. Leave empty to see all trips.",
+  "@homeFilterBoatVolumeHint": {
+    "description": "Aide sous le champ du volume minimal (boat_search_fields.dart)."
+  },
+  "homeFilterBoatVolumeInvalid": "Enter a volume between 0.1 and 9,999 m³",
+  "@homeFilterBoatVolumeInvalid": {
+    "description": "Erreur : volume minimal hors bornes (boat_search_fields.dart)."
+  },
+  "homeFilterBoatPriceTitle": "Maximum price per m³",
+  "@homeFilterBoatPriceTitle": {
+    "description": "Titre de la feuille du prix maximal au m³ d'un trajet bateau (boat_search_fields.dart)."
+  },
+  "homeFilterBoatPriceFieldLabel": "Maximum price per m³ ({symbol})",
+  "@homeFilterBoatPriceFieldLabel": {
+    "description": "Champ de la feuille du prix maximal ; {symbol} est le symbole de la devise du lecteur (boat_search_fields.dart).",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFilterBoatPriceHint": "In your currency. Leave empty to see all prices.",
+  "@homeFilterBoatPriceHint": {
+    "description": "Aide sous le champ du prix maximal au m³ (boat_search_fields.dart)."
+  },
+  "homeFilterBoatPriceInvalid": "Enter a price above zero, {max} at most",
+  "@homeFilterBoatPriceInvalid": {
+    "description": "Erreur : prix maximal au m³ hors bornes, plafond déjà formaté dans la devise (boat_search_fields.dart).",
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFilterBoatArrivalTitle": "Estimated arrival",
+  "@homeFilterBoatArrivalTitle": {
+    "description": "Titre de la feuille de l'arrivée estimée au plus tard (boat_search_fields.dart)."
+  },
+  "homeFilterBoatArrivalOption": "Within {weeks} weeks",
+  "@homeFilterBoatArrivalOption": {
+    "description": "Pastille de l'arrivée estimée au plus tard : 4, 6 ou 8 semaines à partir d'aujourd'hui (boat_search_fields.dart).",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFilterBoatArrivalHelp": "Based on the arrival estimated by the carrier.",
+  "@homeFilterBoatArrivalHelp": {
+    "description": "Aide sous le filtre d'arrivée d'un trajet bateau (feuille et composeur)."
+  },
+  "homeComposerSectionVolumePrice": "VOLUME AND PRICE",
+  "@homeComposerSectionVolumePrice": {
+    "description": "Composeur de recherche de trajets, bateau seulement : section du volume minimal et du prix maximal au m³."
+  },
+  "homeComposerSectionArrival": "ESTIMATED ARRIVAL",
+  "@homeComposerSectionArrival": {
+    "description": "Composeur de recherche de trajets, bateau seulement : section de l'arrivée estimée au plus tard."
+  },
+  "homeComposerVolumeHint": "These filters only show trips billed per m³.",
+  "@homeComposerVolumeHint": {
+    "description": "Composeur de recherche, bateau : explication des filtres de volume et de prix au m³ (le serveur n'y laisse passer qu'un trajet au m³)."
+  },
+  "homeComposerMoreFiltersHintBoat": "Content type, rating, payment",
+  "@homeComposerMoreFiltersHintBoat": {
+    "description": "Sous-titre de « Plus de filtres » du composeur de recherche quand le filtre Transport est le bateau : pas d'escales."
+  },
+  "listingBoatArrivalRange": "Estimated arrival {from} to {to}",
+  "@listingBoatArrivalRange": {
+    "description": "Carte de recherche d'un trajet bateau : fourchette d'arrivée, dates déjà formatées.",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "listingBoatArrivalDate": "Estimated arrival {date}",
+  "@listingBoatArrivalDate": {
+    "description": "Carte de recherche d'un trajet bateau sans fourchette : une date d'arrivée estimée, déjà formatée.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "listingBoatVolumeRemaining": "{volume} left",
+  "@listingBoatVolumeRemaining": {
+    "description": "Carte de recherche d'un trajet bateau au m³ : volume encore disponible, déjà formaté en m³.",
+    "placeholders": {
+      "volume": {
+        "type": "String"
+      }
+    }
   }
 }
