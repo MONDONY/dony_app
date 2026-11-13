@@ -209,6 +209,21 @@ void main() {
       test(name, () => expect(_entries(trip, bids), expected));
     }
 
+    test('bateau : ni récurrence ni modèle (refusés par le back, C16)', () {
+      for (final status in ['ACTIVE', 'COMPLETED']) {
+        final entries = _entries(
+          ownerTrip(status: status, transportMode: TransportMode.boat),
+          const [],
+        );
+        expect(entries, isNot(contains(recurring)), reason: status);
+        expect(entries, isNot(contains(template)), reason: status);
+      }
+      expect(
+        _entries(ownerTrip(transportMode: TransportMode.car), const []),
+        containsAll([recurring, template]),
+      );
+    });
+
     test('« Modifier » grisé n’existe plus : absent dès qu’on est engagé', () {
       expect(_entries(ownerTrip(), pending), isNot(contains(edit)));
     });
