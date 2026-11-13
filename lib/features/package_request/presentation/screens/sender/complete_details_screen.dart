@@ -335,7 +335,9 @@ class _RecapCard extends StatelessWidget {
     final double? gross = thread != null
         ? (thread!.grossPriceEur ??
               ThreadPricer.of(thread!).priceFor(thread!.currentPriceEur).gross)
-        : request.targetPriceEur;
+        // Sans fil, le brut de la demande : `targetPriceEur` seul est le net
+        // du voyageur, l'expéditeur voit toujours les frais inclus.
+        : request.grossPriceEur ?? request.targetPriceEur;
 
     final rows = <(String, String)>[
       (
