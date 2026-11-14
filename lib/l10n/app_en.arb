@@ -11915,14 +11915,6 @@
   "@inquiryBookingCardTitle": {
       "description": "Title of the booking card in a question conversation."
   },
-  "inquiryKycTitle": "Verify your identity",
-  "@inquiryKycTitle": {
-      "description": "Title of the sheet shown when identity verification is required to ask a question."
-  },
-  "inquiryKycBody": "To write to a traveler, we first need to verify your identity. It only takes a few minutes.",
-  "@inquiryKycBody": {
-      "description": "Body of the identity verification sheet for asking a question."
-  },
   "inquirySendLimitError": "Message limit reached. Book to continue.",
   "@inquirySendLimitError": {
       "description": "Error shown when sending a question message is refused because of the quota."

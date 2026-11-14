@@ -87,6 +87,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   /// `null` tant que le fil n'a pas basculé en direct.
   ConversationModel? _refreshedConversation;
   bool _refreshedForLift = false;
+
+  /// Une relecture est en cours : une seule `getConversation` par levée, quel
+  /// que soit le déclencheur (flux parent ou retour de la fiche du trajet).
+  bool _refreshInFlight = false;
+
+  /// Un déclencheur est arrivé pendant la lecture (rien lancé) : à reprendre
+  /// si cette lecture ne dit rien d'utile. Borne les reprises.
+  bool _refreshMissed = false;
+
+  /// Compté à chaque reverrouillage : une relecture lancée avant est périmée.
+  int _lockEpoch = 0;
   bool _mediaAllowed = false;
   List<PendingChatImage> _pendingImages = const [];
   int _localImageSeq = 0;
@@ -185,11 +196,27 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) async {
     if (_conversationId.isEmpty || _refreshedForLift) return;
+    if (_refreshInFlight) {
+      _refreshMissed = true;
+      return;
+    }
     final generation = _inquiryGeneration;
+    final epoch = _lockEpoch;
+    var retry = false;
+    _refreshMissed = false;
+    _refreshInFlight = true;
     try {
       final fresh = await _conversationRepo.getConversation(_conversationId);
       if (isClosed || generation != _inquiryGeneration) return;
-      if (fresh.isInquiry && !fresh.inquiryQuotaLifted) return;
+      if (epoch != _lockEpoch) {
+        // Reverrouillé pendant la lecture : résultat périmé, ignoré.
+        retry = true;
+        return;
+      }
+      if (fresh.isInquiry && !fresh.inquiryQuotaLifted) {
+        retry = true;
+        return;
+      }
       _refreshedForLift = true;
       if (_inquiryLimited) _liftInquiry();
       _refreshedConversation = fresh;
@@ -199,6 +226,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         'chat.conversation_refresh_failed',
         data: {'reason': _reasonOf(e)},
       );
+    } finally {
+      _refreshInFlight = false;
+      // Un déclencheur arrivé pendant la lecture n'a pas pu en lancer une : il
+      // reprend ici si ce résultat n'a rien appris.
+      if (retry &&
+          _refreshMissed &&
+          !isClosed &&
+          !_inquiryLimited &&
+          !_refreshedForLift) {
+        add(const ChatConversationRefreshRequested());
+      }
     }
   }
 
@@ -278,6 +316,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       add(const _InquiryChanged());
       return;
     }
+    if (!_inquiryLimited) _lockEpoch++;
     _inquiryLimited = true;
     _refreshedConversation = null;
     _refreshedForLift = false;

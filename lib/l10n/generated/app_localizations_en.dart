@@ -24037,13 +24037,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inquiryBookingCardTitle => 'Ready to book?';
 
   @override
-  String get inquiryKycTitle => 'Verify your identity';
-
-  @override
-  String get inquiryKycBody =>
-      'To write to a traveler, we first need to verify your identity. It only takes a few minutes.';
-
-  @override
   String get inquirySendLimitError =>
       'Message limit reached. Book to continue.';
 }

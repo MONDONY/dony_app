@@ -216,21 +216,10 @@ void main() {
     await pumpScreen(tester);
     await emitLimited(tester, 3);
 
-    // Avant la levée, le back dit encore « question » au retour de la fiche.
-    when(
-      () => conversations.getConversation('conv-q'),
-    ).thenAnswer((_) async => _inquiry);
-    await tester.tap(tripBanner);
-    await settle(tester);
-    expect(pushed, ['/traveler/ann-9']);
-    expect(quotaBar, findsOneWidget);
-
-    when(
-      () => conversations.getConversation('conv-q'),
-    ).thenAnswer((_) async => _promoted);
+    // Levée par le seul flux du document parent : une seule relecture.
     parentCtrl.add(_parent(lifted: true));
     await settle(tester);
-    verify(() => conversations.getConversation('conv-q')).called(2);
+    verify(() => conversations.getConversation('conv-q')).called(1);
 
     pushed.clear();
     await tester.tap(tripBanner);

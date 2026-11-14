@@ -23472,14 +23472,6 @@
   "@inquiryBookingCardTitle": {
       "description": "Titre de la carte de réservation d'une conversation de question."
   },
-  "inquiryKycTitle": "Vérifiez votre identité",
-  "@inquiryKycTitle": {
-      "description": "Titre de la feuille affichée quand la vérification d'identité est requise pour poser une question."
-  },
-  "inquiryKycBody": "Pour écrire à un voyageur, nous devons d'abord vérifier votre identité. Cela ne prend que quelques minutes.",
-  "@inquiryKycBody": {
-      "description": "Corps de la feuille de vérification requise pour poser une question."
-  },
   "inquirySendLimitError": "Limite de messages atteinte. Réservez pour continuer.",
   "@inquirySendLimitError": {
       "description": "Erreur affichée quand l'envoi d'un message de question est refusé faute de quota."

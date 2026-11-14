@@ -517,6 +517,8 @@ void main() {
       parentCtrl.add(_p(_me, lifted: true));
       bloc.add(const ChatConversationRefreshRequested());
       await pumpEventQueue();
+      // Le premier verify a « consommé » l'appel : rien de plus n'est parti.
+      verifyNoMoreInteractions(conv);
       await bloc.close();
     });
 
@@ -565,6 +567,52 @@ void main() {
       expect(loaded(bloc).conversation, isNull);
       await bloc.close();
     });
+
+    test(
+      'relecture en vol puis reverrouillage : résultat tardif ignoré',
+      () async {
+        final late = Completer<ConversationModel>();
+        when(
+          () => conv.getConversation('api-1'),
+        ).thenAnswer((_) => late.future);
+        final bloc = await open(_subscribe(), sent: 3);
+        parentCtrl.add(_p(_me, lifted: true));
+        await pumpEventQueue();
+        verify(() => conv.getConversation('api-1')).called(1);
+        // Le back reverrouille avant la réponse de la relecture.
+        parentCtrl.add(_p(_me));
+        await pumpEventQueue();
+        sentCtrl.add(3);
+        await pumpEventQueue();
+        late.complete(_direct);
+        await pumpEventQueue();
+        expect(loaded(bloc).conversation, isNull);
+        expect(loaded(bloc).inquiryRemaining, 7);
+        expect(loaded(bloc).inquiryLimitReached, isFalse);
+        await bloc.close();
+      },
+    );
+
+    test(
+      'retour de fiche en vol puis levée du parent : une seule relecture',
+      () async {
+        final pending = Completer<ConversationModel>();
+        when(
+          () => conv.getConversation('api-1'),
+        ).thenAnswer((_) => pending.future);
+        final bloc = await open(_subscribe(), sent: 3);
+        bloc.add(const ChatConversationRefreshRequested());
+        await pumpEventQueue();
+        parentCtrl.add(_p(_me, lifted: true));
+        await pumpEventQueue();
+        pending.complete(_direct);
+        await pumpEventQueue();
+        verify(() => conv.getConversation('api-1')).called(1);
+        expect(loaded(bloc).conversation?.bidId, 'bid-1');
+        expect(loaded(bloc).inquiryRemaining, isNull);
+        await bloc.close();
+      },
+    );
 
     test('reverrouillage : le modèle relu est oublié', () async {
       when(

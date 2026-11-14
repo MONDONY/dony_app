@@ -24211,13 +24211,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get inquiryBookingCardTitle => 'Prêt à réserver ?';
 
   @override
-  String get inquiryKycTitle => 'Vérifiez votre identité';
-
-  @override
-  String get inquiryKycBody =>
-      'Pour écrire à un voyageur, nous devons d\'abord vérifier votre identité. Cela ne prend que quelques minutes.';
-
-  @override
   String get inquirySendLimitError =>
       'Limite de messages atteinte. Réservez pour continuer.';
 }

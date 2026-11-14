@@ -38718,18 +38718,6 @@ abstract class AppLocalizations {
   /// **'Prêt à réserver ?'**
   String get inquiryBookingCardTitle;
 
-  /// Titre de la feuille affichée quand la vérification d'identité est requise pour poser une question.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vérifiez votre identité'**
-  String get inquiryKycTitle;
-
-  /// Corps de la feuille de vérification requise pour poser une question.
-  ///
-  /// In fr, this message translates to:
-  /// **'Pour écrire à un voyageur, nous devons d\'abord vérifier votre identité. Cela ne prend que quelques minutes.'**
-  String get inquiryKycBody;
-
   /// Erreur affichée quand l'envoi d'un message de question est refusé faute de quota.
   ///
   /// In fr, this message translates to:
