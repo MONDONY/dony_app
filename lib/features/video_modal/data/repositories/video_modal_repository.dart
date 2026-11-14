@@ -44,7 +44,7 @@ class VideoModalRepository {
 
   /// Campagnes à proposer, triées par priorité (à égalité, l'ordre du back).
   /// Sans compte, les règles du back (« Ne plus afficher », réponse,
-  /// fréquence, public, plafond d'un modal par jour) sont appliquées avec
+  /// fréquence, public) sont appliquées avec
   /// l'historique local.
   Future<List<VideoModalCampaign>> loadEligible({
     required String lang,
@@ -76,10 +76,7 @@ class VideoModalRepository {
     if (realSession) return capped.toList(growable: false);
     final history = await _readHistory();
     final now = _clock();
-    // Plafond journalier atteint : seules les campagnes « à chaque fois » restent.
-    final dailyCapped = history.dailyCapReached(now);
     return capped
-        .where((c) => !dailyCapped || c.isEveryTime)
         .where((c) => history.isEligible(c, now: now))
         .toList(growable: false);
   }

@@ -66,26 +66,19 @@ class VideoModalVersionRecord extends Equatable {
 }
 
 /// Historique local d'un visiteur sans compte, campagne par campagne puis
-/// version par version, plus l'instant du dernier modal affiché (tous types
-/// confondus) pour le plafond d'un modal par jour.
+/// version par version. Aucun plafond global : seule la fréquence de chaque
+/// campagne décide.
 class VideoModalLocalHistory extends Equatable {
-  const VideoModalLocalHistory([this.campaigns = const {}, this.lastModalAt]);
+  const VideoModalLocalHistory([this.campaigns = const {}]);
 
   final Map<String, Map<int, VideoModalVersionRecord>> campaigns;
 
-  /// Dernier SHOWN, toutes campagnes confondues.
-  final DateTime? lastModalAt;
-
-  /// Un modal par jour et par personne, tous types confondus.
-  static const dailyCap = 1;
-
-  bool get isEmpty => campaigns.isEmpty && lastModalAt == null;
+  bool get isEmpty => campaigns.isEmpty;
 
   VideoModalVersionRecord recordOf(String id, int version) =>
       campaigns[id]?[version] ?? const VideoModalVersionRecord();
 
-  /// [at] : heure de l'événement (SHOWN : dernier affichage de la version et
-  /// jour du dernier modal).
+  /// [at] : heure de l'événement (SHOWN : dernier affichage de la version).
   VideoModalLocalHistory apply(
     String id,
     int version,
@@ -96,25 +89,12 @@ class VideoModalLocalHistory extends Equatable {
       campaigns[id] ?? const {},
     );
     versions[version] = recordOf(id, version).apply(event, at: at);
-    return VideoModalLocalHistory({
-      ...campaigns,
-      id: versions,
-    }, event == VideoModalEventType.shown && at != null ? at : lastModalAt);
-  }
-
-  /// Un modal a déjà été affiché le jour (calendaire, heure locale de
-  /// l'appareil) de [now] : le plafond journalier est atteint.
-  bool dailyCapReached(DateTime now) {
-    final last = lastModalAt;
-    if (last == null || dailyCap <= 0) return false;
-    final a = last.toLocal();
-    final b = now.toLocal();
-    return a.year == b.year && a.month == b.month && a.day == b.day;
+    return VideoModalLocalHistory({...campaigns, id: versions});
   }
 
   /// Mêmes règles que le filtre du back pour un compte : « Ne plus afficher »,
   /// réponse (si la campagne s'arrête après une réponse), fréquence, public de
-  /// la version. Le plafond journalier est à part ([dailyCapReached]).
+  /// la version.
   bool isEligible(VideoModalCampaign campaign, {DateTime? now}) {
     final versions = campaigns[campaign.id] ?? const {};
     final current =
@@ -160,12 +140,11 @@ class VideoModalLocalHistory extends Equatable {
       for (final c in campaigns.entries)
         c.key: {for (final v in c.value.entries) '${v.key}': v.value.toJson()},
     },
-    if (lastModalAt != null)
-      'lastModalAt': lastModalAt!.toUtc().toIso8601String(),
   };
 
   /// Lit l'ancien format (campagnes à la racine) comme le nouveau
-  /// (`{"v": 2, "campaigns": {...}, "lastModalAt": ...}`).
+  /// (`{"v": 2, "campaigns": {...}}`). Une clé inconnue (ancien `lastModalAt`)
+  /// est ignorée.
   static VideoModalLocalHistory fromJson(Object? json) {
     if (json is! Map) return const VideoModalLocalHistory();
     final isV2 = json['v'] == 2 && json['campaigns'] is Map;
@@ -182,15 +161,11 @@ class VideoModalLocalHistory extends Equatable {
       }
       result[c.key as String] = parsed;
     }
-    final last = isV2 ? json['lastModalAt'] : null;
-    return VideoModalLocalHistory(
-      result,
-      last is String ? DateTime.tryParse(last) : null,
-    );
+    return VideoModalLocalHistory(result);
   }
 
   @override
-  List<Object?> get props => [campaigns, lastModalAt];
+  List<Object?> get props => [campaigns];
 }
 
 /// Événement d'un visiteur sans compte, en attente d'envoi au back à la

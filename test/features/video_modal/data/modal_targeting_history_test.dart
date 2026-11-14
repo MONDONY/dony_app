@@ -246,46 +246,13 @@ void main() {
     });
   });
 
-  group('plafond d\'un modal par jour', () {
-    test('aucun modal : pas de plafond', () {
-      expect(empty.dailyCapReached(now), isFalse);
-    });
-
-    test('un SHOWN aujourd\'hui : plafond atteint, toutes campagnes', () {
-      final h = empty.apply(
-        'autre',
-        1,
-        VideoModalEventType.shown,
-        at: DateTime(2026, 11, 10, 0, 5),
-      );
-      expect(h.dailyCapReached(now), isTrue);
-      expect(h.dailyCapReached(DateTime(2026, 11, 10, 23, 59)), isTrue);
-    });
-
-    test('changement de jour (minuit passé) : le plafond retombe', () {
-      final h = empty.apply(
-        'autre',
-        1,
-        VideoModalEventType.shown,
-        at: DateTime(2026, 11, 10, 23, 59),
-      );
-      expect(h.dailyCapReached(DateTime(2026, 11, 11, 0, 1)), isFalse);
-      expect(h.dailyCapReached(DateTime(2026, 12, 10, 9)), isFalse);
-      expect(h.dailyCapReached(DateTime(2027, 11, 10, 9)), isFalse);
-    });
-
-    test('seul un SHOWN compte, pas une réponse', () {
-      final h = empty.apply('c', 1, VideoModalEventType.opened, at: now);
-      expect(h.lastModalAt, isNull);
-      expect(h.dailyCapReached(now), isFalse);
-    });
-
-    test('le dernier SHOWN fait foi', () {
-      final h = empty
-          .apply('a', 1, VideoModalEventType.shown, at: DateTime(2026, 11, 8))
-          .apply('b', 1, VideoModalEventType.shown, at: now);
-      expect(h.lastModalAt, now);
-      expect(h.dailyCapReached(now), isTrue);
+  group('pas de plafond global', () {
+    test('deux modals différents le même jour sont tous deux éligibles', () {
+      final a = campaign(id: 'a', frequency: VideoModalFrequency.once);
+      final b = campaign(id: 'b', frequency: VideoModalFrequency.once);
+      final h = empty.apply('a', 1, VideoModalEventType.shown, at: now);
+      expect(h.isEligible(b, now: now), isTrue);
+      expect(h.isEligible(a, now: now), isTrue);
     });
   });
 
@@ -326,7 +293,6 @@ void main() {
       ]);
       final back = VideoModalLocalHistory.fromJson(h.toJson());
       expect(back.toJson(), h.toJson());
-      expect(back.lastModalAt!.isAtSameMomentAs(now), isTrue);
       final r = back.recordOf(c.id, c.version);
       expect(r.dontShowAgain, isTrue);
       expect(r.lastShownAt!.isAtSameMomentAs(now), isTrue);
@@ -339,7 +305,6 @@ void main() {
           '2': {'displays': 2, 'status': 'DISMISSED'},
         },
       });
-      expect(back.lastModalAt, isNull);
       final r = back.recordOf('c1', 2);
       expect(r.displays, 2);
       expect(r.status, VideoModalEventType.dismissed);
@@ -355,17 +320,16 @@ void main() {
       expect(r.status, isNull);
     });
 
-    test('dernier modal illisible : ignoré', () {
+    test('ancienne clé lastModalAt ignorée sans erreur', () {
       final back = VideoModalLocalHistory.fromJson({
         'v': 2,
         'campaigns': <String, Object?>{},
         'lastModalAt': 'hier',
       });
-      expect(back.lastModalAt, isNull);
       expect(back.isEmpty, isTrue);
     });
 
-    test('un historique qui n\'a que le dernier modal n\'est pas vide', () {
+    test('un historique avec une campagne n\'est pas vide', () {
       final h = empty.apply('c', 1, VideoModalEventType.shown, at: now);
       expect(h.isEmpty, isFalse);
     });
