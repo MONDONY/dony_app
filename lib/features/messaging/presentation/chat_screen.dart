@@ -283,11 +283,31 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  /// Rouvre la fiche du trajet (feuille « Faire une demande »).
-  void _openInquiryTrip() {
-    final path = inquiryTripPathFor(widget.conversation);
-    if (path != null) _navigate(path, null);
+  /// Rouvre la fiche du trajet (feuille « Faire une demande »). Au retour, le
+  /// BLoC relit la conversation : si la demande a été créée, le fil passe en
+  /// direct et le modèle à jour (`bidId`) remplace celui de l'ouverture.
+  Future<void> _openInquiryTrip() async {
+    final path = inquiryTripPathFor(_conversation);
+    if (path == null) return;
+    final bloc = context.read<ChatBloc>();
+    final override = widget.onNavigate;
+    if (override != null) {
+      override(path, null);
+    } else {
+      await context.push<Object?>(path);
+    }
+    if (!mounted) return;
+    bloc.add(const ChatConversationRefreshRequested());
   }
+
+  /// Conversation à jour : celle relue par le BLoC après le passage en direct
+  /// d'un fil de questions, sinon celle de l'ouverture.
+  ConversationModel _conversationOf(ChatState state) => state is ChatLoaded
+      ? (state.conversation ?? widget.conversation)
+      : widget.conversation;
+
+  ConversationModel get _conversation =>
+      _conversationOf(context.read<ChatBloc>().state);
 
   void _navigate(String path, Object? extra) {
     final override = widget.onNavigate;
@@ -399,7 +419,7 @@ class _ChatScreenState extends State<ChatScreen> {
     // Le numéro n'est plus dans la conversation : on le demande au serveur, qui
     // vérifie que le deal est actif et journalise la révélation.
     // Une question avant réservation n'a pas de bid : pas d'appel possible.
-    final bidId = widget.conversation.bidId;
+    final bidId = _conversation.bidId;
     if (bidId == null) return;
     context.read<ContactRevealBloc>().add(ContactRevealRequested(bidId));
   }
@@ -833,7 +853,9 @@ class _ChatScreenState extends State<ChatScreen> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final conversation = widget.conversation;
+    final conversation = context.select<ChatBloc, ConversationModel>(
+      (bloc) => _conversationOf(bloc.state),
+    );
     final participant = conversation.otherParticipant;
     // Repli partagé par le titre de l'écran et le menu ⋯ (Signaler/Bloquer/
     // dialogue de confirmation) : un participant sans nom ne doit jamais

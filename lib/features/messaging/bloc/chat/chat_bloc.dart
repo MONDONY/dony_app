@@ -9,6 +9,7 @@ import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/messaging/data/message_edit_repository.dart';
+import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -81,6 +82,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   // Photos (FLUTTER-B4).
   String _conversationId = '';
+
+  /// Conversation relue après la levée du plafond d'un fil de questions ;
+  /// `null` tant que le fil n'a pas basculé en direct.
+  ConversationModel? _refreshedConversation;
+  bool _refreshedForLift = false;
   bool _mediaAllowed = false;
   List<PendingChatImage> _pendingImages = const [];
   int _localImageSeq = 0;
@@ -147,7 +153,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatAppVisibilityChanged>(_onAppVisibilityChanged);
     on<_InquirySentChanged>(_onInquirySentChanged);
     on<_InquiryChanged>(_onInquiryChanged);
-    on<ChatInquiryLiftedObserved>(_onInquiryLifted);
+    on<ChatConversationRefreshRequested>(_onConversationRefresh);
   }
 
   /// Compteur affichable : demandeur connu et première valeur reçue.
@@ -170,18 +176,38 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (_syncWithThread()) emit(_snapshot());
   }
 
-  void _onInquiryLifted(
-    ChatInquiryLiftedObserved event,
+  /// Conversation relue après la levée du plafond : le back rend alors le
+  /// `bidId` et le type ordinaire, que l'écran, ouvert sur la photo prise à
+  /// l'ouverture, ne connaît pas. Une seule lecture par levée ; un échec laisse
+  /// l'ancien modèle (journal) et la prochaine demande réessaie.
+  Future<void> _onConversationRefresh(
+    ChatConversationRefreshRequested event,
     Emitter<ChatState> emit,
-  ) {
-    if (!_inquiryLimited) return;
-    _liftInquiry();
-    if (_syncWithThread()) emit(_snapshot());
+  ) async {
+    if (_conversationId.isEmpty || _refreshedForLift) return;
+    final generation = _inquiryGeneration;
+    try {
+      final fresh = await _conversationRepo.getConversation(_conversationId);
+      if (isClosed || generation != _inquiryGeneration) return;
+      if (fresh.isInquiry && !fresh.inquiryQuotaLifted) return;
+      _refreshedForLift = true;
+      if (_inquiryLimited) _liftInquiry();
+      _refreshedConversation = fresh;
+      if (_syncWithThread()) emit(_snapshot());
+    } catch (e) {
+      AppLog.warn(
+        'chat.conversation_refresh_failed',
+        data: {'reason': _reasonOf(e)},
+      );
+    }
   }
 
   /// Quota levé : plus de compteur ni de verrou, les envois en attente
   /// repartent en ordinaire. Le document parent reste suivi (reverrouillage).
   void _liftInquiry() {
+    if (_inquiryLimited && !_refreshedForLift && !isClosed) {
+      add(const ChatConversationRefreshRequested());
+    }
     _inquiryLimited = false;
     _inquiryCounting = false;
     _inquirySent = 0;
@@ -253,6 +279,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       return;
     }
     _inquiryLimited = true;
+    _refreshedConversation = null;
+    _refreshedForLift = false;
     final asker = parent.askerId != null && parent.askerId == uid;
     if (asker && !_inquiryCounting) {
       _inquiryCounting = true;
@@ -293,6 +321,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             mediaAllowed: _mediaAllowed,
             inquiryRemaining: _inquiryShown ? _inquiryRemaining : null,
             inquiryLimitReached: _inquiryShown && _inquiryRemaining == 0,
+            conversation: _refreshedConversation,
           );
   }
 
@@ -386,6 +415,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _messages = const [];
     _replyingTo = null;
     _conversationId = event.conversationId;
+    _refreshedConversation = null;
+    _refreshedForLift = false;
     _mediaAllowed = event.mediaAllowed;
     _pendingImages = const [];
     _inquiryGeneration++;

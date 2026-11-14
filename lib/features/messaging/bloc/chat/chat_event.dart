@@ -144,8 +144,9 @@ class ChatAppVisibilityChanged extends ChatEvent {
   const ChatAppVisibilityChanged({required this.visible});
 }
 
-/// La conversation rechargée annonce `inquiryQuotaLifted = true` (un bid existe
-/// ou le voyageur a répondu) : le compteur et le verrou disparaissent.
-class ChatInquiryLiftedObserved extends ChatEvent {
-  const ChatInquiryLiftedObserved();
+/// Relit la conversation auprès du back : après la levée du plafond d'un fil
+/// de questions (suivie sur Firestore) ou au retour de la fiche du trajet. Si
+/// le fil est passé en direct, l'écran reçoit le modèle à jour (`bidId`).
+class ChatConversationRefreshRequested extends ChatEvent {
+  const ChatConversationRefreshRequested();
 }

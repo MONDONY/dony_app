@@ -70,6 +70,13 @@ ConversationModel _conversation({bool lifted = false}) => ConversationModel(
   inquiryQuotaLifted: lifted,
 );
 
+const _direct = ConversationModel(
+  id: 'api-1',
+  firestoreConversationId: _conv,
+  otherParticipant: ParticipantModel(id: 'o', name: 'Owner'),
+  bidId: 'bid-1',
+);
+
 void main() {
   late MockFirestoreChatRepository fs;
   late MockConversationRepository conv;
@@ -116,6 +123,9 @@ void main() {
     when(() => fs.getMessage(any(), any())).thenAnswer((_) async => null);
     stubWrite(() async {});
     when(() => conv.updateLastMessage(any(), any())).thenAnswer((_) async {});
+    when(
+      () => conv.getConversation('api-1'),
+    ).thenAnswer((_) async => _conversation());
   });
 
   tearDown(() async {
@@ -473,11 +483,11 @@ void main() {
   });
 
   test(
-    'ChatInquiryLiftedObserved efface compteur, verrou et abonnements',
+    'levée par le document parent : efface compteur, verrou et abonnement',
     () async {
       final bloc = await open(_subscribe(), sent: 10);
       expect(loaded(bloc).inquiryLimitReached, isTrue);
-      bloc.add(const ChatInquiryLiftedObserved());
+      parentCtrl.add(_p(_me, lifted: true));
       await pumpEventQueue();
       expect(loaded(bloc).inquiryRemaining, isNull);
       expect(loaded(bloc).inquiryLimitReached, isFalse);
@@ -490,6 +500,86 @@ void main() {
       expect(parentCtrl.hasListener, isFalse);
     },
   );
+
+  group('relecture de la conversation après la levée', () {
+    test('levée : relue une fois, le modèle à jour est dans l\'état', () async {
+      when(
+        () => conv.getConversation('api-1'),
+      ).thenAnswer((_) async => _direct);
+      final bloc = await open(_subscribe(), sent: 4);
+      expect(loaded(bloc).conversation, isNull);
+      parentCtrl.add(_p(_me, lifted: true));
+      await pumpEventQueue();
+      verify(() => conv.getConversation('api-1')).called(1);
+      expect(loaded(bloc).conversation?.bidId, 'bid-1');
+      expect(loaded(bloc).conversation?.isInquiry, isFalse);
+      // Un second signal de levée ne relit rien.
+      parentCtrl.add(_p(_me, lifted: true));
+      bloc.add(const ChatConversationRefreshRequested());
+      await pumpEventQueue();
+      await bloc.close();
+    });
+
+    test(
+      'échec de lecture : ancien modèle gardé, nouvel essai possible',
+      () async {
+        var calls = 0;
+        when(() => conv.getConversation('api-1')).thenAnswer((_) async {
+          if (calls++ == 0) throw StateError('réseau');
+          return _direct;
+        });
+        final bloc = await open(_subscribe(), sent: 4);
+        parentCtrl.add(_p(_me, lifted: true));
+        await pumpEventQueue();
+        expect(loaded(bloc).conversation, isNull);
+        expect(loaded(bloc).inquiryRemaining, isNull); // la levée tient
+        bloc.add(const ChatConversationRefreshRequested());
+        await pumpEventQueue();
+        expect(loaded(bloc).conversation?.bidId, 'bid-1');
+        await bloc.close();
+      },
+    );
+
+    test(
+      'retour de la fiche du trajet : levée constatée par le back',
+      () async {
+        when(
+          () => conv.getConversation('api-1'),
+        ).thenAnswer((_) async => _direct);
+        final bloc = await open(_subscribe(), sent: 10);
+        expect(loaded(bloc).inquiryLimitReached, isTrue);
+        bloc.add(const ChatConversationRefreshRequested());
+        await pumpEventQueue();
+        expect(loaded(bloc).inquiryLimitReached, isFalse);
+        expect(loaded(bloc).inquiryRemaining, isNull);
+        expect(loaded(bloc).conversation?.bidId, 'bid-1');
+        await bloc.close();
+      },
+    );
+
+    test('retour sans demande créée : rien ne change', () async {
+      final bloc = await open(_subscribe(), sent: 10);
+      bloc.add(const ChatConversationRefreshRequested());
+      await pumpEventQueue();
+      expect(loaded(bloc).inquiryLimitReached, isTrue);
+      expect(loaded(bloc).conversation, isNull);
+      await bloc.close();
+    });
+
+    test('reverrouillage : le modèle relu est oublié', () async {
+      when(
+        () => conv.getConversation('api-1'),
+      ).thenAnswer((_) async => _direct);
+      final bloc = await open(_subscribe(), sent: 4);
+      parentCtrl.add(_p(_me, lifted: true));
+      await pumpEventQueue();
+      expect(loaded(bloc).conversation, isNotNull);
+      parentCtrl.add(_p(_me));
+      await pumpEventQueue();
+      expect(loaded(bloc).conversation, isNull);
+      await bloc.close();
+    });
+  });
 
   test('quotaLifted reçu du document parent : levée en direct', () async {
     final bloc = await open(_subscribe(), sent: 10);

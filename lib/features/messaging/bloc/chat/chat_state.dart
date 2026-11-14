@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/data/message_edit_repository.dart';
+import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 
 abstract class ChatState {
@@ -42,6 +43,10 @@ class ChatLoaded extends ChatState {
 
   /// Le demandeur a épuisé son quota : le champ de saisie se verrouille.
   final bool inquiryLimitReached;
+
+  /// Conversation relue après le passage en direct d'un fil de questions
+  /// (`bidId`, type ordinaire) ; `null` tant que celle de l'ouverture vaut.
+  final ConversationModel? conversation;
   const ChatLoaded(
     this.messages, {
     this.replyingTo,
@@ -50,6 +55,7 @@ class ChatLoaded extends ChatState {
     this.mediaAllowed = false,
     this.inquiryRemaining,
     this.inquiryLimitReached = false,
+    this.conversation,
   });
 }
 
