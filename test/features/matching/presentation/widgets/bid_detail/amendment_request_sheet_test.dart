@@ -5,6 +5,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_request_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_request_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
@@ -12,6 +13,10 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../../helpers/label_fit_expectations.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
+import '../trip_owner/trip_card_harness.dart' show loadAppFonts;
 
 class _MockRepository extends Mock implements BidAmendmentRepository {}
 
@@ -27,6 +32,29 @@ BidModel _bid() => BidModel(
   status: 'ACCEPTED',
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
+);
+
+BidModel _boatBid() => BidModel(
+  id: 'bid-1',
+  announcementId: 'ann-1',
+  senderId: 'sender-1',
+  travelerName: 'Moussa',
+  departureCity: 'Marseille',
+  arrivalCity: 'Abidjan',
+  status: 'ACCEPTED',
+  transportMode: TransportMode.boat,
+  volumeM3: 0.5,
+  createdAt: DateTime(2026, 11),
+  updatedAt: DateTime(2026, 11),
+);
+
+AmendmentOptions _boatOptions() => const AmendmentOptions(
+  currency: 'EUR',
+  availableVolumeM3: 0.85,
+  pricePerM3Display: 120,
+  paymentMethods: [BidPaymentMethod.cash, BidPaymentMethod.stripe],
+  minAmount: 1,
+  maxAmount: 300,
 );
 
 AmendmentOptions _options(List<BidPaymentMethod> methods) => AmendmentOptions(
@@ -118,14 +146,17 @@ void main() {
     WidgetTester tester, {
     Future<bool> Function(BuildContext)? authorize,
     bool pay = true,
+    BidModel? bid,
+    Locale locale = AppL10n.fr,
+    Size size = const Size(1200, 3200),
   }) async {
-    tester.view.physicalSize = const Size(1200, 3200);
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light(),
-        locale: AppL10n.fr,
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -134,7 +165,7 @@ void main() {
               onPressed: () async {
                 result = await AmendmentRequestSheet.show(
                   context,
-                  bid: _bid(),
+                  bid: bid ?? _bid(),
                   authorize: authorize ?? (_) async => true,
                   presentSheet:
                       (
@@ -192,6 +223,109 @@ void main() {
     expect(_txt('ARTICLES DE LA GRILLE DE MOUSSA'), findsOneWidget);
     expect(_txt('Téléphone'), findsOneWidget);
     expect(_txt('+0 kg'), findsOneWidget);
+  });
+
+  group('colis au m³ (trajet bateau)', () {
+    setUp(() {
+      when(
+        () => repository.options('bid-1'),
+      ).thenAnswer((_) async => _boatOptions());
+      when(
+        () => repository.quote(
+          'bid-1',
+          addedKg: any(named: 'addedKg'),
+          addedVolumeM3: any(named: 'addedVolumeM3'),
+          items: any(named: 'items'),
+        ),
+      ).thenAnswer((_) async => 36);
+    });
+
+    testWidgets('boatAmendment_showsVolumeSelector_notKilos', (tester) async {
+      await open(tester, bid: _boatBid());
+      expect(_txt('VOLUME EN PLUS · 120 €/M³ · 0,8 M³ LIBRES'), findsOneWidget);
+      expect(_txt('+0 m³'), findsOneWidget);
+      expect(find.textContaining('KILOS'), findsNothing);
+      expect(find.textContaining('kg'), findsNothing);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('boatAmendment_sendsVolume_byTenth', (tester) async {
+      await open(tester, bid: _boatBid());
+      await addKilos(tester, 3);
+
+      expect(_txt('+0,3 m³'), findsOneWidget);
+      verify(
+        () => repository.quote(
+          'bid-1',
+          addedKg: 0,
+          addedVolumeM3: 0.3,
+          items: const {},
+        ),
+      ).called(1);
+      expect(_txt('36 €'), findsOneWidget);
+
+      await tester.tap(submit('Envoyer la demande à Moussa'));
+      await tester.pumpAndSettle();
+      verify(
+        () => repository.create(
+          'bid-1',
+          addedKg: 0,
+          addedVolumeM3: 0.3,
+          items: const {},
+          method: BidPaymentMethod.cash,
+        ),
+      ).called(1);
+    });
+
+    testWidgets('boatAmendment_plusButtonStopsAtFreeVolume', (tester) async {
+      await open(tester, bid: _boatBid());
+      await addKilos(tester, 8);
+
+      expect(_txt('+0,8 m³'), findsOneWidget);
+      final plus = find.descendant(
+        of: find.byTooltip('Plus').first,
+        matching: find.byType(InkWell),
+      );
+      expect(tester.widget<InkWell>(plus).onTap, isNull);
+    });
+
+    for (final locale in [AppL10n.fr, AppL10n.en]) {
+      testWidgets(
+        'boatAmendment_labelsAndButtonFitAt360 (${locale.languageCode})',
+        (tester) async {
+          await loadAppFonts();
+          await open(
+            tester,
+            bid: _boatBid(),
+            locale: locale,
+            size: const Size(360, 3200),
+          );
+
+          expect(
+            find.textContaining(
+              locale == AppL10n.en ? 'EXTRA VOLUME' : 'VOLUME EN PLUS',
+            ),
+            findsOneWidget,
+          );
+          expect(tester.takeException(), isNull);
+          expectButtonLabelNominal(
+            tester,
+            find.byWidgetPredicate((w) => w is DonyButton),
+          );
+        },
+      );
+    }
+
+    testWidgets('kgAmendment_unchanged_planeParcel', (tester) async {
+      // Colis d'un trajet bateau SANS volume (ancien back) ou autre mode :
+      // le sélecteur de kilos reste.
+      when(
+        () => repository.options('bid-1'),
+      ).thenAnswer((_) async => _options([BidPaymentMethod.cash]));
+      await open(tester);
+      expect(_txt('KILOS EN PLUS · 5,13 €/KG · 6 KG LIBRES'), findsOneWidget);
+      expect(find.textContaining('M³'), findsNothing);
+    });
   });
 
   testWidgets('sheet_cardMethod_showsBloquerLabel', (tester) async {

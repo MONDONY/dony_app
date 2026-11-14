@@ -8,6 +8,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/kyc/data/kyc_recheck.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_required_bottom_sheet.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
@@ -63,8 +64,13 @@ class PublishIntroScreen extends StatelessWidget {
       create: (ctx) {
         final verified =
             _currentUser(ctx.read<AuthBloc>().state)?.isKycVerified ?? false;
-        return getIt<PublishGateCubit>(param1: role.commitmentRole)
-          ..start(kycVerified: verified);
+        final authBloc = ctx.read<AuthBloc>();
+        return getIt<PublishGateCubit>(param1: role.commitmentRole)..start(
+          kycVerified: verified,
+          // Profil en cache non vérifié : on relit le serveur avant de
+          // bloquer (identité validée hors de l'app).
+          recheckKyc: () => recheckKycVerified(authBloc),
+        );
       },
       child: BlocConsumer<PublishGateCubit, PublishGateState>(
         listenWhen: (prev, next) =>
@@ -245,12 +251,15 @@ class PublishIntroScreen extends StatelessWidget {
                   Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _Hero(asset: config.asset),
+                          _Hero(
+                            asset: config.asset,
+                            alignment: config.assetAlignment,
+                          ),
                           const SizedBox(height: DonySpacing.base),
                           _ConditionCallout(
                             verified: verified,
                             verifiedText: config.verifiedText,
-                            onVerify: () => _startKyc(context, user),
+                            onVerify: () => unawaited(_startKyc(context, user)),
                           ),
                           // Rappel voyageur : activer Stripe pour encaisser par carte —
                           // se masque tout seul si le compte est déjà opérationnel.
@@ -307,22 +316,34 @@ class PublishIntroScreen extends StatelessWidget {
             needsCheck: needsCheck,
             onContinue: () =>
                 unawaited(context.read<PublishGateCubit>().accept()),
-            onVerify: () => _startKyc(context, user),
+            onVerify: () => unawaited(_startKyc(context, user)),
           ),
         ],
       ),
     );
   }
 
-  void _startKyc(BuildContext context, UserModel? user) {
-    KycRequiredBottomSheet.show(
-      context,
-      kycStatus: user?.kycStatus ?? 'NOT_STARTED',
-      // Revenir ici une fois vérifié, pour enchaîner sur la publication.
-      returnTo: switch (role) {
-        PublishIntroRole.trip => '/trips/publish-intro',
-        PublishIntroRole.parcel => '/parcels/send-intro',
-      },
+  Future<void> _startKyc(BuildContext context, UserModel? user) async {
+    // Avant d'ouvrir la vérification, on s'assure côté serveur que l'identité
+    // n'a pas déjà été validée (cache périmé) : dans ce cas on relance
+    // l'aiguillage au lieu de bloquer.
+    final cubit = context.read<PublishGateCubit>();
+    final verified = await recheckKycVerified(context.read<AuthBloc>());
+    if (!context.mounted) return;
+    if (verified) {
+      unawaited(cubit.start(kycVerified: true));
+      return;
+    }
+    unawaited(
+      KycRequiredBottomSheet.show(
+        context,
+        kycStatus: user?.kycStatus ?? 'NOT_STARTED',
+        // Revenir ici une fois vérifié, pour enchaîner sur la publication.
+        returnTo: switch (role) {
+          PublishIntroRole.trip => '/trips/publish-intro',
+          PublishIntroRole.parcel => '/parcels/send-intro',
+        },
+      ),
     );
   }
 }
@@ -331,10 +352,14 @@ class PublishIntroScreen extends StatelessWidget {
 // Config par rôle
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Illustration de l'écran « Publier un colis », neutre pour tous les modes.
+const kSendIntroIllustration = 'assets/illustrations/onboarding-handoff.png';
+
 class _IntroConfig {
   const _IntroConfig({
     required this.title,
     required this.asset,
+    this.assetAlignment = Alignment.center,
     required this.accent,
     required this.buttonVariant,
     required this.verifiedText,
@@ -349,6 +374,9 @@ class _IntroConfig {
 
   final String title;
   final String asset;
+
+  /// Cadrage de [asset] dans le carré du héros.
+  final Alignment assetAlignment;
   final Color accent;
   final DonyButtonVariant buttonVariant;
   final String verifiedText;
@@ -396,7 +424,11 @@ class _IntroConfig {
       case PublishIntroRole.parcel:
         return _IntroConfig(
           title: l10n.requestPublishIntroTitle,
-          asset: 'assets/illustrations/envoie_colis.png',
+          // Avant le choix du mode : une remise de colis, ni aéroport ni
+          // avion (l'ancienne illustration montrait un hall de départ CDG,
+          // fausse en bateau et en route).
+          asset: kSendIntroIllustration,
+          assetAlignment: const Alignment(0, 0.3),
           accent: cs.secondary,
           buttonVariant: DonyButtonVariant.accent,
           verifiedText: l10n.requestPublishIntroVerifiedText,
@@ -437,8 +469,11 @@ class _Rule {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _Hero extends StatelessWidget {
-  const _Hero({required this.asset});
+  const _Hero({required this.asset, this.alignment = Alignment.center});
   final String asset;
+
+  /// Point gardé quand l'illustration n'est pas carrée (rognage du `cover`).
+  final Alignment alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -448,7 +483,12 @@ class _Hero extends StatelessWidget {
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: AspectRatio(
         aspectRatio: 1,
-        child: Image.asset(asset, fit: BoxFit.cover, width: double.infinity),
+        child: Image.asset(
+          asset,
+          fit: BoxFit.cover,
+          alignment: alignment,
+          width: double.infinity,
+        ),
       ),
     );
   }

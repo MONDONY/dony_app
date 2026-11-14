@@ -5,9 +5,12 @@ import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_delay_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -127,6 +130,45 @@ Future<void> openTripCancellation(
   handedOverParcels: tripHandedOverParcelCount(bids),
   transportMode: trip.transportMode,
 );
+
+/// L'annonce d'un retard est-elle ouverte sur [trip] ? Seulement une fois le
+/// trajet parti (`IN_PROGRESS`), quel que soit le mode : le back refuse
+/// ailleurs (409 `trip-delay-not-allowed`). Elle reste possible quand le
+/// report est verrouillé par des colis à bord.
+bool tripCanAnnounceDelay(AnnouncementModel trip) =>
+    trip.status == 'IN_PROGRESS';
+
+/// « Annoncer un retard » : la feuille ([TripDelayBottomSheet]) avec le
+/// nombre d'expéditeurs prévenus ([tripDelaySenderCount] des colis chargés),
+/// puis, retard accepté, la confirmation et la relecture du trajet (arrivée
+/// estimée réécrite, dernier retard) et de ses colis, depuis les blocs de
+/// l'écran ([context]). Fermée sans envoi : rien.
+Future<void> openTripDelay(
+  BuildContext context,
+  AnnouncementModel trip,
+  List<BidModel>? bids,
+) async {
+  final announcements = maybeRead<AnnouncementBloc>(context);
+  final parcels = maybeRead<BidBloc>(context);
+  final delay = await TripDelayBottomSheet.show(
+    context,
+    trip: trip,
+    senderCount: tripDelaySenderCount(bids),
+  );
+  if (delay == null || !context.mounted) return;
+  DonySnackbar.show(
+    context,
+    message: context.l10n.tripDelaySentSnackbar,
+    type: DonySnackbarType.success,
+  );
+  if (announcements != null && !announcements.isClosed) {
+    // Silencieuse : le trajet reste affiché pendant la relecture.
+    announcements.add(AnnouncementDetailRequested(trip.id, silent: true));
+  }
+  if (parcels != null && !parcels.isClosed) {
+    parcels.add(BidListRequested(trip.id, silent: true));
+  }
+}
 
 /// Attente bornée des étapes du voyage avant la question des étapes
 /// suivantes ([askCancelFollowingLegs]) : au-delà, la question se pose sur ce

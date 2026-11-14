@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -19,6 +20,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/screens/bid_negotiation_thread_screen.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
@@ -99,6 +101,7 @@ BidNegotiation _thread({
   String? commissionGridId,
   double? commissionOverrideRate,
   double? commissionVoucherFactor,
+  TransportMode? transportMode,
   List<BidNegotiationMessage> messages = const [
     BidNegotiationMessage(
       id: 'm1',
@@ -147,6 +150,7 @@ BidNegotiation _thread({
   commissionGridId: commissionGridId,
   commissionOverrideRate: commissionOverrideRate,
   commissionVoucherFactor: commissionVoucherFactor,
+  transportMode: transportMode,
 );
 
 void main() {
@@ -496,21 +500,60 @@ void main() {
     expect(find.byType(GpProBadge), findsNothing);
   });
 
-  testWidgets('la carte du trajet ne dessine aucun avion (mode inconnu)', (
+  testWidgets('thread_showsBoatIcon : l\'icône du mode du trajet', (
     tester,
   ) async {
-    await pumpScreen(tester, BidNegotiationLoaded(_thread(netEur: 37)));
+    await pumpScreen(
+      tester,
+      BidNegotiationLoaded(
+        _thread(netEur: 37, transportMode: TransportMode.boat),
+      ),
+    );
 
-    expect(find.byKey(const Key('nego-trip-context')), findsOneWidget);
     expect(
       find.descendant(
         of: find.byKey(const Key('nego-trip-context')),
-        matching: findDonyIcon('route'),
+        matching: findDonyIcon('ship'),
       ),
       findsOneWidget,
     );
     expectNoPlaneIcon(tester);
   });
+
+  testWidgets('thread_roadMode_showsCarIcon : jamais l\'avion', (tester) async {
+    await pumpScreen(
+      tester,
+      BidNegotiationLoaded(
+        _thread(netEur: 37, transportMode: TransportMode.car),
+      ),
+    );
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('nego-trip-context')),
+        matching: findDonyIcon('car'),
+      ),
+      findsOneWidget,
+    );
+    expectNoPlaneIcon(tester);
+  });
+
+  testWidgets(
+    'thread_nullMode_neutral : la carte du trajet ne dessine aucun avion (mode inconnu)',
+    (tester) async {
+      await pumpScreen(tester, BidNegotiationLoaded(_thread(netEur: 37)));
+
+      expect(find.byKey(const Key('nego-trip-context')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('nego-trip-context')),
+          matching: findDonyIcon('route'),
+        ),
+        findsOneWidget,
+      );
+      expectNoPlaneIcon(tester);
+    },
+  );
 
   testWidgets('G8 : sans identifiant (ancien serveur), la carte reste inerte', (
     tester,
@@ -1159,6 +1202,55 @@ void main() {
         findsNothing,
       );
     });
+
+    testWidgets(
+      'negotiationThread_payHint : bateau allumé, versé au dépôt du colis',
+      (tester) async {
+        setTransportModes(
+          const TransportModesAvailability(road: false, boat: true),
+        );
+        addTearDown(resetTransportModesForTest);
+        await pumpScreen(
+          tester,
+          BidNegotiationLoaded(
+            _thread(
+              status: 'AWAITING_PAYMENT',
+              myTurn: false,
+              paymentMethod: BidPaymentMethod.stripe,
+              transportMode: TransportMode.boat,
+            ),
+          ),
+        );
+
+        expect(
+          find.textContaining('versé au transporteur au dépôt de votre colis'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('jusqu\'à la livraison'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'negotiationThread_payHint : avion ou mode inconnu, livraison',
+      (tester) async {
+        setTransportModes(
+          const TransportModesAvailability(road: false, boat: true),
+        );
+        addTearDown(resetTransportModesForTest);
+        await pumpScreen(
+          tester,
+          BidNegotiationLoaded(
+            _thread(status: 'AWAITING_PAYMENT', myTurn: false),
+          ),
+        );
+
+        expect(
+          find.textContaining('reste bloqué jusqu\'à la livraison'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('au dépôt'), findsNothing);
+      },
+    );
 
     testWidgets('taper Payer emet BidNegotiationCheckoutRequested', (
       tester,

@@ -45,6 +45,32 @@ abstract final class AnalyticsEvents {
   /// parcours du fournisseur.
   static const kycProviderWebviewScreen = '/kyc/verify/webview';
 
+  /// Première fin de chargement de la page du fournisseur. Propriétés
+  /// `provider`, `duration_ms` (ouverture de l'écran → page affichée).
+  static const kycWebviewPageLoaded = 'kyc_webview_page_loaded';
+
+  /// La page principale du fournisseur n'a pas pu se charger. Propriétés
+  /// `provider`, `error_code` (code de la plateforme), `description`
+  /// (message technique, tronqué), `duration_ms`.
+  static const kycWebviewError = 'kyc_webview_error';
+
+  /// Caméra refusée pendant le parcours. Propriétés `provider`, `source` :
+  /// `system` (permission système refusée) / `page` (la page signale un
+  /// `NotAllowedError`).
+  static const kycWebviewCameraBlocked = 'kyc_webview_camera_blocked';
+
+  /// L'utilisateur quitte la webview sans l'avoir terminée (croix ou retour
+  /// Android). Propriétés `provider`, `via` (`button`/`system_back`),
+  /// `duration_ms`, `page_loaded`, `camera_blocked`. C'est la seule trace d'un
+  /// abandon : `kyc_failed` ne part que si la création de session échoue.
+  static const kycWebviewClosed = 'kyc_webview_closed';
+
+  /// « Importer une photo » de la page du fournisseur (Android seulement : la
+  /// WebView n'ouvrait aucun sélecteur). Propriétés `provider`, `source`
+  /// (`gallery`/`camera`), `outcome` (`selected`/`cancelled`/`rejected` : ni
+  /// image ni lisible, `error`), `duration_ms`.
+  static const kycWebviewFileSelected = 'kyc_webview_file_selected';
+
   // Announcements
   /// Trajet créé. Propriétés : `corridor`, `available_kg`, `price_per_kg`,
   /// `is_draft`, `from_ai`, `currency`, `transport_mode`, `negotiable`,
@@ -1174,6 +1200,16 @@ abstract final class AnalyticsEvents {
   static const tripRescheduled = 'trip_rescheduled';
   static const tripRescheduleDecided = 'trip_reschedule_decided';
   static const arrivalInstructionsUpdated = 'arrival_instructions_updated';
+
+  /// Retard annoncé par le voyageur d'un trajet parti, accepté par le serveur
+  /// (`POST /announcements/{id}/delays`, `TripDelayCubit`). Propriétés
+  /// `reason`, `transport_mode`, `range_days`, `has_message`. Jamais de date
+  /// ni de texte.
+  static const tripDelayAnnounced = 'trip_delay_announced';
+
+  /// Annonce de retard refusée ou impossible. Propriétés `reason`,
+  /// `transport_mode`, `error_code`.
+  static const tripDelayAnnounceFailed = 'trip_delay_announce_failed';
   // Négociation du prix d'un trajet. L'entonnoir se lit dans cet ordre :
   // ouverture du mode → première proposition → contre-offres → issue.
   // Bascule « J'accepte les propositions de prix » à la création du trajet.
@@ -1342,6 +1378,10 @@ abstract final class AnalyticsEvents {
   /// Propriété `state` : `none` (Devenir GP Pro), `open` (demande en cours),
   /// `active` (badge accordé). Jamais d'information d'entreprise.
   static const profileGpProRowTapped = 'profile_gp_pro_row_tapped';
+
+  /// Lien « Demander le badge GP Pro » de la carte Bateau grisée (étape Mode
+  /// du formulaire de trajet, voyageur non vérifié) touché. Aucune propriété.
+  static const tripBoatBadgeRequestTapped = 'trip_boat_badge_request_tapped';
 
   // ── Suivi approximatif du voyageur ─────────────────────────────────────
   /// « Je pars » confirmé depuis l'écran du trajet (propriété `has_position`).

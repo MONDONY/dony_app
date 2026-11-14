@@ -106,6 +106,27 @@ void main() {
     });
   });
 
+  group('OfflineScanQueueScreen — dépôt à l\'entrepôt (bateau)', () {
+    setUp(() async {
+      await Hive.box<Map>(HiveService.offlineQueueBox).add({
+        'bidId': 'D3P0000000',
+        'eventType': 'DEPART',
+        'photoRequired': true,
+        'offlineTimestamp': DateTime.now().toUtc().toIso8601String(),
+      });
+    });
+
+    testWidgets('une étape DEPART à photo obligatoire se lit comme un dépôt, '
+        'jamais une récupération', (tester) async {
+      await tester.pumpWidget(_buildApp());
+      await tester.pump();
+      expect(find.text("Dépôt à l'entrepôt"), findsOneWidget);
+      expect(find.textContaining('Dépôt enregistré'), findsOneWidget);
+      expect(find.text('Récupération'), findsNothing);
+      expect(find.textContaining('Récupération enregistrée'), findsNothing);
+    });
+  });
+
   group('OfflineScanQueueScreen — with queue items', () {
     setUp(() async {
       final now = DateTime.now().toUtc();

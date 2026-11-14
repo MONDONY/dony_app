@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/weight_input_format.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/money_keyword_warning.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
@@ -17,8 +19,10 @@ import 'package:dony/features/package_request/bloc/package_request_form_event.da
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
+import 'package:dony/features/package_request/data/parcel_dimensions.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/package_request_photo_section.dart';
+import 'package:dony/features/package_request/presentation/widgets/parcel_dimension_field.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +49,13 @@ class Step2DetailsState extends State<Step2Details> {
   final _formKey = GlobalKey<FormState>();
   final _weightCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController();
+  final _lengthCtrl = TextEditingController();
+  final _widthCtrl = TextEditingController();
+  final _heightCtrl = TextEditingController();
+
+  /// Bloc des dimensions facultatives (« peu importe ») déplié : un seul sens,
+  /// une fois ouvert il reste visible avec ce qui y est saisi.
+  final _dimensionsExpanded = ValueNotifier<bool>(false);
 
   /// Libellé catalogue de la catégorie « autre », affiché dans le combo et
   /// intercepté à la sélection pour proposer une précision libre.
@@ -90,7 +101,36 @@ class Step2DetailsState extends State<Step2Details> {
     return w != null && w > PackageRequestLimits.maxWeightFor(_mode);
   }
 
-  bool get _isComplete => _isWeightValid && _allCategories.isNotEmpty;
+  /// Dimensions obligatoires : bateau (le back refuse sinon).
+  bool get _dimensionsRequired => ParcelDimensions.isRequiredFor(_mode);
+
+  /// Dimensions portées par le mode : bateau (obligatoires) et « peu importe »
+  /// (facultatives, tout ou rien). Jamais en avion ni en route.
+  bool get _dimensionsKept => ParcelDimensions.isKeptFor(_mode);
+
+  int? _cm(TextEditingController c) => int.tryParse(c.text.trim());
+
+  bool get _anyDimensionTyped =>
+      _lengthCtrl.text.trim().isNotEmpty ||
+      _widthCtrl.text.trim().isNotEmpty ||
+      _heightCtrl.text.trim().isNotEmpty;
+
+  bool get _dimensionsValid => ParcelDimensions.areValid(
+    _cm(_lengthCtrl),
+    _cm(_widthCtrl),
+    _cm(_heightCtrl),
+  );
+
+  /// Bateau : les trois dimensions valides. « Peu importe » : aucune, ou les
+  /// trois valides (tout ou rien). Autres modes : sans objet.
+  bool get _dimensionsOk {
+    if (!_dimensionsKept) return true;
+    if (_dimensionsRequired) return _dimensionsValid;
+    return !_anyDimensionTyped || _dimensionsValid;
+  }
+
+  bool get _isComplete =>
+      _isWeightValid && _allCategories.isNotEmpty && _dimensionsOk;
 
   void _sync({bool markTouched = false}) {
     if (markTouched) _touched = true;
@@ -179,14 +219,23 @@ class Step2DetailsState extends State<Step2Details> {
     if (s.description != null && s.description!.isNotEmpty) {
       _descriptionCtrl.text = s.description!;
     }
+    if (s.hasDimensions) {
+      _lengthCtrl.text = '${s.lengthCm}';
+      _widthCtrl.text = '${s.widthCm}';
+      _heightCtrl.text = '${s.heightCm}';
+      _dimensionsExpanded.value = true;
+    }
     unawaited(_loadCatalog());
-    _weightCtrl.addListener(_onWeightChanged);
+    _weightCtrl.addListener(_onFieldChanged);
+    for (final c in [_lengthCtrl, _widthCtrl, _heightCtrl]) {
+      c.addListener(_onFieldChanged);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) widget.canContinueNotifier?.value = _isComplete;
     });
   }
 
-  void _onWeightChanged() => _sync();
+  void _onFieldChanged() => _sync();
 
   Future<void> _loadCatalog() async {
     final categories = await getIt<IContentCategoryRepository>()
@@ -197,8 +246,14 @@ class Step2DetailsState extends State<Step2Details> {
 
   @override
   void dispose() {
-    _weightCtrl.removeListener(_onWeightChanged);
+    _weightCtrl.removeListener(_onFieldChanged);
     _weightCtrl.dispose();
+    for (final c in [_lengthCtrl, _widthCtrl, _heightCtrl]) {
+      c
+        ..removeListener(_onFieldChanged)
+        ..dispose();
+    }
+    _dimensionsExpanded.dispose();
     _descriptionCtrl.dispose();
     super.dispose();
   }
@@ -241,6 +296,11 @@ class Step2DetailsState extends State<Step2Details> {
       'parcelSize': w == null ? null : _sizeFromWeight(w).wireName,
       'categories': _allCategories,
       'description': desc.isEmpty ? null : desc,
+      // Un jeu incomplet n'a pas de sens : tout ou rien, et seulement pour un
+      // mode qui les porte.
+      'lengthCm': _dimensionsKept && _dimensionsValid ? _cm(_lengthCtrl) : null,
+      'widthCm': _dimensionsKept && _dimensionsValid ? _cm(_widthCtrl) : null,
+      'heightCm': _dimensionsKept && _dimensionsValid ? _cm(_heightCtrl) : null,
     };
   }
 
@@ -249,9 +309,15 @@ class Step2DetailsState extends State<Step2Details> {
     final s = context.read<PackageRequestFormBloc>().state;
     final w = parseWeightInput(_weightCtrl.text, heavy: _heavy);
     final desc = _descriptionCtrl.text.trim();
+    final dimensionsChanged =
+        _dimensionsKept &&
+        (_cm(_lengthCtrl) != s.lengthCm ||
+            _cm(_widthCtrl) != s.widthCm ||
+            _cm(_heightCtrl) != s.heightCm);
     return w != s.weightKg ||
         !listEquals(_allCategories, s.categories) ||
-        (desc.isEmpty ? null : desc) != s.description;
+        (desc.isEmpty ? null : desc) != s.description ||
+        dimensionsChanged;
   }
 
   void submit() {
@@ -273,9 +339,34 @@ class Step2DetailsState extends State<Step2Details> {
         parcelSize: _sizeFromWeight(w),
         categories: cats,
         description: desc.isEmpty ? null : desc,
+        lengthCm: _dimensionsKept ? _cm(_lengthCtrl) : null,
+        widthCm: _dimensionsKept ? _cm(_widthCtrl) : null,
+        heightCm: _dimensionsKept ? _cm(_heightCtrl) : null,
       ),
     );
   }
+
+  /// Erreur d'une dimension, traduite à l'affichage. Une case vide n'est une
+  /// erreur qu'en bateau, ou en « peu importe » quand une autre est remplie
+  /// (tout ou rien).
+  String? _dimensionError(AppLocalizations l10n, String? raw) {
+    final text = (raw ?? '').trim();
+    if (text.isEmpty) {
+      return _dimensionsRequired || _anyDimensionTyped
+          ? l10n.requestCreateDimensionRequired
+          : null;
+    }
+    return ParcelDimensions.isValidCm(int.tryParse(text))
+        ? null
+        : l10n.requestCreateDimensionInvalid;
+  }
+
+  /// Le bloc des dimensions est-il montré ? Toujours en bateau ; en « peu
+  /// importe » quand le bateau est proposé ou que des dimensions existent déjà
+  /// (demande reprise) ; jamais en avion ni en route.
+  bool get _showDimensions =>
+      _dimensionsRequired ||
+      (_mode == null && (transportModes.boat || _anyDimensionTyped));
 
   /// La taille n'est plus saisie manuellement (la photo suffit à la montrer)
   /// mais reste nécessaire au filtre « Taille » de la recherche — dérivée du
@@ -346,6 +437,28 @@ class Step2DetailsState extends State<Step2Details> {
             ),
             const SizedBox(height: DonySpacing.base),
 
+            // ── Dimensions du colis ────────────────────────────────────────
+            // Bateau : obligatoires, le transporteur facture au volume. « Peu
+            // importe » : facultatives, bloc replié. Masqué en avion et en
+            // route.
+            if (_showDimensions) ...[
+              _DimensionsSection(
+                key: const Key('request-dimensions-section'),
+                isRequired: _dimensionsRequired,
+                expanded: _dimensionsExpanded,
+                lengthCtrl: _lengthCtrl,
+                widthCtrl: _widthCtrl,
+                heightCtrl: _heightCtrl,
+                validator: (v) => _dimensionError(l10n, v),
+                volumeM3: ParcelDimensions.volumeM3(
+                  _cm(_lengthCtrl),
+                  _cm(_widthCtrl),
+                  _cm(_heightCtrl),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.base),
+            ],
+
             // ── Taille du colis (facultative) ──────────────────────────────
             // Route et « peu importe » seulement : en avion et en bateau elle
             // est masquée (et effacée par le bloc). « Peu importe » ne la
@@ -409,6 +522,179 @@ class Step2DetailsState extends State<Step2Details> {
 }
 
 // ─── Atoms ──────────────────────────────────────────────────────────────────
+
+/// Dimensions du colis : longueur, largeur, hauteur en centimètres, et le
+/// volume qui en découle. Facultatives et repliées tant que [isRequired] est
+/// faux ; une fois dépliées, elles le restent.
+class _DimensionsSection extends StatelessWidget {
+  const _DimensionsSection({
+    super.key,
+    required this.isRequired,
+    required this.expanded,
+    required this.lengthCtrl,
+    required this.widthCtrl,
+    required this.heightCtrl,
+    required this.validator,
+    required this.volumeM3,
+  });
+
+  final bool isRequired;
+  final ValueNotifier<bool> expanded;
+  final TextEditingController lengthCtrl;
+  final TextEditingController widthCtrl;
+  final TextEditingController heightCtrl;
+  final String? Function(String?) validator;
+
+  /// Aperçu du volume, `null` sans trois dimensions valides.
+  final double? volumeM3;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    return ValueListenableBuilder<bool>(
+      valueListenable: expanded,
+      builder: (context, isOpen, _) {
+        if (!isRequired && !isOpen) {
+          return _DimensionsExpander(
+            onTap: () => expanded.value = true,
+            label: l10n.requestCreateDimensionsAdd,
+            help: l10n.requestCreateDimensionsHelpAny,
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _FieldLabel(
+              isRequired
+                  ? l10n.requestCreateDimensionsLabel
+                  : l10n.requestCreateDimensionsOptionalLabel,
+            ),
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              isRequired
+                  ? l10n.requestCreateDimensionsHelpBoat
+                  : l10n.requestCreateDimensionsHelpAny,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: ParcelDimensionField(
+                    fieldKey: const Key('request-dimension-length'),
+                    label: l10n.requestCreateDimensionLength,
+                    controller: lengthCtrl,
+                    validator: validator,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Expanded(
+                  child: ParcelDimensionField(
+                    fieldKey: const Key('request-dimension-width'),
+                    label: l10n.requestCreateDimensionWidth,
+                    controller: widthCtrl,
+                    validator: validator,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Expanded(
+                  child: ParcelDimensionField(
+                    fieldKey: const Key('request-dimension-height'),
+                    label: l10n.requestCreateDimensionHeight,
+                    controller: heightCtrl,
+                    validator: validator,
+                  ),
+                ),
+              ],
+            ),
+            if (volumeM3 != null)
+              Padding(
+                padding: const EdgeInsets.only(top: DonySpacing.sm),
+                child: Text(
+                  l10n.requestCreateVolumeLine(
+                    formatParcelVolumeM3(l10n, volumeM3!),
+                  ),
+                  key: const Key('request-volume-preview'),
+                  style: tt.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Entrée repliée des dimensions facultatives : une ligne qui déplie le bloc.
+class _DimensionsExpander extends StatelessWidget {
+  const _DimensionsExpander({
+    required this.onTap,
+    required this.label,
+    required this.help,
+  });
+
+  final VoidCallback onTap;
+  final String label;
+  final String help;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkWell(
+        key: const Key('request-dimensions-add'),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.md,
+            vertical: DonySpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            border: Border.all(color: cs.outline),
+          ),
+          child: Row(
+            children: [
+              DonyIcon('plus', size: 18, color: cs.primary),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                    Text(
+                      help,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// Taille du colis, facultative : quatre tuiles, un second tap sur la tuile
 /// choisie la retire. Ne bloque jamais « Continuer ».
@@ -587,6 +873,10 @@ class _WeightInput extends StatelessWidget {
             horizontal: DonySpacing.base,
             vertical: DonySpacing.md + 4,
           ),
+          // « Au-delà de 32 kg, choisissez Route à l'étape précédente. » :
+          // une ligne ne suffit pas à 360 dp, le message passe à la ligne au
+          // lieu de finir en « … ».
+          errorMaxLines: 3,
           suffixText: 'kg',
           suffixStyle: tt.titleSmall?.copyWith(
             fontWeight: FontWeight.w800,

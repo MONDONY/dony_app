@@ -1994,6 +1994,222 @@ abstract class AppLocalizations {
   /// **'La date d\'arrivée est trop loin après le départ pour ce mode.'**
   String get errorArrivalTooFarMessage;
 
+  /// Erreur boat-carrier-not-verified du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Fret par bateau réservé'**
+  String get errorBoatCarrierNotVerifiedTitle;
+
+  /// Erreur boat-carrier-not-verified du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le transport par bateau est réservé aux professionnels et aux voyageurs vérifiés (badge GP Pro).'**
+  String get errorBoatCarrierNotVerifiedMessage;
+
+  /// Erreur boat-template-unsupported du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modèles indisponibles en bateau'**
+  String get errorBoatTemplateUnsupportedTitle;
+
+  /// Erreur boat-template-unsupported du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les modèles et les trajets récurrents ne sont pas disponibles pour le bateau.'**
+  String get errorBoatTemplateUnsupportedMessage;
+
+  /// Erreur arrival-range-invalid du back, titre de repli (error_catalog.dart). Couvre fin avant début, fin dans le passé, début avant le départ.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée invalide'**
+  String get errorArrivalRangeInvalidTitle;
+
+  /// Erreur arrival-range-invalid du back, message de repli (error_catalog.dart). Le back localise un détail plus précis selon le cas.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez l\'arrivée estimée : elle ne peut pas précéder le départ, et la fin ne peut être ni avant le début ni dans le passé.'**
+  String get errorArrivalRangeInvalidMessage;
+
+  /// Erreur arrival-before-departure du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée avant le départ'**
+  String get errorArrivalBeforeDepartureTitle;
+
+  /// Erreur arrival-before-departure du back, message de repli (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La date d\'arrivée ne peut pas précéder la date de départ.'**
+  String get errorArrivalBeforeDepartureMessage;
+
+  /// Erreur boat-volume-required du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume requis'**
+  String get errorBoatVolumeRequiredTitle;
+
+  /// Erreur boat-volume-required du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un trajet en bateau facturé au m³ doit indiquer le volume proposé.'**
+  String get errorBoatVolumeRequiredMessage;
+
+  /// Erreur boat-volume-unit-invalid du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Unité de capacité incompatible'**
+  String get errorBoatVolumeUnitInvalidTitle;
+
+  /// Erreur boat-volume-unit-invalid du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un trajet facturé au m³ ne peut pas avoir une capacité en kilos libres : indiquez le volume proposé.'**
+  String get errorBoatVolumeUnitInvalidMessage;
+
+  /// Erreur boat-price-required du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix du trajet en bateau'**
+  String get errorBoatPriceRequiredTitle;
+
+  /// Erreur boat-price-required du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un trajet en bateau a un seul prix : au m³ ou au kilo, sans grille de prix par article.'**
+  String get errorBoatPriceRequiredMessage;
+
+  /// Erreur pricing-unit-locked du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Unité de prix verrouillée'**
+  String get errorPricingUnitLockedTitle;
+
+  /// Erreur pricing-unit-locked du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le prix au m³ ou au kilo ne peut plus changer : ce trajet a déjà reçu une demande ou une offre.'**
+  String get errorPricingUnitLockedMessage;
+
+  /// Erreur dimensions-incomplete du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dimensions incomplètes'**
+  String get errorDimensionsIncompleteTitle;
+
+  /// Erreur dimensions-incomplete du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez la longueur, la largeur et la hauteur du colis, ou aucune des trois.'**
+  String get errorDimensionsIncompleteMessage;
+
+  /// Erreur boat-dimensions-required du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dimensions requises'**
+  String get errorBoatDimensionsRequiredTitle;
+
+  /// Erreur boat-dimensions-required du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour un envoi par bateau, indiquez la longueur, la largeur et la hauteur du colis.'**
+  String get errorBoatDimensionsRequiredMessage;
+
+  /// Erreur insufficient-volume du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume insuffisant'**
+  String get errorInsufficientVolumeTitle;
+
+  /// Erreur insufficient-volume du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet n\'a pas assez de volume restant pour ce colis.'**
+  String get errorInsufficientVolumeMessage;
+
+  /// Erreur trip-delay-not-allowed du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retard impossible'**
+  String get errorTripDelayNotAllowedTitle;
+
+  /// Erreur trip-delay-not-allowed du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un retard ne peut être annoncé que sur un trajet en cours : il doit être parti et ne pas être terminé.'**
+  String get errorTripDelayNotAllowedMessage;
+
+  /// Erreur trip-delay-reason-invalid du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif non applicable'**
+  String get errorTripDelayReasonInvalidTitle;
+
+  /// Erreur trip-delay-reason-invalid du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce motif ne s\'applique pas au mode de transport de ce trajet. Choisissez-en un autre.'**
+  String get errorTripDelayReasonInvalidMessage;
+
+  /// Erreur trip-delay-too-frequent du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de retards annoncés'**
+  String get errorTripDelayTooFrequentTitle;
+
+  /// Erreur trip-delay-too-frequent du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez annoncé trop de retards sur ce trajet ces dernières 24 heures. Réessayez plus tard ou contactez le support.'**
+  String get errorTripDelayTooFrequentMessage;
+
+  /// Erreur boat-deposit-photo-required du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo de dépôt requise'**
+  String get errorBoatDepositPhotoRequiredTitle;
+
+  /// Erreur boat-deposit-photo-required du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez une photo du colis au dépôt pour valider cette étape.'**
+  String get errorBoatDepositPhotoRequiredMessage;
+
+  /// Erreur deposit-paid-no-refund du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement impossible'**
+  String get errorDepositPaidNoRefundTitle;
+
+  /// Erreur deposit-paid-no-refund du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur a déjà été payé au dépôt : ce colis ne peut plus être remboursé automatiquement.'**
+  String get errorDepositPaidNoRefundMessage;
+
+  /// Erreur supplement-after-deposit du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément impossible'**
+  String get errorSupplementAfterDepositTitle;
+
+  /// Erreur supplement-after-deposit du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un supplément ne peut plus être demandé une fois le colis déposé.'**
+  String get errorSupplementAfterDepositMessage;
+
+  /// Erreur surplus/volume-trip-unsupported du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Surplus indisponible'**
+  String get errorSurplusVolumeTripUnsupportedTitle;
+
+  /// Erreur surplus/volume-trip-unsupported du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le surplus de capacité n\'est pas disponible pour un trajet facturé au m³.'**
+  String get errorSurplusVolumeTripUnsupportedMessage;
+
   /// Erreur weight-too-heavy du back : le poids dépasse le maximum du mode de transport (error_catalog.dart).
   ///
   /// In fr, this message translates to:
@@ -4190,6 +4406,12 @@ abstract class AppLocalizations {
   /// **'J\'envoie un colis'**
   String get homeModeSelectorSending;
 
+  /// Accueil, segment Envoi du sélecteur de mode, titre affiché (court : il tient avec la pastille du compteur à 360 dp) ; la phrase complète homeModeSelectorSending reste pour le lecteur d'écran (search_mode_selector.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'envoie'**
+  String get homeModeSelectorSendingShort;
+
   /// No description provided for @homeModeSelectorTraveling.
   ///
   /// In fr, this message translates to:
@@ -5015,13 +5237,13 @@ abstract class AppLocalizations {
   /// Puce « comment ça marche », rôle expéditeur : transport
   ///
   /// In fr, this message translates to:
-  /// **'Un voyageur transporte votre colis avec lui.'**
+  /// **'Un voyageur ou un transporteur achemine votre colis.'**
   String get requestPublishIntroWhyBulletCarried;
 
-  /// Puce « comment ça marche », rôle expéditeur : paiement séquestré
+  /// Puce « comment ça marche », rôle expéditeur : paiement. Vraie pour tous les modes (avion et route : versé à la livraison, bateau : au dépôt), affichée avant le choix du mode
   ///
   /// In fr, this message translates to:
-  /// **'Paiement sécurisé, libéré à la livraison confirmée.'**
+  /// **'Paiement sécurisé : vous savez avant de payer quand le transporteur est payé.'**
   String get requestPublishIntroWhyBulletPayment;
 
   /// Puce « comment ça marche », rôle expéditeur : suivi QR
@@ -9199,6 +9421,18 @@ abstract class AppLocalizations {
   /// **'Remise du colis'**
   String get listingPickupParcelTitle;
 
+  /// Bouton court de signalement du trajet, à côté de « Bloquer » (traveler_announcement_bottom_sheet.dart) ; la phrase complète est listingReportTripLink, lue par le lecteur d'écran
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler'**
+  String get listingReportTripShort;
+
+  /// Bouton court de blocage du voyageur, à côté de « Signaler » (traveler_announcement_bottom_sheet.dart) ; la phrase complète est listingBlockTravelerLink, lue par le lecteur d'écran
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloquer'**
+  String get listingBlockTravelerShort;
+
   /// Lien de signalement du trajet (traveler_announcement_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
@@ -10086,6 +10320,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Remboursé si le colis n\'arrive pas'**
   String get bidCreateRefundAssurance;
+
+  /// Rappel sous le mode carte et mobile money quand le voyageur est payé au dépôt du colis (trajet bateau) : aucun remboursement automatique, le support tranche un litige (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Un litige se règle avec le support Yadony.'**
+  String get bidCreateDepositDisputeAssurance;
 
   /// Avertissement affiché sous le mode espèces (create_bid_bottom_sheet.dart)
   ///
@@ -12634,6 +12874,24 @@ abstract class AppLocalizations {
   /// **'Demande annulée. L\'expéditeur sera remboursé.'**
   String get bidDetailCancelledSnackbar;
 
+  /// Snackbar de l'expéditeur qui vient d'annuler un colis payé par carte ou mobile money (bid_labels.dart, bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande annulée. Vous serez remboursé.'**
+  String get bidDetailCancelledSenderSnackbar;
+
+  /// Snackbar de l'expéditeur qui vient d'annuler un colis payé en espèces : aucun paiement n'est passé par Yadony (bid_labels.dart, bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande annulée. Paiement en espèces : aucune somme à rembourser par Yadony.'**
+  String get bidDetailCancelledSenderCashSnackbar;
+
+  /// Vue voyageur, variante espèces de bidDetailCancelledSnackbar : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande annulée. Paiement en espèces : l\'expéditeur n\'a rien à payer.'**
+  String get bidDetailCancelledCashSnackbar;
+
   /// Snackbar BidDeleted (bid_detail_screen.dart)
   ///
   /// In fr, this message translates to:
@@ -12784,11 +13042,23 @@ abstract class AppLocalizations {
   /// **'Votre paiement sera remboursé automatiquement'**
   String get bidDetailCancelRefundAutoSubtitle;
 
+  /// Variante espèces de bidDetailCancelRefundAutoSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : rien à rembourser'**
+  String get bidDetailCancelCashSubtitle;
+
   /// Sous-titre annulation après remise, tuile d'options (bid_detail_action_bars.dart)
   ///
   /// In fr, this message translates to:
   /// **'Remboursement intégral · vous récupérez votre colis'**
   String get bidDetailCancelAfterHandoverOptionSubtitle;
+
+  /// Variante espèces de bidDetailCancelAfterHandoverOptionSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur vous rend le colis et l\'argent remis'**
+  String get bidDetailCancelAfterHandoverCashOptionSubtitle;
 
   /// Sous-titre commun des tuiles de suppression (bid_detail_action_bars.dart, traveler_options_sheet.dart)
   ///
@@ -12825,6 +13095,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.'**
   String get bidDetailCancelAfterHandoverBody;
+
+  /// Variante espèces de bidDetailCancelAfterHandoverBody : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis est déjà chez le voyageur. Paiement en espèces : Yadony ne peut rien rembourser, c\'est le voyageur qui vous rend l\'argent remis avec votre colis. Il confirme la restitution en saisissant votre code de retour.'**
+  String get bidDetailCancelAfterHandoverCashBody;
 
   /// Titre de la tuile Plus de détails et de son bottom sheet, vues expéditeur et voyageur (sender_tile_sheets.dart, traveler_tile_sheets.dart)
   ///
@@ -13132,6 +13408,12 @@ abstract class AppLocalizations {
   /// **'L\'expéditeur sera remboursé automatiquement'**
   String get bidDetailCancelTransportAcceptedSubtitle;
 
+  /// Variante espèces de bidDetailCancelTransportAcceptedSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : l\'expéditeur n\'a rien à payer'**
+  String get bidDetailCancelTransportAcceptedCashSubtitle;
+
   /// Tuile d'options voyageur : refuser un colis non conforme (traveler_options_sheet.dart)
   ///
   /// In fr, this message translates to:
@@ -13143,6 +13425,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Refusez-le sans pénalité, l\'expéditeur est remboursé'**
   String get bidDetailRefuseParcelSubtitle;
+
+  /// Variante espèces de bidDetailRefuseParcelSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusez-le sans pénalité, l\'expéditeur ne vous doit rien'**
+  String get bidDetailRefuseParcelCashSubtitle;
 
   /// Titre de la feuille de refus d'un colis non conforme (parcel_refusal_sheet.dart)
   ///
@@ -13167,6 +13455,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Poids : {weight} kg'**
   String parcelRefusalDeclaredWeight(String weight);
+
+  /// Volume déclaré d'un colis au m³ (bateau), à la place du poids ; {volume} est déjà formaté avec son unité et ses dimensions éventuelles (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume : {volume}'**
+  String parcelRefusalDeclaredVolume(String volume);
 
   /// Libellé du choix du motif (parcel_refusal_sheet.dart)
   ///
@@ -13828,6 +14122,12 @@ abstract class AppLocalizations {
   /// **'La date limite de dépôt est passée : demande annulée. Tout paiement vous est remboursé intégralement.'**
   String get ticketHandoverDeadlineExpiredSender;
 
+  /// Variante espèces de ticketHandoverDeadlineExpiredSender (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt est passée : demande annulée. Paiement en espèces : rien à rembourser.'**
+  String get ticketHandoverDeadlineExpiredSenderCash;
+
   /// Message voyageur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)
   ///
   /// In fr, this message translates to:
@@ -13839,6 +14139,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'POIDS'**
   String get ticketMiniStatWeightLabel;
+
+  /// Libellé de la mini-stat volume du talon voyageur, à la place du poids pour un colis au m³ (bateau), casse conservée telle quelle (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'VOLUME'**
+  String get ticketMiniStatVolumeLabel;
 
   /// Libellé de la mini-stat catégorie du talon voyageur, mot identique dans les deux langues, casse conservée telle quelle (billet_talon.dart)
   ///
@@ -15058,6 +15364,12 @@ abstract class AppLocalizations {
   /// **'L\'expéditeur sera remboursé automatiquement.'**
   String get bidCancelAcceptedSubtitle;
 
+  /// Variante espèces de bidCancelAcceptedSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (cancellation_dialog.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : l\'expéditeur n\'a rien à payer.'**
+  String get bidCancelAcceptedCashSubtitle;
+
   /// Message d'avertissement du cas colis déjà remis (cancellation_dialog.dart).
   ///
   /// In fr, this message translates to:
@@ -15069,6 +15381,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l\'expéditeur n\'a rien à payer et les frais de service Yadony sont recrédités au voyageur.'**
   String get bidCancelWarningRefundNote;
+
+  /// Variante espèces de bidCancelWarningRefundNote : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (cancellation_dialog.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. Les frais de service Yadony vous sont recrédités.'**
+  String get bidCancelWarningRefundNoteCash;
 
   /// Hint du champ motif quand il est obligatoire (cancellation_dialog.dart).
   ///
@@ -16041,6 +16359,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Poids'**
   String get paymentSummaryWeightLabel;
+
+  /// Libellé de la ligne volume du récapitulatif de paiement d'un colis au m³ (bateau), à la place du poids (payment_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume'**
+  String get paymentSummaryVolumeLabel;
 
   /// Libellé de la ligne prix au kilo du récapitulatif de paiement (payment_screen.dart _SummaryCard).
   ///
@@ -18174,6 +18498,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'file'**
   String get scanOfflineEventDefaultLabel;
+
+  /// Phrase de la ligne d'un dépôt à l'entrepôt (colis bateau) en attente dans la file hors ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépôt enregistré'**
+  String get scanOfflineDescDeposit;
 
   /// Description de l'étape DEPART dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
   ///
@@ -26101,6 +26431,12 @@ abstract class AppLocalizations {
   /// **'Seuls l\'expéditeur et le voyageur peuvent le suivre ici. Demandez le lien de suivi à l\'expéditeur.'**
   String get trackingNotLinkedBody;
 
+  /// Titre du bandeau d'une validation rapide annulable quand l'étape est le dépôt à l'entrepôt d'un colis bateau (suivi_validation_toast.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépôt de {parcel} validé'**
+  String suiviDepositValidatedToast(String parcel);
+
   /// Titre du bandeau d'une validation rapide annulable (suivi_validation_toast.dart).
   ///
   /// In fr, this message translates to:
@@ -26671,6 +27007,18 @@ abstract class AppLocalizations {
   /// **'{offset, plural, =0{Le jour même} =1{Le lendemain} other{Dans {offset} jours}}'**
   String tripPublishArrivalDayOption(int offset);
 
+  /// Jour d'arrivée en route, « Autre date » : erreur du sélecteur de date pour une date saisie hors de la fenêtre (remplace le « Hors de portée. » générique, arrival_day_chips.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez entre le {first} et le {last} : l\'arrivée est au plus {days} jours après le départ.'**
+  String tripPublishArrivalOutOfRange(String first, String last, int days);
+
+  /// Création de trajet en route : message affiché quand le changement de la date de départ oblige à déplacer la date d'arrivée choisie (create_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date d\'arrivée déplacée au {date} pour rester dans les {days} jours après le départ.'**
+  String tripPublishArrivalMovedWithDeparture(String date, int days);
+
   /// Jour d'arrivée en route : puce qui ouvre le choix d'une date à partir de J+3 (arrival_day_chips.dart)
   ///
   /// In fr, this message translates to:
@@ -26743,7 +27091,7 @@ abstract class AppLocalizations {
   /// **'Voyage repoussé'**
   String get tripRescheduleReasonPostponed;
 
-  /// Motif de report
+  /// Motif de report ; aussi motif de retard OTHER (trip_delay_labels.dart)
   ///
   /// In fr, this message translates to:
   /// **'Autre raison'**
@@ -26791,7 +27139,7 @@ abstract class AppLocalizations {
   /// **'Le voyageur a reporté son trajet du {previous} au {next} ({reason}).'**
   String bidRescheduleBody(String previous, String next, String reason);
 
-  /// Carte de report : message libre du voyageur
+  /// Carte de report et carte du dernier retard (TripDelayCard, trip_reschedule_card.dart) : message libre du voyageur
   ///
   /// In fr, this message translates to:
   /// **'Message du voyageur : {note}'**
@@ -26833,11 +27181,23 @@ abstract class AppLocalizations {
   /// **'Vous êtes remboursé intégralement et nous vous proposons d\'autres trajets.'**
   String get bidRescheduleWithdrawConfirmMessage;
 
+  /// Variante espèces de bidRescheduleWithdrawConfirmMessage, colis pas encore remis : rien n'est passé par Yadony (trip_reschedule_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : aucune somme à rembourser par Yadony. Nous vous proposons d\'autres trajets.'**
+  String get bidRescheduleWithdrawConfirmCashMessage;
+
   /// Confirmation du retrait, colis déjà remis
   ///
   /// In fr, this message translates to:
   /// **'Vous êtes remboursé intégralement. Le voyageur vous rend le colis contre votre code de retour.'**
   String get bidRescheduleWithdrawConfirmReturnMessage;
+
+  /// Variante espèces de bidRescheduleWithdrawConfirmReturnMessage, colis déjà remis (trip_reschedule_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : Yadony n\'a rien à rembourser, le voyageur vous rend l\'argent remis avec le colis, contre votre code de retour.'**
+  String get bidRescheduleWithdrawConfirmReturnCashMessage;
 
   /// Confirmation après « Garder mon colis »
   ///
@@ -26850,6 +27210,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Envoi annulé. Votre remboursement est en cours.'**
   String get bidRescheduleWithdrawnSnackbar;
+
+  /// Variante espèces de bidRescheduleWithdrawnSnackbar : aucun remboursement n'est promis (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi annulé.'**
+  String get bidRescheduleWithdrawnCashSnackbar;
 
   /// Erreur reschedule-limit-reached
   ///
@@ -27114,6 +27480,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'À confirmer'**
   String get receptionsPendingChip;
+
+  /// Étape courte d'un colis confirmé d'un trajet bateau, ligne « Colis à recevoir » (receptions_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{status, select, ACCEPTED{À déposer} HANDED_OVER{Déposé} IN_TRANSIT{En mer} ARRIVED{Arrivé au port} COMPLETED{Remis} other{En cours}}'**
+  String receptionsRowStepBoat(String status);
 
   /// Étape courte d'un colis confirmé, ligne « Colis à recevoir » (receptions_section.dart).
   ///
@@ -28033,11 +28405,23 @@ abstract class AppLocalizations {
   /// **'Au moins une photo : elle protège les deux parties si le colis remis ne correspond pas à la déclaration.'**
   String get bidCreatePhotosRequiredHelp;
 
+  /// Sous-titre de la tuile « Ajouter une photo » de la réservation d'un colis : une photo au moins est obligatoire pour envoyer la demande, bateau compris (create_bid/photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Obligatoire, rassure le voyageur'**
+  String get bidCreateAddPhotoRequiredSubtitle;
+
   /// Mention sous l'avertissement douane (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
   /// **'À la remise, le voyageur vérifie le colis. S\'il ne correspond pas à votre déclaration, il peut le refuser : vous êtes alors remboursé.'**
   String get bidCreateHandoverCheckNotice;
+
+  /// Variante espèces de bidCreateHandoverCheckNotice : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À la remise, le voyageur vérifie le colis. S\'il ne correspond pas à votre déclaration, il peut le refuser : vous ne payez alors rien.'**
+  String get bidCreateHandoverCheckNoticeCash;
 
   /// Statut de l'écran d'appel pendant que le téléphone de l'autre sonne.
   ///
@@ -29803,12 +30187,6 @@ abstract class AppLocalizations {
   /// **'2 escales et +'**
   String get tripStopsBadgeTwoOrMore;
 
-  /// Détail de trajet : intitulé de la ligne escales (FLUTTER-GE)
-  ///
-  /// In fr, this message translates to:
-  /// **'Escales'**
-  String get tripStopsDetailLabel;
-
   /// Filtres de recherche de trajets : section escales (FLUTTER-GD)
   ///
   /// In fr, this message translates to:
@@ -30042,6 +30420,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Tous les prix du voyage passent en {currency}.'**
   String tripSwitchCurrencyConfirmMessage(String currency);
+
+  /// Message (snackbar) à l'étape Prix d'un trajet bateau vendu au m³ : la devise a changé alors qu'un prix au m³ était saisi, le champ est vidé pour ne jamais garder le nombre dans la nouvelle devise. {currency} : symbole de la nouvelle devise (create_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise changée : saisissez à nouveau le prix au m³ en {currency}.'**
+  String tripPublishPerM3CurrencyReset(String currency);
 
   /// Lecture d'écran de la ligne expéditeur en tête de la fiche publique d'une demande (request_sender_row.dart, FLUTTER-GF).
   ///
@@ -31380,6 +31764,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Fermer le message sur la photo perdue'**
   String get suiviPhotoLostDismiss;
+
+  /// Onglet Suivi : un dépôt mis en file hors ligne est resté en attente parce que sa photo (preuve du dépôt) n'a pas pu partir (refusée, quota, fichier perdu). Message jusqu'à ce que l'utilisateur le ferme.
+  ///
+  /// In fr, this message translates to:
+  /// **'La photo du dépôt n\'a pas pu être envoyée : le dépôt n\'est pas enregistré. Reprenez la photo du dépôt pour le confirmer.'**
+  String get suiviDepositPhotoRetake;
+
+  /// Libellé d'accessibilité du bouton qui ferme le message de la photo du dépôt à reprendre (onglet Suivi)
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer le message sur la photo du dépôt'**
+  String get suiviDepositPhotoRetakeDismiss;
 
   /// Onglet Suivi : une remise (DEPART) scannée hors ligne a été refusée à la synchronisation (422 bid-not-accepted) parce que le colis a été clos entre-temps (absence confirmée, annulation). Ne jamais promettre une alerte de l'équipe : le back n'alerte que dans quelques cas (suivi_closed_scans_banner.dart).
   ///
@@ -33216,11 +33612,17 @@ abstract class AppLocalizations {
   /// **'Vérifiez votre identité pour publier ces trajets, ou créez des brouillons.'**
   String get tripSeriesErrorKyc;
 
-  /// Refus pro-limit-reached.
+  /// Refus monthly-limit-reached, traveler-status-required ou pro-limit-reached.
   ///
   /// In fr, this message translates to:
   /// **'Limite de trajets du mois atteinte.'**
   String get tripSeriesErrorProLimit;
+
+  /// Refus gp-pro-pending.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre demande GP Pro est en cours d\'examen. Vous pouvez créer des brouillons en attendant.'**
+  String get tripSeriesErrorGpProPending;
 
   /// Refus stripe-onboarding-incomplete.
   ///
@@ -34548,10 +34950,10 @@ abstract class AppLocalizations {
   /// **'Le mobile money n\'est proposé qu\'en franc CFA : je ne l\'ai pas coché.'**
   String get aiFormDraftWarningMobileMoney;
 
-  /// Avertissement : un mode de transport pas proposé à la publication a été dit, le trajet repasse en avion.
+  /// Avertissement : un mode de transport que l'assistant ne remplit pas a été dit, il est retiré du brouillon et se choisit dans le formulaire.
   ///
   /// In fr, this message translates to:
-  /// **'Ce mode n\'est pas encore proposé : le trajet sera publié en avion.'**
+  /// **'L\'assistant ne peut pas choisir ce mode : vérifiez le mode de transport avant de publier.'**
   String get aiFormDraftWarningModeUnavailable;
 
   /// Avertissement : budget hors des bornes du formulaire.
@@ -37548,10 +37950,10 @@ abstract class AppLocalizations {
   /// **'Options du trajet'**
   String get tripOwnerMenuTooltip;
 
-  /// Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Modifier », présente tant qu'aucune demande n'engage le trajet (trip_owner_options_sheet.dart).
+  /// Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Modifier », présente tant qu'aucune demande n'engage le trajet (trip_owner_options_sheet.dart). Neutre selon le mode : « capacité » couvre les kilos et le volume en m³ du bateau.
   ///
   /// In fr, this message translates to:
-  /// **'Villes, dates, kilos, prix et conditions'**
+  /// **'Villes, dates, capacité, prix et conditions'**
   String get tripMenuEditSubtitle;
 
   /// Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Rendre ce trajet récurrent » (trajet direct actif ou terminé), qui ouvre le calendrier du trajet récurrent (trip_owner_options_sheet.dart).
@@ -39089,6 +39491,1061 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce colis dépasse 32 kg : modifiez son poids ou choisissez Route.'**
   String get requestCreateWeightTooHeavySubmit;
+
+  /// Titre de la carte Bateau de l'étape Mode (mode_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voie maritime'**
+  String get tripPublishModeBoatTitle;
+
+  /// Sous-titre de la carte Bateau de l'étape Mode (mode_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bateau, groupage en conteneur'**
+  String get tripPublishModeBoatSubtitle;
+
+  /// Étiquette de durée de la carte Bateau (mode_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Plusieurs semaines'**
+  String get tripPublishModeBoatTagDuration;
+
+  /// Étiquette de capacité de la carte Bateau (mode_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume en m³'**
+  String get tripPublishModeBoatTagCapacity;
+
+  /// Carte Bateau grisée : voyageur sans badge GP Pro ni compte pro (mode_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réservé aux transporteurs vérifiés'**
+  String get tripPublishModeBoatLocked;
+
+  /// Lien texte de la carte Bateau grisée, ouvre la demande GP Pro (mode_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander le badge GP Pro'**
+  String get tripPublishModeBoatBadgeLink;
+
+  /// Champ de la ville de départ d'un trajet bateau (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Port de départ'**
+  String get tripPublishBoatDeparturePortLabel;
+
+  /// Champ de la ville d'arrivée d'un trajet bateau (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Port d\'arrivée'**
+  String get tripPublishBoatArrivalPortLabel;
+
+  /// Titre des deux dates d'arrivée d'un trajet bateau (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée'**
+  String get tripPublishBoatArrivalLabel;
+
+  /// Champ de la première date d'arrivée estimée d'un bateau (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus tôt'**
+  String get tripPublishBoatArrivalEarliestLabel;
+
+  /// Champ de la dernière date d'arrivée estimée d'un bateau (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus tard'**
+  String get tripPublishBoatArrivalLatestLabel;
+
+  /// Aide sous l'arrivée estimée d'un trajet bateau (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les expéditeurs voient une fourchette : les retards au port sont fréquents.'**
+  String get tripPublishBoatArrivalHelp;
+
+  /// Erreur : arrivée estimée d'un bateau incomplète (create_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez l\'arrivée au plus tôt et au plus tard'**
+  String get tripPublishBoatArrivalRequired;
+
+  /// Erreur : arrivée au plus tôt d'un bateau avant le départ (create_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'arrivée estimée ne peut pas précéder le départ'**
+  String get tripPublishBoatArrivalBeforeDeparture;
+
+  /// Erreur : fin de la fourchette d'arrivée avant son début (create_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'arrivée au plus tard ne peut pas précéder l\'arrivée au plus tôt'**
+  String get tripPublishBoatArrivalLatestBeforeEarliest;
+
+  /// Erreur : fin de la fourchette d'arrivée au-delà du maximum du bateau (create_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'arrivée au plus tard doit tomber dans les {days} jours qui suivent le départ'**
+  String tripPublishBoatArrivalTooFar(int days);
+
+  /// Adresse de remise d'un trajet bateau (lieux_capacite_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse de l\'entrepôt'**
+  String get tripPublishBoatWarehouseLabel;
+
+  /// Aide de l'adresse de l'entrepôt d'un trajet bateau (lieux_capacite_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Où les expéditeurs déposent leurs colis'**
+  String get tripPublishBoatWarehouseSubtitle;
+
+  /// Adresse de livraison d'un trajet bateau (lieux_capacite_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse de retrait'**
+  String get tripPublishBoatPickupLabel;
+
+  /// Aide de l'adresse de retrait d'un trajet bateau (lieux_capacite_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Où les destinataires récupèrent leurs colis'**
+  String get tripPublishBoatPickupSubtitle;
+
+  /// Titre du choix de l'unité de vente d'un trajet bateau (capacity_control.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous vendez la place'**
+  String get tripPublishBoatUnitQuestion;
+
+  /// Segment de l'unité de vente d'un trajet bateau : au mètre cube (capacity_control.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au m³'**
+  String get tripPublishBoatUnitM3;
+
+  /// Segment de l'unité de vente d'un trajet bateau : au kilo (capacity_control.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au kilo'**
+  String get tripPublishBoatUnitKg;
+
+  /// Champ du volume proposé d'un trajet bateau au m³ (capacity_control.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume disponible (m³)'**
+  String get tripPublishBoatVolumeLabel;
+
+  /// Aide du champ du volume proposé (capacity_control.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'De 0,1 à 9 999 m³, une décimale'**
+  String get tripPublishBoatVolumeHint;
+
+  /// Erreur : volume proposé hors bornes (capacity_control.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un volume entre 0,1 et 9 999 m³'**
+  String get tripPublishBoatVolumeInvalid;
+
+  /// Titre et champ du prix au m³ d'un trajet bateau (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix par m³'**
+  String get tripPublishBoatPricePerM3Label;
+
+  /// Invite sous le champ du prix au m³ encore vide (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez votre prix par m³ pour voir l\'estimation'**
+  String get tripPublishBoatPricePrompt;
+
+  /// Erreur sous le champ du prix au m³ au-dessus du plafond du serveur, montant déjà formaté dans la devise (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le prix par m³ ne peut pas dépasser {max}'**
+  String tripPublishBoatPriceTooHigh(String max);
+
+  /// Estimation du prix au m³, montants déjà formatés dans la devise (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous touchez {net} par m³ · l\'expéditeur paie {total}'**
+  String tripPublishBoatPriceEstimateLine(String net, String total);
+
+  /// Encadré de l'étape Prix d'un trajet bateau : versement au dépôt (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Par bateau, vous êtes payé dès que l\'expéditeur dépose son colis à l\'entrepôt, sans attendre la livraison.'**
+  String get tripPublishBoatDepositPayoutNotice;
+
+  /// Montant ou symbole suivi de « par m³ » (prix_step.dart, announcement_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{value}/m³'**
+  String tripPublishPerM3Value(String value);
+
+  /// Titre du bloc des dimensions d'une demande en bateau (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dimensions du colis'**
+  String get requestCreateDimensionsLabel;
+
+  /// Titre du bloc des dimensions d'une demande « peu importe » (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dimensions du colis (facultatif)'**
+  String get requestCreateDimensionsOptionalLabel;
+
+  /// Aide sous le titre des dimensions d'une demande en bateau (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le transporteur facture au volume : mesurez votre colis emballé, en centimètres.'**
+  String get requestCreateDimensionsHelpBoat;
+
+  /// Aide des dimensions facultatives d'une demande « peu importe » (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Utile par bateau : le prix se calcule au volume.'**
+  String get requestCreateDimensionsHelpAny;
+
+  /// Ligne qui déplie les dimensions facultatives (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter les dimensions'**
+  String get requestCreateDimensionsAdd;
+
+  /// Libellé du champ longueur du colis (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Longueur'**
+  String get requestCreateDimensionLength;
+
+  /// Libellé du champ largeur du colis (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Largeur'**
+  String get requestCreateDimensionWidth;
+
+  /// Libellé du champ hauteur du colis (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Hauteur'**
+  String get requestCreateDimensionHeight;
+
+  /// Erreur : dimension du colis manquante (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Obligatoire'**
+  String get requestCreateDimensionRequired;
+
+  /// Erreur : dimension du colis hors bornes (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre 1 et 400 cm'**
+  String get requestCreateDimensionInvalid;
+
+  /// Aperçu du volume du colis, déjà formaté en m³ (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume : {volume}'**
+  String requestCreateVolumeLine(String volume);
+
+  /// Message : publication d'une demande en bateau sans dimensions (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez les dimensions du colis à l\'étape « Le colis ».'**
+  String get requestCreateDimensionsRequiredSubmit;
+
+  /// Poids suivi du volume d'un colis, déjà formatés (wizard_summary_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{weight} · {volume}'**
+  String requestCreateWeightAndVolume(String weight, String volume);
+
+  /// Ligne de l'aperçu : volume du colis (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume'**
+  String get requestPreviewVolumeLabel;
+
+  /// Ligne de l'aperçu : volume et dimensions du colis (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{volume} ({length} × {width} × {height} cm)'**
+  String requestPreviewVolumeValue(
+    String volume,
+    int length,
+    int width,
+    int height,
+  );
+
+  /// Sélecteur : le prix saisi est au m³, le total est calculé (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix au m³'**
+  String get requestCreatePriceBasisPerM3;
+
+  /// Explication quand le prix au m³ est grisé faute de dimensions (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez d\'abord les dimensions du colis pour fixer un prix au m³.'**
+  String get requestCreatePriceBasisPerM3NeedsDimensions;
+
+  /// Exemple dans le champ du prix au m³ d'une demande bateau (étape 3 du formulaire d'une demande d'envoi).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. 600,00'**
+  String get requestCreatePerM3InputHint;
+
+  /// Unité du champ prix en mode au m³ (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{symbol} / m³'**
+  String requestCreatePriceUnitPerM3(String symbol);
+
+  /// Calcul du total en mode prix au m³, montants déjà formatés (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{volume} × {perM3} / m³ = {total} au total'**
+  String requestCreatePerM3Computed(String volume, String perM3, String total);
+
+  /// Encadré de l'étape Prix d'une demande en bateau : délai et versement au dépôt (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Par bateau, comptez plusieurs semaines. Le transporteur est payé dès le dépôt de votre colis à l\'entrepôt : le paiement n\'attend pas la livraison.'**
+  String get requestCreateBoatDepositNotice;
+
+  /// Ligne de calcul du prix d'une réservation au m³ : volume du colis × prix au m³, déjà formatés (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{volume} × {rate} par m³'**
+  String bidCreateVolumeRateLine(String volume, String rate);
+
+  /// Volume encore disponible sur le trajet bateau, déjà formaté en m³ (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume restant sur ce trajet : {available}'**
+  String bidCreateVolumeAvailableLine(String available);
+
+  /// Erreur locale : le volume du colis dépasse le volume restant du trajet, déjà formatés en m³ (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis fait {volume} et il ne reste que {available} sur ce trajet.'**
+  String bidCreateVolumeTooLarge(String volume, String available);
+
+  /// Aide du bouton d'envoi grisé : dimensions du colis manquantes sur un trajet au m³ (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez les trois dimensions du colis pour calculer le prix.'**
+  String get bidCreateVolumeDimensionsHint;
+
+  /// Sous-titre du choix de paiement par carte, trajet bateau : le transporteur est payé au dépôt du colis (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Versé au transporteur au dépôt du colis'**
+  String get bidCreateCardModeSubtitleDeposit;
+
+  /// Explication du mode carte d'un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloqué par Yadony dès maintenant, versé au transporteur quand vous déposez le colis.'**
+  String get bidCreateCardModeBodyDeposit;
+
+  /// Explication du mode carte d'une proposition de prix sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé par carte une fois votre prix accepté, puis versé au transporteur au dépôt du colis.'**
+  String get bidCreateCardModeNegotiationBodyDeposit;
+
+  /// Explication du mode mobile money d'un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Après l\'accord du transporteur, vous recevez une demande de paiement sur votre téléphone. Le montant est versé au transporteur au dépôt du colis.'**
+  String get bidCreateMobileMoneyModeBodyDeposit;
+
+  /// Écran de succès d'un paiement par carte sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre paiement est sécurisé par Yadony jusqu\'au dépôt de votre colis, puis versé au transporteur. Le transporteur est notifié de votre demande.'**
+  String get bidCreateOfferPaidSubtitleDeposit;
+
+  /// Écran de succès d'une offre mobile money sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement mobile money : si le transporteur accepte, vous recevrez une notification et aurez 30 minutes pour valider le paiement sur votre téléphone. Le montant est gardé en sécurité par Yadony jusqu\'au dépôt du colis.'**
+  String get bidCreateMobileMoneySuccessSubtitleDeposit;
+
+  /// Puce de l'accueil (mode Trajets filtré sur le bateau) : volume restant minimal en m³, remplace « Urgent » et « Valise 23 kg ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume'**
+  String get homeFilterChipsVolume;
+
+  /// Puce de l'accueil (mode Trajets filtré sur le bateau) : arrivée estimée au plus tard.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get homeFilterChipsArrival;
+
+  /// Puce Arrivée active : arrivée estimée sous N semaines (4, 6 ou 8).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée ≤ {weeks} sem.'**
+  String homeFilterChipsArrivalActive(int weeks);
+
+  /// Valeur du volume minimal de la recherche bateau (champ du composeur et puce Volume de l'accueil), volume déjà formaté en m³.
+  ///
+  /// In fr, this message translates to:
+  /// **'≥ {volume}'**
+  String homeFilterBoatVolumeValue(String volume);
+
+  /// Valeur du champ du prix maximal au m³ du composeur de recherche bateau, prix déjà formaté avec « /m³ ».
+  ///
+  /// In fr, this message translates to:
+  /// **'≤ {price}'**
+  String homeFilterBoatPriceValue(String price);
+
+  /// Libellé du champ du volume restant minimal (composeur de recherche, bateau).
+  ///
+  /// In fr, this message translates to:
+  /// **'VOLUME MIN'**
+  String get homeFilterFieldsMinVolume;
+
+  /// Libellé du champ du prix maximal au m³ (composeur de recherche, bateau).
+  ///
+  /// In fr, this message translates to:
+  /// **'PRIX MAX AU M³'**
+  String get homeFilterFieldsMaxPricePerM3;
+
+  /// Titre de la feuille du volume restant minimal d'un trajet bateau (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume minimum'**
+  String get homeFilterBoatVolumeTitle;
+
+  /// Champ de la feuille du volume minimal (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume minimum (m³)'**
+  String get homeFilterBoatVolumeFieldLabel;
+
+  /// Aide sous le champ du volume minimal (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'De 0,1 à 9 999 m³. Laissez vide pour tous les trajets.'**
+  String get homeFilterBoatVolumeHint;
+
+  /// Erreur : volume minimal hors bornes (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un volume entre 0,1 et 9 999 m³'**
+  String get homeFilterBoatVolumeInvalid;
+
+  /// Titre de la feuille du prix maximal au m³ d'un trajet bateau (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix maximum au m³'**
+  String get homeFilterBoatPriceTitle;
+
+  /// Champ de la feuille du prix maximal ; {symbol} est le symbole de la devise du lecteur (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix maximum par m³ ({symbol})'**
+  String homeFilterBoatPriceFieldLabel(String symbol);
+
+  /// Aide sous le champ du prix maximal au m³ (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans votre devise. Laissez vide pour tous les prix.'**
+  String get homeFilterBoatPriceHint;
+
+  /// Erreur : prix maximal au m³ hors bornes, plafond déjà formaté dans la devise (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un prix supérieur à zéro, {max} au plus'**
+  String homeFilterBoatPriceInvalid(String max);
+
+  /// Titre de la feuille de l'arrivée estimée au plus tard (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée'**
+  String get homeFilterBoatArrivalTitle;
+
+  /// Pastille de l'arrivée estimée au plus tard : 4, 6 ou 8 semaines à partir d'aujourd'hui (boat_search_fields.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sous {weeks} semaines'**
+  String homeFilterBoatArrivalOption(int weeks);
+
+  /// Aide sous le filtre d'arrivée d'un trajet bateau (feuille et composeur). Le back compare la FIN de la fourchette (arrival_date_max, sinon arrival_date) à la limite (AnnouncementSpecification.arrivalNotAfter) : un trajet « du 20 déc. au 10 janv. » n'entre pas dans « Sous 8 semaines » si le 10 janv. dépasse la limite.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toute la fourchette d\'arrivée annoncée par le transporteur tombe avant cette limite.'**
+  String get homeFilterBoatArrivalHelp;
+
+  /// Composeur de recherche de trajets, bateau seulement : section du volume minimal et du prix maximal au m³.
+  ///
+  /// In fr, this message translates to:
+  /// **'VOLUME ET PRIX'**
+  String get homeComposerSectionVolumePrice;
+
+  /// Composeur de recherche de trajets, bateau seulement : section de l'arrivée estimée au plus tard.
+  ///
+  /// In fr, this message translates to:
+  /// **'ARRIVÉE ESTIMÉE'**
+  String get homeComposerSectionArrival;
+
+  /// Composeur de recherche, bateau : explication des filtres de volume et de prix au m³ (le serveur n'y laisse passer qu'un trajet au m³).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces filtres ne montrent que les trajets facturés au m³.'**
+  String get homeComposerVolumeHint;
+
+  /// Sous-titre de « Plus de filtres » du composeur de recherche quand le filtre Transport est le bateau : pas d'escales.
+  ///
+  /// In fr, this message translates to:
+  /// **'Type de contenu, note, paiement'**
+  String get homeComposerMoreFiltersHintBoat;
+
+  /// Carte de recherche d'un trajet bateau : fourchette d'arrivée, dates déjà formatées.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée du {from} au {to}'**
+  String listingBoatArrivalRange(String from, String to);
+
+  /// Carte de recherche d'un trajet bateau sans fourchette : une date d'arrivée estimée, déjà formatée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée le {date}'**
+  String listingBoatArrivalDate(String date);
+
+  /// Carte de recherche d'un trajet bateau au m³ : volume encore disponible, déjà formaté en m³.
+  ///
+  /// In fr, this message translates to:
+  /// **'{volume} restants'**
+  String listingBoatVolumeRemaining(String volume);
+
+  /// Frise de suivi d'un colis bateau (tracking_timeline_bottom_sheet.dart) : étape en cours tant que le colis n'est pas déposé ; libellé court de l'étape DEPART en bateau (tracking_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépôt à l\'entrepôt'**
+  String get trackingBoatStepDeposit;
+
+  /// Frise de suivi d'un colis bateau : étape DEPART faite (dépôt scanné à l'entrepôt), aussi phrase d'état avant le départ du bateau (tracking_timeline_bottom_sheet.dart, journey_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Déposé à l\'entrepôt'**
+  String get trackingBoatStepDeposited;
+
+  /// Frise de suivi d'un colis bateau : jalon du trajet à venir, le bateau n'est pas encore parti.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ du bateau'**
+  String get trackingBoatStepDeparture;
+
+  /// Frise de suivi d'un colis bateau : jalon du trajet fait, le bateau est parti. Aussi titre et bouton de l'action « Je pars » d'un trajet bateau (trip_todo_labels.dart, trip_depart_action.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bateau parti'**
+  String get trackingBoatStepDeparted;
+
+  /// Frise de suivi d'un colis bateau : étape en cours entre le départ et l'arrivée au port ; aussi phrase d'état sans ville d'arrivée.
+  ///
+  /// In fr, this message translates to:
+  /// **'En mer'**
+  String get trackingBoatStepAtSea;
+
+  /// Frise de suivi d'un colis bateau : jalon de l'arrivée au port (à venir ou fait), aussi phrase d'état une fois arrivé, et titre de l'action « Arrivé » d'un trajet bateau (trip_todo_labels.dart). Ville commençant par une consonne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé au port de {city}'**
+  String trackingBoatStepAtPort(String city);
+
+  /// Comme trackingBoatStepAtPort, pour une ville commençant par une voyelle (élision : « port d'Abidjan »).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé au port d\'{city}'**
+  String trackingBoatStepAtPortElided(String city);
+
+  /// Comme trackingBoatStepAtPort, quand la ville d'arrivée n'est pas connue (colis lu par QR). Aussi bouton de l'action « Arrivé » d'un trajet bateau (trip_todo_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé au port'**
+  String get trackingBoatStepAtPortNoCity;
+
+  /// Phrase d'état de la frise d'un colis bateau pas encore déposé (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente du dépôt à l\'entrepôt'**
+  String get trackingBoatHeadlineAwaitingDeposit;
+
+  /// Phrase d'état de la frise d'un colis bateau parti, pas encore arrivé au port (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En mer vers {city}'**
+  String trackingBoatHeadlineAtSeaTo(String city);
+
+  /// Sous le jalon « Départ du bateau » à venir : date de départ prévue du trajet (« 2 déc. »).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prévu le {date}'**
+  String trackingBoatPlannedDeparture(String date);
+
+  /// Sous le jalon « Arrivé au port » à venir : fourchette d'arrivée estimée (celle du dernier retard s'il existe).
+  ///
+  /// In fr, this message translates to:
+  /// **'Estimé du {from} au {to}'**
+  String trackingBoatEstimatedRange(String from, String to);
+
+  /// Sous le jalon « Arrivé au port » à venir : arrivée estimée à une seule date.
+  ///
+  /// In fr, this message translates to:
+  /// **'Estimé le {date}'**
+  String trackingBoatEstimatedDate(String date);
+
+  /// Sous l'étape « En mer » : dernier retard annoncé par le transporteur, son message ou à défaut son motif.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retard annoncé : {detail}'**
+  String trackingBoatDelayNote(String detail);
+
+  /// Billet (billet_route.dart) : libellé de l'arrivée quand le trajet annonce une fourchette (bateau), à la place de « Arrivée ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée'**
+  String get ticketEstimatedArrivalLabel;
+
+  /// Billet (billet_route.dart) : fourchette d'arrivée estimée (« 11 janv. au 18 janv. »).
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} au {to}'**
+  String ticketArrivalRangeValue(String from, String to);
+
+  /// Résumé d'état d'un colis bateau parti (sender_hero_card.dart, tuile Suivi) : fourchette d'arrivée estimée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée du {from} au {to} à {city}.'**
+  String bidDetailSenderInTransitBoatRange(String from, String to, String city);
+
+  /// Résumé d'état d'un colis bateau parti dont l'arrivée estimée tient sur une date.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée le {date} à {city}.'**
+  String bidDetailSenderInTransitBoatDate(String date, String city);
+
+  /// Carte Paiement de l'expéditeur (paiement_card.dart), colis payé au dépôt (payoutTrigger DEPOSIT) une fois déposé, avec la date du dépôt.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} versé au transporteur au dépôt du colis, le {date}'**
+  String bidDetailDepositPaidLabel(String amount, String date);
+
+  /// Comme bidDetailDepositPaidLabel quand la date du dépôt n'est pas encore lue.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} versé au transporteur au dépôt du colis'**
+  String bidDetailDepositPaidNoDateLabel(String amount);
+
+  /// Carte Paiement de l'expéditeur, colis payé au dépôt (payoutTrigger DEPOSIT) pas encore déposé.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} payé, versé au transporteur au dépôt du colis'**
+  String bidDetailDepositPendingLabel(String amount);
+
+  /// Carte du dernier retard du trajet dans la fiche colis de l'expéditeur (trip_reschedule_card.dart, TripDelayCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retard annoncé'**
+  String get bidDelayTitle;
+
+  /// Carte du retard : nouvelle fourchette d'arrivée estimée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle arrivée estimée : du {from} au {to}.'**
+  String bidDelayNewRange(String from, String to);
+
+  /// Carte du retard : nouvelle arrivée estimée à une seule date.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle arrivée estimée : le {date}.'**
+  String bidDelayNewDate(String date);
+
+  /// Carte du retard : motif annoncé par le transporteur (libellé de trip_delay_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif : {reason}'**
+  String bidDelayReason(String reason);
+
+  /// Motif de retard PORT_CONGESTION, bateau seulement (trip_delay_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Congestion au port'**
+  String get tripDelayReasonPortCongestion;
+
+  /// Motif de retard WEATHER, tous modes (trip_delay_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Météo'**
+  String get tripDelayReasonWeather;
+
+  /// Motif de retard EXTENDED_STOPOVER en bateau et en avion (trip_delay_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Escale prolongée'**
+  String get tripDelayReasonExtendedStopover;
+
+  /// Motif de retard EXTENDED_STOPOVER sur la route ou un mode inconnu : jamais « escale » hors bateau et avion (trip_delay_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrêt prolongé'**
+  String get tripDelayReasonExtendedStop;
+
+  /// Motif de retard TRANSPORT_DISRUPTION, neutre, tous modes (trip_delay_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Perturbation du transport'**
+  String get tripDelayReasonTransportDisruption;
+
+  /// Carte de prix de la fiche d'un trajet bateau vendu au m³, vue expéditeur (traveler_announcement_bottom_sheet.dart), sous le prix frais inclus.
+  ///
+  /// In fr, this message translates to:
+  /// **'par m³'**
+  String get listingPricePerM3Label;
+
+  /// Erreur arrival-time-before-departure du back, titre (error_catalog.dart) : arrivée le même jour que le départ, à une heure qui ne le suit pas.
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure d\'arrivée avant le départ'**
+  String get errorArrivalTimeBeforeDepartureTitle;
+
+  /// Erreur arrival-time-before-departure du back, message de repli (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le même jour, l\'heure d\'arrivée doit suivre l\'heure de départ.'**
+  String get errorArrivalTimeBeforeDepartureMessage;
+
+  /// Titre de la feuille d'annonce de retard (trip_delay_bottom_sheet.dart) et entrée du menu ⋮ de l'écran du trajet (trip_owner_options_sheet.dart), tous modes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annoncer un retard'**
+  String get tripDelaySheetTitle;
+
+  /// Sous-titre de la feuille d'annonce de retard : expéditeurs distincts des colis remis, en transit ou arrivés (0 tant que les colis ne sont pas chargés).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Les expéditeurs dont le colis est à bord sont prévenus en une fois.} =1{L\'expéditeur dont le colis est à bord est prévenu.} other{Les {count} expéditeurs de ce trajet sont prévenus en une fois.}}'**
+  String tripDelaySheetSubtitle(int count);
+
+  /// Feuille d'annonce de retard : titre de la section des motifs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif'**
+  String get tripDelayReasonSection;
+
+  /// Feuille d'annonce de retard : titre de la section des dates (début et fin de la fourchette).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle arrivée estimée'**
+  String get tripDelayArrivalSection;
+
+  /// Feuille d'annonce de retard : libellé court du début de la nouvelle arrivée estimée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Du'**
+  String get tripDelayFromLabel;
+
+  /// Feuille d'annonce de retard : libellé court de la fin de la nouvelle arrivée estimée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Au'**
+  String get tripDelayToLabel;
+
+  /// Feuille d'annonce de retard : dernière date d'arrivée possible (départ + durée maximale du mode), sous les dates.
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus tard le {date} pour ce trajet'**
+  String tripDelayArrivalLimit(String date);
+
+  /// Feuille d'annonce de retard : titre du champ de message libre (300 caractères).
+  ///
+  /// In fr, this message translates to:
+  /// **'Message aux expéditeurs'**
+  String get tripDelayMessageSection;
+
+  /// Aide du message de retard, trajet bateau.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. : attente à Tanger Med, départ prévu jeudi'**
+  String get tripDelayMessageHintBoat;
+
+  /// Aide du message de retard, trajet avion seulement (« vol »).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. : vol retardé, nouvel horaire annoncé demain'**
+  String get tripDelayMessageHintPlane;
+
+  /// Aide du message de retard, route ou mode inconnu : neutre, ni vol ni port.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. : contretemps, reprise prévue jeudi'**
+  String get tripDelayMessageHint;
+
+  /// Feuille d'annonce de retard : encadré d'information, tous modes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le report du trajet reste bloqué une fois les colis à bord ; l\'annonce de retard, elle, reste possible jusqu\'à l\'arrivée.'**
+  String get tripDelayInfo;
+
+  /// Bouton du pied de la feuille d'annonce de retard (stickyBottom).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prévenir les expéditeurs'**
+  String get tripDelaySubmit;
+
+  /// Confirmation après l'annonce d'un retard (trip_owner_actions.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retard annoncé : les expéditeurs sont prévenus.'**
+  String get tripDelaySentSnackbar;
+
+  /// Sous-titre de l'entrée « Annoncer un retard » du menu ⋮ de l'écran du trajet (trajet parti).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prévenez les expéditeurs de la nouvelle arrivée estimée'**
+  String get tripMenuAnnounceDelaySubtitle;
+
+  /// Pastille de capacité de l'écran du trajet bateau vendu au m³ (trip_owner_header.dart), sous le volume restant : « 0,4 m³ » puis « restants sur 2 m³ ».
+  ///
+  /// In fr, this message translates to:
+  /// **'restants sur {total}'**
+  String tripOwnerVolumeRemainingOf(String total);
+
+  /// Sous-titre de la tuile Paiements de l'écran du trajet bateau (interrupteur bateau allumé, trip_tiles.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé au dépôt de chaque colis'**
+  String get tripTilePaymentsDeposit;
+
+  /// Feuille de la tuile Paiements d'un trajet bateau (trip_tile_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque colis vous est versé dès son dépôt à l\'entrepôt.'**
+  String get tripTilePaymentsDepositNote;
+
+  /// Pastille de l'étape sur la confirmation d'une lecture (scan_confirm_screen.dart) quand DEPART est le dépôt à l'entrepôt (bateau, colis payé au dépôt).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépôt enregistré'**
+  String get scanDepositRecordedChip;
+
+  /// Sous-titre de l'écran photo en mode retour de résultat (scan_photo_screen.dart) quand DEPART est le dépôt à l'entrepôt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Obligatoire pour valider le dépôt à l\'entrepôt'**
+  String get suiviDepositPhotoRequired;
+
+  /// Bouton d'entrée de la modification d'un colis au m³ (trajet bateau), à la place de amendmentEntryButton
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter du volume ou des articles'**
+  String get amendmentEntryButtonVolume;
+
+  /// Titre du sélecteur de volume (colis au m³). {price} : prix au m³ formaté, {free} : volume libre en m³
+  ///
+  /// In fr, this message translates to:
+  /// **'VOLUME EN PLUS · {price}/M³ · {free} M³ LIBRES'**
+  String amendmentSheetVolumeLabel(String price, String free);
+
+  /// Titre du sélecteur de volume quand la capacité est libre. {price} : prix au m³ formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'VOLUME EN PLUS · {price}/M³'**
+  String amendmentSheetVolumeLabelOpen(String price);
+
+  /// Titre du sélecteur de volume quand le serveur ne donne pas le prix au m³
+  ///
+  /// In fr, this message translates to:
+  /// **'VOLUME EN PLUS'**
+  String get amendmentSheetVolumeLabelPlain;
+
+  /// Valeur du sélecteur de volume. {volume} : nombre de m³ déjà formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'+{volume} m³'**
+  String amendmentSheetVolumeValue(String volume);
+
+  /// Libellé du volume avant/après (vue voyageur, colis au m³)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume du colis'**
+  String get amendmentTravelerParcelVolume;
+
+  /// Volume avant → après, en m³
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} → {to} m³'**
+  String amendmentTravelerParcelVolumeValue(String from, String to);
+
+  /// Colis au m³ : consigne du voyageur après l'acceptation d'une modification
+  ///
+  /// In fr, this message translates to:
+  /// **'Récupérez le volume en plus à la remise. S\'il n\'est pas là, dites-le avant de scanner le QR.'**
+  String get amendmentTravelerAcceptedBodyVolume;
+
+  /// Bouton du voyageur (colis au m³) : le volume ajouté n'a pas été apporté
+  ///
+  /// In fr, this message translates to:
+  /// **'Le volume en plus n\'est pas là'**
+  String get amendmentNotBroughtVolume;
+
+  /// Titre de la confirmation « volume en plus absent » (colis au m³)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le volume en plus n\'est pas là ?'**
+  String get amendmentNotBroughtVolumeConfirmTitle;
+
+  /// Message de la confirmation « volume en plus absent » (colis au m³)
+  ///
+  /// In fr, this message translates to:
+  /// **'La modification sera annulée et l\'expéditeur remboursé. Le colis reste à son volume d\'origine.'**
+  String get amendmentNotBroughtVolumeConfirmMessage;
+
+  /// Statut côté expéditeur d'une modification au m³ non apportée. {name} : prénom du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} a signalé que le volume en plus n\'était pas là'**
+  String amendmentSenderNotBroughtVolumeStatus(String name);
+
+  /// Message de la confirmation de refus d'une modification au m³
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis garde son volume d\'origine et son prix.'**
+  String get amendmentDeclineConfirmMessageVolume;
+
+  /// Ligne : part payée par carte et séquestrée, colis payé au dépôt (trajet bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé par carte, versé au transporteur au dépôt'**
+  String get amendmentPaymentHeldByCardDeposit;
+
+  /// Ligne : part payée en ligne (mobile money) et séquestrée, colis payé au dépôt (trajet bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé en ligne, versé au transporteur au dépôt'**
+  String get amendmentPaymentHeldOnlineDeposit;
+
+  /// Ligne : part versée, colis payé au dépôt (trajet bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Versé sur votre compte au dépôt du colis'**
+  String get amendmentGainPaidOutDeposit;
+
+  /// Erreur volume-price-too-high du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix au m³ trop élevé'**
+  String get errorVolumePriceTooHighTitle;
+
+  /// Erreur volume-price-too-high du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le prix au m³ dépasse le plafond autorisé. Baissez-le puis réessayez.'**
+  String get errorVolumePriceTooHighMessage;
+
+  /// Erreur transport-mode-locked du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode de transport verrouillé'**
+  String get errorTransportModeLockedTitle;
+
+  /// Erreur transport-mode-locked du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tant que des colis sont en cours sur ce trajet, son mode ne peut pas passer au bateau ni le quitter.'**
+  String get errorTransportModeLockedMessage;
+
+  /// Fil de prix d'un trajet : indication de paiement quand le transporteur est payé au dépôt du colis (bateau), à la place de negotiationThreadPayHint
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix accepté. Réglez maintenant pour réserver votre place, le montant est versé au transporteur au dépôt de votre colis.'**
+  String get negotiationThreadPayHintDeposit;
+
+  /// Bandeau du récapitulatif de paiement par carte quand le transporteur est payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sécurisé · versé au dépôt du colis'**
+  String get negotiationPaymentRecapSecureBannerMessageDeposit;
+
+  /// Note du récapitulatif de paiement par carte quand le transporteur est payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant est bloqué et sécurisé. Le transporteur le reçoit au dépôt de votre colis. Un litige se règle avec le support Yadony.'**
+  String get negotiationPaymentRecapSecureNoteDeposit;
+
+  /// Bandeau du récapitulatif mobile money quand le transporteur est payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous validez le paiement sur votre téléphone. Yadony garde l\'argent et le verse au transporteur au dépôt de votre colis.'**
+  String get negotiationPaymentRecapMobileMoneyBannerMessageDeposit;
+
+  /// Note du récapitulatif mobile money quand le transporteur est payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une demande de paiement arrive sur le numéro indiqué ci-dessous. Le transporteur reçoit le montant au dépôt de votre colis.'**
+  String get negotiationPaymentRecapMobileMoneyNoteDeposit;
+
+  /// Écran de succès d'un fil payé quand le transporteur est payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre argent est sécurisé par Yadony, puis versé au transporteur au dépôt de votre colis. Suivez votre colis depuis le fil.'**
+  String get negotiationOfferAcceptedPaidSubtitleDeposit;
+
+  /// Écran d'attente mobile money : moment où le transporteur est payé, au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au dépôt du colis'**
+  String get mobileMoneyPaidToTravelerValueDeposit;
+
+  /// Fiche publique d'une demande par bateau : réassurance du voyageur, payé au dépôt
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé : versé dès le dépôt du colis'**
+  String get requestPublicReassureSecuredDeposit;
+
+  /// Menu d'options de l'expéditeur : sous-titre de l'entrée « Contacter le support » qui remplace l'annulation après remise d'un colis payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le transporteur a été payé au dépôt du colis : un litige se règle avec le support Yadony.'**
+  String get bidDepositPaidSupportSenderSubtitle;
+
+  /// Menu d'options du voyageur : sous-titre de l'entrée « Contacter le support » qui remplace le refus et l'annulation d'un colis payé au dépôt (bateau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez été payé au dépôt du colis : un litige se règle avec le support Yadony.'**
+  String get bidDepositPaidSupportTravelerSubtitle;
+
+  /// Trajet dédié à une demande par bateau : bandeau d'un voyageur sans badge GP Pro ni compte pro, « Continuer » reste grisé
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette demande est en bateau, un mode réservé aux transporteurs vérifiés. Demandez le badge GP Pro pour proposer votre trajet.'**
+  String get tripPublishLockedBoatBlocked;
+
+  /// Dépôt d'un colis payé au dépôt (bateau) tenté sans QR (numéro saisi, bouton d'une ligne colis) : le dépôt exige le QR de l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Scannez le QR de l\'expéditeur'**
+  String get trackingDepositNeedsQr;
+
+  /// Erreur boat-deposit-qr-required du back, titre (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'QR de l\'expéditeur requis'**
+  String get errorBoatDepositQrRequiredTitle;
+
+  /// Erreur boat-deposit-qr-required du back, message (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour valider le dépôt, scannez le QR code de l\'expéditeur : un numéro saisi ne suffit pas.'**
+  String get errorBoatDepositQrRequiredMessage;
 }
 
 class _AppLocalizationsDelegate

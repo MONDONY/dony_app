@@ -22,9 +22,20 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final String? arrivalDate;
   final AddressData pickupAddress;
   final AddressData deliveryAddress;
-  final double availableKg;
-  final double pricePerKg;
+
+  /// Kilos et prix au kilo : `null` pour un trajet bateau vendu au m³, qui
+  /// n'envoie aucun kilo.
+  final double? availableKg;
+  final double? pricePerKg;
   final TransportMode transportMode;
+
+  /// Bateau : fin de la fourchette d'arrivée estimée (`yyyy-MM-dd`), le début
+  /// étant [arrivalDate]. `null` hors bateau.
+  final String? arrivalDateMax;
+
+  /// Bateau au m³ : volume proposé et prix net par m³. `null` sinon.
+  final double? volumeCapacityM3;
+  final double? pricePerM3;
 
   /// Escales (FLUTTER-GE), avion uniquement ; `null` = non renseigné.
   final TripStops? stops;
@@ -67,6 +78,9 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     required this.availableKg,
     required this.pricePerKg,
     required this.transportMode,
+    this.arrivalDateMax,
+    this.volumeCapacityM3,
+    this.pricePerM3,
     this.stops,
     this.description,
     this.acceptedContentTypes = const [],
@@ -152,6 +166,13 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   /// Route : ville où une étape publiée du voyage s'arrête ; `null` = aucune.
   final String? viaCity;
 
+  /// Bateau : volume restant minimal (m³), prix maximal au m³ (devise du
+  /// lecteur) et arrivée estimée au plus tard ; `null` = peu importe. Stricts
+  /// côté back : un trajet au kilo n'y passe pas.
+  final double? minVolumeM3;
+  final double? maxPricePerM3;
+  final DateTime? arrivalBefore;
+
   AnnouncementSearchRequested({
     this.departureCity,
     this.arrivalCity,
@@ -176,6 +197,9 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.paymentMethods,
     this.minItemSize,
     this.viaCity,
+    this.minVolumeM3,
+    this.maxPricePerM3,
+    this.arrivalBefore,
   });
 }
 
@@ -236,9 +260,20 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   final String? arrivalDate;
   final AddressData pickupAddress;
   final AddressData deliveryAddress;
-  final double availableKg;
-  final double pricePerKg;
+
+  /// Kilos et prix au kilo : `null` pour un trajet bateau vendu au m³, qui
+  /// n'envoie aucun kilo.
+  final double? availableKg;
+  final double? pricePerKg;
   final TransportMode transportMode;
+
+  /// Bateau : fin de la fourchette d'arrivée estimée (`yyyy-MM-dd`), le début
+  /// étant [arrivalDate]. `null` hors bateau.
+  final String? arrivalDateMax;
+
+  /// Bateau au m³ : volume proposé et prix net par m³. `null` sinon.
+  final double? volumeCapacityM3;
+  final double? pricePerM3;
 
   /// Escales (FLUTTER-GE), avion uniquement ; `null` = non renseigné.
   final TripStops? stops;
@@ -280,6 +315,9 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     required this.availableKg,
     required this.pricePerKg,
     required this.transportMode,
+    this.arrivalDateMax,
+    this.volumeCapacityM3,
+    this.pricePerM3,
     this.stops,
     this.description,
     this.acceptedContentTypes = const [],

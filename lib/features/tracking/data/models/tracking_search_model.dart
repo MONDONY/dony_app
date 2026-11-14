@@ -1,3 +1,6 @@
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+
 class TrackingSearchModel {
   final String trackingNumber;
   final String bidId;
@@ -8,6 +11,17 @@ class TrackingSearchModel {
   final String paymentStatus;
   final String? arrivalInstructions;
 
+  /// Mode du trajet qui porte le colis (`transportMode` du back, lot 3).
+  /// `null` quand le back ne le connaît pas, ne le sert pas encore (back
+  /// antérieur) ou sert un mode que l'app ne connaît pas : jamais un avion
+  /// supposé, l'appelant choisit l'icône neutre.
+  final TransportMode? transportMode;
+
+  /// Moment où le voyageur est payé. Absent (back antérieur) : livraison.
+  /// Au dépôt (bateau), l'étape DEPART exige le QR de l'expéditeur et une
+  /// photo, jamais un numéro saisi.
+  final PayoutTrigger payoutTrigger;
+
   const TrackingSearchModel({
     required this.trackingNumber,
     required this.bidId,
@@ -17,6 +31,8 @@ class TrackingSearchModel {
     required this.stepLabel,
     required this.paymentStatus,
     this.arrivalInstructions,
+    this.transportMode,
+    this.payoutTrigger = PayoutTrigger.delivery,
   });
 
   factory TrackingSearchModel.fromJson(Map<String, dynamic> json) =>
@@ -29,5 +45,11 @@ class TrackingSearchModel {
         stepLabel: json['stepLabel'] as String,
         paymentStatus: json['paymentStatus'] as String,
         arrivalInstructions: json['arrivalInstructions'] as String?,
+        transportMode: transportModeFromWire(
+          json['transportMode'] is String
+              ? json['transportMode'] as String
+              : null,
+        ),
+        payoutTrigger: PayoutTrigger.fromWire(json['payoutTrigger']),
       );
 }

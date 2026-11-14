@@ -8,6 +8,7 @@ import 'package:dony/features/matching/data/models/kg_sold_model.dart';
 import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
+import 'package:dony/features/matching/data/models/trip_delay_info.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/models/trip_series_result.dart';
@@ -32,9 +33,12 @@ class AnnouncementRepository {
     String? arrivalDate,
     required AddressData pickupAddress,
     required AddressData deliveryAddress,
-    required double availableKg,
-    required double pricePerKg,
+    required double? availableKg,
+    required double? pricePerKg,
     required TransportMode transportMode,
+    String? arrivalDateMax,
+    double? volumeCapacityM3,
+    double? pricePerM3,
     TripStops? stops,
     String? description,
     List<String> acceptedContentTypes = const [],
@@ -63,6 +67,9 @@ class AnnouncementRepository {
       availableKg: availableKg,
       pricePerKg: pricePerKg,
       transportMode: transportMode,
+      arrivalDateMax: arrivalDateMax,
+      volumeCapacityM3: volumeCapacityM3,
+      pricePerM3: pricePerM3,
       stops: stops,
       description: description,
       acceptedContentTypes: acceptedContentTypes,
@@ -147,6 +154,9 @@ class AnnouncementRepository {
     List<String>? paymentMethods,
     ItemSize? minItemSize,
     String? viaCity,
+    double? minVolumeM3,
+    double? maxPricePerM3,
+    DateTime? arrivalBefore,
   }) {
     return _remoteDatasource.searchAnnouncements(
       departureCity: departureCity,
@@ -172,6 +182,9 @@ class AnnouncementRepository {
       paymentMethods: paymentMethods,
       minItemSize: minItemSize,
       viaCity: viaCity,
+      minVolumeM3: minVolumeM3,
+      maxPricePerM3: maxPricePerM3,
+      arrivalBefore: arrivalBefore,
     );
   }
 
@@ -200,6 +213,9 @@ class AnnouncementRepository {
     List<String>? paymentMethods,
     ItemSize? minItemSize,
     String? viaCity,
+    double? minVolumeM3,
+    double? maxPricePerM3,
+    DateTime? arrivalBefore,
     int page = 0,
     bool includeFull = false,
   }) {
@@ -227,6 +243,9 @@ class AnnouncementRepository {
       paymentMethods: paymentMethods,
       minItemSize: minItemSize,
       viaCity: viaCity,
+      minVolumeM3: minVolumeM3,
+      maxPricePerM3: maxPricePerM3,
+      arrivalBefore: arrivalBefore,
       page: page,
       includeFull: includeFull,
     );
@@ -256,6 +275,9 @@ class AnnouncementRepository {
     List<String>? paymentMethods,
     ItemSize? minItemSize,
     String? viaCity,
+    double? minVolumeM3,
+    double? maxPricePerM3,
+    DateTime? arrivalBefore,
   }) {
     return _remoteDatasource.countAnnouncements(
       departureCity: departureCity,
@@ -279,6 +301,9 @@ class AnnouncementRepository {
       paymentMethods: paymentMethods,
       minItemSize: minItemSize,
       viaCity: viaCity,
+      minVolumeM3: minVolumeM3,
+      maxPricePerM3: maxPricePerM3,
+      arrivalBefore: arrivalBefore,
     );
   }
 
@@ -303,9 +328,12 @@ class AnnouncementRepository {
     String? arrivalDate,
     required AddressData pickupAddress,
     required AddressData deliveryAddress,
-    required double availableKg,
-    required double pricePerKg,
+    required double? availableKg,
+    required double? pricePerKg,
     required TransportMode transportMode,
+    String? arrivalDateMax,
+    double? volumeCapacityM3,
+    double? pricePerM3,
     TripStops? stops,
     String? description,
     List<String> acceptedContentTypes = const [],
@@ -334,6 +362,9 @@ class AnnouncementRepository {
       availableKg: availableKg,
       pricePerKg: pricePerKg,
       transportMode: transportMode,
+      arrivalDateMax: arrivalDateMax,
+      volumeCapacityM3: volumeCapacityM3,
+      pricePerM3: pricePerM3,
       stops: stops,
       description: description,
       acceptedContentTypes: acceptedContentTypes,
@@ -385,5 +416,20 @@ class AnnouncementRepository {
     handoverDeadline: handoverDeadline,
     reason: reason,
     note: note,
+  );
+
+  /// Retard annoncé sur un trajet parti (`POST /announcements/{id}/delays`).
+  Future<TripDelayInfo> announceDelay({
+    required String announcementId,
+    required TripDelayReason reason,
+    required DateTime arrivalDate,
+    required DateTime arrivalDateMax,
+    String? message,
+  }) => _remoteDatasource.announceDelay(
+    announcementId: announcementId,
+    reason: reason,
+    arrivalDate: arrivalDate,
+    arrivalDateMax: arrivalDateMax,
+    message: message,
   );
 }

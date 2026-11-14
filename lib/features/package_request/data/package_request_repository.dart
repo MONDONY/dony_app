@@ -134,6 +134,9 @@ class PackageRequestRepository {
     String? promoCode,
     String? currency,
     ItemSize? itemSize,
+    int? lengthCm,
+    int? widthCm,
+    int? heightCm,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/package-requests',
@@ -165,6 +168,11 @@ class PackageRequestRepository {
         'currency': ?currency,
         // Facultative : absente tant que l'expéditeur n'en choisit pas.
         ...itemSizeEntry('itemSize', FieldChange.ofNullable(itemSize)),
+        // Bateau et « peu importe » : les trois ensemble ; jamais le volume,
+        // que le serveur calcule.
+        'lengthCm': ?lengthCm,
+        'widthCm': ?widthCm,
+        'heightCm': ?heightCm,
       },
     );
     return PackageRequest.fromJson(response.data!);
@@ -192,6 +200,9 @@ class PackageRequestRepository {
     List<String>? photoKeys,
     String? promoCode,
     FieldChange<ItemSize> itemSize = const FieldChange.keep(),
+    int? lengthCm,
+    int? widthCm,
+    int? heightCm,
   }) async {
     final response = await _apiClient.dio.put<Map<String, dynamic>>(
       '/package-requests/$id',
@@ -219,6 +230,10 @@ class PackageRequestRepository {
         'promoCode': ?promoCode,
         // Absente : taille conservée. `FieldChange.clear()` l'efface (`NONE`).
         ...itemSizeEntry('itemSize', itemSize),
+        // Absentes : le back conserve les dimensions enregistrées.
+        'lengthCm': ?lengthCm,
+        'widthCm': ?widthCm,
+        'heightCm': ?heightCm,
       },
     );
     return PackageRequest.fromJson(response.data!);

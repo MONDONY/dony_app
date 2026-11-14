@@ -20,6 +20,7 @@ class PendingValidation {
     required this.method,
     required this.deadline,
     this.photoPath,
+    this.deposit = false,
   });
 
   final int id;
@@ -33,19 +34,31 @@ class PendingValidation {
   final ScanMethod method;
   final DateTime deadline;
   final String? photoPath;
+
+  /// Dépôt à l'entrepôt d'un colis payé au dépôt (bateau) : les messages
+  /// parlent du dépôt, jamais d'une récupération.
+  final bool deposit;
 }
 
 /// Issue d'un envoi, jouée une fois par l'écran (message, rechargement).
 sealed class SuiviValidationOutcome {
-  const SuiviValidationOutcome(this.step, this.parcelLabel);
+  const SuiviValidationOutcome(
+    this.step,
+    this.parcelLabel, {
+    this.deposit = false,
+  });
   final String step;
   final String parcelLabel;
+
+  /// Étape `DEPART` d'un dépôt à l'entrepôt (bateau).
+  final bool deposit;
 }
 
 final class SuiviValidationSent extends SuiviValidationOutcome {
   const SuiviValidationSent(
     super.step,
     super.parcelLabel, {
+    super.deposit,
     this.photoDropped = false,
   });
 
@@ -55,11 +68,16 @@ final class SuiviValidationSent extends SuiviValidationOutcome {
 
 /// Sans réseau : l'étape attend dans la file hors ligne.
 final class SuiviValidationQueued extends SuiviValidationOutcome {
-  const SuiviValidationQueued(super.step, super.parcelLabel);
+  const SuiviValidationQueued(super.step, super.parcelLabel, {super.deposit});
 }
 
 final class SuiviValidationFailed extends SuiviValidationOutcome {
-  const SuiviValidationFailed(super.step, super.parcelLabel, this.error);
+  const SuiviValidationFailed(
+    super.step,
+    super.parcelLabel,
+    this.error, {
+    super.deposit,
+  });
   final AppException error;
 }
 
@@ -151,6 +169,9 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     String? photoPath,
     ScanPosition? position,
     String? trackingNumber,
+    String? qrToken,
+    bool photoRequired = false,
+    bool deposit = false,
   }) {
     // Une étape en cours d'envoi (délai écoulé, réponse pas encore reçue) ne
     // se reprogramme pas : sa ligne n'est plus « en attente » mais le back
@@ -175,6 +196,8 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
       gpsLabel: position?.label,
       scanMethod: method,
       trackingNumber: trackingNumber,
+      qrToken: qrToken,
+      photoRequired: photoRequired,
       notBefore: deadline.add(replayGrace),
     )..ignore();
     _positions[id] = position != null
@@ -196,6 +219,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
             method: method,
             deadline: deadline,
             photoPath: photoPath,
+            deposit: deposit,
           ),
         ],
       ),
@@ -255,14 +279,20 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
           ? SuiviValidationSent(
               pending.step,
               pending.parcelLabel,
+              deposit: pending.deposit,
               photoDropped: sent.photoDropped,
             )
-          : SuiviValidationQueued(pending.step, pending.parcelLabel);
+          : SuiviValidationQueued(
+              pending.step,
+              pending.parcelLabel,
+              deposit: pending.deposit,
+            );
     } catch (e) {
       outcome = SuiviValidationFailed(
         pending.step,
         pending.parcelLabel,
         unwrapDioError(e),
+        deposit: pending.deposit,
       );
     } finally {
       _sendingBids.remove(pending.bidId);

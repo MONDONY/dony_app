@@ -121,7 +121,7 @@ Widget? _stickyBottomFor(
           ? liveBid(
               (sheetContext, current) => AmendmentEntry.shouldShow(current)
                   ? DonyButton(
-                      label: l.amendmentEntryButton,
+                      label: AmendmentEntry.entryLabel(l, current),
                       iconAsset: 'plus',
                       variant: DonyButtonVariant.secondary,
                       onPressed: () => closeTileSheetThen(
@@ -229,6 +229,7 @@ class _SuiviContent extends StatelessWidget {
             bidStatus: bid.status,
             departureCity: bid.departureCity,
             arrivalCity: bid.arrivalCity,
+            transportMode: bid.transportMode,
           ),
         if (showTracking && showLocations)
           const SizedBox(height: DonySpacing.base),

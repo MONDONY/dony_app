@@ -14,16 +14,28 @@ class BidAmendmentRepository {
   Future<double> quote(
     String bidId, {
     required double addedKg,
+    double? addedVolumeM3,
     required Map<String, int> items,
-  }) => _datasource.quote(bidId, addedKg: addedKg, items: items);
+  }) => _datasource.quote(
+    bidId,
+    addedKg: addedKg,
+    addedVolumeM3: addedVolumeM3,
+    items: items,
+  );
 
   Future<AmendmentCheckout> create(
     String bidId, {
     required double addedKg,
+    double? addedVolumeM3,
     required Map<String, int> items,
     required BidPaymentMethod method,
-  }) =>
-      _datasource.create(bidId, addedKg: addedKg, items: items, method: method);
+  }) => _datasource.create(
+    bidId,
+    addedKg: addedKg,
+    addedVolumeM3: addedVolumeM3,
+    items: items,
+    method: method,
+  );
 
   Future<BidAmendment> confirmAuthorization(String bidId, String id) =>
       _datasource.confirmAuthorization(bidId, id);

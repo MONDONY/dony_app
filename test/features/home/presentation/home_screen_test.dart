@@ -2560,6 +2560,146 @@ void main() {
     });
   });
 
+  // Bateau : puces Volume et Arrivée, filtres envoyés au serveur.
+  group('filtres bateau de la rangée de puces', () {
+    Future<MockAnnouncementBloc> pumpTrips(WidgetTester tester) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: true),
+      );
+      final bloc = MockAnnouncementBloc();
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        _buildHome(
+          announcementBlocOverride: bloc,
+          user: _makeUser(roles: const ['SENDER', 'TRAVELER']),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+      return bloc;
+    }
+
+    Future<void> pickBoat(WidgetTester tester) async {
+      final chip = find.byKey(const Key('home-chip-transport'));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bateau'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+    }
+
+    List<AnnouncementSearchRequested> searches(MockAnnouncementBloc bloc) =>
+        verify(
+          () => bloc.add(captureAny()),
+        ).captured.whereType<AnnouncementSearchRequested>().toList();
+
+    Future<void> tapChip(WidgetTester tester, String key) async {
+      final chip = find.byKey(Key(key));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('boatFilters_sendParams : puce Volume → feuille, 3 m³ envoyé, '
+        'un tap sur la puce active le retire', (tester) async {
+      final bloc = await pumpTrips(tester);
+      await pickBoat(tester);
+      expect(find.byKey(const Key('chip-urgent')), findsNothing);
+      expect(find.byKey(const Key('chip-suitcase-23')), findsNothing);
+
+      await tapChip(tester, 'home-chip-volume');
+      expect(find.text('Volume minimum'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('boat-filter-volume-field')),
+        '3',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('boat-filter-apply')));
+      await tester.pumpAndSettle();
+
+      final withVolume = searches(bloc).last;
+      expect(withVolume.transportMode, TransportMode.boat);
+      expect(withVolume.minVolumeM3, 3);
+      expect(withVolume.maxPricePerM3, isNull);
+      expect(withVolume.arrivalBefore, isNull);
+      expect(find.text('≥ 3 m³'), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'min_volume', 'mode': 'trips'},
+        ),
+      ).called(1);
+
+      await tapChip(tester, 'home-chip-volume');
+      expect(searches(bloc).last.minVolumeM3, isNull);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterCleared,
+          properties: {'filter': 'min_volume', 'mode': 'trips'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('puce Arrivée : 6 semaines → arrivalBefore = aujourd\'hui + '
+        '42 jours, puis retrait', (tester) async {
+      final bloc = await pumpTrips(tester);
+      await pickBoat(tester);
+
+      await tapChip(tester, 'home-chip-arrival');
+      expect(find.text('Arrivée estimée'), findsOneWidget);
+      expect(
+        find.text(
+          'Toute la fourchette d\'arrivée annoncée par le transporteur tombe '
+          'avant cette limite.',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('boat-arrival-6')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('boat-filter-apply')));
+      await tester.pumpAndSettle();
+
+      final now = DateTime.now();
+      expect(
+        searches(bloc).last.arrivalBefore,
+        DateTime(now.year, now.month, now.day + 42),
+      );
+      expect(find.text('Arrivée ≤ 6 sem.'), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'arrival_window', 'mode': 'trips'},
+        ),
+      ).called(1);
+
+      await tapChip(tester, 'home-chip-arrival');
+      expect(searches(bloc).last.arrivalBefore, isNull);
+    });
+
+    testWidgets('avion : aucune puce bateau, Urgent et Valise gardés', (
+      tester,
+    ) async {
+      await pumpTrips(tester);
+      expect(find.byKey(const Key('home-chip-volume')), findsNothing);
+      expect(find.byKey(const Key('home-chip-arrival')), findsNothing);
+      expect(find.byKey(const Key('chip-urgent')), findsOneWidget);
+    });
+
+    testWidgets('curseur Capacité à 1 000 kg en bateau', (tester) async {
+      await pumpTrips(tester);
+      await pickBoat(tester);
+      await tapChip(tester, 'chip-capacity');
+      final slider = tester.widget<RangeSlider>(find.byType(RangeSlider));
+      expect(slider.max, 1000);
+    });
+  });
+
   group('première arrivée sur l\'onglet : liste à 100 %', () {
     testWidgets(
       'la feuille se pose à 100 % : favoris, recherche, « + » dans son '

@@ -82,9 +82,12 @@ class MarkerBitmapFactory {
 
   // ─── Price pill marker (white pill + urgency dot) ─────────────────────────
 
+  /// [priceLabel] : texte du prix déjà formé (« 600 €/m³ » d'un trajet bateau
+  /// vendu au m³), à la place de [pricePerKg] et de la grille.
   static Future<BitmapDescriptor> pricePill({
     required double pricePerKg,
     required String gridLabel,
+    String? priceLabel,
     Color dotColor = Colors.transparent,
     bool isSelected = false,
     Brightness brightness = Brightness.light,
@@ -102,6 +105,7 @@ class MarkerBitmapFactory {
       prefix: prefix,
       currencyCode: currencyCode ?? 'EUR', // i18n-ignore — code devise ISO
       gridLabel: gridLabel,
+      priceLabel: priceLabel ?? '',
       feeSuffix: feeSuffix,
       flagEmoji: flagEmoji ?? '',
       isOwn: isOwn,
@@ -113,6 +117,7 @@ class MarkerBitmapFactory {
     final bitmap = await _renderPricePill(
       pricePerKg: pricePerKg,
       gridLabel: gridLabel,
+      priceLabel: priceLabel,
       dotColor: dotColor,
       isSelected: isSelected,
       brightness: brightness,
@@ -128,10 +133,12 @@ class MarkerBitmapFactory {
 
   // ─── Stacked price pill (same-address cluster: ghost layer + "+N" badge) ───
 
+  /// [priceLabel] : comme [pricePill].
   static Future<BitmapDescriptor> stackedPricePill({
     required double pricePerKg,
     required int count,
     required String gridLabel,
+    String? priceLabel,
     Color dotColor = Colors.transparent,
     bool isSelected = false,
     Brightness brightness = Brightness.light,
@@ -148,6 +155,7 @@ class MarkerBitmapFactory {
       prefix: prefix,
       currencyCode: currencyCode ?? 'EUR', // i18n-ignore — code devise ISO
       gridLabel: gridLabel,
+      priceLabel: priceLabel ?? '',
       feeSuffix: feeSuffix,
     );
     final cached = _stackedPillCache[key];
@@ -158,6 +166,7 @@ class MarkerBitmapFactory {
       pricePerKg: pricePerKg,
       count: count,
       gridLabel: gridLabel,
+      priceLabel: priceLabel,
       dotColor: dotColor,
       isSelected: isSelected,
       brightness: brightness,
@@ -173,6 +182,7 @@ class MarkerBitmapFactory {
     required double pricePerKg,
     required int count,
     required String gridLabel,
+    String? priceLabel,
     required Color dotColor,
     required bool isSelected,
     required Brightness brightness,
@@ -181,9 +191,9 @@ class MarkerBitmapFactory {
     String feeSuffix = '',
   }) async {
     final palette = _pillPalette(brightness);
-    final price = pricePerKg <= 0
-        ? gridLabel
-        : formatPriceIn(pricePerKg, currencyCode);
+    final price =
+        priceLabel ??
+        (pricePerKg <= 0 ? gridLabel : formatPriceIn(pricePerKg, currencyCode));
     const fontSize = 12.0;
     const paddingH = 6.0;
     const paddingV = 4.0;
@@ -207,7 +217,7 @@ class MarkerBitmapFactory {
         // Sous grille, le prix est le net du voyageur : la mention est dite
         // en plus léger, jamais pour la pastille « Grille » sans montant.
         children: [
-          if (feeSuffix.isNotEmpty && pricePerKg > 0)
+          if (feeSuffix.isNotEmpty && pricePerKg > 0 && priceLabel == null)
             TextSpan(
               text: ' $feeSuffix',
               style: const TextStyle(fontWeight: FontWeight.w500),
@@ -401,6 +411,7 @@ class MarkerBitmapFactory {
   static Future<BitmapDescriptor> _renderPricePill({
     required double pricePerKg,
     required String gridLabel,
+    String? priceLabel,
     required Color dotColor,
     required bool isSelected,
     required Brightness brightness,
@@ -430,9 +441,9 @@ class MarkerBitmapFactory {
             ghostStroke: basePalette.ghostStroke,
           )
         : basePalette;
-    final label = pricePerKg <= 0
-        ? gridLabel
-        : formatPriceIn(pricePerKg, currencyCode);
+    final label =
+        priceLabel ??
+        (pricePerKg <= 0 ? gridLabel : formatPriceIn(pricePerKg, currencyCode));
 
     final fontSize = isSelected ? 13.5 : 12.0;
     const paddingH = 6.0;
@@ -460,7 +471,7 @@ class MarkerBitmapFactory {
         // Sous grille, le prix est le net du voyageur : la mention est dite
         // en plus léger, jamais pour la pastille « Grille » sans montant.
         children: [
-          if (feeSuffix.isNotEmpty && pricePerKg > 0)
+          if (feeSuffix.isNotEmpty && pricePerKg > 0 && priceLabel == null)
             TextSpan(
               text: ' $feeSuffix',
               style: const TextStyle(fontWeight: FontWeight.w500),
@@ -752,6 +763,7 @@ class _PricePillKey {
     required this.prefix,
     required this.currencyCode,
     required this.gridLabel,
+    required this.priceLabel,
     required this.feeSuffix,
     required this.flagEmoji,
     required this.isOwn,
@@ -767,6 +779,9 @@ class _PricePillKey {
   // sinon la même annonce afficherait le mot d'une langue précédente après
   // un changement de langue en session.
   final String gridLabel;
+
+  /// Prix déjà formé (« 600 €/m³ »), vide pour un prix au kilo.
+  final String priceLabel;
 
   /// Mention « + frais de service » de la pastille, vide sans grille.
   final String feeSuffix;
@@ -788,6 +803,7 @@ class _PricePillKey {
           prefix == other.prefix &&
           currencyCode == other.currencyCode &&
           gridLabel == other.gridLabel &&
+          priceLabel == other.priceLabel &&
           feeSuffix == other.feeSuffix &&
           flagEmoji == other.flagEmoji &&
           isOwn == other.isOwn;
@@ -801,6 +817,7 @@ class _PricePillKey {
     prefix,
     currencyCode,
     gridLabel,
+    priceLabel,
     feeSuffix,
     flagEmoji,
     isOwn,
@@ -817,6 +834,7 @@ class _StackedPillKey {
     required this.prefix,
     required this.currencyCode,
     required this.gridLabel,
+    required this.priceLabel,
     required this.feeSuffix,
   });
 
@@ -828,6 +846,9 @@ class _StackedPillKey {
   final String prefix;
   final String currencyCode;
   final String gridLabel;
+
+  /// Prix déjà formé (« 600 €/m³ »), vide pour un prix au kilo.
+  final String priceLabel;
 
   /// Mention « + frais de service » de la pastille, vide sans grille.
   final String feeSuffix;
@@ -844,6 +865,7 @@ class _StackedPillKey {
           prefix == other.prefix &&
           currencyCode == other.currencyCode &&
           gridLabel == other.gridLabel &&
+          priceLabel == other.priceLabel &&
           feeSuffix == other.feeSuffix;
 
   @override
@@ -856,6 +878,7 @@ class _StackedPillKey {
     prefix,
     currencyCode,
     gridLabel,
+    priceLabel,
     feeSuffix,
   );
 }

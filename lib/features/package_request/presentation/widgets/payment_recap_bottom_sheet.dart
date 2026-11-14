@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/matching/data/payout_wording.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart'
@@ -162,8 +163,10 @@ class PaymentRecapBottomSheet {
                                       mascotteType: DonyMascotteType.securise,
                                       title:
                                           lb.negotiationOfferAcceptedPaidTitle,
-                                      subtitle: lb
-                                          .negotiationOfferAcceptedPaidSubtitle,
+                                      subtitle:
+                                          paidAtDeposit(thread.transportMode)
+                                          ? lb.negotiationOfferAcceptedPaidSubtitleDeposit
+                                          : lb.negotiationOfferAcceptedPaidSubtitle,
                                       ctaLabel: lb.negotiationTrackShipmentCta,
                                       onCta: () => returnToNegotiationThread(
                                         routeContext,
@@ -254,6 +257,7 @@ class PaymentRecapBottomSheet {
         fee: fee,
         isCash: isCash,
         isMobileMoney: isMobileMoney,
+        payoutAtDeposit: paidAtDeposit(thread.transportMode),
         currency: thread.currency,
       ),
     ).whenComplete(processing.dispose);
@@ -286,7 +290,12 @@ class PaymentRecapBottomSheet {
     if (!callerContext.mounted) return;
     bloc.add(NegotiationFetchRequested(thread.id));
     if (paid == true) {
-      unawaited(callerContext.push('/negotiations/${thread.id}/paid'));
+      unawaited(
+        callerContext.push(
+          '/negotiations/${thread.id}/paid',
+          extra: paidAtDeposit(thread.transportMode),
+        ),
+      );
     }
   }
 }
@@ -303,6 +312,7 @@ class PaymentRecapContent extends StatelessWidget {
     required this.fee,
     required this.isCash,
     this.isMobileMoney = false,
+    this.payoutAtDeposit = false,
     this.currency = 'EUR',
   });
 
@@ -314,6 +324,10 @@ class PaymentRecapContent extends StatelessWidget {
   /// Paiement en ligne par mobile money : même grille que la carte, bannière
   /// et note adaptées (validation sur le téléphone, séquestre Yadony).
   final bool isMobileMoney;
+
+  /// Le transporteur est payé au dépôt du colis (bateau) et non à la
+  /// livraison : bannière et note de la carte et du mobile money l'annoncent.
+  final bool payoutAtDeposit;
   final String currency;
 
   @override
@@ -326,7 +340,11 @@ class PaymentRecapContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Trust banner
-        _TrustBanner(isCash: isCash, isMobileMoney: isMobileMoney),
+        _TrustBanner(
+          isCash: isCash,
+          isMobileMoney: isMobileMoney,
+          payoutAtDeposit: payoutAtDeposit,
+        ),
         const SizedBox(height: DonySpacing.base),
 
         // Fee table
@@ -370,8 +388,12 @@ class PaymentRecapContent extends StatelessWidget {
           isCash
               ? l.negotiationPaymentRecapCashNote
               : isMobileMoney
-              ? l.negotiationPaymentRecapMobileMoneyNote
-              : l.negotiationPaymentRecapSecureNote,
+              ? (payoutAtDeposit
+                    ? l.negotiationPaymentRecapMobileMoneyNoteDeposit
+                    : l.negotiationPaymentRecapMobileMoneyNote)
+              : (payoutAtDeposit
+                    ? l.negotiationPaymentRecapSecureNoteDeposit
+                    : l.negotiationPaymentRecapSecureNote),
           style: tt.bodySmall?.copyWith(
             color: cs.onSurfaceVariant,
             height: 1.5,
@@ -383,10 +405,15 @@ class PaymentRecapContent extends StatelessWidget {
 }
 
 class _TrustBanner extends StatelessWidget {
-  const _TrustBanner({required this.isCash, this.isMobileMoney = false});
+  const _TrustBanner({
+    required this.isCash,
+    this.isMobileMoney = false,
+    this.payoutAtDeposit = false,
+  });
 
   final bool isCash;
   final bool isMobileMoney;
+  final bool payoutAtDeposit;
 
   @override
   Widget build(BuildContext context) {
@@ -404,8 +431,12 @@ class _TrustBanner extends StatelessWidget {
     final String message = isCash
         ? l.negotiationPaymentRecapCashBannerMessage
         : isMobileMoney
-        ? l.negotiationPaymentRecapMobileMoneyBannerMessage
-        : l.negotiationPaymentRecapSecureBannerMessage;
+        ? (payoutAtDeposit
+              ? l.negotiationPaymentRecapMobileMoneyBannerMessageDeposit
+              : l.negotiationPaymentRecapMobileMoneyBannerMessage)
+        : (payoutAtDeposit
+              ? l.negotiationPaymentRecapSecureBannerMessageDeposit
+              : l.negotiationPaymentRecapSecureBannerMessage);
 
     return Container(
       padding: const EdgeInsets.symmetric(

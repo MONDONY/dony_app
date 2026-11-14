@@ -16,6 +16,8 @@ class AddressSelectorField extends StatelessWidget {
     this.value,
     this.dense = false,
     this.caption,
+    this.emptyLabel,
+    this.emptySubtitle,
   });
 
   final AddressSelectorType type;
@@ -29,6 +31,11 @@ class AddressSelectorField extends StatelessWidget {
   /// Légende au-dessus de l'adresse choisie, pour dire ce qu'elle désigne
   /// quand aucun titre de section ne le fait.
   final String? caption;
+
+  /// Textes de la carte vide (« Adresse de l'entrepôt » d'un trajet bateau) ;
+  /// `null` : ceux de la remise ou de la livraison.
+  final String? emptyLabel;
+  final String? emptySubtitle;
 
   bool get _isRemise => type == AddressSelectorType.remise;
 
@@ -56,12 +63,16 @@ class AddressSelectorField extends StatelessWidget {
 
     final l10n = context.l10n;
     return _EmptyCard(
-      label: _isRemise
-          ? l10n.addressSelectorDropoffLabel
-          : l10n.addressSelectorDeliveryLabel,
-      subtitle: _isRemise
-          ? l10n.addressSelectorDropoffSubtitle
-          : l10n.addressSelectorDeliverySubtitle,
+      label:
+          emptyLabel ??
+          (_isRemise
+              ? l10n.addressSelectorDropoffLabel
+              : l10n.addressSelectorDeliveryLabel),
+      subtitle:
+          emptySubtitle ??
+          (_isRemise
+              ? l10n.addressSelectorDropoffSubtitle
+              : l10n.addressSelectorDeliverySubtitle),
       color: color,
       containerColor: containerColor,
       dense: dense,

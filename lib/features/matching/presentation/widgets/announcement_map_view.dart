@@ -12,6 +12,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/map_camera_math.dart';
+import 'package:dony/features/matching/presentation/widgets/map_pill_price.dart';
 import 'package:dony/features/matching/presentation/widgets/map_styles.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_clustering.dart';
@@ -522,29 +523,11 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
     if (cluster.isMultiple) {
       if (cluster.isSameSpot) {
         // Same address: stacked pill with count badge.
-        // Show cheapest price and most urgent (earliest) departure.
-        // Prix affiché à l'expéditeur (net + commission) — cohérent avec les cartes/sheets.
-        // On ne compare que les prix réellement présents : un `?? 0` par
-        // élément ferait gagner « le moins cher » à une annonce sans prix
-        // face à une annonce qui en a un, et ferait basculer tout le cluster
-        // en affichage « Grille » à tort. Seule l'absence de TOUT prix dans
-        // le cluster retombe sur la sentinelle `<= 0` (`_renderStackedPricePill`
-        // affiche alors « Grille » plutôt qu'un faux montant).
-        // Un trajet tarifé à la grille seulement a un prix au kilo à 0 : il
-        // ne doit pas passer pour « le moins cher » de la pile (FLUTTER-PC).
-        final itemsWithPrice = cluster.items.where(
-          (it) => (it.announcement.senderPricePerKg ?? 0) > 0,
-        );
-        final cheapestItem = itemsWithPrice.isEmpty
-            ? cluster.items.first
-            : itemsWithPrice.reduce(
-                (a, b) =>
-                    a.announcement.senderPricePerKg! <
-                        b.announcement.senderPricePerKg!
-                    ? a
-                    : b,
-              );
-        final cheapest = cheapestItem.announcement.searchCardPricePerKg ?? 0.0;
+        // Show cheapest price and most urgent (earliest) departure
+        // ([stackedPillPrice] : le moins cher au kilo, sinon au m³).
+        final pill = stackedPillPrice(context.l10n, [
+          for (final it in cluster.items) it.announcement,
+        ]);
         final earliest = cluster.items
             .map((it) => it.announcement.departureDate)
             .reduce((a, b) => a.isBefore(b) ? a : b);
@@ -556,7 +539,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
           (it) => it.announcement.id == widget.selectedAnnouncementId,
         );
         final icon = await MarkerBitmapFactory.stackedPricePill(
-          pricePerKg: cheapest,
+          pricePerKg: pill.pricePerKg,
+          priceLabel: pill.priceLabel,
           count: cluster.count,
           dotColor: urgencyColor,
           isSelected: isSelected,
@@ -564,7 +548,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
           prefix: sameSpotClusterPrefix(
             cluster.items.map((it) => it.announcement),
           ),
-          currencyCode: cheapestItem.announcement.currency,
+          currencyCode: pill.currency,
           gridLabel: context.l10n.listingPriceGridShort,
         );
         return Marker(
@@ -600,9 +584,12 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
     final currentUserId = widget.currentUserId;
     final isOwn =
         currentUserId != null && item.announcement.travelerId == currentUserId;
+    // Prix au kilo absent → sentinelle `<= 0`, rendue « Par article » ; un
+    // trajet bateau vendu au m³ montre son prix au m³ ([singlePillPrice]).
+    final pill = singlePillPrice(context.l10n, item.announcement);
     final icon = await MarkerBitmapFactory.pricePill(
-      // Idem : absent → sentinelle `<= 0`, déjà rendue comme « Grille ».
-      pricePerKg: item.announcement.searchCardPricePerKg ?? 0,
+      pricePerKg: pill.pricePerKg,
+      priceLabel: pill.priceLabel,
       dotColor: urgencyColor,
       isSelected: isSelected,
       brightness: _brightness,

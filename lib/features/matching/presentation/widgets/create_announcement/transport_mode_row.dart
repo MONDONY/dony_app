@@ -29,7 +29,8 @@ class TransportModeRow extends StatelessWidget {
   /// Mode courant ; `null` vaut avion (anciennes données).
   final ValueNotifier<TransportMode?> notifier;
 
-  /// Mode figé (modification, demande dédiée) : les taps ne font rien.
+  /// Mode figé (trajet bateau modifié, demande dédiée) : seule la puce du
+  /// mode réel est montrée, les taps ne font rien.
   final bool readOnly;
 
   @override
@@ -52,10 +53,14 @@ class TransportModeRow extends StatelessWidget {
           valueListenable: notifier,
           builder: (context, value, _) {
             final current = transportModeOrPlane(value).displayGroup;
-            final shown = [
-              if (!modes.any((m) => m.displayGroup == current)) current,
-              ...modes,
-            ];
+            // Lecture seule : seul le mode réel du trajet est montré (jamais
+            // la puce d'un autre mode, avion compris, qui ne se choisit pas).
+            final shown = readOnly
+                ? [current]
+                : [
+                    if (!modes.any((m) => m.displayGroup == current)) current,
+                    ...modes,
+                  ];
             return Wrap(
               spacing: DonySpacing.sm,
               runSpacing: DonySpacing.xs,
@@ -95,9 +100,6 @@ class _ModeChip extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final fg = selected ? cs.primary : cs.onSurfaceVariant;
-    // Lecture seule : la puce du mode réel reste pleinement lisible, les
-    // autres s'estompent.
-    final dimmed = !enabled && !selected;
     return Semantics(
       key: Key('mode-chip-${mode.displayGroup.name}'),
       button: true,
@@ -111,40 +113,37 @@ class _ModeChip extends StatelessWidget {
           child: Center(
             widthFactor: 1,
             heightFactor: 1,
-            child: Opacity(
-              opacity: dimmed ? 0.5 : 1,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.md,
-                  vertical: DonySpacing.xs + 2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.md,
+                vertical: DonySpacing.xs + 2,
+              ),
+              decoration: BoxDecoration(
+                color: selected ? cs.primaryContainer : cs.surface,
+                borderRadius: BorderRadius.circular(DonyRadius.full),
+                border: Border.all(
+                  color: selected ? cs.primary : cs.outline,
+                  width: selected ? 1.5 : 1,
                 ),
-                decoration: BoxDecoration(
-                  color: selected ? cs.primaryContainer : cs.surface,
-                  borderRadius: BorderRadius.circular(DonyRadius.full),
-                  border: Border.all(
-                    color: selected ? cs.primary : cs.outline,
-                    width: selected ? 1.5 : 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DonyIcon(mode.iconAsset, size: 14, color: fg),
-                    const SizedBox(width: DonySpacing.xs),
-                    Flexible(
-                      child: Text(
-                        mode.label(context.l10n),
-                        style: tt.labelMedium?.copyWith(
-                          color: fg,
-                          letterSpacing: 0,
-                          fontWeight: selected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                        ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DonyIcon(mode.iconAsset, size: 14, color: fg),
+                  const SizedBox(width: DonySpacing.xs),
+                  Flexible(
+                    child: Text(
+                      mode.label(context.l10n),
+                      style: tt.labelMedium?.copyWith(
+                        color: fg,
+                        letterSpacing: 0,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

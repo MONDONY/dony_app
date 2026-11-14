@@ -6,6 +6,7 @@ import 'package:dony/features/matching/data/datasources/bid_remote_datasource.da
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/traveler_bids_page.dart';
+import 'package:dony/features/matching/data/models/trip_delay_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -413,5 +414,58 @@ void main() {
       expect(TripRescheduleReason.fromWire('POSTPONED'), isNotNull);
       expect(TripRescheduleReason.fromWire('???'), isNull);
     });
+
+    test(
+      'announceDelay envoie la fourchette en jours et lit le retard',
+      () async {
+        api.on('POST', '/announcements/ann-001/delays', {
+          'id': 'd-1',
+          'reason': 'PORT_CONGESTION',
+          'arrivalDate': '2027-01-11',
+          'arrivalDateMax': '2027-01-18',
+          'message': 'Attente à Tanger Med',
+          'announcedAt': '2026-12-20T09:00:00Z',
+        }, status: 201);
+        final d = await ds.announceDelay(
+          announcementId: 'ann-001',
+          reason: TripDelayReason.portCongestion,
+          arrivalDate: DateTime(2027, 1, 11),
+          arrivalDateMax: DateTime(2027, 1, 18),
+          message: '  Attente à Tanger Med  ',
+        );
+        expect(api.last.method, 'POST');
+        expect(api.last.data, {
+          'reason': 'PORT_CONGESTION',
+          'arrivalDate': '2027-01-11',
+          'arrivalDateMax': '2027-01-18',
+          'message': 'Attente à Tanger Med',
+        });
+        expect(d.id, 'd-1');
+        expect(d.reasonKind, TripDelayReason.portCongestion);
+        expect(d.arrivalDateMax, DateTime(2027, 1, 18));
+      },
+    );
+
+    test(
+      'announceDelay : message blanc omis, réponse illisible = demande',
+      () async {
+        api.on('POST', '/announcements/ann-001/delays', {
+          'unexpected': true,
+        }, status: 201);
+        final d = await ds.announceDelay(
+          announcementId: 'ann-001',
+          reason: TripDelayReason.weather,
+          arrivalDate: DateTime(2026, 11, 20),
+          arrivalDateMax: DateTime(2026, 11, 22),
+          message: '   ',
+        );
+        final body = api.last.data as Map<String, dynamic>;
+        expect(body.containsKey('message'), isFalse);
+        expect(d.reason, 'WEATHER');
+        expect(d.arrivalDate, DateTime(2026, 11, 20));
+        expect(d.arrivalDateMax, DateTime(2026, 11, 22));
+        expect(d.message, isNull);
+      },
+    );
   });
 }

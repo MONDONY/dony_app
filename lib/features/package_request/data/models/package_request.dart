@@ -54,6 +54,10 @@ class PackageRequest extends Equatable {
     this.grossPriceEur,
     this.commissionGridId,
     this.itemSize,
+    this.lengthCm,
+    this.widthCm,
+    this.heightCm,
+    this.volumeM3,
   });
 
   final String id;
@@ -147,6 +151,14 @@ class PackageRequest extends Equatable {
   /// `null` sans taille, ou sur un back antérieur au lot 2.
   final ItemSize? itemSize;
 
+  /// Dimensions du colis en centimètres (bateau, obligatoires à la
+  /// publication) et volume en m³ calculé par le serveur. `null` sans
+  /// dimensions, ou sur un back antérieur au lot 3.
+  final int? lengthCm;
+  final int? widthCm;
+  final int? heightCm;
+  final double? volumeM3;
+
   /// Parse le tableau `photos` du wire en deux listes alignées (URLs
   /// présignées + clés S3) en un seul passage.
   static (List<String>, List<String>) _photosFromJson(List<dynamic>? raw) {
@@ -203,6 +215,10 @@ class PackageRequest extends Equatable {
       grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
       commissionGridId: json['commissionGridId'] as String?,
       itemSize: itemSizeFromWire(json['itemSize']),
+      lengthCm: (json['lengthCm'] as num?)?.toInt(),
+      widthCm: (json['widthCm'] as num?)?.toInt(),
+      heightCm: (json['heightCm'] as num?)?.toInt(),
+      volumeM3: (json['volumeM3'] as num?)?.toDouble(),
     );
   }
 
@@ -238,6 +254,10 @@ class PackageRequest extends Equatable {
     grossPriceEur,
     commissionGridId,
     itemSize,
+    lengthCm,
+    widthCm,
+    heightCm,
+    volumeM3,
   ];
 }
 

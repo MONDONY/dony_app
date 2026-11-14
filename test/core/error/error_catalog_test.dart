@@ -2371,4 +2371,192 @@ void main() {
       expect(en.message, contains('GP Pro application'));
     });
   });
+
+  group('ErrorCatalog — bateau (lot 3)', () {
+    final fr = lookupAppLocalizations(AppL10n.fr);
+    final en = lookupAppLocalizations(AppL10n.en);
+
+    const codes = [
+      'boat-carrier-not-verified',
+      'boat-template-unsupported',
+      'arrival-range-invalid',
+      'arrival-before-departure',
+      'boat-volume-required',
+      'boat-volume-unit-invalid',
+      'boat-price-required',
+      'volume-price-too-high',
+      'transport-mode-locked',
+      'pricing-unit-locked',
+      'dimensions-incomplete',
+      'boat-dimensions-required',
+      'insufficient-volume',
+      'trip-delay-not-allowed',
+      'trip-delay-reason-invalid',
+      'trip-delay-too-frequent',
+      'boat-deposit-photo-required',
+      'boat-deposit-qr-required',
+      'deposit-paid-no-refund',
+      'supplement-after-deposit',
+      'surplus/volume-trip-unsupported',
+    ];
+
+    test(
+      'errorCatalog_hasBoatCodes : chaque code a un texte FR et EN propre',
+      () {
+        for (final code in codes) {
+          expect(ErrorCatalog.debugCodes, contains(code), reason: code);
+          final error = ValidationException('', code: code);
+          final pFr = ErrorCatalog.lookup(error, l10n: fr);
+          final pEn = ErrorCatalog.lookup(error, l10n: en);
+          expect(pFr.message, isNotEmpty, reason: code);
+          expect(pEn.message, isNotEmpty, reason: code);
+          expect(pEn.message, isNot(pFr.message), reason: code);
+          expect(pEn.severity, ErrorSeverity.warning, reason: code);
+          for (final text in [pFr.title, pFr.message, pEn.title, pEn.message]) {
+            expect(text.contains('\u2014'), isFalse, reason: code);
+          }
+        }
+      },
+    );
+
+    test('boat-volume-booking-unavailable : code retiré, repli générique', () {
+      expect(
+        ErrorCatalog.debugCodes,
+        isNot(contains('boat-volume-booking-unavailable')),
+      );
+    });
+
+    test('transport-mode-locked : message clair en anglais', () {
+      final p = ErrorCatalog.lookup(
+        const ConflictException('', code: 'transport-mode-locked'),
+        l10n: en,
+      );
+      expect(p.title, 'Transport mode locked');
+      expect(p.message, contains('switch to or from boat'));
+    });
+
+    test('deposit-paid-no-refund : affiche le detail du serveur', () {
+      final p = ErrorCatalog.lookup(
+        const ConflictException(
+          'Le voyageur a été payé au dépôt : écrivez au support.',
+          code: 'deposit-paid-no-refund',
+        ),
+        l10n: fr,
+      );
+      expect(
+        p.message,
+        'Le voyageur a été payé au dépôt : écrivez au support.',
+      );
+    });
+
+    test('trip-delay-too-frequent : affiche le detail du serveur', () {
+      final p = ErrorCatalog.lookup(
+        const ConflictException(
+          'Vous avez annoncé 5 retards sur ce trajet.',
+          code: 'trip-delay-too-frequent',
+        ),
+        l10n: fr,
+      );
+      expect(p.message, 'Vous avez annoncé 5 retards sur ce trajet.');
+    });
+
+    test('arrival-range-invalid : relaie le detail du serveur selon le cas', () {
+      for (final detail in [
+        "L'arrivée estimée au plus tard ne peut pas être antérieure à aujourd'hui.",
+        'La date d\'arrivée ne peut pas précéder la date de départ',
+        "Indiquez l'arrivée estimée au plus tôt et au plus tard.",
+      ]) {
+        final p = ErrorCatalog.lookup(
+          ValidationException(detail, code: 'arrival-range-invalid'),
+          l10n: fr,
+        );
+        expect(p.message, detail);
+      }
+    });
+
+    test('arrival-range-invalid : repli sans detail couvre les trois cas', () {
+      const error = ValidationException('', code: 'arrival-range-invalid');
+      final pFr = ErrorCatalog.lookup(error, l10n: fr);
+      final pEn = ErrorCatalog.lookup(error, l10n: en);
+      expect(pFr.title, 'Arrivée estimée invalide');
+      expect(pFr.message, contains('départ'));
+      expect(pFr.message, contains('passé'));
+      expect(pEn.title, 'Invalid estimated arrival');
+      expect(pEn.message, contains('before departure'));
+      expect(pEn.message, contains('in the past'));
+    });
+
+    test('arrival-before-departure : detail du serveur puis repli', () {
+      final withDetail = ErrorCatalog.lookup(
+        const ValidationException(
+          "La date d'arrivée ne peut pas précéder la date de départ",
+          code: 'arrival-before-departure',
+        ),
+        l10n: fr,
+      );
+      expect(
+        withDetail.message,
+        "La date d'arrivée ne peut pas précéder la date de départ",
+      );
+      final fallback = ErrorCatalog.lookup(
+        const ValidationException('', code: 'arrival-before-departure'),
+        l10n: en,
+      );
+      expect(fallback.title, 'Arrival before departure');
+      expect(
+        fallback.message,
+        "The arrival date can't be before the departure date.",
+      );
+    });
+
+    // Même règle à l'heure près (`ArrivalRules.validate`) : un formulaire de
+    // trajet dont l'heure de départ change après l'heure d'arrivée, un report.
+    test(
+      'arrival-time-before-departure : detail du serveur puis repli FR/EN',
+      () {
+        expect(
+          ErrorCatalog.debugCodes,
+          contains('arrival-time-before-departure'),
+        );
+        final withDetail = ErrorCatalog.lookup(
+          const ValidationException(
+            "Le même jour, l'heure d'arrivée doit suivre l'heure de départ",
+            code: 'arrival-time-before-departure',
+          ),
+          l10n: fr,
+        );
+        expect(
+          withDetail.message,
+          "Le même jour, l'heure d'arrivée doit suivre l'heure de départ",
+        );
+        final fallbackFr = ErrorCatalog.lookup(
+          const ValidationException('', code: 'arrival-time-before-departure'),
+          l10n: fr,
+        );
+        expect(fallbackFr.title, "Heure d'arrivée avant le départ");
+        expect(
+          fallbackFr.message,
+          "Le même jour, l'heure d'arrivée doit suivre l'heure de départ.",
+        );
+        final fallbackEn = ErrorCatalog.lookup(
+          const ValidationException('', code: 'arrival-time-before-departure'),
+          l10n: en,
+        );
+        expect(fallbackEn.title, 'Arrival time before departure');
+        expect(
+          fallbackEn.message,
+          'On the same day, the arrival time must be after the departure time.',
+        );
+        expect(fallbackEn.severity, ErrorSeverity.warning);
+      },
+    );
+
+    test('trip-delay-too-frequent : detail vide, texte de repli', () {
+      final p = ErrorCatalog.lookup(
+        const ConflictException('', code: 'trip-delay-too-frequent'),
+        l10n: fr,
+      );
+      expect(p.title, 'Trop de retards annoncés');
+    });
+  });
 }

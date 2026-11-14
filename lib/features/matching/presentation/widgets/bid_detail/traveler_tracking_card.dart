@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/traveler_tracking_card_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -29,6 +30,7 @@ class TravelerTrackingCard extends StatelessWidget {
     this.bidStatus,
     this.departureCity,
     this.arrivalCity,
+    this.transportMode,
     this.now,
   });
 
@@ -42,6 +44,10 @@ class TravelerTrackingCard extends StatelessWidget {
 
   final String? departureCity;
   final String? arrivalCity;
+
+  /// Mode du trajet : nomme les étapes de la frise compacte (dépôt à
+  /// l'entrepôt et arrivée au port en bateau).
+  final TransportMode? transportMode;
 
   /// Horloge injectable pour les tests ; l'heure du téléphone par défaut.
   final DateTime Function()? now;
@@ -70,6 +76,7 @@ class TravelerTrackingCard extends StatelessWidget {
       tracking: tracking,
       departureCity: departureCity,
       arrivalCity: arrivalCity,
+      transportMode: transportMode,
       bidStatus: bidStatus,
       loadsEvents: loadsEvents,
       now: (now ?? DateTime.now)(),
@@ -97,6 +104,7 @@ class _CardBody extends StatelessWidget {
     this.bidStatus,
     this.departureCity,
     this.arrivalCity,
+    this.transportMode,
   });
 
   final TravelerTrackingModel tracking;
@@ -105,6 +113,7 @@ class _CardBody extends StatelessWidget {
   final String? bidStatus;
   final String? departureCity;
   final String? arrivalCity;
+  final TransportMode? transportMode;
 
   @override
   Widget build(BuildContext context) {
@@ -138,6 +147,8 @@ class _CardBody extends StatelessWidget {
             tracking: tracking,
             now: now,
             arrived: bidStatus == 'ARRIVED',
+            mode: transportMode,
+            arrivalCity: arrivalCity,
           );
     final points =
         tracking.history.length > TravelerTrackingCard._maxHistoryRows

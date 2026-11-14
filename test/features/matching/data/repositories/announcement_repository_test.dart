@@ -339,6 +339,73 @@ void main() {
     ).called(1);
   });
 
+  test('filtres bateau : les trois recherches les délèguent', () async {
+    final arrival = DateTime(2027, 1, 5);
+    when(
+      () => mockDs.searchAnnouncements(
+        minVolumeM3: any(named: 'minVolumeM3'),
+        maxPricePerM3: any(named: 'maxPricePerM3'),
+        arrivalBefore: any(named: 'arrivalBefore'),
+      ),
+    ).thenAnswer((_) async => [_ann()]);
+    when(
+      () => mockDs.searchAnnouncementsPage(
+        minVolumeM3: any(named: 'minVolumeM3'),
+        maxPricePerM3: any(named: 'maxPricePerM3'),
+        arrivalBefore: any(named: 'arrivalBefore'),
+      ),
+    ).thenAnswer(
+      (_) async =>
+          const AnnouncementSearchPage(content: [], totalElements: 0, page: 0),
+    );
+    when(
+      () => mockDs.countAnnouncements(
+        minVolumeM3: any(named: 'minVolumeM3'),
+        maxPricePerM3: any(named: 'maxPricePerM3'),
+        arrivalBefore: any(named: 'arrivalBefore'),
+      ),
+    ).thenAnswer((_) async => 2);
+
+    await repo.searchAnnouncements(
+      minVolumeM3: 2.5,
+      maxPricePerM3: 600,
+      arrivalBefore: arrival,
+    );
+    await repo.searchAnnouncementsPage(
+      minVolumeM3: 2.5,
+      maxPricePerM3: 600,
+      arrivalBefore: arrival,
+    );
+    final total = await repo.countAnnouncements(
+      minVolumeM3: 2.5,
+      maxPricePerM3: 600,
+      arrivalBefore: arrival,
+    );
+
+    expect(total, 2);
+    verify(
+      () => mockDs.searchAnnouncements(
+        minVolumeM3: 2.5,
+        maxPricePerM3: 600,
+        arrivalBefore: arrival,
+      ),
+    ).called(1);
+    verify(
+      () => mockDs.searchAnnouncementsPage(
+        minVolumeM3: 2.5,
+        maxPricePerM3: 600,
+        arrivalBefore: arrival,
+      ),
+    ).called(1);
+    verify(
+      () => mockDs.countAnnouncements(
+        minVolumeM3: 2.5,
+        maxPricePerM3: 600,
+        arrivalBefore: arrival,
+      ),
+    ).called(1);
+  });
+
   test('deleteAnnouncement delegates correctly', () async {
     when(() => mockDs.deleteAnnouncement('ann-1')).thenAnswer((_) async {});
 

@@ -41,6 +41,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/label_fit_expectations.dart';
 import '../../../helpers/mock_recent_city_store.dart';
 import '../../../helpers/plane_icon_expectations.dart';
 
@@ -454,10 +455,10 @@ void main() {
   });
 
   // Les escales sont une notion d'avion : leur puce ne dessine un avion que
-  // si le filtre de mode vaut avion.
+  // si le filtre de mode vaut avion. Le bateau n'a pas d'escales du tout (voir
+  // le groupe « bateau »).
   for (final (mode, planeShown) in <(TransportMode?, bool)>[
     (null, false),
-    (TransportMode.boat, false),
     (TransportMode.plane, true),
   ]) {
     testWidgets('puces Escales, filtre mode $mode : avion $planeShown', (
@@ -749,8 +750,10 @@ void main() {
       expect(find.byKey(const Key('chip-stops-directOnly')), findsNothing);
     });
 
-    testWidgets('composeur avion (et « tous ») : inchangé, Valise 23 kg et '
-        'ESCALES, ni TAILLE ni PASSE PAR', (tester) async {
+    testWidgets('composeur avion (et « tous ») : inchangé, ESCALES, ni TAILLE '
+        'ni PASSE PAR ; la Valise 23 kg reste propre à l\'avion', (
+      tester,
+    ) async {
       roadOn();
       _vueHaute(tester);
       for (final mode in [TransportMode.plane, null]) {
@@ -764,8 +767,21 @@ void main() {
 
         expect(find.text('TAILLE DU COLIS'), findsNothing, reason: '$mode');
         expect(find.byKey(const Key('item-size-L')), findsNothing);
-        await _scrollTo(tester, find.byKey(const Key('composer-suitcase-23')));
-        expect(find.byKey(const Key('composer-suitcase-23')), findsOneWidget);
+        // « Peu importe » (plusieurs modes offerts) : pas de valise, propre à
+        // l'avion.
+        if (mode == null) {
+          expect(
+            find.byKey(const Key('composer-suitcase-23')),
+            findsNothing,
+            reason: 'peu importe',
+          );
+        } else {
+          await _scrollTo(
+            tester,
+            find.byKey(const Key('composer-suitcase-23')),
+          );
+          expect(find.byKey(const Key('composer-suitcase-23')), findsOneWidget);
+        }
         expect(
           find.text('Type de contenu, note, escales, paiement'),
           findsOneWidget,
@@ -1140,16 +1156,415 @@ void main() {
 
         final button = find.byType(DonyButton);
         final label = find.descendant(of: button, matching: find.byType(Text));
-        // Une seule ligne : le libellé tient dans la hauteur d'une ligne de
-        // 15 px (pas deux) et dans la largeur du bouton, sans être rétréci ;
-        // le bouton garde sa hauteur de 48 à 56.
+        // Une seule ligne, à taille nominale (le FittedBox du bouton ne
+        // rétrécit pas le libellé) ; le bouton garde sa hauteur de 48 à 56.
         expect(label, findsOneWidget);
-        expect(tester.getSize(label).height, lessThan(15 * 1.6));
-        expect(
-          tester.getSize(label).width,
-          lessThanOrEqualTo(tester.getSize(button).width),
-        );
+        expectButtonLabelNominal(tester, button, reason: 'Rechercher');
         expect(tester.getSize(button).height, inInclusiveRange(48, 56));
+      });
+    }
+  });
+
+  group('bateau : volume et prix, arrivée', () {
+    const boat = HomeSearchFilters(transportMode: TransportMode.boat);
+
+    void boatOn() {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: true),
+      );
+      addTearDown(resetTransportModesForTest);
+    }
+
+    /// Derniers arguments du comptage : volume, prix au m³, arrivée, mode.
+    ({
+      double? volume,
+      double? price,
+      DateTime? arrival,
+      TransportMode? mode,
+      double? kg,
+    })
+    lastCount(_MockAnnouncementRepo repo) {
+      final captured = verify(
+        () => repo.countAnnouncements(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDateFrom: any(named: 'departureDateFrom'),
+          departureDateTo: any(named: 'departureDateTo'),
+          minAvailableKg: captureAny(named: 'minAvailableKg'),
+          maxAvailableKg: any(named: 'maxAvailableKg'),
+          maxPricePerKg: any(named: 'maxPricePerKg'),
+          gpProOnly: any(named: 'gpProOnly'),
+          minRating: any(named: 'minRating'),
+          weekendOnly: any(named: 'weekendOnly'),
+          transportMode: captureAny(named: 'transportMode'),
+          kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+          contentType: any(named: 'contentType'),
+          userLat: any(named: 'userLat'),
+          userLng: any(named: 'userLng'),
+          radiusKm: any(named: 'radiusKm'),
+          urgent: any(named: 'urgent'),
+          maxStops: any(named: 'maxStops'),
+          paymentMethods: any(named: 'paymentMethods'),
+          minVolumeM3: captureAny(named: 'minVolumeM3'),
+          maxPricePerM3: captureAny(named: 'maxPricePerM3'),
+          arrivalBefore: captureAny(named: 'arrivalBefore'),
+        ),
+      ).captured;
+      final n = captured.length - 5;
+      return (
+        kg: captured[n] as double?,
+        mode: captured[n + 1] as TransportMode?,
+        volume: captured[n + 2] as double?,
+        price: captured[n + 3] as double?,
+        arrival: captured[n + 4] as DateTime?,
+      );
+    }
+
+    DateTime inWeeks(int weeks) {
+      final now = DateTime.now();
+      return DateTime(now.year, now.month, now.day + weeks * 7);
+    }
+
+    Future<void> openMore(WidgetTester tester) async {
+      await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+      if (find
+          .byKey(const Key('composer-more-filters-body'))
+          .evaluate()
+          .isEmpty) {
+        await tester.tap(find.byKey(const Key('composer-more-filters')));
+        await tester.pumpAndSettle();
+      }
+    }
+
+    DonyButton applyButton(WidgetTester tester) =>
+        tester.widget<DonyButton>(find.byKey(const Key('boat-filter-apply')));
+
+    Future<void> typeIn(WidgetTester tester, String key, String text) async {
+      await tester.enterText(find.byKey(Key(key)), text);
+      await tester.pump();
+      await tester.pump();
+    }
+
+    testWidgets('boatHidesEscalesAndUrgent : VOLUME ET PRIX et ARRIVÉE, ni '
+        'Urgent, ni Valise 23 kg, ni ESCALES, ni PASSE PAR', (tester) async {
+      boatOn();
+      _vueHaute(tester);
+      await tester.pumpWidget(const _Harness(initialFilters: boat));
+      await tester.pumpAndSettle();
+
+      await _scrollTo(tester, find.text('POIDS ET PRIX'));
+      final weightTop = tester.getTopLeft(find.text('POIDS ET PRIX')).dy;
+      await _scrollTo(tester, find.text('VOLUME ET PRIX'));
+      final volumeTop = tester.getTopLeft(find.text('VOLUME ET PRIX')).dy;
+      await _scrollTo(tester, find.text('ARRIVÉE ESTIMÉE'));
+      final arrivalTop = tester.getTopLeft(find.text('ARRIVÉE ESTIMÉE')).dy;
+      await _scrollTo(tester, find.text('FILTRES RAPIDES'));
+      final quickTop = tester.getTopLeft(find.text('FILTRES RAPIDES')).dy;
+      expect(weightTop, lessThan(volumeTop));
+      expect(volumeTop, lessThan(arrivalTop));
+      expect(arrivalTop, lessThan(quickTop));
+
+      expect(find.text('VOLUME MIN'), findsOneWidget);
+      expect(find.text('PRIX MAX AU M³'), findsOneWidget);
+      expect(
+        find.text('Ces filtres ne montrent que les trajets facturés au m³.'),
+        findsOneWidget,
+      );
+      for (final weeks in [4, 6, 8]) {
+        expect(find.byKey(Key('boat-arrival-$weeks')), findsOneWidget);
+        expect(find.text('Sous $weeks semaines'), findsOneWidget);
+      }
+      expect(
+        find.text(
+          'Toute la fourchette d\'arrivée annoncée par le transporteur tombe '
+          'avant cette limite.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('composer-urgent')), findsNothing);
+      expect(find.text('🔥 Urgent'), findsNothing);
+      expect(find.byKey(const Key('composer-suitcase-23')), findsNothing);
+      expect(find.text('TAILLE DU COLIS'), findsNothing);
+
+      expect(find.text('Type de contenu, note, paiement'), findsOneWidget);
+      await openMore(tester);
+      expect(find.text('ESCALES'), findsNothing);
+      expect(find.byKey(const Key('chip-stops-directOnly')), findsNothing);
+      expect(find.text('PASSE PAR'), findsNothing);
+      expect(find.text('MOYENS DE PAIEMENT'), findsOneWidget);
+
+      // Aucun avion hors du choix du mode (la puce « Avion » du TRANSPORT).
+      expect(
+        findPlaneDonyIcons().evaluate().length,
+        find
+            .descendant(
+              of: find.byKey(const Key('composer-transport-plane')),
+              matching: findPlaneDonyIcons(),
+            )
+            .evaluate()
+            .length,
+      );
+      expect(findMaterialFlightIcons(), findsNothing);
+    });
+
+    testWidgets('planeFiltersUnchanged : avion, route et « tous » sans section '
+        'bateau, avec Urgent', (tester) async {
+      boatOn();
+      _vueHaute(tester);
+      for (final mode in [null, TransportMode.plane, TransportMode.car]) {
+        await tester.pumpWidget(
+          _Harness(
+            key: ValueKey(mode),
+            initialFilters: HomeSearchFilters(transportMode: mode),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('VOLUME ET PRIX'), findsNothing, reason: '$mode');
+        expect(find.text('ARRIVÉE ESTIMÉE'), findsNothing, reason: '$mode');
+        expect(find.byKey(const Key('composer-boat-volume')), findsNothing);
+        expect(find.byKey(const Key('boat-arrival-4')), findsNothing);
+        await _scrollTo(tester, find.byKey(const Key('composer-urgent')));
+        expect(find.byKey(const Key('composer-urgent')), findsOneWidget);
+      }
+    });
+
+    testWidgets('volume : saisie 2,5 → comptage, champ « ≥ 2,5 m³ », bornes '
+        'du back', (tester) async {
+      boatOn();
+      _vueHaute(tester);
+      final repo = _MockAnnouncementRepo();
+      await tester.pumpWidget(
+        _Harness(announcementRepo: repo, initialFilters: boat),
+      );
+      await tester.pumpAndSettle();
+
+      await _scrollTo(tester, find.byKey(const Key('composer-boat-volume')));
+      await tester.tap(find.byKey(const Key('composer-boat-volume')));
+      await tester.pumpAndSettle();
+      expect(find.text('Volume minimum'), findsOneWidget);
+      expect(
+        find.text('De 0,1 à 9 999 m³. Laissez vide pour tous les trajets.'),
+        findsOneWidget,
+      );
+
+      // Hors bornes : erreur, « Appliquer » grisé.
+      for (final bad in ['0,05', '10000', '0']) {
+        await typeIn(tester, 'boat-filter-volume-field', bad);
+        expect(
+          find.text('Indiquez un volume entre 0,1 et 9 999 m³'),
+          findsOneWidget,
+          reason: bad,
+        );
+        expect(applyButton(tester).onPressed, isNull, reason: bad);
+      }
+      // Seules les décimales utiles sont saisissables.
+      await typeIn(tester, 'boat-filter-volume-field', '2,5');
+      expect(
+        find.text('Indiquez un volume entre 0,1 et 9 999 m³'),
+        findsNothing,
+      );
+      expect(applyButton(tester).onPressed, isNotNull);
+      await tester.tap(find.byKey(const Key('boat-filter-apply')));
+      await _settleFilterChange(tester);
+
+      expect(find.text('≥ 2,5 m³'), findsOneWidget);
+      final count = lastCount(repo);
+      expect(count.volume, 2.5);
+      expect(count.mode, TransportMode.boat);
+      expect(count.price, isNull);
+      expect(count.arrival, isNull);
+
+      // Champ vidé puis « Appliquer » : le filtre est retiré.
+      await tester.tap(find.byKey(const Key('composer-boat-volume')));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<TextField>(
+              find.descendant(
+                of: find.byKey(const Key('boat-filter-volume-field')),
+                matching: find.byType(TextField),
+              ),
+            )
+            .controller!
+            .text,
+        '2,5',
+      );
+      await typeIn(tester, 'boat-filter-volume-field', '');
+      expect(applyButton(tester).onPressed, isNotNull);
+      await tester.tap(find.byKey(const Key('boat-filter-apply')));
+      await _settleFilterChange(tester);
+      expect(lastCount(repo).volume, isNull);
+      expect(find.text('≥ 2,5 m³'), findsNothing);
+    });
+
+    testWidgets('prix max au m³ : saisie dans la devise du lecteur, plafond '
+        'du back', (tester) async {
+      boatOn();
+      _vueHaute(tester);
+      final repo = _MockAnnouncementRepo();
+      await tester.pumpWidget(
+        _Harness(announcementRepo: repo, initialFilters: boat),
+      );
+      await tester.pumpAndSettle();
+
+      await _scrollTo(tester, find.byKey(const Key('composer-boat-price')));
+      await tester.tap(find.byKey(const Key('composer-boat-price')));
+      await tester.pumpAndSettle();
+      expect(find.text('Prix maximum au m³'), findsOneWidget);
+
+      for (final bad in ['0', '10000001']) {
+        await typeIn(tester, 'boat-filter-price-field', bad);
+        expect(applyButton(tester).onPressed, isNull, reason: bad);
+        expect(
+          find.textContaining('Indiquez un prix supérieur à zéro'),
+          findsOneWidget,
+        );
+      }
+      await typeIn(tester, 'boat-filter-price-field', '600');
+      expect(applyButton(tester).onPressed, isNotNull);
+      await tester.tap(find.byKey(const Key('boat-filter-apply')));
+      await _settleFilterChange(tester);
+
+      expect(find.textContaining('/m³'), findsOneWidget);
+      expect(find.textContaining('600'), findsWidgets);
+      final count = lastCount(repo);
+      expect(count.price, 600);
+      expect(count.volume, isNull);
+    });
+
+    testWidgets('arrivée : 6 semaines → aujourd\'hui + 42 jours, retoucher '
+        'la pastille retire le filtre', (tester) async {
+      boatOn();
+      _vueHaute(tester);
+      final repo = _MockAnnouncementRepo();
+      await tester.pumpWidget(
+        _Harness(announcementRepo: repo, initialFilters: boat),
+      );
+      await tester.pumpAndSettle();
+
+      await _scrollTo(tester, find.byKey(const Key('boat-arrival-6')));
+      await tester.tap(find.byKey(const Key('boat-arrival-6')));
+      await _settleFilterChange(tester);
+      expect(
+        tester
+            .widget<QuickChip>(find.byKey(const Key('boat-arrival-6')))
+            .active,
+        isTrue,
+      );
+      expect(lastCount(repo).arrival, inWeeks(6));
+
+      await tester.tap(find.byKey(const Key('boat-arrival-8')));
+      await _settleFilterChange(tester);
+      expect(lastCount(repo).arrival, inWeeks(8));
+
+      await tester.tap(find.byKey(const Key('boat-arrival-8')));
+      await _settleFilterChange(tester);
+      expect(lastCount(repo).arrival, isNull);
+    });
+
+    testWidgets('bateau puis avion : volume, prix au m³ et arrivée effacés, '
+        'Urgent revient', (tester) async {
+      boatOn();
+      _vueHaute(tester);
+      final repo = _MockAnnouncementRepo();
+      await tester.pumpWidget(
+        _Harness(
+          announcementRepo: repo,
+          initialFilters: boat.copyWith(
+            minVolumeM3: 3,
+            maxPricePerM3: 500,
+            arrivalWithinWeeks: 4,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('composer-transport-plane')));
+      await _settleFilterChange(tester);
+
+      final count = lastCount(repo);
+      expect(count.mode, TransportMode.plane);
+      expect(count.volume, isNull);
+      expect(count.price, isNull);
+      expect(count.arrival, isNull);
+      expect(find.text('VOLUME ET PRIX'), findsNothing);
+      await _scrollTo(tester, find.byKey(const Key('composer-urgent')));
+      expect(find.byKey(const Key('composer-urgent')), findsOneWidget);
+    });
+
+    testWidgets('le curseur du poids minimum monte à 1 000 kg en bateau', (
+      tester,
+    ) async {
+      boatOn();
+      _vueHaute(tester);
+      await tester.pumpWidget(
+        _Harness(initialFilters: boat.copyWith(weightMin: 600)),
+      );
+      await tester.pumpAndSettle();
+      await _scrollTo(tester, find.text('POIDS MIN'));
+      expect(find.text('600 kg'), findsOneWidget);
+      await tester.tap(find.text('POIDS MIN'));
+      await tester.pumpAndSettle();
+      final slider = tester.widget<Slider>(find.byType(Slider));
+      expect(slider.max, 1000);
+      expect(slider.value, 600);
+    });
+
+    for (final english in [false, true]) {
+      testWidgets('360 dp ${english ? 'EN' : 'FR'} : composeur bateau sans '
+          'débordement, boutons sur une ligne', (tester) async {
+        if (english) useEnglish();
+        boatOn();
+        await _loadAppFonts();
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          _Harness(
+            theme: AppTheme.light(),
+            initialFilters: boat.copyWith(
+              minVolumeM3: 1234.5,
+              maxPricePerM3: 9999999,
+              arrivalWithinWeeks: 8,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await _scrollTo(
+          tester,
+          find.text(english ? 'VOLUME AND PRICE' : 'VOLUME ET PRIX'),
+        );
+        await _scrollTo(
+          tester,
+          find.text(english ? 'ESTIMATED ARRIVAL' : 'ARRIVÉE ESTIMÉE'),
+        );
+        expect(tester.takeException(), isNull);
+
+        // Les champs gardent une seule ligne de valeur, même hauteur.
+        final heights = {
+          tester.getSize(find.byKey(const Key('composer-boat-volume'))).height,
+          tester.getSize(find.byKey(const Key('composer-boat-price'))).height,
+        };
+        expect(heights.length, 1);
+
+        final button = find.byType(DonyButton);
+        final label = find.descendant(of: button, matching: find.byType(Text));
+        expect(label, findsOneWidget);
+        // Taille nominale : le FittedBox du bouton ne rétrécit pas le libellé.
+        expectButtonLabelNominal(tester, button, reason: 'Rechercher');
+        expect(tester.getSize(button).height, inInclusiveRange(48, 56));
+
+        // Feuille du volume : bouton « Appliquer » sur une ligne.
+        await tester.tap(find.byKey(const Key('composer-boat-volume')));
+        await tester.pumpAndSettle();
+        final apply = find.byKey(const Key('boat-filter-apply'));
+        final applyLabel = find.descendant(
+          of: apply,
+          matching: find.byType(Text),
+        );
+        expect(applyLabel, findsOneWidget);
+        expectButtonLabelNominal(tester, apply, reason: 'Appliquer');
+        expect(tester.takeException(), isNull);
       });
     }
   });

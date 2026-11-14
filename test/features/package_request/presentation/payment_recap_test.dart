@@ -68,6 +68,7 @@ Widget _wrapContent({
   required double fee,
   required bool isCash,
   bool isMobileMoney = false,
+  bool payoutAtDeposit = false,
   _MockNegotiationBloc? bloc,
 }) {
   final mockBloc = bloc ?? _MockNegotiationBloc();
@@ -90,6 +91,7 @@ Widget _wrapContent({
               fee: fee,
               isCash: isCash,
               isMobileMoney: isMobileMoney,
+              payoutAtDeposit: payoutAtDeposit,
             ),
           ),
         ),
@@ -306,6 +308,99 @@ void main() {
         find.textContaining('You confirm the payment on your phone'),
         findsOneWidget,
       );
+    });
+  });
+
+  group('PaymentRecapContent — versé au dépôt (bateau)', () {
+    testWidgets('negotiationRecap_depositBanner : carte', (tester) async {
+      await tester.pumpWidget(
+        _wrapContent(
+          net: 35.0,
+          gross: 39.20,
+          fee: 4.20,
+          isCash: false,
+          payoutAtDeposit: true,
+        ),
+      );
+
+      expect(find.text('Sécurisé · versé au dépôt du colis'), findsOneWidget);
+      expect(
+        find.textContaining(
+          'Le transporteur le reçoit au dépôt de votre colis',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('livraison'), findsNothing);
+      expect(
+        find.textContaining('Un litige se règle avec le support Yadony'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('negotiationRecap_depositBanner : mobile money', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapContent(
+          net: 35.0,
+          gross: 39.20,
+          fee: 4.20,
+          isCash: false,
+          isMobileMoney: true,
+          payoutAtDeposit: true,
+        ),
+      );
+
+      expect(
+        find.textContaining('le verse au transporteur au dépôt de votre colis'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Le transporteur reçoit le montant au dépôt'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('livraison'), findsNothing);
+    });
+
+    testWidgets('negotiationRecap_deliveryBannerUnchanged', (tester) async {
+      await tester.pumpWidget(
+        _wrapContent(net: 35.0, gross: 39.20, fee: 4.20, isCash: false),
+      );
+
+      expect(
+        find.text('Sécurisé · bloqué jusqu\'à la livraison'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('au dépôt'), findsNothing);
+    });
+
+    testWidgets('en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrapContent(
+          net: 35.0,
+          gross: 39.20,
+          fee: 4.20,
+          isCash: false,
+          payoutAtDeposit: true,
+        ),
+      );
+
+      expect(find.text('Secure · paid out at parcel deposit'), findsOneWidget);
+    });
+
+    testWidgets('espèces : jamais le texte du dépôt', (tester) async {
+      await tester.pumpWidget(
+        _wrapContent(
+          net: 35.0,
+          gross: 39.20,
+          fee: 4.20,
+          isCash: true,
+          payoutAtDeposit: true,
+        ),
+      );
+
+      expect(find.textContaining('au dépôt de votre colis'), findsNothing);
     });
   });
 }

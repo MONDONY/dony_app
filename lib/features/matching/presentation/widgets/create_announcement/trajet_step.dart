@@ -89,6 +89,16 @@ class TrajetStep extends StatelessWidget {
   final String? departureDateError;
   final String? departureTimeError;
 
+  /// Bateau : arrivée estimée au plus tôt et au plus tard (jours sans heure),
+  /// à la place de l'heure et du jour d'arrivée. Null : jamais proposée.
+  final ValueNotifier<DateTime?>? boatArrivalMinNotifier;
+  final ValueNotifier<DateTime?>? boatArrivalMaxNotifier;
+  final Future<void> Function()? onSelectBoatArrivalMin;
+  final Future<void> Function()? onSelectBoatArrivalMax;
+
+  /// Message de l'arrivée estimée d'un bateau (incomplète ou incohérente).
+  final String? boatArrivalError;
+
   const TrajetStep({
     super.key,
     required this.departureCityNotifier,
@@ -114,6 +124,11 @@ class TrajetStep extends StatelessWidget {
     this.arrivalCityError,
     this.departureDateError,
     this.departureTimeError,
+    this.boatArrivalMinNotifier,
+    this.boatArrivalMaxNotifier,
+    this.onSelectBoatArrivalMin,
+    this.onSelectBoatArrivalMax,
+    this.boatArrivalError,
   });
 
   @override
@@ -284,9 +299,23 @@ class TrajetStep extends StatelessWidget {
           arrivalTimeNotifier,
           ?arrivalDayOffsetNotifier,
           ?transportModeNotifier,
+          ?boatArrivalMinNotifier,
+          ?boatArrivalMaxNotifier,
         ]),
         builder: (context, _) {
           final isRoad = transportModeNotifier?.value?.isRoad ?? false;
+          // Bateau : ports au lieu de villes, arrivée estimée en fourchette
+          // au lieu de l'heure et du jour d'arrivée.
+          final isBoat =
+              transportModeNotifier?.value == TransportMode.boat &&
+              boatArrivalMinNotifier != null &&
+              boatArrivalMaxNotifier != null;
+          final departureLabel = isBoat
+              ? l.tripPublishBoatDeparturePortLabel
+              : l.tripPublishDepartureCityLabel;
+          final arrivalLabel = isBoat
+              ? l.tripPublishBoatArrivalPortLabel
+              : l.tripPublishArrivalCityLabel;
           return Column(
             children: [
               // ── Corridor départ → arrivée ───────────────────────────────
@@ -298,7 +327,7 @@ class TrajetStep extends StatelessWidget {
               if (lockCorridor) ...[
                 DonyTextField.tappable(
                   key: const Key('departureCityField'),
-                  label: l.tripPublishDepartureCityLabel,
+                  label: departureLabel,
                   value: departureCityNotifier.value,
                   prefixWidget: DonyIcon(
                     'map-pin',
@@ -318,7 +347,7 @@ class TrajetStep extends StatelessWidget {
                 const SizedBox(height: DonySpacing.sm),
                 DonyTextField.tappable(
                   key: const Key('arrivalCityField'),
-                  label: l.tripPublishArrivalCityLabel,
+                  label: arrivalLabel,
                   value: arrivalCityNotifier.value,
                   prefixWidget: DonyIcon('flag', size: 20, color: cs.primary),
                   trailing: DonyIcon(
@@ -339,6 +368,8 @@ class TrajetStep extends StatelessWidget {
                     arrivalValue: arrivalCityNotifier.value,
                     departureFieldKey: const Key('departureCityField'),
                     arrivalFieldKey: const Key('arrivalCityField'),
+                    departureLabel: isBoat ? departureLabel : null,
+                    arrivalLabel: isBoat ? arrivalLabel : null,
                     requiredLabels: true,
                     departureError: departureCityError,
                     arrivalError: arrivalCityError,
@@ -390,10 +421,11 @@ class TrajetStep extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.sm),
               // ── Heure d'arrivée (optionnel) — DonyTextField.tappable ───
-              // Masquée en route (C28) : seul le jour d'arrivée compte. Un
-              // ancien trajet route qui en porte une la garde, pour qu'elle
-              // reste visible et effaçable.
-              if (!isRoad || arrivalTimeNotifier.value != null)
+              // Masquée en route (C28) : seul le jour d'arrivée compte ; et
+              // en bateau, qui a une fourchette de dates. Un ancien trajet
+              // qui en porte une la garde, pour qu'elle reste visible et
+              // effaçable.
+              if ((!isRoad && !isBoat) || arrivalTimeNotifier.value != null)
                 DonyTextField.tappable(
                   key: const Key('arrivalTimeField'),
                   label: l.tripPublishArrivalTimeOptionalLabel,
@@ -427,6 +459,7 @@ class TrajetStep extends StatelessWidget {
                   onTap: () => onSelectArrivalTime(),
                 ),
               if (arrivalDayOffsetNotifier != null &&
+                  !isBoat &&
                   (isRoad || arrivalTimeNotifier.value != null)) ...[
                 const SizedBox(height: DonySpacing.sm),
                 ArrivalDayChips(
@@ -483,6 +516,16 @@ class TrajetStep extends StatelessWidget {
                   );
                 },
               ),
+              if (isBoat) ...[
+                const SizedBox(height: DonySpacing.base),
+                _BoatArrivalRange(
+                  minNotifier: boatArrivalMinNotifier!,
+                  maxNotifier: boatArrivalMaxNotifier!,
+                  onSelectMin: onSelectBoatArrivalMin,
+                  onSelectMax: onSelectBoatArrivalMax,
+                  error: boatArrivalError,
+                ),
+              ],
             ],
           ).animate().fadeIn(delay: 60.ms);
         },
@@ -502,6 +545,78 @@ class TrajetStep extends StatelessWidget {
         ),
       const SizedBox(height: DonySpacing.lg),
     ];
+  }
+}
+
+/// Arrivée estimée d'un trajet bateau : deux jours, au plus tôt et au plus
+/// tard, et l'aide « les expéditeurs voient une fourchette ».
+class _BoatArrivalRange extends StatelessWidget {
+  const _BoatArrivalRange({
+    required this.minNotifier,
+    required this.maxNotifier,
+    required this.onSelectMin,
+    required this.onSelectMax,
+    required this.error,
+  });
+
+  final ValueNotifier<DateTime?> minNotifier;
+  final ValueNotifier<DateTime?> maxNotifier;
+  final Future<void> Function()? onSelectMin;
+  final Future<void> Function()? onSelectMax;
+  final String? error;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    String? format(DateTime? d) =>
+        d == null ? null : DateFormat.yMMMEd(l.localeName).format(d);
+    Widget chevron() =>
+        Icon(DonyIcons.chevron, size: 18, color: cs.onSurfaceVariant);
+    return Column(
+      key: const Key('boat-arrival-range'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.tripPublishBoatArrivalLabel,
+          style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        DonyTextField.tappable(
+          key: const Key('boatArrivalMinField'),
+          label: l.tripPublishBoatArrivalEarliestLabel,
+          requiredLabel: true,
+          value: format(minNotifier.value),
+          prefixIcon: DonyIcons.date,
+          prefixIconColor: cs.secondary,
+          trailing: chevron(),
+          onTap: () => onSelectMin?.call(),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        DonyTextField.tappable(
+          key: const Key('boatArrivalMaxField'),
+          label: l.tripPublishBoatArrivalLatestLabel,
+          requiredLabel: true,
+          value: format(maxNotifier.value),
+          prefixIcon: DonyIcons.date,
+          prefixIconColor: cs.secondary,
+          trailing: chevron(),
+          onTap: () => onSelectMax?.call(),
+        ),
+        DonyFieldError(
+          message: error,
+          textKey: const Key('boat-arrival-error'),
+          withIcon: true,
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          l.tripPublishBoatArrivalHelp,
+          key: const Key('boat-arrival-help'),
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+      ],
+    );
   }
 }
 

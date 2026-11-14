@@ -65,8 +65,8 @@ AnnouncementModel _$AnnouncementModelFromJson(
   deliveryAddress: json['deliveryAddress'] == null
       ? null
       : AddressData.fromJson(json['deliveryAddress'] as Map<String, dynamic>),
-  availableKg: (json['availableKg'] as num).toDouble(),
-  totalKg: (json['totalKg'] as num).toDouble(),
+  availableKg: _kgOrZero(json['availableKg']),
+  totalKg: _kgOrZero(json['totalKg']),
   pricePerKg: (json['pricePerKg'] as num?)?.toDouble(),
   pricePerKgDisplay: (json['pricePerKgDisplay'] as num?)?.toDouble(),
   transportMode: transportModeFromWire(json['transportMode'] as String?),
@@ -124,6 +124,14 @@ AnnouncementModel _$AnnouncementModelFromJson(
   parcelsSummary: TripParcelsSummary.fromJsonOrNull(json['parcelsSummary']),
   maxItemSize: itemSizeFromWire(json['maxItemSize']),
   maxParcelWeightKg: (json['maxParcelWeightKg'] as num?)?.toDouble(),
+  arrivalDateMax: json['arrivalDateMax'] == null
+      ? null
+      : DateTime.parse(json['arrivalDateMax'] as String),
+  volumeCapacityM3: (json['volumeCapacityM3'] as num?)?.toDouble(),
+  availableVolumeM3: (json['availableVolumeM3'] as num?)?.toDouble(),
+  pricePerM3: (json['pricePerM3'] as num?)?.toDouble(),
+  pricePerM3Display: (json['pricePerM3Display'] as num?)?.toDouble(),
+  latestTripDelay: TripDelayInfo.fromJsonOrNull(json['latestTripDelay']),
 );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -190,6 +198,12 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'maxItemSize': itemSizeToWireOrNull(instance.maxItemSize),
       'maxParcelWeightKg': instance.maxParcelWeightKg,
       'parcelsSummary': _parcelsSummaryToJson(instance.parcelsSummary),
+      'arrivalDateMax': instance.arrivalDateMax?.toIso8601String(),
+      'volumeCapacityM3': instance.volumeCapacityM3,
+      'availableVolumeM3': instance.availableVolumeM3,
+      'pricePerM3': instance.pricePerM3,
+      'pricePerM3Display': instance.pricePerM3Display,
+      'latestTripDelay': tripDelayToJson(instance.latestTripDelay),
     };
 
 const _$BidPaymentMethodEnumMap = {

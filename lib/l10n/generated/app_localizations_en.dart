@@ -1120,6 +1120,134 @@ class AppLocalizationsEn extends AppLocalizations {
       'The arrival date is too far after departure for this mode.';
 
   @override
+  String get errorBoatCarrierNotVerifiedTitle => 'Sea freight reserved';
+
+  @override
+  String get errorBoatCarrierNotVerifiedMessage =>
+      'Sea freight is reserved for businesses and verified carriers (GP Pro badge).';
+
+  @override
+  String get errorBoatTemplateUnsupportedTitle =>
+      'Templates not available for boats';
+
+  @override
+  String get errorBoatTemplateUnsupportedMessage =>
+      'Templates and recurring trips are not available for sea freight.';
+
+  @override
+  String get errorArrivalRangeInvalidTitle => 'Invalid estimated arrival';
+
+  @override
+  String get errorArrivalRangeInvalidMessage =>
+      'Check the estimated arrival: it can\'t be before departure, and the latest date can\'t be before the earliest or in the past.';
+
+  @override
+  String get errorArrivalBeforeDepartureTitle => 'Arrival before departure';
+
+  @override
+  String get errorArrivalBeforeDepartureMessage =>
+      'The arrival date can\'t be before the departure date.';
+
+  @override
+  String get errorBoatVolumeRequiredTitle => 'Volume required';
+
+  @override
+  String get errorBoatVolumeRequiredMessage =>
+      'A sea freight trip priced per cubic meter must state the volume offered.';
+
+  @override
+  String get errorBoatVolumeUnitInvalidTitle => 'Incompatible capacity unit';
+
+  @override
+  String get errorBoatVolumeUnitInvalidMessage =>
+      'A trip priced per cubic meter cannot use free-kilo capacity. Enter the volume offered.';
+
+  @override
+  String get errorBoatPriceRequiredTitle => 'Sea freight trip price';
+
+  @override
+  String get errorBoatPriceRequiredMessage =>
+      'A sea freight trip has a single price: per cubic meter or per kilo, without an item price list.';
+
+  @override
+  String get errorPricingUnitLockedTitle => 'Pricing unit locked';
+
+  @override
+  String get errorPricingUnitLockedMessage =>
+      'The price per cubic meter or per kilo can no longer change: this trip has already received a request or an offer.';
+
+  @override
+  String get errorDimensionsIncompleteTitle => 'Incomplete dimensions';
+
+  @override
+  String get errorDimensionsIncompleteMessage =>
+      'Enter the length, width and height of the parcel, or none of the three.';
+
+  @override
+  String get errorBoatDimensionsRequiredTitle => 'Dimensions required';
+
+  @override
+  String get errorBoatDimensionsRequiredMessage =>
+      'For a sea freight shipment, enter the length, width and height of the parcel.';
+
+  @override
+  String get errorInsufficientVolumeTitle => 'Not enough volume';
+
+  @override
+  String get errorInsufficientVolumeMessage =>
+      'This trip does not have enough volume left for this parcel.';
+
+  @override
+  String get errorTripDelayNotAllowedTitle => 'Delay not allowed';
+
+  @override
+  String get errorTripDelayNotAllowedMessage =>
+      'A delay can only be announced on a trip in progress: it must have departed and not be finished.';
+
+  @override
+  String get errorTripDelayReasonInvalidTitle => 'Reason not applicable';
+
+  @override
+  String get errorTripDelayReasonInvalidMessage =>
+      'This reason does not apply to the transport mode of this trip. Choose another reason.';
+
+  @override
+  String get errorTripDelayTooFrequentTitle => 'Too many delays announced';
+
+  @override
+  String get errorTripDelayTooFrequentMessage =>
+      'You have announced too many delays on this trip in the last 24 hours. Try again later or contact support.';
+
+  @override
+  String get errorBoatDepositPhotoRequiredTitle => 'Deposit photo required';
+
+  @override
+  String get errorBoatDepositPhotoRequiredMessage =>
+      'Add a photo of the parcel at drop-off to confirm this step.';
+
+  @override
+  String get errorDepositPaidNoRefundTitle => 'Refund not possible';
+
+  @override
+  String get errorDepositPaidNoRefundMessage =>
+      'The carrier was already paid at drop-off: this parcel can no longer be refunded automatically.';
+
+  @override
+  String get errorSupplementAfterDepositTitle => 'Supplement not possible';
+
+  @override
+  String get errorSupplementAfterDepositMessage =>
+      'A supplement can no longer be requested once the parcel has been dropped off.';
+
+  @override
+  String get errorSurplusVolumeTripUnsupportedTitle =>
+      'Extra capacity unavailable';
+
+  @override
+  String get errorSurplusVolumeTripUnsupportedMessage =>
+      'Extra capacity cannot be opened on a trip priced per cubic meter.';
+
+  @override
   String get errorWeightTooHeavyTitle => 'Weight too high';
 
   @override
@@ -2465,6 +2593,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeModeSelectorSending => 'I\'m sending a parcel';
 
   @override
+  String get homeModeSelectorSendingShort => 'I\'m sending';
+
+  @override
   String get homeModeSelectorTraveling => 'I\'m traveling';
 
   @override
@@ -2941,11 +3072,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestPublishIntroWhyBulletCarried =>
-      'A traveler carries your parcel with them.';
+      'A traveler or a carrier ships your parcel.';
 
   @override
   String get requestPublishIntroWhyBulletPayment =>
-      'Secure payment, released once delivery is confirmed.';
+      'Secure payment: you know before paying when the carrier gets paid.';
 
   @override
   String get requestPublishIntroWhyBulletTracking =>
@@ -5461,6 +5592,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingPickupParcelTitle => 'Parcel drop-off';
 
   @override
+  String get listingReportTripShort => 'Report';
+
+  @override
+  String get listingBlockTravelerShort => 'Block';
+
+  @override
   String get listingReportTripLink => 'Report this trip';
 
   @override
@@ -6046,6 +6183,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidCreateRefundAssurance =>
       'Refunded if the parcel doesn\'t arrive';
+
+  @override
+  String get bidCreateDepositDisputeAssurance =>
+      'Disputes are handled by Yadony support.';
 
   @override
   String get bidCreateCashEscrowWarning =>
@@ -7587,6 +7728,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Request canceled. The sender will be refunded.';
 
   @override
+  String get bidDetailCancelledSenderSnackbar =>
+      'Request canceled. You will be refunded.';
+
+  @override
+  String get bidDetailCancelledSenderCashSnackbar =>
+      'Request canceled. Cash payment: Yadony has nothing to refund.';
+
+  @override
+  String get bidDetailCancelledCashSnackbar =>
+      'Request canceled. Cash payment: the sender owes nothing.';
+
+  @override
   String get bidDetailDeletedSnackbar => 'Request deleted.';
 
   @override
@@ -7672,8 +7825,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your payment will be refunded automatically';
 
   @override
+  String get bidDetailCancelCashSubtitle => 'Cash payment: nothing to refund';
+
+  @override
   String get bidDetailCancelAfterHandoverOptionSubtitle =>
       'Full refund · you get your parcel back';
+
+  @override
+  String get bidDetailCancelAfterHandoverCashOptionSubtitle =>
+      'The traveler returns your parcel and cash';
 
   @override
   String get bidDetailRemoveFromHistorySubtitle =>
@@ -7695,6 +7855,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidDetailCancelAfterHandoverBody =>
       'The parcel is already with the traveler. You will be fully refunded and get your parcel back: the traveler will confirm the return by entering your return code.';
+
+  @override
+  String get bidDetailCancelAfterHandoverCashBody =>
+      'The parcel is already with the traveler. Cash payment: Yadony can\'t refund anything, the traveler gives your cash back with your parcel. They confirm the return by entering your return code.';
 
   @override
   String get bidDetailMoreDetails => 'More details';
@@ -7874,11 +8038,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'The sender will be refunded automatically';
 
   @override
+  String get bidDetailCancelTransportAcceptedCashSubtitle =>
+      'Cash payment: the sender owes nothing';
+
+  @override
   String get bidDetailRefuseParcelLabel => 'The parcel doesn\'t match';
 
   @override
   String get bidDetailRefuseParcelSubtitle =>
       'Refuse it with no penalty, the sender is refunded';
+
+  @override
+  String get bidDetailRefuseParcelCashSubtitle =>
+      'Refuse it with no penalty, the sender owes you nothing';
 
   @override
   String get parcelRefusalTitle => 'Refuse the parcel';
@@ -7893,6 +8065,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String parcelRefusalDeclaredWeight(String weight) {
     return 'Weight: $weight kg';
+  }
+
+  @override
+  String parcelRefusalDeclaredVolume(String volume) {
+    return 'Volume: $volume';
   }
 
   @override
@@ -8283,11 +8460,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'The drop-off deadline has passed: request cancelled. Any payment is refunded to you in full.';
 
   @override
+  String get ticketHandoverDeadlineExpiredSenderCash =>
+      'The drop-off deadline has passed: request cancelled. Cash payment: nothing to refund.';
+
+  @override
   String get ticketHandoverDeadlineExpiredTraveler =>
       'The drop-off deadline has passed: request cancelled.';
 
   @override
   String get ticketMiniStatWeightLabel => 'WEIGHT';
+
+  @override
+  String get ticketMiniStatVolumeLabel => 'VOLUME';
 
   @override
   String get ticketMiniStatCategoryLabel => 'TYPE';
@@ -9012,12 +9196,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'The sender will be automatically refunded.';
 
   @override
+  String get bidCancelAcceptedCashSubtitle =>
+      'Cash payment: the sender owes nothing.';
+
+  @override
   String get bidCancelWarningMessage =>
       'The parcel has already been handed over. You\'ll need to return it to the sender within 3 days by entering the return code they\'ll give you.';
 
   @override
   String get bidCancelWarningRefundNote =>
       'The sender will be fully refunded. If the payment was in cash, the sender owes nothing and the Yadony service fee is credited back to the traveler.';
+
+  @override
+  String get bidCancelWarningRefundNoteCash =>
+      'Cash payment: give back any money the sender already handed you. The Yadony service fee is credited back to you.';
 
   @override
   String get bidCancelReasonRequiredHint => 'Reason for cancellation *';
@@ -9643,6 +9835,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentSummaryWeightLabel => 'Weight';
+
+  @override
+  String get paymentSummaryVolumeLabel => 'Volume';
 
   @override
   String get paymentSummaryPricePerKgLabel => 'Price/kg';
@@ -10958,6 +11153,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanOfflineEventDefaultLabel => 'queued';
+
+  @override
+  String get scanOfflineDescDeposit => 'Drop-off recorded';
 
   @override
   String get scanOfflineDescPickup => 'Collection recorded';
@@ -15762,6 +15960,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only the sender and the traveler can track it here. Ask the sender for the tracking link.';
 
   @override
+  String suiviDepositValidatedToast(String parcel) {
+    return '$parcel: drop-off validated';
+  }
+
+  @override
   String suiviStepValidatedToast(String step, String parcel) {
     String _temp0 = intl.Intl.selectLogic(step, {
       'DEPART': '$parcel: collection validated',
@@ -16150,6 +16353,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String tripPublishArrivalOutOfRange(String first, String last, int days) {
+    return 'Pick a date between $first and $last: arrival is at most $days days after departure.';
+  }
+
+  @override
+  String tripPublishArrivalMovedWithDeparture(String date, int days) {
+    return 'Arrival date moved to $date to stay within $days days after departure.';
+  }
+
+  @override
   String get tripPublishArrivalOtherDate => 'Other date';
 
   @override
@@ -16256,8 +16469,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'You get a full refund and we suggest other trips.';
 
   @override
+  String get bidRescheduleWithdrawConfirmCashMessage =>
+      'Cash payment: Yadony has nothing to refund. We suggest other trips.';
+
+  @override
   String get bidRescheduleWithdrawConfirmReturnMessage =>
       'You get a full refund. The traveler returns the parcel against your return code.';
+
+  @override
+  String get bidRescheduleWithdrawConfirmReturnCashMessage =>
+      'Cash payment: Yadony has nothing to refund, the traveler gives your cash back with the parcel, against your return code.';
 
   @override
   String get bidRescheduleKeptSnackbar =>
@@ -16266,6 +16487,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidRescheduleWithdrawnSnackbar =>
       'Shipment canceled. Your refund is on its way.';
+
+  @override
+  String get bidRescheduleWithdrawnCashSnackbar => 'Shipment canceled.';
 
   @override
   String get errorRescheduleLimitReachedTitle => 'Cannot reschedule';
@@ -16435,6 +16659,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get receptionsPendingChip => 'To confirm';
+
+  @override
+  String receptionsRowStepBoat(String status) {
+    String _temp0 = intl.Intl.selectLogic(status, {
+      'ACCEPTED': 'To drop off',
+      'HANDED_OVER': 'Dropped off',
+      'IN_TRANSIT': 'At sea',
+      'ARRIVED': 'At port',
+      'COMPLETED': 'Delivered',
+      'other': 'In progress',
+    });
+    return '$_temp0';
+  }
 
   @override
   String receptionsRowStep(String status) {
@@ -17008,8 +17245,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'At least one photo: it protects both sides if the parcel handed over doesn\'t match the declaration.';
 
   @override
+  String get bidCreateAddPhotoRequiredSubtitle =>
+      'Required, reassures the traveler';
+
+  @override
   String get bidCreateHandoverCheckNotice =>
       'At handover, the traveler checks the parcel. If it doesn\'t match your declaration, they can refuse it: you are then refunded.';
+
+  @override
+  String get bidCreateHandoverCheckNoticeCash =>
+      'At handover, the traveler checks the parcel. If it doesn\'t match your declaration, they can refuse it: you then pay nothing.';
 
   @override
   String get callStatusRinging => 'Ringing…';
@@ -18088,9 +18333,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripStopsBadgeTwoOrMore => '2+ stops';
 
   @override
-  String get tripStopsDetailLabel => 'Stops';
-
-  @override
   String get homeComposerSectionStops => 'STOPS';
 
   @override
@@ -18235,6 +18477,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String tripSwitchCurrencyConfirmMessage(String currency) {
     return 'All prices on this trip switch to $currency.';
+  }
+
+  @override
+  String tripPublishPerM3CurrencyReset(String currency) {
+    return 'Currency changed: enter the price per m³ again in $currency.';
   }
 
   @override
@@ -19177,6 +19424,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suiviPhotoLostDismiss => 'Close the lost photo message';
+
+  @override
+  String get suiviDepositPhotoRetake =>
+      'The deposit photo could not be sent: the drop-off is not recorded. Retake the deposit photo to confirm it.';
+
+  @override
+  String get suiviDepositPhotoRetakeDismiss =>
+      'Close the deposit photo message';
 
   @override
   String get suiviScanClosedBeforeSync =>
@@ -20411,6 +20666,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripSeriesErrorProLimit => 'Monthly trip limit reached.';
 
   @override
+  String get tripSeriesErrorGpProPending =>
+      'Your GP Pro request is under review. You can create drafts meanwhile.';
+
+  @override
   String get tripSeriesErrorStripe =>
       'Set up card payments to publish these trips, or create drafts.';
 
@@ -21231,7 +21490,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiFormDraftWarningModeUnavailable =>
-      'This mode isn\'t available yet: the trip will be published as a flight.';
+      'The assistant can\'t set this mode: check the transport mode before publishing.';
 
   @override
   String get aiFormDraftWarningBudget =>
@@ -23169,7 +23428,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripMenuEditSubtitle =>
-      'Cities, dates, kilos, price and conditions';
+      'Cities, dates, capacity, price and conditions';
 
   @override
   String get tripMenuRecurringSubtitle => 'The same trip on other dates';
@@ -24246,4 +24505,694 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get requestCreateWeightTooHeavySubmit =>
       'This parcel is over 32 kg: change its weight or choose Road.';
+
+  @override
+  String get tripPublishModeBoatTitle => 'By sea';
+
+  @override
+  String get tripPublishModeBoatSubtitle => 'Ship, shared container';
+
+  @override
+  String get tripPublishModeBoatTagDuration => 'Several weeks';
+
+  @override
+  String get tripPublishModeBoatTagCapacity => 'Volume in m³';
+
+  @override
+  String get tripPublishModeBoatLocked => 'Reserved for verified carriers';
+
+  @override
+  String get tripPublishModeBoatBadgeLink => 'Request the GP Pro badge';
+
+  @override
+  String get tripPublishBoatDeparturePortLabel => 'Departure port';
+
+  @override
+  String get tripPublishBoatArrivalPortLabel => 'Arrival port';
+
+  @override
+  String get tripPublishBoatArrivalLabel => 'Estimated arrival';
+
+  @override
+  String get tripPublishBoatArrivalEarliestLabel => 'Earliest';
+
+  @override
+  String get tripPublishBoatArrivalLatestLabel => 'Latest';
+
+  @override
+  String get tripPublishBoatArrivalHelp =>
+      'Senders see a date range: delays at port are common.';
+
+  @override
+  String get tripPublishBoatArrivalRequired =>
+      'Enter the earliest and the latest arrival';
+
+  @override
+  String get tripPublishBoatArrivalBeforeDeparture =>
+      'The estimated arrival can\'t be before departure';
+
+  @override
+  String get tripPublishBoatArrivalLatestBeforeEarliest =>
+      'The latest arrival can\'t be before the earliest';
+
+  @override
+  String tripPublishBoatArrivalTooFar(int days) {
+    return 'The latest arrival must be within $days days of departure';
+  }
+
+  @override
+  String get tripPublishBoatWarehouseLabel => 'Warehouse address';
+
+  @override
+  String get tripPublishBoatWarehouseSubtitle =>
+      'Where senders drop off their parcels';
+
+  @override
+  String get tripPublishBoatPickupLabel => 'Pickup address';
+
+  @override
+  String get tripPublishBoatPickupSubtitle =>
+      'Where recipients collect their parcels';
+
+  @override
+  String get tripPublishBoatUnitQuestion => 'You sell the space';
+
+  @override
+  String get tripPublishBoatUnitM3 => 'Per m³';
+
+  @override
+  String get tripPublishBoatUnitKg => 'Per kilo';
+
+  @override
+  String get tripPublishBoatVolumeLabel => 'Available volume (m³)';
+
+  @override
+  String get tripPublishBoatVolumeHint => 'From 0.1 to 9,999 m³, one decimal';
+
+  @override
+  String get tripPublishBoatVolumeInvalid =>
+      'Enter a volume between 0.1 and 9,999 m³';
+
+  @override
+  String get tripPublishBoatPricePerM3Label => 'Price per m³';
+
+  @override
+  String get tripPublishBoatPricePrompt =>
+      'Enter your price per m³ to see the estimate';
+
+  @override
+  String tripPublishBoatPriceTooHigh(String max) {
+    return 'The price per m³ can\'t be higher than $max';
+  }
+
+  @override
+  String tripPublishBoatPriceEstimateLine(String net, String total) {
+    return 'You get $net per m³ · the sender pays $total';
+  }
+
+  @override
+  String get tripPublishBoatDepositPayoutNotice =>
+      'By ship, you get paid as soon as the sender drops off their parcel at the warehouse, without waiting for delivery.';
+
+  @override
+  String tripPublishPerM3Value(String value) {
+    return '$value/m³';
+  }
+
+  @override
+  String get requestCreateDimensionsLabel => 'Package dimensions';
+
+  @override
+  String get requestCreateDimensionsOptionalLabel =>
+      'Package dimensions (optional)';
+
+  @override
+  String get requestCreateDimensionsHelpBoat =>
+      'The carrier charges by volume: measure your package as packed, in centimeters.';
+
+  @override
+  String get requestCreateDimensionsHelpAny =>
+      'Helpful by boat: the price is based on volume.';
+
+  @override
+  String get requestCreateDimensionsAdd => 'Add dimensions';
+
+  @override
+  String get requestCreateDimensionLength => 'Length';
+
+  @override
+  String get requestCreateDimensionWidth => 'Width';
+
+  @override
+  String get requestCreateDimensionHeight => 'Height';
+
+  @override
+  String get requestCreateDimensionRequired => 'Required';
+
+  @override
+  String get requestCreateDimensionInvalid => 'Between 1 and 400 cm';
+
+  @override
+  String requestCreateVolumeLine(String volume) {
+    return 'Volume: $volume';
+  }
+
+  @override
+  String get requestCreateDimensionsRequiredSubmit =>
+      'Enter the package dimensions in the “The package” step.';
+
+  @override
+  String requestCreateWeightAndVolume(String weight, String volume) {
+    return '$weight · $volume';
+  }
+
+  @override
+  String get requestPreviewVolumeLabel => 'Volume';
+
+  @override
+  String requestPreviewVolumeValue(
+    String volume,
+    int length,
+    int width,
+    int height,
+  ) {
+    return '$volume ($length × $width × $height cm)';
+  }
+
+  @override
+  String get requestCreatePriceBasisPerM3 => 'Price per m³';
+
+  @override
+  String get requestCreatePriceBasisPerM3NeedsDimensions =>
+      'Enter the package dimensions first to set a price per m³.';
+
+  @override
+  String get requestCreatePerM3InputHint => 'E.g. 600.00';
+
+  @override
+  String requestCreatePriceUnitPerM3(String symbol) {
+    return '$symbol / m³';
+  }
+
+  @override
+  String requestCreatePerM3Computed(String volume, String perM3, String total) {
+    return '$volume × $perM3 / m³ = $total total';
+  }
+
+  @override
+  String get requestCreateBoatDepositNotice =>
+      'By boat, expect several weeks. The carrier is paid as soon as your package is dropped off at the warehouse: payment doesn\'t wait for delivery.';
+
+  @override
+  String bidCreateVolumeRateLine(String volume, String rate) {
+    return '$volume × $rate per m³';
+  }
+
+  @override
+  String bidCreateVolumeAvailableLine(String available) {
+    return 'Space left on this trip: $available';
+  }
+
+  @override
+  String bidCreateVolumeTooLarge(String volume, String available) {
+    return 'This package is $volume and only $available is left on this trip.';
+  }
+
+  @override
+  String get bidCreateVolumeDimensionsHint =>
+      'Enter all three package dimensions to calculate the price.';
+
+  @override
+  String get bidCreateCardModeSubtitleDeposit =>
+      'Paid to the carrier when you drop off the package';
+
+  @override
+  String get bidCreateCardModeBodyDeposit =>
+      'Locked by Yadony right away, paid to the carrier once you drop off the package.';
+
+  @override
+  String get bidCreateCardModeNegotiationBodyDeposit =>
+      'Paid by card once your price is agreed, then paid to the carrier when you drop off the package.';
+
+  @override
+  String get bidCreateMobileMoneyModeBodyDeposit =>
+      'Once the carrier agrees, you\'ll get a payment request on your phone. The amount is paid to the carrier when you drop off the package.';
+
+  @override
+  String get bidCreateOfferPaidSubtitleDeposit =>
+      'Your payment is secured by Yadony until you drop off your package, then paid to the carrier. The carrier has been notified of your request.';
+
+  @override
+  String get bidCreateMobileMoneySuccessSubtitleDeposit =>
+      'Mobile money payment: if the carrier accepts, you\'ll get a notification and have 30 minutes to confirm the payment on your phone. The amount is kept safe by Yadony until the package is dropped off.';
+
+  @override
+  String get homeFilterChipsVolume => 'Volume';
+
+  @override
+  String get homeFilterChipsArrival => 'Arrival';
+
+  @override
+  String homeFilterChipsArrivalActive(int weeks) {
+    return 'Arrival ≤ $weeks wks';
+  }
+
+  @override
+  String homeFilterBoatVolumeValue(String volume) {
+    return '≥ $volume';
+  }
+
+  @override
+  String homeFilterBoatPriceValue(String price) {
+    return '≤ $price';
+  }
+
+  @override
+  String get homeFilterFieldsMinVolume => 'MIN VOLUME';
+
+  @override
+  String get homeFilterFieldsMaxPricePerM3 => 'MAX PRICE PER M³';
+
+  @override
+  String get homeFilterBoatVolumeTitle => 'Minimum volume';
+
+  @override
+  String get homeFilterBoatVolumeFieldLabel => 'Minimum volume (m³)';
+
+  @override
+  String get homeFilterBoatVolumeHint =>
+      'From 0.1 to 9,999 m³. Leave empty to see all trips.';
+
+  @override
+  String get homeFilterBoatVolumeInvalid =>
+      'Enter a volume between 0.1 and 9,999 m³';
+
+  @override
+  String get homeFilterBoatPriceTitle => 'Maximum price per m³';
+
+  @override
+  String homeFilterBoatPriceFieldLabel(String symbol) {
+    return 'Maximum price per m³ ($symbol)';
+  }
+
+  @override
+  String get homeFilterBoatPriceHint =>
+      'In your currency. Leave empty to see all prices.';
+
+  @override
+  String homeFilterBoatPriceInvalid(String max) {
+    return 'Enter a price above zero, $max at most';
+  }
+
+  @override
+  String get homeFilterBoatArrivalTitle => 'Estimated arrival';
+
+  @override
+  String homeFilterBoatArrivalOption(int weeks) {
+    return 'Within $weeks weeks';
+  }
+
+  @override
+  String get homeFilterBoatArrivalHelp =>
+      'The carrier\'s whole estimated arrival range falls before this limit.';
+
+  @override
+  String get homeComposerSectionVolumePrice => 'VOLUME AND PRICE';
+
+  @override
+  String get homeComposerSectionArrival => 'ESTIMATED ARRIVAL';
+
+  @override
+  String get homeComposerVolumeHint =>
+      'These filters only show trips billed per m³.';
+
+  @override
+  String get homeComposerMoreFiltersHintBoat => 'Content type, rating, payment';
+
+  @override
+  String listingBoatArrivalRange(String from, String to) {
+    return 'Estimated arrival $from to $to';
+  }
+
+  @override
+  String listingBoatArrivalDate(String date) {
+    return 'Estimated arrival $date';
+  }
+
+  @override
+  String listingBoatVolumeRemaining(String volume) {
+    return '$volume left';
+  }
+
+  @override
+  String get trackingBoatStepDeposit => 'Drop-off at the warehouse';
+
+  @override
+  String get trackingBoatStepDeposited => 'Dropped off at the warehouse';
+
+  @override
+  String get trackingBoatStepDeparture => 'Ship departure';
+
+  @override
+  String get trackingBoatStepDeparted => 'Ship departed';
+
+  @override
+  String get trackingBoatStepAtSea => 'At sea';
+
+  @override
+  String trackingBoatStepAtPort(String city) {
+    return 'Arrived at the port of $city';
+  }
+
+  @override
+  String trackingBoatStepAtPortElided(String city) {
+    return 'Arrived at the port of $city';
+  }
+
+  @override
+  String get trackingBoatStepAtPortNoCity => 'Arrived at port';
+
+  @override
+  String get trackingBoatHeadlineAwaitingDeposit =>
+      'Waiting to be dropped off at the warehouse';
+
+  @override
+  String trackingBoatHeadlineAtSeaTo(String city) {
+    return 'At sea, bound for $city';
+  }
+
+  @override
+  String trackingBoatPlannedDeparture(String date) {
+    return 'Scheduled for $date';
+  }
+
+  @override
+  String trackingBoatEstimatedRange(String from, String to) {
+    return 'Estimated $from to $to';
+  }
+
+  @override
+  String trackingBoatEstimatedDate(String date) {
+    return 'Estimated $date';
+  }
+
+  @override
+  String trackingBoatDelayNote(String detail) {
+    return 'Delay announced: $detail';
+  }
+
+  @override
+  String get ticketEstimatedArrivalLabel => 'Estimated arrival';
+
+  @override
+  String ticketArrivalRangeValue(String from, String to) {
+    return '$from to $to';
+  }
+
+  @override
+  String bidDetailSenderInTransitBoatRange(
+    String from,
+    String to,
+    String city,
+  ) {
+    return 'Estimated arrival $from to $to in $city.';
+  }
+
+  @override
+  String bidDetailSenderInTransitBoatDate(String date, String city) {
+    return 'Estimated arrival $date in $city.';
+  }
+
+  @override
+  String bidDetailDepositPaidLabel(String amount, String date) {
+    return '$amount paid to the carrier at parcel drop-off, on $date';
+  }
+
+  @override
+  String bidDetailDepositPaidNoDateLabel(String amount) {
+    return '$amount paid to the carrier at parcel drop-off';
+  }
+
+  @override
+  String bidDetailDepositPendingLabel(String amount) {
+    return '$amount paid, released to the carrier at parcel drop-off';
+  }
+
+  @override
+  String get bidDelayTitle => 'Delay announced';
+
+  @override
+  String bidDelayNewRange(String from, String to) {
+    return 'New estimated arrival: $from to $to.';
+  }
+
+  @override
+  String bidDelayNewDate(String date) {
+    return 'New estimated arrival: $date.';
+  }
+
+  @override
+  String bidDelayReason(String reason) {
+    return 'Reason: $reason';
+  }
+
+  @override
+  String get tripDelayReasonPortCongestion => 'Port congestion';
+
+  @override
+  String get tripDelayReasonWeather => 'Weather';
+
+  @override
+  String get tripDelayReasonExtendedStopover => 'Extended stopover';
+
+  @override
+  String get tripDelayReasonExtendedStop => 'Extended stop';
+
+  @override
+  String get tripDelayReasonTransportDisruption => 'Transport disruption';
+
+  @override
+  String get listingPricePerM3Label => 'per m³';
+
+  @override
+  String get errorArrivalTimeBeforeDepartureTitle =>
+      'Arrival time before departure';
+
+  @override
+  String get errorArrivalTimeBeforeDepartureMessage =>
+      'On the same day, the arrival time must be after the departure time.';
+
+  @override
+  String get tripDelaySheetTitle => 'Announce a delay';
+
+  @override
+  String tripDelaySheetSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'All $count senders on this trip are notified at once.',
+      one: 'The sender with a parcel on board is notified.',
+      zero: 'Senders with a parcel on board are notified at once.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripDelayReasonSection => 'Reason';
+
+  @override
+  String get tripDelayArrivalSection => 'New estimated arrival';
+
+  @override
+  String get tripDelayFromLabel => 'From';
+
+  @override
+  String get tripDelayToLabel => 'To';
+
+  @override
+  String tripDelayArrivalLimit(String date) {
+    return 'No later than $date for this trip';
+  }
+
+  @override
+  String get tripDelayMessageSection => 'Message to senders';
+
+  @override
+  String get tripDelayMessageHintBoat =>
+      'E.g. waiting at Tanger Med, departure expected Thursday';
+
+  @override
+  String get tripDelayMessageHintPlane =>
+      'E.g. flight delayed, new schedule announced tomorrow';
+
+  @override
+  String get tripDelayMessageHint =>
+      'E.g. unexpected hold-up, back on the way Thursday';
+
+  @override
+  String get tripDelayInfo =>
+      'Rescheduling is locked once parcels are on board; you can still announce a delay until arrival.';
+
+  @override
+  String get tripDelaySubmit => 'Notify senders';
+
+  @override
+  String get tripDelaySentSnackbar =>
+      'Delay announced: senders have been notified.';
+
+  @override
+  String get tripMenuAnnounceDelaySubtitle =>
+      'Tell senders the new estimated arrival';
+
+  @override
+  String tripOwnerVolumeRemainingOf(String total) {
+    return 'left of $total';
+  }
+
+  @override
+  String get tripTilePaymentsDeposit => 'Paid as each parcel is dropped off';
+
+  @override
+  String get tripTilePaymentsDepositNote =>
+      'Each parcel is paid to you as soon as it is dropped off at the warehouse.';
+
+  @override
+  String get scanDepositRecordedChip => 'Drop-off recorded';
+
+  @override
+  String get suiviDepositPhotoRequired =>
+      'Required to confirm the warehouse drop-off';
+
+  @override
+  String get amendmentEntryButtonVolume => 'Add volume or items';
+
+  @override
+  String amendmentSheetVolumeLabel(String price, String free) {
+    return 'EXTRA VOLUME · $price/M³ · $free M³ FREE';
+  }
+
+  @override
+  String amendmentSheetVolumeLabelOpen(String price) {
+    return 'EXTRA VOLUME · $price/M³';
+  }
+
+  @override
+  String get amendmentSheetVolumeLabelPlain => 'EXTRA VOLUME';
+
+  @override
+  String amendmentSheetVolumeValue(String volume) {
+    return '+$volume m³';
+  }
+
+  @override
+  String get amendmentTravelerParcelVolume => 'Parcel volume';
+
+  @override
+  String amendmentTravelerParcelVolumeValue(String from, String to) {
+    return '$from → $to m³';
+  }
+
+  @override
+  String get amendmentTravelerAcceptedBodyVolume =>
+      'Collect the extra volume at handover. If it isn\'t there, say so before scanning the QR.';
+
+  @override
+  String get amendmentNotBroughtVolume => 'The extra volume isn\'t here';
+
+  @override
+  String get amendmentNotBroughtVolumeConfirmTitle =>
+      'The extra volume isn\'t here?';
+
+  @override
+  String get amendmentNotBroughtVolumeConfirmMessage =>
+      'The change will be cancelled and the sender refunded. The parcel stays at its original volume.';
+
+  @override
+  String amendmentSenderNotBroughtVolumeStatus(String name) {
+    return '$name reported the extra volume wasn\'t there';
+  }
+
+  @override
+  String get amendmentDeclineConfirmMessageVolume =>
+      'The parcel keeps its original volume and price.';
+
+  @override
+  String get amendmentPaymentHeldByCardDeposit =>
+      'Paid by card, paid out to the carrier at deposit';
+
+  @override
+  String get amendmentPaymentHeldOnlineDeposit =>
+      'Paid online, paid out to the carrier at deposit';
+
+  @override
+  String get amendmentGainPaidOutDeposit =>
+      'Paid to your account when the parcel is deposited';
+
+  @override
+  String get errorVolumePriceTooHighTitle => 'Price per cubic meter too high';
+
+  @override
+  String get errorVolumePriceTooHighMessage =>
+      'The price per cubic meter is above the allowed limit. Lower it and try again.';
+
+  @override
+  String get errorTransportModeLockedTitle => 'Transport mode locked';
+
+  @override
+  String get errorTransportModeLockedMessage =>
+      'While parcels are still active on this trip, its mode can\'t switch to or from boat.';
+
+  @override
+  String get negotiationThreadPayHintDeposit =>
+      'Price accepted. Pay now to reserve your spot; the amount is paid out to the carrier when you drop off your parcel.';
+
+  @override
+  String get negotiationPaymentRecapSecureBannerMessageDeposit =>
+      'Secure · paid out at parcel deposit';
+
+  @override
+  String get negotiationPaymentRecapSecureNoteDeposit =>
+      'The amount is held securely. The carrier receives it when you drop off your parcel. A dispute is settled with Yadony support.';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyBannerMessageDeposit =>
+      'You approve the payment on your phone. Yadony holds the money and pays it out to the carrier when you drop off your parcel.';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyNoteDeposit =>
+      'A payment request is sent to the number below. The carrier receives the amount when you drop off your parcel.';
+
+  @override
+  String get negotiationOfferAcceptedPaidSubtitleDeposit =>
+      'Your money is secured by Yadony, then paid out to the carrier when you drop off your parcel. Follow your parcel from the thread.';
+
+  @override
+  String get mobileMoneyPaidToTravelerValueDeposit =>
+      'When the parcel is dropped off';
+
+  @override
+  String get requestPublicReassureSecuredDeposit =>
+      'Secure payment: paid out as soon as the parcel is dropped off';
+
+  @override
+  String get bidDepositPaidSupportSenderSubtitle =>
+      'The carrier was paid when the parcel was deposited: a dispute is settled with Yadony support.';
+
+  @override
+  String get bidDepositPaidSupportTravelerSubtitle =>
+      'You were paid when the parcel was deposited: a dispute is settled with Yadony support.';
+
+  @override
+  String get tripPublishLockedBoatBlocked =>
+      'This request is for sea freight, a mode reserved for verified carriers. Request the GP Pro badge to offer your trip.';
+
+  @override
+  String get trackingDepositNeedsQr => 'Scan the sender\'s QR code';
+
+  @override
+  String get errorBoatDepositQrRequiredTitle => 'Sender\'s QR code required';
+
+  @override
+  String get errorBoatDepositQrRequiredMessage =>
+      'To confirm the deposit, scan the sender\'s QR code: a typed number is not enough.';
 }

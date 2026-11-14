@@ -2152,6 +2152,105 @@ void main() {
       expect(() => s.dispose(), returnsNormally);
     });
   });
+
+  group('dépôt d\'un colis payé au dépôt (qrToken, photo exigée)', () {
+    void stubPost() => when(
+      () => mockRepo.postScan(
+        bidId: any(named: 'bidId'),
+        eventType: any(named: 'eventType'),
+        gpsLat: any(named: 'gpsLat'),
+        gpsLon: any(named: 'gpsLon'),
+        gpsLabel: any(named: 'gpsLabel'),
+        photoUrl: any(named: 'photoUrl'),
+        scanMethod: any(named: 'scanMethod'),
+        trackingNumber: any(named: 'trackingNumber'),
+        qrToken: any(named: 'qrToken'),
+        offlineTimestamp: any(named: 'offlineTimestamp'),
+      ),
+    ).thenAnswer((_) async => _fakeEvent());
+
+    test('le jeton survit à la file et part au rejeu', () async {
+      await service.queueScan(
+        bidId: 'bid-9',
+        eventType: 'DEPART',
+        photoKey: 'tracking/bid-9/p.jpg',
+        qrToken: 'tok_abc',
+      );
+      final entry = Map<String, dynamic>.from(
+        _hiveService.offlineQueue.values.first,
+      );
+      expect(entry['qrToken'], 'tok_abc');
+      stubPost();
+
+      await service.syncAll();
+
+      verify(
+        () => mockRepo.postScan(
+          bidId: 'bid-9',
+          eventType: 'DEPART',
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: 'tracking/bid-9/p.jpg',
+          scanMethod: any(named: 'scanMethod'),
+          trackingNumber: any(named: 'trackingNumber'),
+          qrToken: 'tok_abc',
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).called(1);
+    });
+
+    test('sans jeton : aucune clé dans l\'entrée', () async {
+      await service.queueScan(bidId: 'bid-9', eventType: 'TRANSIT');
+      final entry = Map<String, dynamic>.from(
+        _hiveService.offlineQueue.values.first,
+      );
+      expect(entry.containsKey('qrToken'), isFalse);
+      expect(entry.containsKey('photoRequired'), isFalse);
+    });
+
+    test('photo exigée mais absente : jamais envoyée, entrée gardée '
+        '« à reprendre » (pas supprimée en silence)', () async {
+      await service.queueScan(
+        bidId: 'bid-9',
+        eventType: 'DEPART',
+        qrToken: 'tok_abc',
+        photoRequired: true,
+      );
+      stubPost();
+
+      await service.syncAll();
+      // Garde locale, pas un verdict du serveur : l'entrée reste en file.
+      expect(_hiveService.offlineQueue.length, 1);
+      final retake = service.depositRetakeFor({'bid-9'});
+      expect(retake, hasLength(1));
+      expect(retake.single.eventType, 'DEPART');
+      expect(service.depositRetakeFor({'autre'}), isEmpty);
+      // Ni envoyée, ni comptée parmi les scans en attente de réseau.
+      expect(service.pendingCount, 0);
+
+      // Mise de côté : un nouveau rejeu ne la renvoie pas.
+      await service.syncAll();
+      verifyNever(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+          scanMethod: any(named: 'scanMethod'),
+          trackingNumber: any(named: 'trackingNumber'),
+          qrToken: any(named: 'qrToken'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      );
+
+      // L'utilisateur lit le message : l'entrée part, explicitement.
+      await service.dismissDepositRetake(retake.single);
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+    });
+  });
 }
 
 TrackingEventModel _fakeEvent() => TrackingEventModel(

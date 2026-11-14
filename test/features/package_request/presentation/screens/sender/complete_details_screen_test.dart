@@ -10,6 +10,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/complete_details_screen.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
@@ -176,6 +177,40 @@ void main() {
     // The 3 raw fields are still there, unchanged, as RecipientSection's
     // children.
     expect(find.byType(TextFormField), findsNWidgets(3));
+  });
+
+  testWidgets('sans fil, le récapitulatif montre le prix brut de la demande, '
+      'jamais le net du voyageur', (tester) async {
+    final request = PackageRequest(
+      id: 'pr-1',
+      senderId: 'sender-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      dateToleranceDays: 0,
+      weightKg: 5,
+      parcelSize: ParcelSize.medium,
+      transportMode: TransportMode.plane,
+      categories: const ['Vêtements'],
+      targetPriceEur: 5,
+      grossPriceEur: 6,
+      status: PackageRequestStatus.negotiating,
+      createdAt: DateTime(2026),
+    );
+    final loadedState = CompleteDetailsState(loaded: true, request: request);
+    when(() => completeDetailsBloc.state).thenReturn(loadedState);
+    whenListen(
+      completeDetailsBloc,
+      const Stream<CompleteDetailsState>.empty(),
+      initialState: loadedState,
+    );
+    await tester.pumpWidget(_buildApp());
+    await tester.pumpAndSettle();
+    final context = tester.element(find.text('HOME'));
+    unawaited(GoRouter.of(context).push('/complete/pr-1'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(PriceDisplay.money(6, 'EUR')), findsOneWidget);
+    expect(find.text(PriceDisplay.money(5, 'EUR')), findsNothing);
   });
 
   testWidgets(

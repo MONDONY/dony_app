@@ -1128,6 +1128,134 @@ class AppLocalizationsFr extends AppLocalizations {
       'La date d\'arrivée est trop loin après le départ pour ce mode.';
 
   @override
+  String get errorBoatCarrierNotVerifiedTitle => 'Fret par bateau réservé';
+
+  @override
+  String get errorBoatCarrierNotVerifiedMessage =>
+      'Le transport par bateau est réservé aux professionnels et aux voyageurs vérifiés (badge GP Pro).';
+
+  @override
+  String get errorBoatTemplateUnsupportedTitle =>
+      'Modèles indisponibles en bateau';
+
+  @override
+  String get errorBoatTemplateUnsupportedMessage =>
+      'Les modèles et les trajets récurrents ne sont pas disponibles pour le bateau.';
+
+  @override
+  String get errorArrivalRangeInvalidTitle => 'Arrivée estimée invalide';
+
+  @override
+  String get errorArrivalRangeInvalidMessage =>
+      'Vérifiez l\'arrivée estimée : elle ne peut pas précéder le départ, et la fin ne peut être ni avant le début ni dans le passé.';
+
+  @override
+  String get errorArrivalBeforeDepartureTitle => 'Arrivée avant le départ';
+
+  @override
+  String get errorArrivalBeforeDepartureMessage =>
+      'La date d\'arrivée ne peut pas précéder la date de départ.';
+
+  @override
+  String get errorBoatVolumeRequiredTitle => 'Volume requis';
+
+  @override
+  String get errorBoatVolumeRequiredMessage =>
+      'Un trajet en bateau facturé au m³ doit indiquer le volume proposé.';
+
+  @override
+  String get errorBoatVolumeUnitInvalidTitle =>
+      'Unité de capacité incompatible';
+
+  @override
+  String get errorBoatVolumeUnitInvalidMessage =>
+      'Un trajet facturé au m³ ne peut pas avoir une capacité en kilos libres : indiquez le volume proposé.';
+
+  @override
+  String get errorBoatPriceRequiredTitle => 'Prix du trajet en bateau';
+
+  @override
+  String get errorBoatPriceRequiredMessage =>
+      'Un trajet en bateau a un seul prix : au m³ ou au kilo, sans grille de prix par article.';
+
+  @override
+  String get errorPricingUnitLockedTitle => 'Unité de prix verrouillée';
+
+  @override
+  String get errorPricingUnitLockedMessage =>
+      'Le prix au m³ ou au kilo ne peut plus changer : ce trajet a déjà reçu une demande ou une offre.';
+
+  @override
+  String get errorDimensionsIncompleteTitle => 'Dimensions incomplètes';
+
+  @override
+  String get errorDimensionsIncompleteMessage =>
+      'Indiquez la longueur, la largeur et la hauteur du colis, ou aucune des trois.';
+
+  @override
+  String get errorBoatDimensionsRequiredTitle => 'Dimensions requises';
+
+  @override
+  String get errorBoatDimensionsRequiredMessage =>
+      'Pour un envoi par bateau, indiquez la longueur, la largeur et la hauteur du colis.';
+
+  @override
+  String get errorInsufficientVolumeTitle => 'Volume insuffisant';
+
+  @override
+  String get errorInsufficientVolumeMessage =>
+      'Ce trajet n\'a pas assez de volume restant pour ce colis.';
+
+  @override
+  String get errorTripDelayNotAllowedTitle => 'Retard impossible';
+
+  @override
+  String get errorTripDelayNotAllowedMessage =>
+      'Un retard ne peut être annoncé que sur un trajet en cours : il doit être parti et ne pas être terminé.';
+
+  @override
+  String get errorTripDelayReasonInvalidTitle => 'Motif non applicable';
+
+  @override
+  String get errorTripDelayReasonInvalidMessage =>
+      'Ce motif ne s\'applique pas au mode de transport de ce trajet. Choisissez-en un autre.';
+
+  @override
+  String get errorTripDelayTooFrequentTitle => 'Trop de retards annoncés';
+
+  @override
+  String get errorTripDelayTooFrequentMessage =>
+      'Vous avez annoncé trop de retards sur ce trajet ces dernières 24 heures. Réessayez plus tard ou contactez le support.';
+
+  @override
+  String get errorBoatDepositPhotoRequiredTitle => 'Photo de dépôt requise';
+
+  @override
+  String get errorBoatDepositPhotoRequiredMessage =>
+      'Ajoutez une photo du colis au dépôt pour valider cette étape.';
+
+  @override
+  String get errorDepositPaidNoRefundTitle => 'Remboursement impossible';
+
+  @override
+  String get errorDepositPaidNoRefundMessage =>
+      'Le voyageur a déjà été payé au dépôt : ce colis ne peut plus être remboursé automatiquement.';
+
+  @override
+  String get errorSupplementAfterDepositTitle => 'Supplément impossible';
+
+  @override
+  String get errorSupplementAfterDepositMessage =>
+      'Un supplément ne peut plus être demandé une fois le colis déposé.';
+
+  @override
+  String get errorSurplusVolumeTripUnsupportedTitle => 'Surplus indisponible';
+
+  @override
+  String get errorSurplusVolumeTripUnsupportedMessage =>
+      'Le surplus de capacité n\'est pas disponible pour un trajet facturé au m³.';
+
+  @override
   String get errorWeightTooHeavyTitle => 'Poids trop élevé';
 
   @override
@@ -2478,6 +2606,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeModeSelectorSending => 'J\'envoie un colis';
 
   @override
+  String get homeModeSelectorSendingShort => 'J\'envoie';
+
+  @override
   String get homeModeSelectorTraveling => 'Je voyage';
 
   @override
@@ -2956,11 +3087,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestPublishIntroWhyBulletCarried =>
-      'Un voyageur transporte votre colis avec lui.';
+      'Un voyageur ou un transporteur achemine votre colis.';
 
   @override
   String get requestPublishIntroWhyBulletPayment =>
-      'Paiement sécurisé, libéré à la livraison confirmée.';
+      'Paiement sécurisé : vous savez avant de payer quand le transporteur est payé.';
 
   @override
   String get requestPublishIntroWhyBulletTracking =>
@@ -5493,6 +5624,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingPickupParcelTitle => 'Remise du colis';
 
   @override
+  String get listingReportTripShort => 'Signaler';
+
+  @override
+  String get listingBlockTravelerShort => 'Bloquer';
+
+  @override
   String get listingReportTripLink => 'Signaler ce trajet';
 
   @override
@@ -6078,6 +6215,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidCreateRefundAssurance => 'Remboursé si le colis n\'arrive pas';
+
+  @override
+  String get bidCreateDepositDisputeAssurance =>
+      'Un litige se règle avec le support Yadony.';
 
   @override
   String get bidCreateCashEscrowWarning =>
@@ -7635,6 +7776,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Demande annulée. L\'expéditeur sera remboursé.';
 
   @override
+  String get bidDetailCancelledSenderSnackbar =>
+      'Demande annulée. Vous serez remboursé.';
+
+  @override
+  String get bidDetailCancelledSenderCashSnackbar =>
+      'Demande annulée. Paiement en espèces : aucune somme à rembourser par Yadony.';
+
+  @override
+  String get bidDetailCancelledCashSnackbar =>
+      'Demande annulée. Paiement en espèces : l\'expéditeur n\'a rien à payer.';
+
+  @override
   String get bidDetailDeletedSnackbar => 'Demande supprimée.';
 
   @override
@@ -7721,8 +7874,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre paiement sera remboursé automatiquement';
 
   @override
+  String get bidDetailCancelCashSubtitle =>
+      'Paiement en espèces : rien à rembourser';
+
+  @override
   String get bidDetailCancelAfterHandoverOptionSubtitle =>
       'Remboursement intégral · vous récupérez votre colis';
+
+  @override
+  String get bidDetailCancelAfterHandoverCashOptionSubtitle =>
+      'Le voyageur vous rend le colis et l\'argent remis';
 
   @override
   String get bidDetailRemoveFromHistorySubtitle =>
@@ -7744,6 +7905,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidDetailCancelAfterHandoverBody =>
       'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.';
+
+  @override
+  String get bidDetailCancelAfterHandoverCashBody =>
+      'Le colis est déjà chez le voyageur. Paiement en espèces : Yadony ne peut rien rembourser, c\'est le voyageur qui vous rend l\'argent remis avec votre colis. Il confirme la restitution en saisissant votre code de retour.';
 
   @override
   String get bidDetailMoreDetails => 'Plus de détails';
@@ -7923,11 +8088,19 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'expéditeur sera remboursé automatiquement';
 
   @override
+  String get bidDetailCancelTransportAcceptedCashSubtitle =>
+      'Paiement en espèces : l\'expéditeur n\'a rien à payer';
+
+  @override
   String get bidDetailRefuseParcelLabel => 'Le colis ne correspond pas';
 
   @override
   String get bidDetailRefuseParcelSubtitle =>
       'Refusez-le sans pénalité, l\'expéditeur est remboursé';
+
+  @override
+  String get bidDetailRefuseParcelCashSubtitle =>
+      'Refusez-le sans pénalité, l\'expéditeur ne vous doit rien';
 
   @override
   String get parcelRefusalTitle => 'Refuser le colis';
@@ -7942,6 +8115,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String parcelRefusalDeclaredWeight(String weight) {
     return 'Poids : $weight kg';
+  }
+
+  @override
+  String parcelRefusalDeclaredVolume(String volume) {
+    return 'Volume : $volume';
   }
 
   @override
@@ -8339,11 +8517,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'La date limite de dépôt est passée : demande annulée. Tout paiement vous est remboursé intégralement.';
 
   @override
+  String get ticketHandoverDeadlineExpiredSenderCash =>
+      'La date limite de dépôt est passée : demande annulée. Paiement en espèces : rien à rembourser.';
+
+  @override
   String get ticketHandoverDeadlineExpiredTraveler =>
       'La date limite de dépôt est passée : demande annulée.';
 
   @override
   String get ticketMiniStatWeightLabel => 'POIDS';
+
+  @override
+  String get ticketMiniStatVolumeLabel => 'VOLUME';
 
   @override
   String get ticketMiniStatCategoryLabel => 'TYPE';
@@ -9067,12 +9252,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'expéditeur sera remboursé automatiquement.';
 
   @override
+  String get bidCancelAcceptedCashSubtitle =>
+      'Paiement en espèces : l\'expéditeur n\'a rien à payer.';
+
+  @override
   String get bidCancelWarningMessage =>
       'Le colis a déjà été remis. Vous devrez le restituer à l\'expéditeur sous 3 jours en saisissant le code de retour qu\'il vous communiquera.';
 
   @override
   String get bidCancelWarningRefundNote =>
       'L\'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l\'expéditeur n\'a rien à payer et les frais de service Yadony sont recrédités au voyageur.';
+
+  @override
+  String get bidCancelWarningRefundNoteCash =>
+      'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. Les frais de service Yadony vous sont recrédités.';
 
   @override
   String get bidCancelReasonRequiredHint => 'Motif de l\'annulation *';
@@ -9707,6 +9900,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paymentSummaryWeightLabel => 'Poids';
+
+  @override
+  String get paymentSummaryVolumeLabel => 'Volume';
 
   @override
   String get paymentSummaryPricePerKgLabel => 'Prix/kg';
@@ -11036,6 +11232,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get scanOfflineEventDefaultLabel => 'file';
+
+  @override
+  String get scanOfflineDescDeposit => 'Dépôt enregistré';
 
   @override
   String get scanOfflineDescPickup => 'Récupération enregistrée';
@@ -15873,6 +16072,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Seuls l\'expéditeur et le voyageur peuvent le suivre ici. Demandez le lien de suivi à l\'expéditeur.';
 
   @override
+  String suiviDepositValidatedToast(String parcel) {
+    return 'Dépôt de $parcel validé';
+  }
+
+  @override
   String suiviStepValidatedToast(String step, String parcel) {
     String _temp0 = intl.Intl.selectLogic(step, {
       'DEPART': '$parcel récupéré',
@@ -16265,6 +16469,16 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String tripPublishArrivalOutOfRange(String first, String last, int days) {
+    return 'Choisissez entre le $first et le $last : l\'arrivée est au plus $days jours après le départ.';
+  }
+
+  @override
+  String tripPublishArrivalMovedWithDeparture(String date, int days) {
+    return 'Date d\'arrivée déplacée au $date pour rester dans les $days jours après le départ.';
+  }
+
+  @override
   String get tripPublishArrivalOtherDate => 'Autre date';
 
   @override
@@ -16371,8 +16585,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous êtes remboursé intégralement et nous vous proposons d\'autres trajets.';
 
   @override
+  String get bidRescheduleWithdrawConfirmCashMessage =>
+      'Paiement en espèces : aucune somme à rembourser par Yadony. Nous vous proposons d\'autres trajets.';
+
+  @override
   String get bidRescheduleWithdrawConfirmReturnMessage =>
       'Vous êtes remboursé intégralement. Le voyageur vous rend le colis contre votre code de retour.';
+
+  @override
+  String get bidRescheduleWithdrawConfirmReturnCashMessage =>
+      'Paiement en espèces : Yadony n\'a rien à rembourser, le voyageur vous rend l\'argent remis avec le colis, contre votre code de retour.';
 
   @override
   String get bidRescheduleKeptSnackbar =>
@@ -16381,6 +16603,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidRescheduleWithdrawnSnackbar =>
       'Envoi annulé. Votre remboursement est en cours.';
+
+  @override
+  String get bidRescheduleWithdrawnCashSnackbar => 'Envoi annulé.';
 
   @override
   String get errorRescheduleLimitReachedTitle => 'Report impossible';
@@ -16550,6 +16775,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get receptionsPendingChip => 'À confirmer';
+
+  @override
+  String receptionsRowStepBoat(String status) {
+    String _temp0 = intl.Intl.selectLogic(status, {
+      'ACCEPTED': 'À déposer',
+      'HANDED_OVER': 'Déposé',
+      'IN_TRANSIT': 'En mer',
+      'ARRIVED': 'Arrivé au port',
+      'COMPLETED': 'Remis',
+      'other': 'En cours',
+    });
+    return '$_temp0';
+  }
 
   @override
   String receptionsRowStep(String status) {
@@ -17122,8 +17360,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Au moins une photo : elle protège les deux parties si le colis remis ne correspond pas à la déclaration.';
 
   @override
+  String get bidCreateAddPhotoRequiredSubtitle =>
+      'Obligatoire, rassure le voyageur';
+
+  @override
   String get bidCreateHandoverCheckNotice =>
       'À la remise, le voyageur vérifie le colis. S\'il ne correspond pas à votre déclaration, il peut le refuser : vous êtes alors remboursé.';
+
+  @override
+  String get bidCreateHandoverCheckNoticeCash =>
+      'À la remise, le voyageur vérifie le colis. S\'il ne correspond pas à votre déclaration, il peut le refuser : vous ne payez alors rien.';
 
   @override
   String get callStatusRinging => 'Ça sonne…';
@@ -18218,9 +18464,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripStopsBadgeTwoOrMore => '2 escales et +';
 
   @override
-  String get tripStopsDetailLabel => 'Escales';
-
-  @override
   String get homeComposerSectionStops => 'ESCALES';
 
   @override
@@ -18365,6 +18608,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String tripSwitchCurrencyConfirmMessage(String currency) {
     return 'Tous les prix du voyage passent en $currency.';
+  }
+
+  @override
+  String tripPublishPerM3CurrencyReset(String currency) {
+    return 'Devise changée : saisissez à nouveau le prix au m³ en $currency.';
   }
 
   @override
@@ -19321,6 +19569,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get suiviPhotoLostDismiss => 'Fermer le message sur la photo perdue';
+
+  @override
+  String get suiviDepositPhotoRetake =>
+      'La photo du dépôt n\'a pas pu être envoyée : le dépôt n\'est pas enregistré. Reprenez la photo du dépôt pour le confirmer.';
+
+  @override
+  String get suiviDepositPhotoRetakeDismiss =>
+      'Fermer le message sur la photo du dépôt';
 
   @override
   String get suiviScanClosedBeforeSync =>
@@ -20553,6 +20809,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripSeriesErrorProLimit => 'Limite de trajets du mois atteinte.';
 
   @override
+  String get tripSeriesErrorGpProPending =>
+      'Votre demande GP Pro est en cours d\'examen. Vous pouvez créer des brouillons en attendant.';
+
+  @override
   String get tripSeriesErrorStripe =>
       'Configurez vos paiements par carte pour publier ces trajets, ou créez des brouillons.';
 
@@ -21375,7 +21635,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiFormDraftWarningModeUnavailable =>
-      'Ce mode n\'est pas encore proposé : le trajet sera publié en avion.';
+      'L\'assistant ne peut pas choisir ce mode : vérifiez le mode de transport avant de publier.';
 
   @override
   String get aiFormDraftWarningBudget =>
@@ -23335,7 +23595,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripOwnerMenuTooltip => 'Options du trajet';
 
   @override
-  String get tripMenuEditSubtitle => 'Villes, dates, kilos, prix et conditions';
+  String get tripMenuEditSubtitle =>
+      'Villes, dates, capacité, prix et conditions';
 
   @override
   String get tripMenuRecurringSubtitle => 'Le même trajet à d\'autres dates';
@@ -24424,4 +24685,694 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get requestCreateWeightTooHeavySubmit =>
       'Ce colis dépasse 32 kg : modifiez son poids ou choisissez Route.';
+
+  @override
+  String get tripPublishModeBoatTitle => 'Voie maritime';
+
+  @override
+  String get tripPublishModeBoatSubtitle => 'Bateau, groupage en conteneur';
+
+  @override
+  String get tripPublishModeBoatTagDuration => 'Plusieurs semaines';
+
+  @override
+  String get tripPublishModeBoatTagCapacity => 'Volume en m³';
+
+  @override
+  String get tripPublishModeBoatLocked => 'Réservé aux transporteurs vérifiés';
+
+  @override
+  String get tripPublishModeBoatBadgeLink => 'Demander le badge GP Pro';
+
+  @override
+  String get tripPublishBoatDeparturePortLabel => 'Port de départ';
+
+  @override
+  String get tripPublishBoatArrivalPortLabel => 'Port d\'arrivée';
+
+  @override
+  String get tripPublishBoatArrivalLabel => 'Arrivée estimée';
+
+  @override
+  String get tripPublishBoatArrivalEarliestLabel => 'Au plus tôt';
+
+  @override
+  String get tripPublishBoatArrivalLatestLabel => 'Au plus tard';
+
+  @override
+  String get tripPublishBoatArrivalHelp =>
+      'Les expéditeurs voient une fourchette : les retards au port sont fréquents.';
+
+  @override
+  String get tripPublishBoatArrivalRequired =>
+      'Indiquez l\'arrivée au plus tôt et au plus tard';
+
+  @override
+  String get tripPublishBoatArrivalBeforeDeparture =>
+      'L\'arrivée estimée ne peut pas précéder le départ';
+
+  @override
+  String get tripPublishBoatArrivalLatestBeforeEarliest =>
+      'L\'arrivée au plus tard ne peut pas précéder l\'arrivée au plus tôt';
+
+  @override
+  String tripPublishBoatArrivalTooFar(int days) {
+    return 'L\'arrivée au plus tard doit tomber dans les $days jours qui suivent le départ';
+  }
+
+  @override
+  String get tripPublishBoatWarehouseLabel => 'Adresse de l\'entrepôt';
+
+  @override
+  String get tripPublishBoatWarehouseSubtitle =>
+      'Où les expéditeurs déposent leurs colis';
+
+  @override
+  String get tripPublishBoatPickupLabel => 'Adresse de retrait';
+
+  @override
+  String get tripPublishBoatPickupSubtitle =>
+      'Où les destinataires récupèrent leurs colis';
+
+  @override
+  String get tripPublishBoatUnitQuestion => 'Vous vendez la place';
+
+  @override
+  String get tripPublishBoatUnitM3 => 'Au m³';
+
+  @override
+  String get tripPublishBoatUnitKg => 'Au kilo';
+
+  @override
+  String get tripPublishBoatVolumeLabel => 'Volume disponible (m³)';
+
+  @override
+  String get tripPublishBoatVolumeHint => 'De 0,1 à 9 999 m³, une décimale';
+
+  @override
+  String get tripPublishBoatVolumeInvalid =>
+      'Indiquez un volume entre 0,1 et 9 999 m³';
+
+  @override
+  String get tripPublishBoatPricePerM3Label => 'Prix par m³';
+
+  @override
+  String get tripPublishBoatPricePrompt =>
+      'Indiquez votre prix par m³ pour voir l\'estimation';
+
+  @override
+  String tripPublishBoatPriceTooHigh(String max) {
+    return 'Le prix par m³ ne peut pas dépasser $max';
+  }
+
+  @override
+  String tripPublishBoatPriceEstimateLine(String net, String total) {
+    return 'Vous touchez $net par m³ · l\'expéditeur paie $total';
+  }
+
+  @override
+  String get tripPublishBoatDepositPayoutNotice =>
+      'Par bateau, vous êtes payé dès que l\'expéditeur dépose son colis à l\'entrepôt, sans attendre la livraison.';
+
+  @override
+  String tripPublishPerM3Value(String value) {
+    return '$value/m³';
+  }
+
+  @override
+  String get requestCreateDimensionsLabel => 'Dimensions du colis';
+
+  @override
+  String get requestCreateDimensionsOptionalLabel =>
+      'Dimensions du colis (facultatif)';
+
+  @override
+  String get requestCreateDimensionsHelpBoat =>
+      'Le transporteur facture au volume : mesurez votre colis emballé, en centimètres.';
+
+  @override
+  String get requestCreateDimensionsHelpAny =>
+      'Utile par bateau : le prix se calcule au volume.';
+
+  @override
+  String get requestCreateDimensionsAdd => 'Ajouter les dimensions';
+
+  @override
+  String get requestCreateDimensionLength => 'Longueur';
+
+  @override
+  String get requestCreateDimensionWidth => 'Largeur';
+
+  @override
+  String get requestCreateDimensionHeight => 'Hauteur';
+
+  @override
+  String get requestCreateDimensionRequired => 'Obligatoire';
+
+  @override
+  String get requestCreateDimensionInvalid => 'Entre 1 et 400 cm';
+
+  @override
+  String requestCreateVolumeLine(String volume) {
+    return 'Volume : $volume';
+  }
+
+  @override
+  String get requestCreateDimensionsRequiredSubmit =>
+      'Indiquez les dimensions du colis à l\'étape « Le colis ».';
+
+  @override
+  String requestCreateWeightAndVolume(String weight, String volume) {
+    return '$weight · $volume';
+  }
+
+  @override
+  String get requestPreviewVolumeLabel => 'Volume';
+
+  @override
+  String requestPreviewVolumeValue(
+    String volume,
+    int length,
+    int width,
+    int height,
+  ) {
+    return '$volume ($length × $width × $height cm)';
+  }
+
+  @override
+  String get requestCreatePriceBasisPerM3 => 'Prix au m³';
+
+  @override
+  String get requestCreatePriceBasisPerM3NeedsDimensions =>
+      'Indiquez d\'abord les dimensions du colis pour fixer un prix au m³.';
+
+  @override
+  String get requestCreatePerM3InputHint => 'Ex. 600,00';
+
+  @override
+  String requestCreatePriceUnitPerM3(String symbol) {
+    return '$symbol / m³';
+  }
+
+  @override
+  String requestCreatePerM3Computed(String volume, String perM3, String total) {
+    return '$volume × $perM3 / m³ = $total au total';
+  }
+
+  @override
+  String get requestCreateBoatDepositNotice =>
+      'Par bateau, comptez plusieurs semaines. Le transporteur est payé dès le dépôt de votre colis à l\'entrepôt : le paiement n\'attend pas la livraison.';
+
+  @override
+  String bidCreateVolumeRateLine(String volume, String rate) {
+    return '$volume × $rate par m³';
+  }
+
+  @override
+  String bidCreateVolumeAvailableLine(String available) {
+    return 'Volume restant sur ce trajet : $available';
+  }
+
+  @override
+  String bidCreateVolumeTooLarge(String volume, String available) {
+    return 'Ce colis fait $volume et il ne reste que $available sur ce trajet.';
+  }
+
+  @override
+  String get bidCreateVolumeDimensionsHint =>
+      'Indiquez les trois dimensions du colis pour calculer le prix.';
+
+  @override
+  String get bidCreateCardModeSubtitleDeposit =>
+      'Versé au transporteur au dépôt du colis';
+
+  @override
+  String get bidCreateCardModeBodyDeposit =>
+      'Bloqué par Yadony dès maintenant, versé au transporteur quand vous déposez le colis.';
+
+  @override
+  String get bidCreateCardModeNegotiationBodyDeposit =>
+      'Payé par carte une fois votre prix accepté, puis versé au transporteur au dépôt du colis.';
+
+  @override
+  String get bidCreateMobileMoneyModeBodyDeposit =>
+      'Après l\'accord du transporteur, vous recevez une demande de paiement sur votre téléphone. Le montant est versé au transporteur au dépôt du colis.';
+
+  @override
+  String get bidCreateOfferPaidSubtitleDeposit =>
+      'Votre paiement est sécurisé par Yadony jusqu\'au dépôt de votre colis, puis versé au transporteur. Le transporteur est notifié de votre demande.';
+
+  @override
+  String get bidCreateMobileMoneySuccessSubtitleDeposit =>
+      'Paiement mobile money : si le transporteur accepte, vous recevrez une notification et aurez 30 minutes pour valider le paiement sur votre téléphone. Le montant est gardé en sécurité par Yadony jusqu\'au dépôt du colis.';
+
+  @override
+  String get homeFilterChipsVolume => 'Volume';
+
+  @override
+  String get homeFilterChipsArrival => 'Arrivée';
+
+  @override
+  String homeFilterChipsArrivalActive(int weeks) {
+    return 'Arrivée ≤ $weeks sem.';
+  }
+
+  @override
+  String homeFilterBoatVolumeValue(String volume) {
+    return '≥ $volume';
+  }
+
+  @override
+  String homeFilterBoatPriceValue(String price) {
+    return '≤ $price';
+  }
+
+  @override
+  String get homeFilterFieldsMinVolume => 'VOLUME MIN';
+
+  @override
+  String get homeFilterFieldsMaxPricePerM3 => 'PRIX MAX AU M³';
+
+  @override
+  String get homeFilterBoatVolumeTitle => 'Volume minimum';
+
+  @override
+  String get homeFilterBoatVolumeFieldLabel => 'Volume minimum (m³)';
+
+  @override
+  String get homeFilterBoatVolumeHint =>
+      'De 0,1 à 9 999 m³. Laissez vide pour tous les trajets.';
+
+  @override
+  String get homeFilterBoatVolumeInvalid =>
+      'Indiquez un volume entre 0,1 et 9 999 m³';
+
+  @override
+  String get homeFilterBoatPriceTitle => 'Prix maximum au m³';
+
+  @override
+  String homeFilterBoatPriceFieldLabel(String symbol) {
+    return 'Prix maximum par m³ ($symbol)';
+  }
+
+  @override
+  String get homeFilterBoatPriceHint =>
+      'Dans votre devise. Laissez vide pour tous les prix.';
+
+  @override
+  String homeFilterBoatPriceInvalid(String max) {
+    return 'Indiquez un prix supérieur à zéro, $max au plus';
+  }
+
+  @override
+  String get homeFilterBoatArrivalTitle => 'Arrivée estimée';
+
+  @override
+  String homeFilterBoatArrivalOption(int weeks) {
+    return 'Sous $weeks semaines';
+  }
+
+  @override
+  String get homeFilterBoatArrivalHelp =>
+      'Toute la fourchette d\'arrivée annoncée par le transporteur tombe avant cette limite.';
+
+  @override
+  String get homeComposerSectionVolumePrice => 'VOLUME ET PRIX';
+
+  @override
+  String get homeComposerSectionArrival => 'ARRIVÉE ESTIMÉE';
+
+  @override
+  String get homeComposerVolumeHint =>
+      'Ces filtres ne montrent que les trajets facturés au m³.';
+
+  @override
+  String get homeComposerMoreFiltersHintBoat =>
+      'Type de contenu, note, paiement';
+
+  @override
+  String listingBoatArrivalRange(String from, String to) {
+    return 'Arrivée estimée du $from au $to';
+  }
+
+  @override
+  String listingBoatArrivalDate(String date) {
+    return 'Arrivée estimée le $date';
+  }
+
+  @override
+  String listingBoatVolumeRemaining(String volume) {
+    return '$volume restants';
+  }
+
+  @override
+  String get trackingBoatStepDeposit => 'Dépôt à l\'entrepôt';
+
+  @override
+  String get trackingBoatStepDeposited => 'Déposé à l\'entrepôt';
+
+  @override
+  String get trackingBoatStepDeparture => 'Départ du bateau';
+
+  @override
+  String get trackingBoatStepDeparted => 'Bateau parti';
+
+  @override
+  String get trackingBoatStepAtSea => 'En mer';
+
+  @override
+  String trackingBoatStepAtPort(String city) {
+    return 'Arrivé au port de $city';
+  }
+
+  @override
+  String trackingBoatStepAtPortElided(String city) {
+    return 'Arrivé au port d\'$city';
+  }
+
+  @override
+  String get trackingBoatStepAtPortNoCity => 'Arrivé au port';
+
+  @override
+  String get trackingBoatHeadlineAwaitingDeposit =>
+      'En attente du dépôt à l\'entrepôt';
+
+  @override
+  String trackingBoatHeadlineAtSeaTo(String city) {
+    return 'En mer vers $city';
+  }
+
+  @override
+  String trackingBoatPlannedDeparture(String date) {
+    return 'Prévu le $date';
+  }
+
+  @override
+  String trackingBoatEstimatedRange(String from, String to) {
+    return 'Estimé du $from au $to';
+  }
+
+  @override
+  String trackingBoatEstimatedDate(String date) {
+    return 'Estimé le $date';
+  }
+
+  @override
+  String trackingBoatDelayNote(String detail) {
+    return 'Retard annoncé : $detail';
+  }
+
+  @override
+  String get ticketEstimatedArrivalLabel => 'Arrivée estimée';
+
+  @override
+  String ticketArrivalRangeValue(String from, String to) {
+    return '$from au $to';
+  }
+
+  @override
+  String bidDetailSenderInTransitBoatRange(
+    String from,
+    String to,
+    String city,
+  ) {
+    return 'Arrivée estimée du $from au $to à $city.';
+  }
+
+  @override
+  String bidDetailSenderInTransitBoatDate(String date, String city) {
+    return 'Arrivée estimée le $date à $city.';
+  }
+
+  @override
+  String bidDetailDepositPaidLabel(String amount, String date) {
+    return '$amount versé au transporteur au dépôt du colis, le $date';
+  }
+
+  @override
+  String bidDetailDepositPaidNoDateLabel(String amount) {
+    return '$amount versé au transporteur au dépôt du colis';
+  }
+
+  @override
+  String bidDetailDepositPendingLabel(String amount) {
+    return '$amount payé, versé au transporteur au dépôt du colis';
+  }
+
+  @override
+  String get bidDelayTitle => 'Retard annoncé';
+
+  @override
+  String bidDelayNewRange(String from, String to) {
+    return 'Nouvelle arrivée estimée : du $from au $to.';
+  }
+
+  @override
+  String bidDelayNewDate(String date) {
+    return 'Nouvelle arrivée estimée : le $date.';
+  }
+
+  @override
+  String bidDelayReason(String reason) {
+    return 'Motif : $reason';
+  }
+
+  @override
+  String get tripDelayReasonPortCongestion => 'Congestion au port';
+
+  @override
+  String get tripDelayReasonWeather => 'Météo';
+
+  @override
+  String get tripDelayReasonExtendedStopover => 'Escale prolongée';
+
+  @override
+  String get tripDelayReasonExtendedStop => 'Arrêt prolongé';
+
+  @override
+  String get tripDelayReasonTransportDisruption => 'Perturbation du transport';
+
+  @override
+  String get listingPricePerM3Label => 'par m³';
+
+  @override
+  String get errorArrivalTimeBeforeDepartureTitle =>
+      'Heure d\'arrivée avant le départ';
+
+  @override
+  String get errorArrivalTimeBeforeDepartureMessage =>
+      'Le même jour, l\'heure d\'arrivée doit suivre l\'heure de départ.';
+
+  @override
+  String get tripDelaySheetTitle => 'Annoncer un retard';
+
+  @override
+  String tripDelaySheetSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Les $count expéditeurs de ce trajet sont prévenus en une fois.',
+      one: 'L\'expéditeur dont le colis est à bord est prévenu.',
+      zero:
+          'Les expéditeurs dont le colis est à bord sont prévenus en une fois.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripDelayReasonSection => 'Motif';
+
+  @override
+  String get tripDelayArrivalSection => 'Nouvelle arrivée estimée';
+
+  @override
+  String get tripDelayFromLabel => 'Du';
+
+  @override
+  String get tripDelayToLabel => 'Au';
+
+  @override
+  String tripDelayArrivalLimit(String date) {
+    return 'Au plus tard le $date pour ce trajet';
+  }
+
+  @override
+  String get tripDelayMessageSection => 'Message aux expéditeurs';
+
+  @override
+  String get tripDelayMessageHintBoat =>
+      'Ex. : attente à Tanger Med, départ prévu jeudi';
+
+  @override
+  String get tripDelayMessageHintPlane =>
+      'Ex. : vol retardé, nouvel horaire annoncé demain';
+
+  @override
+  String get tripDelayMessageHint => 'Ex. : contretemps, reprise prévue jeudi';
+
+  @override
+  String get tripDelayInfo =>
+      'Le report du trajet reste bloqué une fois les colis à bord ; l\'annonce de retard, elle, reste possible jusqu\'à l\'arrivée.';
+
+  @override
+  String get tripDelaySubmit => 'Prévenir les expéditeurs';
+
+  @override
+  String get tripDelaySentSnackbar =>
+      'Retard annoncé : les expéditeurs sont prévenus.';
+
+  @override
+  String get tripMenuAnnounceDelaySubtitle =>
+      'Prévenez les expéditeurs de la nouvelle arrivée estimée';
+
+  @override
+  String tripOwnerVolumeRemainingOf(String total) {
+    return 'restants sur $total';
+  }
+
+  @override
+  String get tripTilePaymentsDeposit => 'Payé au dépôt de chaque colis';
+
+  @override
+  String get tripTilePaymentsDepositNote =>
+      'Chaque colis vous est versé dès son dépôt à l\'entrepôt.';
+
+  @override
+  String get scanDepositRecordedChip => 'Dépôt enregistré';
+
+  @override
+  String get suiviDepositPhotoRequired =>
+      'Obligatoire pour valider le dépôt à l\'entrepôt';
+
+  @override
+  String get amendmentEntryButtonVolume => 'Ajouter du volume ou des articles';
+
+  @override
+  String amendmentSheetVolumeLabel(String price, String free) {
+    return 'VOLUME EN PLUS · $price/M³ · $free M³ LIBRES';
+  }
+
+  @override
+  String amendmentSheetVolumeLabelOpen(String price) {
+    return 'VOLUME EN PLUS · $price/M³';
+  }
+
+  @override
+  String get amendmentSheetVolumeLabelPlain => 'VOLUME EN PLUS';
+
+  @override
+  String amendmentSheetVolumeValue(String volume) {
+    return '+$volume m³';
+  }
+
+  @override
+  String get amendmentTravelerParcelVolume => 'Volume du colis';
+
+  @override
+  String amendmentTravelerParcelVolumeValue(String from, String to) {
+    return '$from → $to m³';
+  }
+
+  @override
+  String get amendmentTravelerAcceptedBodyVolume =>
+      'Récupérez le volume en plus à la remise. S\'il n\'est pas là, dites-le avant de scanner le QR.';
+
+  @override
+  String get amendmentNotBroughtVolume => 'Le volume en plus n\'est pas là';
+
+  @override
+  String get amendmentNotBroughtVolumeConfirmTitle =>
+      'Le volume en plus n\'est pas là ?';
+
+  @override
+  String get amendmentNotBroughtVolumeConfirmMessage =>
+      'La modification sera annulée et l\'expéditeur remboursé. Le colis reste à son volume d\'origine.';
+
+  @override
+  String amendmentSenderNotBroughtVolumeStatus(String name) {
+    return '$name a signalé que le volume en plus n\'était pas là';
+  }
+
+  @override
+  String get amendmentDeclineConfirmMessageVolume =>
+      'Le colis garde son volume d\'origine et son prix.';
+
+  @override
+  String get amendmentPaymentHeldByCardDeposit =>
+      'Payé par carte, versé au transporteur au dépôt';
+
+  @override
+  String get amendmentPaymentHeldOnlineDeposit =>
+      'Payé en ligne, versé au transporteur au dépôt';
+
+  @override
+  String get amendmentGainPaidOutDeposit =>
+      'Versé sur votre compte au dépôt du colis';
+
+  @override
+  String get errorVolumePriceTooHighTitle => 'Prix au m³ trop élevé';
+
+  @override
+  String get errorVolumePriceTooHighMessage =>
+      'Le prix au m³ dépasse le plafond autorisé. Baissez-le puis réessayez.';
+
+  @override
+  String get errorTransportModeLockedTitle => 'Mode de transport verrouillé';
+
+  @override
+  String get errorTransportModeLockedMessage =>
+      'Tant que des colis sont en cours sur ce trajet, son mode ne peut pas passer au bateau ni le quitter.';
+
+  @override
+  String get negotiationThreadPayHintDeposit =>
+      'Prix accepté. Réglez maintenant pour réserver votre place, le montant est versé au transporteur au dépôt de votre colis.';
+
+  @override
+  String get negotiationPaymentRecapSecureBannerMessageDeposit =>
+      'Sécurisé · versé au dépôt du colis';
+
+  @override
+  String get negotiationPaymentRecapSecureNoteDeposit =>
+      'Le montant est bloqué et sécurisé. Le transporteur le reçoit au dépôt de votre colis. Un litige se règle avec le support Yadony.';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyBannerMessageDeposit =>
+      'Vous validez le paiement sur votre téléphone. Yadony garde l\'argent et le verse au transporteur au dépôt de votre colis.';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyNoteDeposit =>
+      'Une demande de paiement arrive sur le numéro indiqué ci-dessous. Le transporteur reçoit le montant au dépôt de votre colis.';
+
+  @override
+  String get negotiationOfferAcceptedPaidSubtitleDeposit =>
+      'Votre argent est sécurisé par Yadony, puis versé au transporteur au dépôt de votre colis. Suivez votre colis depuis le fil.';
+
+  @override
+  String get mobileMoneyPaidToTravelerValueDeposit => 'Au dépôt du colis';
+
+  @override
+  String get requestPublicReassureSecuredDeposit =>
+      'Paiement sécurisé : versé dès le dépôt du colis';
+
+  @override
+  String get bidDepositPaidSupportSenderSubtitle =>
+      'Le transporteur a été payé au dépôt du colis : un litige se règle avec le support Yadony.';
+
+  @override
+  String get bidDepositPaidSupportTravelerSubtitle =>
+      'Vous avez été payé au dépôt du colis : un litige se règle avec le support Yadony.';
+
+  @override
+  String get tripPublishLockedBoatBlocked =>
+      'Cette demande est en bateau, un mode réservé aux transporteurs vérifiés. Demandez le badge GP Pro pour proposer votre trajet.';
+
+  @override
+  String get trackingDepositNeedsQr => 'Scannez le QR de l\'expéditeur';
+
+  @override
+  String get errorBoatDepositQrRequiredTitle => 'QR de l\'expéditeur requis';
+
+  @override
+  String get errorBoatDepositQrRequiredMessage =>
+      'Pour valider le dépôt, scannez le QR code de l\'expéditeur : un numéro saisi ne suffit pas.';
 }

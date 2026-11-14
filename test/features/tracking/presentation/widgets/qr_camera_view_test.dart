@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/camera_handoff.dart';
+import 'package:dony/features/tracking/data/models/scanned_qr.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -51,9 +52,9 @@ void main() {
     });
   });
 
-  test('bidIdFromCapture prend le premier QR Yadony de la capture', () {
+  test('scannedQrFromCapture prend le premier QR Yadony de la capture', () {
     expect(
-      bidIdFromCapture(
+      scannedQrFromCapture(
         const BarcodeCapture(
           barcodes: [
             Barcode(),
@@ -62,10 +63,10 @@ void main() {
           ],
         ),
       ),
-      _uuid,
+      const ScannedQr(_uuid),
     );
     expect(
-      bidIdFromCapture(
+      scannedQrFromCapture(
         const BarcodeCapture(barcodes: [Barcode(rawValue: 'bonjour')]),
       ),
       isNull,
@@ -261,7 +262,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: QrCameraView(onBidId: (_) {}, paused: paused, torch: torch),
+        home: QrCameraView(onScanned: (_) {}, paused: paused, torch: torch),
       ),
     );
     await tester.pump(const Duration(milliseconds: 600));
@@ -283,7 +284,7 @@ void main() {
     addTearDown(torch2.dispose);
     await tester.pumpWidget(
       MaterialApp(
-        home: QrCameraView(onBidId: (_) {}, paused: paused2, torch: torch2),
+        home: QrCameraView(onScanned: (_) {}, paused: paused2, torch: torch2),
       ),
     );
     await tester.pump(const Duration(milliseconds: 600));
@@ -297,14 +298,14 @@ void main() {
   });
 
   group('QrCameraView : lecture des codes', () {
-    Future<List<String>> pumpView(
+    Future<List<ScannedQr>> pumpView(
       WidgetTester tester, {
       ValueNotifier<bool>? paused,
     }) async {
-      final read = <String>[];
+      final read = <ScannedQr>[];
       await tester.pumpWidget(
         localizedApp(
-          QrCameraView(onBidId: read.add, paused: paused),
+          QrCameraView(onScanned: read.add, paused: paused),
           locale: AppL10n.en,
         ),
       );
@@ -331,7 +332,7 @@ void main() {
       detect(tester, const [
         Barcode(rawValue: 'https://yadony.com/tracking/$_uuid'),
       ]);
-      expect(read, [_uuid]);
+      expect(read, [const ScannedQr(_uuid)]);
       expect(noticeOpacity(tester), 0);
       await tester.pumpWidget(const SizedBox.shrink());
     });
@@ -409,7 +410,7 @@ void main() {
         final handoff = CameraHandoff(settleDelay: Duration.zero);
         await tester.pumpWidget(
           MaterialApp(
-            home: QrCameraView(onBidId: (_) {}, cameraHandoff: handoff),
+            home: QrCameraView(onScanned: (_) {}, cameraHandoff: handoff),
           ),
         );
         await tester.pump(const Duration(milliseconds: 600));
@@ -445,13 +446,13 @@ void main() {
         final second = CameraHandoff(settleDelay: Duration.zero);
         await tester.pumpWidget(
           MaterialApp(
-            home: QrCameraView(onBidId: (_) {}, cameraHandoff: first),
+            home: QrCameraView(onScanned: (_) {}, cameraHandoff: first),
           ),
         );
         await tester.pump();
         await tester.pumpWidget(
           MaterialApp(
-            home: QrCameraView(onBidId: (_) {}, cameraHandoff: second),
+            home: QrCameraView(onScanned: (_) {}, cameraHandoff: second),
           ),
         );
         await tester.pump(const Duration(milliseconds: 600));
@@ -464,6 +465,51 @@ void main() {
       });
     },
   );
+
+  group('extractScannedQr : jeton du QR de dépôt', () {
+    test('?k= lu, avec ou sans autres paramètres', () {
+      expect(
+        extractScannedQr('https://yadony.com/tracking/$_uuid/scan?k=tok_abc'),
+        const ScannedQr(_uuid, qrToken: 'tok_abc'),
+      );
+      expect(
+        extractScannedQr('https://yadony.com/tracking/$_uuid?c=qr&k=tok_abc'),
+        const ScannedQr(_uuid, qrToken: 'tok_abc'),
+      );
+    });
+
+    test('sans jeton ou jeton vide : le colis seul (avion, route)', () {
+      expect(
+        extractScannedQr('https://yadony.com/tracking/$_uuid/scan'),
+        const ScannedQr(_uuid),
+      );
+      expect(
+        extractScannedQr('https://yadony.com/tracking/$_uuid?k='),
+        const ScannedQr(_uuid),
+      );
+    });
+
+    test('un QR étranger reste ignoré, jeton ou non', () {
+      expect(extractScannedQr('https://menu.example/carte?k=abc'), isNull);
+    });
+
+    testWidgets('la caméra remonte le colis ET son jeton', (tester) async {
+      final read = <ScannedQr>[];
+      await tester.pumpWidget(
+        localizedApp(QrCameraView(onScanned: read.add), locale: AppL10n.en),
+      );
+      await tester.pump();
+      tester.widget<MobileScanner>(find.byType(MobileScanner)).onDetect!(
+        const BarcodeCapture(
+          barcodes: [
+            Barcode(rawValue: 'https://yadony.com/tracking/$_uuid/scan?k=t1'),
+          ],
+        ),
+      );
+      expect(read, [const ScannedQr(_uuid, qrToken: 't1')]);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  });
 }
 
 /// Lampe sans caméra : compte les demandes, l'état réel reste piloté

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/payout_wording.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -42,7 +43,14 @@ class RequestReassuranceNotes extends StatelessWidget {
     ).textTheme.bodySmall?.copyWith(color: cs.onSurface);
     final lines = <({String icon, String text})>[
       if (securedPayment(request))
-        (icon: 'shield-check', text: l.requestPublicReassureSecured),
+        (
+          icon: 'shield-check',
+          // Demande par bateau : le transporteur est payé au dépôt du colis.
+          // « Peu importe » (mode du trajet inconnu) garde la livraison.
+          text: paidAtDeposit(request.transportMode)
+              ? l.requestPublicReassureSecuredDeposit
+              : l.requestPublicReassureSecured,
+        ),
       if (request.negotiable)
         (icon: 'tag', text: l.requestPublicReassureNegotiable),
     ];

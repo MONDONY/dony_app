@@ -85,6 +85,13 @@ TripWallTime tripWallTime(
 const _vowels =
     'AEIOUÀÂÄÉÈÊËÎÏÔÖÙÛÜ'; // i18n-ignore : voyelles pour l'élision, pas un texte affiché
 
+/// Le nom [name] commence par une voyelle : le français élide « de » devant
+/// lui (« heure d'Abidjan », « port d'Abidjan »). Faux pour un nom vide.
+bool cityTakesElision(String name) {
+  final trimmed = name.trim();
+  return trimmed.isNotEmpty && _vowels.contains(trimmed[0].toUpperCase());
+}
+
 /// « 20:30 », ou « 20:30, heure de Paris » / « 8:30 PM, Paris time » quand
 /// le fuseau du trajet diffère de celui de l'appareil. [city] = ville de
 /// départ du trajet.
@@ -103,8 +110,7 @@ String withTripCity(
 }) {
   final name = city?.trim();
   if (!t.differsFromDevice || name == null || name.isEmpty) return time;
-  final elided = _vowels.contains(name[0].toUpperCase());
-  return elided
+  return cityTakesElision(name)
       ? l.tripTimeInCityElided(time, name)
       : l.tripTimeInCity(time, name);
 }

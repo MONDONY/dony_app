@@ -27,6 +27,7 @@ import 'package:dony/features/stripe_account/presentation/residence_country_sett
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -113,6 +114,16 @@ class PrixStep extends StatelessWidget {
   /// mobile money explique la devise au lieu de proposer d'en changer.
   final bool currencyLocked;
 
+  /// Trajet bateau au m³ : champ du prix net par m³, possédé par le parent
+  /// comme [customPriceCtrl]. Null : le prix au m³ n'est jamais proposé.
+  final TextEditingController? pricePerM3Ctrl;
+
+  /// Encadré « versé au dépôt » d'un trajet bateau : seulement pour un
+  /// voyageur qui peut publier en bateau (badge GP Pro ou compte pro), le seul
+  /// à qui le serveur applique le versement au dépôt (C15). Faux : jamais
+  /// affiché, une promesse fausse sinon.
+  final bool showBoatDepositNotice;
+
   const PrixStep({
     super.key,
     this.currency,
@@ -135,6 +146,8 @@ class PrixStep extends StatelessWidget {
     this.lockedTotalPriceEur,
     this.showPaymentMethods = true,
     this.currencyLocked = false,
+    this.pricePerM3Ctrl,
+    this.showBoatDepositNotice = false,
   });
 
   /// Repères de la devise de l'annonce : chips, médiane, fourchette.
@@ -172,9 +185,14 @@ class PrixStep extends StatelessWidget {
               : const _LockedPriceNote(),
         if (!lockPrice) ...[
           // ── MODE DE TARIFICATION ──────────────────────────────────────────────
+          // Pas de grille en bateau (422 `boat-price-required`) : l'unité de
+          // vente (m³ ou kilo) se choisit à l'étape Capacité.
           BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-            buildWhen: (p, c) => p.pricingMode != c.pricingMode,
+            buildWhen: (p, c) =>
+                p.pricingMode != c.pricingMode ||
+                p.hasBoatPricing != c.hasBoatPricing,
             builder: (context, formState) {
+              if (formState.hasBoatPricing) return const SizedBox.shrink();
               return Container(
                 decoration: BoxDecoration(
                   color: cs.surfaceContainerHighest,
@@ -212,10 +230,19 @@ class PrixStep extends StatelessWidget {
           ).animate().fadeIn(delay: 50.ms),
           const SizedBox(height: DonySpacing.md),
 
-          // ── PRIX PAR KG ───────────────────────────────────────────────────────
+          // ── PRIX PAR KG (ou par m³ en bateau au m³) ───────────────────────────
           BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-            buildWhen: (p, c) => p.pricingMode != c.pricingMode,
+            buildWhen: (p, c) =>
+                p.pricingMode != c.pricingMode ||
+                p.isPricedPerM3 != c.isPricedPerM3,
             builder: (context, formState) {
+              final m3Ctrl = pricePerM3Ctrl;
+              if (formState.isPricedPerM3 && m3Ctrl != null) {
+                return _BoatPricePerM3Section(
+                  controller: m3Ctrl,
+                  currency: currency,
+                );
+              }
               final isMixed = formState.pricingMode == PricingMode.mixed;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -477,8 +504,11 @@ class PrixStep extends StatelessWidget {
                     p.priceWarning != c.priceWarning ||
                     p.pricePerKg != c.pricePerKg ||
                     p.departureCity != c.departureCity ||
-                    p.arrivalCity != c.arrivalCity,
+                    p.arrivalCity != c.arrivalCity ||
+                    p.isPricedPerM3 != c.isPricedPerM3,
                 builder: (context, formState) {
+                  // Repères du prix au kilo : sans objet au m³.
+                  if (formState.isPricedPerM3) return const SizedBox.shrink();
                   final dep = formState.departureCity;
                   final arr = formState.arrivalCity;
                   final corridor = (dep != null && arr != null)
@@ -533,6 +563,17 @@ class PrixStep extends StatelessWidget {
                 ],
               );
             },
+          ),
+          // ── VERSEMENT AU DÉPÔT (bateau) ───────────────────────────────────
+          BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+            buildWhen: (p, c) => p.hasBoatPricing != c.hasBoatPricing,
+            builder: (context, formState) =>
+                showBoatDepositNotice && formState.hasBoatPricing
+                ? const Padding(
+                    padding: EdgeInsets.only(top: DonySpacing.md),
+                    child: _BoatDepositNotice(),
+                  )
+                : const SizedBox.shrink(),
           ),
           // ── OUVERTURE AUX PROPOSITIONS DE PRIX ────────────────────────────
           const SizedBox(height: DonySpacing.md),
@@ -1210,6 +1251,133 @@ class _LockedAgreedPriceCard extends StatelessWidget {
             ),
           ),
           DonyIcon('lock', size: 16, color: cs.onSurfaceVariant),
+        ],
+      ),
+    );
+  }
+}
+
+/// Prix net par m³ d'un trajet bateau au m³ : de 0,01 à 99 999 999,99 (règle
+/// du bloc, `isPricePerM3Valid`). L'estimation dit ce que touche le transporteur et ce que paie
+/// l'expéditeur, frais de service inclus, pour un m³.
+class _BoatPricePerM3Section extends StatelessWidget {
+  const _BoatPricePerM3Section({
+    required this.controller,
+    required this.currency,
+  });
+
+  final TextEditingController controller;
+  final SupportedCurrency? currency;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return Column(
+      key: const Key('boat-price-per-m3-section'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CaSectionLabel(
+          label: l.tripPublishBoatPricePerM3Label,
+          iconAsset: 'tag',
+        ),
+        const SizedBox(height: DonySpacing.md),
+        BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+          buildWhen: (p, c) => p.pricePerM3 != c.pricePerM3,
+          builder: (context, formState) {
+            final net = formState.pricePerM3;
+            final valid = formState.isPricePerM3Valid;
+            final tooHigh = formState.isPricePerM3TooHigh;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DonyTextField(
+                  key: const Key('trip-price-per-m3'),
+                  controller: controller,
+                  label: l.tripPublishBoatPricePerM3Label,
+                  hint: l.tripPublishCustomPriceFieldHint,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r'^\d*([.,]\d{0,2})?'),
+                    ),
+                  ],
+                  suffixIcon: Padding(
+                    padding: const EdgeInsets.only(right: DonySpacing.md),
+                    child: Text(
+                      l.tripPublishPerM3Value(currency?.symbol ?? ''),
+                      style: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.sm),
+                Text(
+                  tooHigh
+                      ? l.tripPublishBoatPriceTooHigh(
+                          CurrencyFormatter.formatOrPlain(
+                            maxPricePerM3,
+                            currency,
+                          ),
+                        )
+                      : valid
+                      ? l.tripPublishBoatPriceEstimateLine(
+                          CurrencyFormatter.formatOrPlain(net!, currency),
+                          CurrencyFormatter.formatOrPlain(
+                            senderPriceForNet(net, currency?.code).gross,
+                            currency,
+                          ),
+                        )
+                      : l.tripPublishBoatPricePrompt,
+                  key: const Key('boat-price-estimate'),
+                  style: tt.bodySmall?.copyWith(
+                    color: valid
+                        ? cs.onSurfaceVariant
+                        : cs.error.withValues(alpha: tooHigh ? 1 : 0.7),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    ).animate().fadeIn(delay: 100.ms);
+  }
+}
+
+/// Encadré du versement au dépôt d'un trajet bateau : couleur unie, pas de
+/// dégradé.
+class _BoatDepositNotice extends StatelessWidget {
+  const _BoatDepositNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('boat-deposit-notice'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DonyIcon('info', size: 18, color: cs.primary),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Text(
+              context.l10n.tripPublishBoatDepositPayoutNotice,
+              style: tt.bodySmall?.copyWith(color: cs.onSurface),
+            ),
+          ),
         ],
       ),
     );

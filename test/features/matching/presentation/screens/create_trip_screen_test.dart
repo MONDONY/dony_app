@@ -100,6 +100,7 @@ import '../../../../helpers/ai_form_draft_test_doubles.dart';
 import '../../../../helpers/currency_test_doubles.dart';
 import '../../../../helpers/form_draft_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/label_fit_expectations.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/mock_recent_city_store.dart';
 import '../../../video_modal/moment_test_support.dart';
@@ -417,6 +418,7 @@ AnnouncementModel _makeFullAnnouncement({
   ItemSize? maxItemSize,
   double? maxParcelWeightKg,
   DateTime? arrivalDate,
+  DateTime? arrivalDateMax,
   String? arrivalTime = '10:30',
 }) => AnnouncementModel(
   id: 'ann-full-1',
@@ -428,6 +430,7 @@ AnnouncementModel _makeFullAnnouncement({
   departureTime: '22:00',
   arrivalTime: arrivalTime,
   arrivalDate: arrivalDate,
+  arrivalDateMax: arrivalDateMax,
   availableKg: availableKg,
   totalKg: 23.0,
   pricePerKg: pricePerKg,
@@ -5868,19 +5871,18 @@ void main() {
       expect(sentCreate().transportMode, TransportMode.plane);
     });
 
-    testWidgets('bateau allumé : pas de carte bateau en création', (
-      tester,
-    ) async {
+    testWidgets('bateau seul allumé : étape Mode, cartes Avion et Bateau (lot '
+        '3)', (tester) async {
       setTransportModes(
         const TransportModesAvailability(road: false, boat: true),
       );
       await pumpScreen(tester, null);
-      // Bateau seul allumé : la création reste « avion seul » (C1).
-      expect(header(tester).steps.first, TripFormStep.trajet);
-      expect(find.byType(ModeStep, skipOffstage: false), findsNothing);
+      expect(header(tester).steps.first, TripFormStep.mode);
+      expect(find.byKey(const Key('mode-card-plane')), findsOneWidget);
+      expect(find.byKey(const Key('mode-card-boat')), findsOneWidget);
     });
 
-    testWidgets('bateau et route allumés : cartes Avion et Route seulement', (
+    testWidgets('bateau et route allumés : cartes Avion, Route et Bateau', (
       tester,
     ) async {
       setTransportModes(
@@ -5890,14 +5892,19 @@ void main() {
 
       expect(find.byKey(const Key('mode-card-plane')), findsOneWidget);
       expect(find.byKey(const Key('mode-card-car')), findsOneWidget);
-      expect(find.byKey(const Key('mode-card-boat')), findsNothing);
+      expect(find.byKey(const Key('mode-card-boat')), findsOneWidget);
     });
 
     testWidgets("modification d'un trajet BOAT : mode gardé et renvoyé BOAT", (
       tester,
     ) async {
       roadOn();
-      final boatTrip = _makeFullAnnouncement(transportMode: TransportMode.boat);
+      final boatTrip = _makeFullAnnouncement(
+        transportMode: TransportMode.boat,
+        arrivalTime: null,
+        arrivalDate: DateTime(2026, 8, 20),
+        arrivalDateMax: DateTime(2026, 8, 30),
+      );
       await pumpScreen(tester, CreateTripArgs(announcement: boatTrip));
 
       expect(header(tester).steps.first, TripFormStep.trajet);
@@ -5905,10 +5912,16 @@ void main() {
       final row = tester.widget<TransportModeRow>(
         find.byType(TransportModeRow),
       );
+      // Recette 13/11 : un trajet bateau sans colis peut changer de mode,
+      // comme un trajet avion ; seul le back refuse quand un colis, une
+      // offre ou un fil vivant existe (409 `transport-mode-locked`).
       expect(row.readOnly, isFalse);
       expect(row.notifier.value, TransportMode.boat);
-      // Le mode réel est affiché, même s'il n'est pas proposable.
+      // Le mode réel est affiché, même s'il n'est pas proposable, à côté des
+      // autres modes.
       expect(find.byKey(const Key('mode-chip-boat')), findsOneWidget);
+      expect(find.byKey(const Key('mode-chip-plane')), findsOneWidget);
+      expect(find.byKey(const Key('mode-chip-car')), findsOneWidget);
 
       await _goToStep(tester, TripFormStep.conditions);
       await tester.tap(find.byKey(const Key('create-announcement-submit')));
@@ -5918,6 +5931,29 @@ void main() {
         () => announcementBloc.add(captureAny()),
       ).captured.whereType<AnnouncementUpdateRequested>().single;
       expect(sent.transportMode, TransportMode.boat);
+    });
+
+    testWidgets("modification d'un trajet BOAT sans colis : passer en Route "
+        'est possible', (tester) async {
+      roadOn();
+      final boatTrip = _makeFullAnnouncement(
+        transportMode: TransportMode.boat,
+        arrivalTime: null,
+        arrivalDate: DateTime(2026, 8, 20),
+        arrivalDateMax: DateTime(2026, 8, 30),
+      );
+      await pumpScreen(tester, CreateTripArgs(announcement: boatTrip));
+
+      final chip = find.byKey(const Key('mode-chip-car'));
+      await tester.ensureVisible(chip);
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+
+      final row = tester.widget<TransportModeRow>(
+        find.byType(TransportModeRow),
+      );
+      expect(row.notifier.value, TransportMode.car);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets("avion seul, modification d'un trajet avion : pas de ligne du "
@@ -5996,9 +6032,10 @@ void main() {
       expect(row.readOnly, isTrue);
       expect(row.notifier.value, TransportMode.plane);
 
-      // Toucher une autre puce ne change rien : le mode vient de la demande.
-      await tester.tap(find.byKey(const Key('mode-chip-car')));
-      await tester.pump();
+      // Seule la puce du mode de la demande est montrée : aucune autre à
+      // toucher, le mode ne change pas.
+      expect(find.byKey(const Key('mode-chip-plane')), findsOneWidget);
+      expect(find.byKey(const Key('mode-chip-car')), findsNothing);
       expect(row.notifier.value, TransportMode.plane);
     });
 
@@ -6129,9 +6166,11 @@ void main() {
     testWidgets('trajet dédié sur demande à mode connu : transportMode non '
         'envoyé (le back prend celui de la demande)', (tester) async {
       roadOn();
+      // Route (et non bateau) : un trajet dédié bateau exige en plus la
+      // fourchette d'arrivée, couverte dans create_trip_boat_test.
       final nego = await openDedicated(
         tester,
-        lockedContext(TransportMode.boat),
+        lockedContext(TransportMode.car),
       );
 
       final event = verify(
@@ -6400,20 +6439,26 @@ void main() {
 
         /// Libellé sur une ligne, à sa taille : ni retour à la ligne, ni
         /// police rétrécie par le `FittedBox` du bouton.
-        void expectOneLine(Finder text) {
+        void expectOneLine(Finder text, {Finder? button}) {
           expect(text, findsOneWidget);
           final style = DefaultTextStyle.of(
             tester.element(text),
           ).style.merge(tester.widget<Text>(text).style);
-          final laidOut = tester.getSize(text);
-          expect(laidOut.height, lessThan((style.fontSize ?? 14) * 2));
-          expect(tester.getRect(text).width, closeTo(laidOut.width, 0.5));
+          expect(
+            tester.getSize(text).height,
+            lessThan((style.fontSize ?? 14) * 2),
+          );
+          if (button != null) {
+            expectButtonLabelNominal(tester, button);
+          } else {
+            expectPlainLabelFits(tester, text);
+          }
         }
 
-        Finder buttonLabel(String label) => find.descendant(
-          of: find.widgetWithText(DonyButton, label),
-          matching: find.text(label),
-        );
+        Finder buttonOf(String label) => find.widgetWithText(DonyButton, label);
+
+        Finder buttonLabel(String label) =>
+            find.descendant(of: buttonOf(label), matching: find.text(label));
 
         expect(header(tester).current, TripFormStep.trajet);
         expect(tester.takeException(), isNull);
@@ -6424,8 +6469,8 @@ void main() {
           tester.getSize(find.widgetWithText(DonyButton, cont)).height,
           backHeight,
         );
-        expectOneLine(buttonLabel(back));
-        expectOneLine(buttonLabel(cont));
+        expectOneLine(buttonLabel(back), button: buttonOf(back));
+        expectOneLine(buttonLabel(cont), button: buttonOf(cont));
 
         await _goToStep(tester, TripFormStep.conditions);
         expect(tester.takeException(), isNull);
@@ -6439,7 +6484,8 @@ void main() {
             matching: find.text(skip),
           ),
         );
-        expectOneLine(buttonLabel(english ? 'Preview' : 'Aperçu'));
+        final preview = english ? 'Preview' : 'Aperçu';
+        expectOneLine(buttonLabel(preview), button: buttonOf(preview));
         await tester.pump(const Duration(seconds: 5));
       });
     }
@@ -6478,10 +6524,13 @@ void main() {
               matching: find.text(label),
             );
             expect(text, findsOneWidget);
-            final laidOut = tester.getSize(text);
             // Ni rétréci par le FittedBox, ni sur deux lignes.
-            expect(tester.getRect(text).width, closeTo(laidOut.width, 0.5));
-            expect(laidOut.height, lessThan(30));
+            expectButtonLabelNominal(
+              tester,
+              find.widgetWithText(DonyButton, label),
+              reason: label,
+            );
+            expect(tester.getSize(text).height, lessThan(30));
           }
         });
       }
@@ -7058,6 +7107,76 @@ void main() {
       expect(picker.lastDate, DateTime(dep.year, dep.month, dep.day + 14));
     });
 
+    // Recette 13/11 : avancer le départ ramenait l'arrivée « Autre date » en
+    // silence (4 déc. devenu 29 nov.).
+    Future<void> changeDeparture(WidgetTester tester, DateTime day) async {
+      final field = find.byKey(const Key('departureDateField'));
+      await tester.ensureVisible(field);
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.pumpAndSettle();
+      // Format de saisie du sélecteur (celui de ses localisations Material).
+      final material = MaterialLocalizations.of(
+        tester.element(find.byType(DatePickerDialog)),
+      );
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(DatePickerDialog),
+          matching: find.byType(TextField),
+        ),
+        material.formatCompactDate(day),
+      );
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('route, Autre date : départ décalé, la date d\'arrivée reste '
+        'la même si elle tient dans les 14 jours', (tester) async {
+      roadOn();
+      final dep = draftDeparture();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: fullDraft(
+            stepId: TripFormStep.trajet,
+            transportMode: 'CAR',
+            arrivalDayOffset: 14,
+          ),
+        ),
+      );
+      await changeDeparture(tester, DateTime(dep.year, dep.month, dep.day + 5));
+      expect(arrivalOffsetOf(tester), 9);
+      expect(find.textContaining('Date d\'arrivée déplacée'), findsNothing);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('route, Autre date : arrivée hors fenêtre après le changement '
+        'de départ, elle suit le départ et un message le dit', (tester) async {
+      roadOn();
+      final dep = draftDeparture();
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: fullDraft(
+            stepId: TripFormStep.trajet,
+            transportMode: 'CAR',
+            arrivalDayOffset: 14,
+          ),
+        ),
+      );
+      await changeDeparture(
+        tester,
+        DateTime(dep.year, dep.month, dep.day + 20),
+      );
+      expect(arrivalOffsetOf(tester), 14);
+      expect(
+        find.textContaining('pour rester dans les 14 jours après le départ'),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(seconds: 5));
+    });
+
     for (final english in [false, true]) {
       final lang = english ? 'en' : 'fr';
       testWidgets('360 dp $lang : étape Trajet route, quatre puces d\'arrivée '
@@ -7171,10 +7290,13 @@ void main() {
             of: find.widgetWithText(DonyButton, label),
             matching: find.text(label),
           );
-          final laidOut = tester.getSize(text);
           // Ni rétréci par le FittedBox, ni sur deux lignes.
-          expect(tester.getRect(text).width, closeTo(laidOut.width, 0.5));
-          expect(laidOut.height, lessThan(30));
+          expectButtonLabelNominal(
+            tester,
+            find.widgetWithText(DonyButton, label),
+            reason: label,
+          );
+          expect(tester.getSize(text).height, lessThan(30));
         }
       });
     }

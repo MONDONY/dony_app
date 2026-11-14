@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_delay_info.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
@@ -25,6 +26,7 @@ class _MockAnalytics extends Mock implements AnalyticsService {}
 BidModel _bid(
   String id,
   String status, {
+  PayoutTrigger payoutTrigger = PayoutTrigger.delivery,
   String announcementId = 'trip-a',
   String? from,
   String? to,
@@ -37,6 +39,7 @@ BidModel _bid(
   senderId: 's',
   status: status,
   trackingNumber: number,
+  payoutTrigger: payoutTrigger,
   departureCity: from,
   arrivalCity: to,
   arrivalInstructions: instructions,
@@ -628,6 +631,84 @@ void main() {
       expect(effect.transportMode, TransportMode.other);
     });
 
+    test('unknownQr_usesBackMode : trackNumber prend le mode servi par le '
+        'back', () async {
+      when(() => trackingRepo.searchByTrackingNumber('DON-MER')).thenAnswer(
+        (_) async => const TrackingSearchModel(
+          trackingNumber: 'DON-MER',
+          bidId: 'bid-m',
+          departureCity: 'Le Havre',
+          arrivalCity: 'Abidjan',
+          currentStep: 'HANDED_OVER',
+          stepLabel: "Dépôt à l'entrepôt",
+          paymentStatus: 'ESCROWED',
+          transportMode: TransportMode.boat,
+        ),
+      );
+      final c = build()..start(canValidate: false);
+      await c.trackNumber('DON-MER');
+      final effect = c.state.effect! as SuiviShowTimeline;
+      expect(effect.transportMode, TransportMode.boat);
+      // Colis d'un tiers : aucun jalon du trajet connu.
+      expect(effect.milestones, isNull);
+    });
+
+    test('unknownQr_withoutMode_neutral : followParcel et QR inconnu en '
+        'Suivre, icône neutre (jamais l\'avion)', () {
+      final c = build()
+        ..start(canValidate: true, requested: SuiviMode.valider)
+        ..onQrScanned('nowhere', _hub())
+        ..followParcel('nowhere');
+      final followed = c.state.effect! as SuiviShowTimeline;
+      expect(followed.transportMode, TransportMode.other);
+      expect(followed.milestones, isNull);
+
+      c
+        ..releaseScan()
+        ..onQrScanned('ailleurs', _hub());
+      final scanned = c.state.effect! as SuiviShowTimeline;
+      expect(scanned.transportMode, TransportMode.other);
+    });
+
+    test('colis connu : son mode, même absent (ancienne donnée), et ses '
+        'jalons du trajet', () async {
+      final c = build()..start(canValidate: false);
+      await Future<void>.delayed(Duration.zero);
+      final boat = BidModel(
+        id: 'ship-boat',
+        announcementId: 'trip-boat',
+        senderId: 's',
+        status: 'IN_TRANSIT',
+        departureCity: 'Le Havre',
+        arrivalCity: 'Abidjan',
+        transportMode: TransportMode.boat,
+        departureDate: DateTime(2026, 12, 2),
+        arrivalDate: DateTime(2027, 1, 11),
+        arrivalDateMax: DateTime(2027, 1, 18),
+        latestTripDelay: TripDelayInfo(
+          reason: 'PORT_CONGESTION',
+          arrivalDate: DateTime(2027, 1, 16),
+          arrivalDateMax: DateTime(2027, 1, 23),
+          announcedAt: DateTime(2026, 12, 20),
+        ),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      );
+      c.trackShipment(boat);
+      final effect = c.state.effect! as SuiviShowTimeline;
+      expect(effect.transportMode, TransportMode.boat);
+      expect(effect.milestones?.arrivalDateMax, DateTime(2027, 1, 18));
+      expect(effect.milestones?.latestDelay?.reason, 'PORT_CONGESTION');
+      expect(effect.milestones?.departureDate, DateTime(2026, 12, 2));
+
+      c
+        ..releaseScan()
+        ..trackShipment(c.state.shipments.single);
+      // Colis connu sans mode (ancienne donnée) : `null`, lu comme un avion
+      // par la frise, jamais remplacé par l'icône d'un tiers.
+      expect((c.state.effect! as SuiviShowTimeline).transportMode, isNull);
+    });
+
     test('trackNumber trouve le colis et ouvre son parcours', () async {
       when(() => trackingRepo.searchByTrackingNumber('DON-ABC123')).thenAnswer(
         (_) async => const TrackingSearchModel(
@@ -1155,6 +1236,85 @@ void main() {
     test('segment absent : rien ne change', () {
       final c = build()..applyRequestedSegment(null);
       expect(c.state.trackSegment, isNull);
+    });
+  });
+
+  group('dépôt d\'un colis payé au dépôt (bateau)', () {
+    ScanHubLoaded depositHub() => _hub(
+      bidsByTrip: {
+        'trip-a': [
+          _bid(
+            'dep',
+            'ACCEPTED',
+            payoutTrigger: PayoutTrigger.deposit,
+            number: 'DON-DEP001',
+          ),
+          _bid('plain', 'ACCEPTED', number: 'DON-PLN001'),
+        ],
+      },
+    );
+    SuiviCubit validating() =>
+        build()..start(canValidate: true, requested: SuiviMode.valider);
+
+    test('QR avec jeton : le jeton suit l\'étape DEPART, photo exigée', () {
+      final c = validating()
+        ..onQrScanned('dep', depositHub(), qrToken: 'tok_abc');
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.step, 'DEPART');
+      expect(effect.qrToken, 'tok_abc');
+      expect(effect.isDeposit, isTrue);
+      expect(effect.photoRequired, isTrue);
+    });
+
+    test('QR sans jeton sur un colis payé au dépôt : validé, le serveur '
+        'tranchera (422 boat-deposit-qr-required)', () {
+      final c = validating()..onQrScanned('dep', depositHub());
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.qrToken, isNull);
+      expect(effect.isDeposit, isTrue);
+    });
+
+    test('colis livré (avion) : aucun jeton, pas de dépôt', () {
+      final c = validating()..onQrScanned('plain', depositHub());
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.qrToken, isNull);
+      expect(effect.isDeposit, isFalse);
+    });
+
+    test('QR avec jeton sur un colis livré (avion, route) : parcours normal, '
+        'ni dépôt ni photo imposée, le jeton est seulement relayé', () {
+      final c = validating()
+        ..onQrScanned('plain', depositHub(), qrToken: 'tok_abc');
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.step, 'DEPART');
+      expect(effect.isDeposit, isFalse);
+      expect(effect.qrToken, 'tok_abc');
+    });
+
+    test('numéro saisi : « Scannez le QR de l\'expéditeur »', () async {
+      final c = validating();
+      await c.validateNumber('DON-DEP001', depositHub());
+      expect(c.state.effect, isA<SuiviDepositNeedsQr>());
+      expect((c.state.effect! as SuiviDepositNeedsQr).bid.id, 'dep');
+    });
+
+    test('numéro saisi sur un colis livré : inchangé', () async {
+      final c = validating();
+      await c.validateNumber('DON-PLN001', depositHub());
+      expect(c.state.effect, isA<SuiviValidateStep>());
+    });
+
+    test('bouton d\'une ligne colis : DEPART refusé sans QR, ARRIVEE ok', () {
+      final bid = _bid('dep', 'ACCEPTED', payoutTrigger: PayoutTrigger.deposit);
+      final c = validating()..validateParcel(bid, 'DEPART');
+      expect(c.state.effect, isA<SuiviDepositNeedsQr>());
+
+      final other = validating()
+        ..validateParcel(
+          _bid('dep2', 'HANDED_OVER', payoutTrigger: PayoutTrigger.deposit),
+          'ARRIVEE',
+        );
+      expect(other.state.effect, isA<SuiviValidateStep>());
     });
   });
 }

@@ -408,6 +408,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
                                 filtered,
                                 i,
                                 TripCard(
+                                  viewer: TripCardViewer.owner,
                                   key: ValueKey(item.id),
                                   announcement: item,
                                   index: i,

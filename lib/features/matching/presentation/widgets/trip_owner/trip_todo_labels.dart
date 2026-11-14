@@ -3,6 +3,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
+import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 
@@ -17,7 +18,8 @@ import 'package:intl/intl.dart';
 const kTripTodoRelativeDueWindow = Duration(hours: 6);
 
 /// Icône de l'action [kind] (`assets/icons/<nom>.svg`) d'un trajet du [mode] :
-/// « Je pars » prend l'icône du mode, « Arrivé » le drapeau.
+/// « Je pars » prend l'icône du mode, « Arrivé » le drapeau, sauf en bateau
+/// (« Arrivé au port ») : l'icône du bateau.
 String tripTodoIcon(TripTodoKind kind, TransportMode mode) => switch (kind) {
   TripTodoKind.requests => 'inbox',
   TripTodoKind.presence => 'circle-check',
@@ -28,7 +30,8 @@ String tripTodoIcon(TripTodoKind kind, TransportMode mode) => switch (kind) {
   TripTodoKind.deliveryNoShowContest => 'triangle-alert',
   TripTodoKind.returnParcel => 'refresh-cw',
   TripTodoKind.depart => mode.iconAsset,
-  TripTodoKind.arrive => 'flag',
+  TripTodoKind.arrive =>
+    mode == TransportMode.boat ? TransportMode.boat.iconAsset : 'flag',
   TripTodoKind.pickupCodeRenewal => 'key-round',
   TripTodoKind.deliver => 'package',
   TripTodoKind.notify => 'message-circle',
@@ -44,16 +47,29 @@ String tripTodoIcon(TripTodoKind kind, TransportMode mode) => switch (kind) {
 int _countOf(TripTodoItem item) =>
     item.kind == TripTodoKind.notify ? item.bidIds.length : item.count;
 
+/// Trajet bateau : le départ est « Bateau parti », l'arrivée « Arrivé au
+/// port de {ville} » (titre) et « Arrivé au port » (bouton) ; les autres modes
+/// gardent « Je pars » et « Arrivé à destination ».
+bool _isBoat(AnnouncementModel? trip) =>
+    trip?.transportMode == TransportMode.boat;
+
 /// Titre de l'action [item] (carte, ligne de la file, titre de son sheet).
 /// [cardReady] : compte de paiement par carte prêt, qui change le geste de
-/// [TripTodoKind.addCard].
+/// [TripTodoKind.addCard]. [trip] : trajet de l'écran, dont le mode change
+/// les libellés du départ et de l'arrivée ([_isBoat]).
 String tripTodoTitle(
   AppLocalizations l,
   TripTodoItem item, {
   required bool cardReady,
+  AnnouncementModel? trip,
 }) {
   final n = _countOf(item);
   return switch (item.kind) {
+    TripTodoKind.depart when _isBoat(trip) => l.trackingBoatStepDeparted,
+    TripTodoKind.arrive when _isBoat(trip) => boatPortArrivalLabel(
+      l,
+      trip?.arrivalCity,
+    ),
     TripTodoKind.requests => l.tripTodoRequestsTitle,
     TripTodoKind.presence => l.tripTodoPresenceTitle,
     TripTodoKind.scan => l.tripTodoScanTitle(n),
@@ -110,13 +126,17 @@ String tripTodoSubtitle(
 
 /// Libellé du bouton de l'action [item] : bouton de la grosse carte, et
 /// bouton principal du pied collant quand [item] est en tête de la file.
+/// [trip] : comme [tripTodoTitle].
 String tripTodoButton(
   AppLocalizations l,
   TripTodoItem item, {
   required bool cardReady,
+  AnnouncementModel? trip,
 }) {
   final n = _countOf(item);
   return switch (item.kind) {
+    TripTodoKind.depart when _isBoat(trip) => l.trackingBoatStepDeparted,
+    TripTodoKind.arrive when _isBoat(trip) => l.trackingBoatStepAtPortNoCity,
     TripTodoKind.requests => l.listingSeeRequestsButton(n),
     TripTodoKind.presence => l.bidDetailConfirmPresence,
     TripTodoKind.scan => l.bidDetailScanParcelQr,

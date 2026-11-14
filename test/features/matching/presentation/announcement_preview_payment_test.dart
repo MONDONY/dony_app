@@ -1,5 +1,7 @@
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -89,6 +91,40 @@ void main() {
     await pump(tester, methods: const ['CASH', 'MOBILE_MONEY']);
     expect(find.text('Cash + Mobile money'), findsOneWidget);
   });
+
+  // Recette 13/11 (route) : « Capacité : Personnalisé » au lieu des kilos.
+  for (final english in [false, true]) {
+    testWidgets(
+      'capacité personnalisée : les kilos saisis, jamais « Personnalisé »'
+      '${english ? ' (anglais)' : ''}',
+      (tester) async {
+        if (english) useEnglish();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: AnnouncementPreviewSheet(
+                  formState: const AnnouncementFormState(
+                    transportMode: TransportMode.car,
+                    pricePerKg: 7,
+                    availableKg: 1500,
+                    capacityUnit: CapacityUnit.custom,
+                  ),
+                  onConfirm: () {},
+                  paymentMethods: const ['CASH'],
+                ),
+              ),
+            ),
+          ),
+        );
+        final l = english
+            ? lookupAppLocalizations(AppL10n.en)
+            : lookupAppLocalizations(AppL10n.fr);
+        expect(find.text(formatWeightKg(l, 1500)), findsOneWidget);
+        expect(find.text(l.tripCapacityCustom), findsNothing);
+      },
+    );
+  }
 
   testWidgets('FLUTTER-GK : devise du voyage rappelée dans l\'aperçu', (
     tester,

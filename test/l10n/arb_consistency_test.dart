@@ -110,12 +110,22 @@ const _sameInBothLanguages = <String>{
   'profileTravelerStatusGpPro', // « GP Pro » : nom du statut, même mot
   'profileTravelerStatusGpProNamed', // « GP Pro · {name} » : nom du statut et raison sociale
   'amendmentSheetKgValue', // « +{kg} kg » : signe, nombre et unité
+  'amendmentSheetVolumeValue', // « +{volume} m³ » : signe, nombre et unité
+  'amendmentTravelerParcelVolumeValue', // « {from} → {to} m³ » : même texte
   'amendmentRailMobileMoney', // nom de service
   'amendmentLineMethodMobileMoney', // nom de service
   'amendmentTravelerParcelWeightValue', // « {from} → {to} kg » : même texte
   'requestPosterDateFlexibleValue', // « Flexible » se dit pareil
   'tripPosterTimeRange', // « {departure} → {arrival} » : heures déjà localisées
   'tripPosterPricePerKgShort', // « {price}/kg » : montant et unité
+  'homeFilterChipsVolume', // « Volume » : même mot en français et en anglais
+  'homeFilterBoatVolumeValue', // « ≥ {volume} » : signe et volume déjà formaté
+  'homeFilterBoatPriceValue', // « ≤ {price} » : signe et prix déjà formaté
+  'tripPublishPerM3Value', // « {value}/m³ » : montant et unité
+  'requestCreateWeightAndVolume', // « {weight} · {volume} » : valeurs déjà localisées
+  'requestPreviewVolumeLabel', // « Volume » : même mot en français et en anglais
+  'requestPreviewVolumeValue', // « {volume} (L × l × h cm) » : valeurs et unité
+  'requestCreatePriceUnitPerM3', // « {symbol} / m³ » : symbole et unité
   'assistantCharCount', // « {count}/500 » : chiffres seuls
   'moneyChannelMobileMoney', // nom de service, FLUTTER-P3
   'flightsRouteTitle', // « {origin} → {destination} » : le trajet, sans mot
@@ -205,6 +215,8 @@ const _sameInBothLanguages = <String>{
   'bidDetailCashBadge', // « CASH » se dit pareil (tâche D2)
   'bidDetailDescriptionLabel', // « Description » se dit pareil (tâche D2, correction R40)
   'ticketMiniStatCategoryLabel', // « TYPE » se dit pareil (tâche D3)
+  'ticketMiniStatVolumeLabel', // « VOLUME » : même mot en français et en anglais
+  'paymentSummaryVolumeLabel', // « Volume » : même mot en français et en anglais
   'shipmentDestinationFallback', // « destination » se dit pareil (tâche D3, clé dédiée : duplique bidDetailFallbackDestination d'un autre préfixe, R40)
   'tripOwnerArrivalFieldLabel', // « Instructions » se dit pareil (tâche D4)
   'activityRevenueMobileMoney', // « Mobile money » se dit pareil (tâche D5)

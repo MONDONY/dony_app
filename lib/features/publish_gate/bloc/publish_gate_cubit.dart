@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -7,6 +8,7 @@ import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -79,8 +81,21 @@ class PublishGateCubit extends Cubit<PublishGateState> {
 
   /// [kycVerified] faux : l'écran reste affiché, il porte le chemin vers la
   /// vérification d'identité, préalable à toute publication.
-  Future<void> start({required bool kycVerified}) async {
+  ///
+  /// [recheckKyc] : appelé seulement quand l'identité semble non vérifiée
+  /// d'après le profil en cache, avant d'afficher ce blocage. Il relit le profil
+  /// auprès du serveur : `true` (VERIFIED) laisse passer, sinon le blocage
+  /// reste. L'identité peut être validée hors de l'app sans qu'aucune push
+  /// n'ait rafraîchi le cache.
+  Future<void> start({
+    required bool kycVerified,
+    Future<bool> Function()? recheckKyc,
+  }) async {
     emit(const PublishGateState());
+    if (!kycVerified && recheckKyc != null) {
+      kycVerified = await recheckKyc();
+      if (isClosed) return;
+    }
     PublishCommitments? fetched;
     try {
       fetched = await _commitments.fetch();
@@ -219,11 +234,24 @@ class PublishGateCubit extends Cubit<PublishGateState> {
     switch (role) {
       case PublishCommitmentRole.traveler:
         final d = TripFormDraft.fromJson(stored.data);
+        // Étapes du formulaire de création tel qu'il s'ouvrira : Mode en
+        // tête dès qu'il y a un choix de mode (cinq étapes, sinon quatre).
+        final steps = tripFormSteps(
+          showModeStep: showModeStepFor(
+            isEdit: false,
+            isLocked: false,
+            lockedModeKnown: false,
+            modes: transportModes,
+          ),
+        );
+        final index = steps.indexOf(d.stepId);
         return LocalPublishDraft(
           draft: stored,
           departureCity: d.departureCity,
           arrivalCity: d.arrivalCity,
           date: d.departureDate,
+          stepNumber: (index < 0 ? 0 : index) + 1,
+          stepCount: steps.length,
         );
       case PublishCommitmentRole.sender:
         final d = PackageRequestFormDraft.decode(stored.data);

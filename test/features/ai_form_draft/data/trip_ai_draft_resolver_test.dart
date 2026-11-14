@@ -109,20 +109,20 @@ void main() {
     });
 
     test(
-      'BOAT : pas proposé à la publication, PLANE avec avertissement',
+      'BOAT : jamais proposé par l\'IA (même allumé), mode retiré avec avertissement',
       () async {
         tripModes = const TransportModesAvailability(road: true, boat: true);
         final resolved = await resolver().resolve(const {
           'transportMode': 'BOAT',
         });
-        expect(resolved.draft['transportMode'], 'PLANE');
+        expect(resolved.draft.containsKey('transportMode'), isFalse);
         expect(resolved.warnings, [AiDraftWarning.modeUnavailable]);
       },
     );
 
-    test('CAR avec avion seul : PLANE avec avertissement', () async {
+    test('CAR avec avion seul : mode retiré avec avertissement', () async {
       final resolved = await resolver().resolve(const {'transportMode': 'CAR'});
-      expect(resolved.draft['transportMode'], 'PLANE');
+      expect(resolved.draft.containsKey('transportMode'), isFalse);
       expect(resolved.warnings, [AiDraftWarning.modeUnavailable]);
     });
 
@@ -134,11 +134,15 @@ void main() {
       expect(resolved.warnings, isEmpty);
     });
 
-    test('mode inconnu ou train : PLANE avec avertissement', () async {
+    test('mode inconnu ou train : mode retiré avec avertissement', () async {
       tripModes = const TransportModesAvailability(road: true, boat: true);
       for (final wire in ['TRAIN', 'HOVERCRAFT']) {
         final resolved = await resolver().resolve({'transportMode': wire});
-        expect(resolved.draft['transportMode'], 'PLANE', reason: wire);
+        expect(
+          resolved.draft.containsKey('transportMode'),
+          isFalse,
+          reason: wire,
+        );
         expect(resolved.warnings, [AiDraftWarning.modeUnavailable]);
       }
     });

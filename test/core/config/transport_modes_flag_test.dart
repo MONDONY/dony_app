@@ -22,36 +22,55 @@ void main() {
     expect(a.hasRequestChoice, isFalse);
   });
 
-  test(
-    'route allumée : avion + route à la création, bateau jamais au lot 1',
-    () {
-      expect(kBoatTripCreationReady, isFalse);
-      const a = TransportModesAvailability(road: true, boat: true);
-      expect(a.tripCreationModes, [TransportMode.plane, TransportMode.car]);
-      expect(a.requestModes, [
-        TransportMode.plane,
-        TransportMode.boat,
-        TransportMode.car,
-      ]);
-      expect(a.searchModes, a.requestModes);
-      expect(a.hasTripChoice, isTrue);
-      expect(a.hasRequestChoice, isTrue);
-    },
-  );
+  test('route et bateau allumés : les trois modes à la création (lot 3)', () {
+    expect(kBoatTripCreationReady, isTrue);
+    const a = TransportModesAvailability(road: true, boat: true);
+    expect(a.tripCreationModes, [
+      TransportMode.plane,
+      TransportMode.car,
+      TransportMode.boat,
+    ]);
+    expect(a.requestModes, [
+      TransportMode.plane,
+      TransportMode.boat,
+      TransportMode.car,
+    ]);
+    expect(a.searchModes, a.requestModes);
+    expect(a.hasTripChoice, isTrue);
+    expect(a.hasRequestChoice, isTrue);
+  });
 
-  test('bateau seul : choix à la demande, pas à la création', () {
+  test('bateau seul allumé : avion et bateau à la création', () {
     const a = TransportModesAvailability(road: false, boat: true);
-    expect(a.tripCreationModes, [TransportMode.plane]);
-    expect(a.hasTripChoice, isFalse);
+    expect(a.tripCreationModes, [TransportMode.plane, TransportMode.boat]);
+    expect(a.hasTripChoice, isTrue);
     expect(a.requestModes, [TransportMode.plane, TransportMode.boat]);
     expect(a.hasRequestChoice, isTrue);
+  });
+
+  test('modèles et trajet dédié : jamais le bateau (C16, A10)', () {
+    const a = TransportModesAvailability(road: true, boat: true);
+    expect(a.templateModes, [TransportMode.plane, TransportMode.car]);
+    expect(a.withoutBoat.tripCreationModes, a.templateModes);
+    expect(a.withoutBoat.boat, isFalse);
+    expect(a.withoutBoat.road, isTrue);
+    expect(a.hasTemplateChoice, isTrue);
+    const boatOnly = TransportModesAvailability(road: false, boat: true);
+    expect(boatOnly.templateModes, [TransportMode.plane]);
+    expect(boatOnly.hasTemplateChoice, isFalse);
+  });
+
+  test('bateau éteint : jamais proposé à la création', () {
+    const a = TransportModesAvailability(road: true, boat: false);
+    expect(a.tripCreationModes, [TransportMode.plane, TransportMode.car]);
+    expect(a.allowsForTrip(TransportMode.boat), isFalse);
   });
 
   test('allowsForTrip suit les modes de création', () {
     const a = TransportModesAvailability(road: true, boat: true);
     expect(a.allowsForTrip(TransportMode.plane), isTrue);
     expect(a.allowsForTrip(TransportMode.car), isTrue);
-    expect(a.allowsForTrip(TransportMode.boat), isFalse);
+    expect(a.allowsForTrip(TransportMode.boat), isTrue);
     expect(a.allowsForTrip(TransportMode.train), isFalse);
     expect(
       TransportModesAvailability.planeOnly.allowsForTrip(TransportMode.car),

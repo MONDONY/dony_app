@@ -43,6 +43,7 @@ class MakeOfferBottomSheet {
     required String packageRequestId,
     double? targetPriceEur,
     required double weightKg,
+    double? volumeM3,
     required String departureCity,
     required String arrivalCity,
     required DateTime? desiredDate,
@@ -99,6 +100,7 @@ class MakeOfferBottomSheet {
           packageRequestId: packageRequestId,
           targetPriceEur: targetPriceEur,
           weightKg: weightKg,
+          volumeM3: volumeM3,
           departureCity: departureCity,
           arrivalCity: arrivalCity,
           requestDesiredDate: desiredDate,
@@ -272,6 +274,7 @@ class _MakeOfferContent extends StatefulWidget {
     required this.packageRequestId,
     required this.targetPriceEur,
     required this.weightKg,
+    this.volumeM3,
     required this.departureCity,
     required this.arrivalCity,
     required this.requestDesiredDate,
@@ -289,6 +292,9 @@ class _MakeOfferContent extends StatefulWidget {
   final String packageRequestId;
   final double? targetPriceEur;
   final double weightKg;
+
+  /// Volume du colis de la demande par bateau, transmis au trajet dédié.
+  final double? volumeM3;
   final String departureCity;
   final String arrivalCity;
 
@@ -654,6 +660,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
             desiredDate: widget.requestDesiredDate,
             dateToleranceDays: widget.requestDateToleranceDays,
             weightKg: widget.weightKg,
+            volumeM3: widget.volumeM3,
             transportMode: widget.transportMode,
             agreedPriceEur: widget.isFirmPrice && widget.targetPriceEur != null
                 ? widget.targetPriceEur!

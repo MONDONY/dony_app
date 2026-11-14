@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/boat_price_unit.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
@@ -46,6 +47,11 @@ class TripFormDraft extends Equatable {
     this.legs = const [],
     this.maxItemSize,
     this.maxParcelWeightKg,
+    this.arrivalDate,
+    this.arrivalDateMax,
+    this.volumeM3,
+    this.pricePerM3,
+    this.boatPriceUnit,
   });
 
   /// Étape atteinte.
@@ -115,6 +121,19 @@ class TripFormDraft extends Equatable {
   /// le lot 2 : `null`.
   final double? maxParcelWeightKg;
 
+  /// Bateau : arrivée estimée au plus tôt et au plus tard, jours sans heure.
+  /// Absentes d'un brouillon d'avant le lot 3 : `null`.
+  final DateTime? arrivalDate;
+  final DateTime? arrivalDateMax;
+
+  /// Bateau au m³ : volume proposé et prix net par m³.
+  final double? volumeM3;
+  final double? pricePerM3;
+
+  /// Bateau : unité de vente choisie ; `null` vaut le m³ (défaut du
+  /// formulaire).
+  final BoatPriceUnit? boatPriceUnit;
+
   Map<String, dynamic> toJson() => {
     'stepId': stepId.wire,
     // Index de l'ancien formulaire à trois étapes : lu par les versions
@@ -153,17 +172,24 @@ class TripFormDraft extends Equatable {
     'legs': [for (final l in legs) _legToJson(l)],
     'maxItemSize': itemSizeToWireOrNull(maxItemSize),
     'maxParcelWeightKg': maxParcelWeightKg,
+    'arrivalDate': _encodeDate(arrivalDate),
+    'arrivalDateMax': _encodeDate(arrivalDateMax),
+    'volumeM3': volumeM3,
+    'pricePerM3': pricePerM3,
+    'boatPriceUnit': boatPriceUnit?.wire,
   };
 
   /// Lecture tolérante : un champ absent ou illisible vaut le défaut du
   /// formulaire vierge. Un départ déjà passé est retiré et ramène à la
-  /// première étape, où il se choisit ; la date limite et les étapes ajoutées
-  /// suivent, elles en dépendent.
+  /// première étape, où il se choisit ; la date limite, l'arrivée estimée
+  /// d'un bateau et les étapes ajoutées suivent, elles en dépendent.
   factory TripFormDraft.fromJson(Map<String, dynamic> json, {DateTime? now}) {
     final today = _dateOnly(now ?? DateTime.now());
     var stepId = _stepFromJson(json);
     var date = _decodeDate(json['departureDate']);
     var deadline = _decodeDateTime(json['handoverDeadline']);
+    var arrivalMin = _decodeDate(json['arrivalDate']);
+    var arrivalMax = _decodeDate(json['arrivalDateMax']);
     var legs = [
       for (final raw in (json['legs'] as List?) ?? const [])
         if (raw is Map<String, dynamic>) ?_legFromJson(raw),
@@ -171,6 +197,8 @@ class TripFormDraft extends Equatable {
     if (date != null && date.isBefore(today)) {
       date = null;
       deadline = null;
+      arrivalMin = null;
+      arrivalMax = null;
       legs = const [];
       stepId = TripFormStep.trajet;
     }
@@ -210,6 +238,11 @@ class TripFormDraft extends Equatable {
       legs: legs,
       maxItemSize: itemSizeFromWire(json['maxItemSize']),
       maxParcelWeightKg: _positiveNumber(json['maxParcelWeightKg']),
+      arrivalDate: arrivalMin,
+      arrivalDateMax: arrivalMax,
+      volumeM3: _positiveNumber(json['volumeM3']),
+      pricePerM3: _positiveNumber(json['pricePerM3']),
+      boatPriceUnit: BoatPriceUnit.fromWire(json['boatPriceUnit']),
     );
   }
 

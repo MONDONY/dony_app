@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -637,6 +638,33 @@ void main() {
 
         expect(a, isNot(equals(b)));
       });
+    });
+  });
+
+  group('MobileMoneyPaymentStatus.payoutTrigger', () {
+    Map<String, dynamic> json([Map<String, dynamic> extra = const {}]) => {
+      'bidId': 'b1',
+      'paymentStatus': 'PENDING',
+      ...extra,
+    };
+
+    test('DEPOSIT lu, livraison par défaut (clé absente ou inconnue)', () {
+      expect(
+        MobileMoneyPaymentStatus.fromJson(
+          json({'payoutTrigger': 'DEPOSIT'}),
+        ).payoutTrigger,
+        PayoutTrigger.deposit,
+      );
+      expect(
+        MobileMoneyPaymentStatus.fromJson(json()).payoutTrigger,
+        PayoutTrigger.delivery,
+      );
+      expect(
+        MobileMoneyPaymentStatus.fromJson(
+          json({'payoutTrigger': 'X'}),
+        ).payoutTrigger,
+        PayoutTrigger.delivery,
+      );
     });
   });
 }

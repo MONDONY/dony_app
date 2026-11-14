@@ -47,12 +47,20 @@ class TripAiDraftResolver implements AiDraftResolver {
     }
     // Un mode que le formulaire ne propose pas (pas encore ouvert, ou jamais
     // publiable comme le train) partirait au serveur sans que l'utilisateur le
-    // voie : il redevient l'avion. Le bus compte comme la route.
+    // voie : il est retiré du brouillon (jamais remplacé par l'avion), le
+    // formulaire demande le mode ou applique son défaut. Le bus compte comme
+    // la route. Le bateau ne
+    // passe jamais par l'IA, même allumé : il demande le volume en m³, le prix
+    // au m³ et la fourchette d'arrivée, que l'IA ne remplit pas, et un
+    // voyageur non vérifié ne peut pas le publier. Il se choisit à l'écran
+    // Mode du formulaire.
     final mode = out['transportMode'];
     if (mode is String) {
       final parsed = transportModeFromWire(mode);
-      if (parsed == null || !_isModeAvailable(parsed.displayGroup)) {
-        out['transportMode'] = 'PLANE';
+      if (parsed == null ||
+          parsed.displayGroup == TransportMode.boat ||
+          !_isModeAvailable(parsed.displayGroup)) {
+        out.remove('transportMode');
         warnings.add(AiDraftWarning.modeUnavailable);
       }
     }

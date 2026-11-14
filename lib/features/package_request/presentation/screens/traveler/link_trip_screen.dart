@@ -171,6 +171,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       desiredDate: r.desiredDate,
       dateToleranceDays: r.dateToleranceDays,
       weightKg: r.weightKg,
+      volumeM3: r.volumeM3,
       transportMode: r.transportMode,
       agreedPriceEur: widget.thread.currentPriceEur,
       paymentMethod: r.acceptedPaymentMethods.isEmpty

@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/mobile_money_network.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_delay_info.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
@@ -144,7 +145,13 @@ class AnnouncementModel {
   final DateTime? arrivalDate;
   final AddressData? pickupAddress;
   final AddressData? deliveryAddress;
+
+  /// Kilos restants / proposés. `0` pour un trajet bateau au m³ : le back sert
+  /// alors `null` (aucune capacité en kilos), à lire par [isPricedPerM3] et
+  /// [availableVolumeM3].
+  @JsonKey(fromJson: _kgOrZero)
   final double availableKg;
+  @JsonKey(fromJson: _kgOrZero)
   final double totalKg;
 
   /// Net voyageur. `null` pour une session anonyme : le backend masque le
@@ -320,6 +327,29 @@ class AnnouncementModel {
   )
   final TripParcelsSummary? parcelsSummary;
 
+  /// Fin de la fourchette d'arrivée (bateau). `null` : arrivée à date fixe
+  /// ([arrivalDate]), ou back antérieur au lot 3.
+  final DateTime? arrivalDateMax;
+
+  /// Volume proposé et volume restant, en m³ (trajet bateau au m³). `null`
+  /// pour un trajet au kilo, ou sur un back antérieur au lot 3.
+  final double? volumeCapacityM3;
+  final double? availableVolumeM3;
+
+  /// Prix au m³ net voyageur (bateau). `null` pour une session anonyme, un
+  /// trajet au kilo ou un back antérieur : l'expéditeur lit
+  /// [pricePerM3Display].
+  final double? pricePerM3;
+
+  /// Prix au m³ affiché à l'EXPÉDITEUR, frais inclus (symétrique de
+  /// [pricePerKgDisplay]). Servi à tous les lecteurs.
+  final double? pricePerM3Display;
+
+  /// Dernier retard annoncé par le voyageur. Servi au seul propriétaire par le
+  /// détail du trajet ; `null` pour tout autre lecteur ou sans retard.
+  @JsonKey(fromJson: TripDelayInfo.fromJsonOrNull, toJson: tripDelayToJson)
+  final TripDelayInfo? latestTripDelay;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -379,12 +409,27 @@ class AnnouncementModel {
     this.parcelsSummary,
     this.maxItemSize,
     this.maxParcelWeightKg,
+    this.arrivalDateMax,
+    this.volumeCapacityM3,
+    this.availableVolumeM3,
+    this.pricePerM3,
+    this.pricePerM3Display,
+    this.latestTripDelay,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>
       _$AnnouncementModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$AnnouncementModelToJson(this);
+
+  /// Trajet bateau vendu au m³ : un volume est proposé, aucun kilo. Comme le
+  /// back (BOAT et prix au m³ servi) : un volume facultatif sur un bateau au
+  /// kilo, ou un prix au m³ sur un autre mode, ne le rend pas vendu au m³.
+  /// Un invité ne reçoit que le prix affiché, jamais le net : l'un ou l'autre
+  /// suffit.
+  bool get isPricedPerM3 =>
+      transportMode == TransportMode.boat &&
+      (pricePerM3 != null || pricePerM3Display != null);
 
   /// Trajet dédié : une part de la capacité est réservée à une négociation.
   bool get isDedicated => reservedKg > 0;
@@ -412,6 +457,8 @@ class AnnouncementModel {
   /// Étape d'un voyage à plusieurs étapes (FLUTTER-4D).
   bool get isTripLeg => tripGroupId != null;
 }
+
+double _kgOrZero(Object? value) => (value as num?)?.toDouble() ?? 0;
 
 Map<String, dynamic>? _parcelsSummaryToJson(TripParcelsSummary? s) =>
     s?.toJson();

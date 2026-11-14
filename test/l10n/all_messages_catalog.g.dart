@@ -420,6 +420,54 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorTransportModeDisabledMessage,
   'errorArrivalTooFarTitle': (l) => l.errorArrivalTooFarTitle,
   'errorArrivalTooFarMessage': (l) => l.errorArrivalTooFarMessage,
+  'errorBoatCarrierNotVerifiedTitle': (l) => l.errorBoatCarrierNotVerifiedTitle,
+  'errorBoatCarrierNotVerifiedMessage': (l) =>
+      l.errorBoatCarrierNotVerifiedMessage,
+  'errorBoatTemplateUnsupportedTitle': (l) =>
+      l.errorBoatTemplateUnsupportedTitle,
+  'errorBoatTemplateUnsupportedMessage': (l) =>
+      l.errorBoatTemplateUnsupportedMessage,
+  'errorArrivalRangeInvalidTitle': (l) => l.errorArrivalRangeInvalidTitle,
+  'errorArrivalRangeInvalidMessage': (l) => l.errorArrivalRangeInvalidMessage,
+  'errorArrivalBeforeDepartureTitle': (l) => l.errorArrivalBeforeDepartureTitle,
+  'errorArrivalBeforeDepartureMessage': (l) =>
+      l.errorArrivalBeforeDepartureMessage,
+  'errorBoatVolumeRequiredTitle': (l) => l.errorBoatVolumeRequiredTitle,
+  'errorBoatVolumeRequiredMessage': (l) => l.errorBoatVolumeRequiredMessage,
+  'errorBoatVolumeUnitInvalidTitle': (l) => l.errorBoatVolumeUnitInvalidTitle,
+  'errorBoatVolumeUnitInvalidMessage': (l) =>
+      l.errorBoatVolumeUnitInvalidMessage,
+  'errorBoatPriceRequiredTitle': (l) => l.errorBoatPriceRequiredTitle,
+  'errorBoatPriceRequiredMessage': (l) => l.errorBoatPriceRequiredMessage,
+  'errorPricingUnitLockedTitle': (l) => l.errorPricingUnitLockedTitle,
+  'errorPricingUnitLockedMessage': (l) => l.errorPricingUnitLockedMessage,
+  'errorDimensionsIncompleteTitle': (l) => l.errorDimensionsIncompleteTitle,
+  'errorDimensionsIncompleteMessage': (l) => l.errorDimensionsIncompleteMessage,
+  'errorBoatDimensionsRequiredTitle': (l) => l.errorBoatDimensionsRequiredTitle,
+  'errorBoatDimensionsRequiredMessage': (l) =>
+      l.errorBoatDimensionsRequiredMessage,
+  'errorInsufficientVolumeTitle': (l) => l.errorInsufficientVolumeTitle,
+  'errorInsufficientVolumeMessage': (l) => l.errorInsufficientVolumeMessage,
+  'errorTripDelayNotAllowedTitle': (l) => l.errorTripDelayNotAllowedTitle,
+  'errorTripDelayNotAllowedMessage': (l) => l.errorTripDelayNotAllowedMessage,
+  'errorTripDelayReasonInvalidTitle': (l) => l.errorTripDelayReasonInvalidTitle,
+  'errorTripDelayReasonInvalidMessage': (l) =>
+      l.errorTripDelayReasonInvalidMessage,
+  'errorTripDelayTooFrequentTitle': (l) => l.errorTripDelayTooFrequentTitle,
+  'errorTripDelayTooFrequentMessage': (l) => l.errorTripDelayTooFrequentMessage,
+  'errorBoatDepositPhotoRequiredTitle': (l) =>
+      l.errorBoatDepositPhotoRequiredTitle,
+  'errorBoatDepositPhotoRequiredMessage': (l) =>
+      l.errorBoatDepositPhotoRequiredMessage,
+  'errorDepositPaidNoRefundTitle': (l) => l.errorDepositPaidNoRefundTitle,
+  'errorDepositPaidNoRefundMessage': (l) => l.errorDepositPaidNoRefundMessage,
+  'errorSupplementAfterDepositTitle': (l) => l.errorSupplementAfterDepositTitle,
+  'errorSupplementAfterDepositMessage': (l) =>
+      l.errorSupplementAfterDepositMessage,
+  'errorSurplusVolumeTripUnsupportedTitle': (l) =>
+      l.errorSurplusVolumeTripUnsupportedTitle,
+  'errorSurplusVolumeTripUnsupportedMessage': (l) =>
+      l.errorSurplusVolumeTripUnsupportedMessage,
   'errorWeightTooHeavyTitle': (l) => l.errorWeightTooHeavyTitle,
   'errorWeightTooHeavyMessage': (l) => l.errorWeightTooHeavyMessage,
   'errorTripCapacityTooHighTitle': (l) => l.errorTripCapacityTooHighTitle,
@@ -844,6 +892,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'homeComposerLocating': (l) => l.homeComposerLocating,
   'commonDateThisMonth': (l) => l.commonDateThisMonth,
   'homeModeSelectorSending': (l) => l.homeModeSelectorSending,
+  'homeModeSelectorSendingShort': (l) => l.homeModeSelectorSendingShort,
   'homeModeSelectorTraveling': (l) => l.homeModeSelectorTraveling,
   'homeModeSelectorTravelersAvailable': (l) =>
       l.homeModeSelectorTravelersAvailable(intPlaceholderValue),
@@ -1916,6 +1965,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'listingSeeAllPricesButton': (l) =>
       l.listingSeeAllPricesButton(intPlaceholderValue),
   'listingPickupParcelTitle': (l) => l.listingPickupParcelTitle,
+  'listingReportTripShort': (l) => l.listingReportTripShort,
+  'listingBlockTravelerShort': (l) => l.listingBlockTravelerShort,
   'listingReportTripLink': (l) => l.listingReportTripLink,
   'listingBlockTravelerLink': (l) => l.listingBlockTravelerLink,
   'listingFavoriteAddedMessage': (l) => l.listingFavoriteAddedMessage,
@@ -2105,6 +2156,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidCreateMobileMoneyModeBody': (l) => l.bidCreateMobileMoneyModeBody,
   'bidCreateCashModeBody': (l) => l.bidCreateCashModeBody,
   'bidCreateRefundAssurance': (l) => l.bidCreateRefundAssurance,
+  'bidCreateDepositDisputeAssurance': (l) => l.bidCreateDepositDisputeAssurance,
   'bidCreateCashEscrowWarning': (l) => l.bidCreateCashEscrowWarning,
   'bidCreateArticlesLineLabel': (l) => l.bidCreateArticlesLineLabel,
   'bidCreatePromoDiscountLabel': (l) => l.bidCreatePromoDiscountLabel,
@@ -2790,6 +2842,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailPresenceConfirmedSnackbar': (l) =>
       l.bidDetailPresenceConfirmedSnackbar,
   'bidDetailCancelledSnackbar': (l) => l.bidDetailCancelledSnackbar,
+  'bidDetailCancelledSenderSnackbar': (l) => l.bidDetailCancelledSenderSnackbar,
+  'bidDetailCancelledSenderCashSnackbar': (l) =>
+      l.bidDetailCancelledSenderCashSnackbar,
+  'bidDetailCancelledCashSnackbar': (l) => l.bidDetailCancelledCashSnackbar,
   'bidDetailDeletedSnackbar': (l) => l.bidDetailDeletedSnackbar,
   'bidDetailGoneTitle': (l) => l.bidDetailGoneTitle,
   'bidDetailGoneBody': (l) => l.bidDetailGoneBody,
@@ -2819,8 +2875,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailShareTrackingSubtitle': (l) => l.bidDetailShareTrackingSubtitle,
   'bidDetailCancelRefundAutoSubtitle': (l) =>
       l.bidDetailCancelRefundAutoSubtitle,
+  'bidDetailCancelCashSubtitle': (l) => l.bidDetailCancelCashSubtitle,
   'bidDetailCancelAfterHandoverOptionSubtitle': (l) =>
       l.bidDetailCancelAfterHandoverOptionSubtitle,
+  'bidDetailCancelAfterHandoverCashOptionSubtitle': (l) =>
+      l.bidDetailCancelAfterHandoverCashOptionSubtitle,
   'bidDetailRemoveFromHistorySubtitle': (l) =>
       l.bidDetailRemoveFromHistorySubtitle,
   'bidDetailCancelConfirmBody': (l) => l.bidDetailCancelConfirmBody,
@@ -2829,6 +2888,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailCancelAfterHandoverTitle': (l) =>
       l.bidDetailCancelAfterHandoverTitle,
   'bidDetailCancelAfterHandoverBody': (l) => l.bidDetailCancelAfterHandoverBody,
+  'bidDetailCancelAfterHandoverCashBody': (l) =>
+      l.bidDetailCancelAfterHandoverCashBody,
   'bidDetailMoreDetails': (l) => l.bidDetailMoreDetails,
   'bidDetailSectionTodo': (l) => l.bidDetailSectionTodo,
   'bidDetailSectionShipment': (l) => l.bidDetailSectionShipment,
@@ -2903,13 +2964,19 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidDetailCancelTransportHandedOverSubtitle,
   'bidDetailCancelTransportAcceptedSubtitle': (l) =>
       l.bidDetailCancelTransportAcceptedSubtitle,
+  'bidDetailCancelTransportAcceptedCashSubtitle': (l) =>
+      l.bidDetailCancelTransportAcceptedCashSubtitle,
   'bidDetailRefuseParcelLabel': (l) => l.bidDetailRefuseParcelLabel,
   'bidDetailRefuseParcelSubtitle': (l) => l.bidDetailRefuseParcelSubtitle,
+  'bidDetailRefuseParcelCashSubtitle': (l) =>
+      l.bidDetailRefuseParcelCashSubtitle,
   'parcelRefusalTitle': (l) => l.parcelRefusalTitle,
   'parcelRefusalIntro': (l) => l.parcelRefusalIntro,
   'parcelRefusalDeclaredTitle': (l) => l.parcelRefusalDeclaredTitle,
   'parcelRefusalDeclaredWeight': (l) =>
       l.parcelRefusalDeclaredWeight(placeholderMarker('weight')),
+  'parcelRefusalDeclaredVolume': (l) =>
+      l.parcelRefusalDeclaredVolume(placeholderMarker('volume')),
   'parcelRefusalReasonLabel': (l) => l.parcelRefusalReasonLabel,
   'parcelRefusalReasonContentMismatch': (l) =>
       l.parcelRefusalReasonContentMismatch,
@@ -3058,9 +3125,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.ticketHandoverDeadlineExpiredTitle,
   'ticketHandoverDeadlineExpiredSender': (l) =>
       l.ticketHandoverDeadlineExpiredSender,
+  'ticketHandoverDeadlineExpiredSenderCash': (l) =>
+      l.ticketHandoverDeadlineExpiredSenderCash,
   'ticketHandoverDeadlineExpiredTraveler': (l) =>
       l.ticketHandoverDeadlineExpiredTraveler,
   'ticketMiniStatWeightLabel': (l) => l.ticketMiniStatWeightLabel,
+  'ticketMiniStatVolumeLabel': (l) => l.ticketMiniStatVolumeLabel,
   'ticketMiniStatCategoryLabel': (l) => l.ticketMiniStatCategoryLabel,
   'ticketPickupCodeSectionLabel': (l) => l.ticketPickupCodeSectionLabel,
   'ticketCopyCodeButton': (l) => l.ticketCopyCodeButton,
@@ -3309,8 +3379,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripOwnerArrivalFieldHint': (l) => l.tripOwnerArrivalFieldHint,
   'bidCancelDialogTitle': (l) => l.bidCancelDialogTitle,
   'bidCancelAcceptedSubtitle': (l) => l.bidCancelAcceptedSubtitle,
+  'bidCancelAcceptedCashSubtitle': (l) => l.bidCancelAcceptedCashSubtitle,
   'bidCancelWarningMessage': (l) => l.bidCancelWarningMessage,
   'bidCancelWarningRefundNote': (l) => l.bidCancelWarningRefundNote,
+  'bidCancelWarningRefundNoteCash': (l) => l.bidCancelWarningRefundNoteCash,
   'bidCancelReasonRequiredHint': (l) => l.bidCancelReasonRequiredHint,
   'bidCancelReasonOptionalHint': (l) => l.bidCancelReasonOptionalHint,
   'bidCancelReasonRequiredError': (l) => l.bidCancelReasonRequiredError,
@@ -3507,6 +3579,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.paymentPayButtonLabel(placeholderMarker('price')),
   'paymentSummaryTitle': (l) => l.paymentSummaryTitle,
   'paymentSummaryWeightLabel': (l) => l.paymentSummaryWeightLabel,
+  'paymentSummaryVolumeLabel': (l) => l.paymentSummaryVolumeLabel,
   'paymentSummaryPricePerKgLabel': (l) => l.paymentSummaryPricePerKgLabel,
   'paymentSummaryTypeLabel': (l) => l.paymentSummaryTypeLabel,
   'paymentSummaryFlatRateValue': (l) => l.paymentSummaryFlatRateValue,
@@ -3967,6 +4040,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'scanTorchUnavailableTooltip': (l) => l.scanTorchUnavailableTooltip,
   'scanQrPickerHint': (l) => l.scanQrPickerHint,
   'scanOfflineEventDefaultLabel': (l) => l.scanOfflineEventDefaultLabel,
+  'scanOfflineDescDeposit': (l) => l.scanOfflineDescDeposit,
   'scanOfflineDescPickup': (l) => l.scanOfflineDescPickup,
   'scanOfflineDescTransit': (l) => l.scanOfflineDescTransit,
   'scanOfflineDescDefault': (l) => l.scanOfflineDescDefault,
@@ -5561,6 +5635,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'suiviNumberNotFound': (l) => l.suiviNumberNotFound,
   'trackingNotLinkedTitle': (l) => l.trackingNotLinkedTitle,
   'trackingNotLinkedBody': (l) => l.trackingNotLinkedBody,
+  'suiviDepositValidatedToast': (l) =>
+      l.suiviDepositValidatedToast(placeholderMarker('parcel')),
   'suiviStepValidatedToast': (l) => l.suiviStepValidatedToast(
     placeholderMarker('step'),
     placeholderMarker('parcel'),
@@ -5714,6 +5790,16 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPublishArrivalDayLabel': (l) => l.tripPublishArrivalDayLabel,
   'tripPublishArrivalDayOption': (l) =>
       l.tripPublishArrivalDayOption(intPlaceholderValue),
+  'tripPublishArrivalOutOfRange': (l) => l.tripPublishArrivalOutOfRange(
+    placeholderMarker('first'),
+    placeholderMarker('last'),
+    intPlaceholderValue,
+  ),
+  'tripPublishArrivalMovedWithDeparture': (l) =>
+      l.tripPublishArrivalMovedWithDeparture(
+        placeholderMarker('date'),
+        intPlaceholderValue,
+      ),
   'tripPublishArrivalOtherDate': (l) => l.tripPublishArrivalOtherDate,
   'tripPublishArrivalDateLabel': (l) => l.tripPublishArrivalDateLabel,
   'tripArrivalOnDateAtTime': (l) => l.tripArrivalOnDateAtTime(
@@ -5758,10 +5844,16 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidRescheduleWithdrawConfirmTitle,
   'bidRescheduleWithdrawConfirmMessage': (l) =>
       l.bidRescheduleWithdrawConfirmMessage,
+  'bidRescheduleWithdrawConfirmCashMessage': (l) =>
+      l.bidRescheduleWithdrawConfirmCashMessage,
   'bidRescheduleWithdrawConfirmReturnMessage': (l) =>
       l.bidRescheduleWithdrawConfirmReturnMessage,
+  'bidRescheduleWithdrawConfirmReturnCashMessage': (l) =>
+      l.bidRescheduleWithdrawConfirmReturnCashMessage,
   'bidRescheduleKeptSnackbar': (l) => l.bidRescheduleKeptSnackbar,
   'bidRescheduleWithdrawnSnackbar': (l) => l.bidRescheduleWithdrawnSnackbar,
+  'bidRescheduleWithdrawnCashSnackbar': (l) =>
+      l.bidRescheduleWithdrawnCashSnackbar,
   'errorRescheduleLimitReachedTitle': (l) => l.errorRescheduleLimitReachedTitle,
   'errorRescheduleLimitReachedMessage': (l) =>
       l.errorRescheduleLimitReachedMessage,
@@ -5818,6 +5910,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'receptionsSectionTitle': (l) => l.receptionsSectionTitle,
   'receptionsRowFrom': (l) => l.receptionsRowFrom(placeholderMarker('name')),
   'receptionsPendingChip': (l) => l.receptionsPendingChip,
+  'receptionsRowStepBoat': (l) =>
+      l.receptionsRowStepBoat(placeholderMarker('status')),
   'receptionsRowStep': (l) => l.receptionsRowStep(placeholderMarker('status')),
   'receptionDetailTitle': (l) => l.receptionDetailTitle,
   'receptionPendingHeadline': (l) =>
@@ -6019,7 +6113,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidCreateGridSuggestionPendingHint(placeholderMarker('item')),
   'bidCreatePhotoRequiredHint': (l) => l.bidCreatePhotoRequiredHint,
   'bidCreatePhotosRequiredHelp': (l) => l.bidCreatePhotosRequiredHelp,
+  'bidCreateAddPhotoRequiredSubtitle': (l) =>
+      l.bidCreateAddPhotoRequiredSubtitle,
   'bidCreateHandoverCheckNotice': (l) => l.bidCreateHandoverCheckNotice,
+  'bidCreateHandoverCheckNoticeCash': (l) => l.bidCreateHandoverCheckNoticeCash,
   'callStatusRinging': (l) => l.callStatusRinging,
   'callMinimize': (l) => l.callMinimize,
   'callBannerTitle': (l) => l.callBannerTitle,
@@ -6384,7 +6481,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripStopsBadgeDirect': (l) => l.tripStopsBadgeDirect,
   'tripStopsBadgeOne': (l) => l.tripStopsBadgeOne,
   'tripStopsBadgeTwoOrMore': (l) => l.tripStopsBadgeTwoOrMore,
-  'tripStopsDetailLabel': (l) => l.tripStopsDetailLabel,
   'homeComposerSectionStops': (l) => l.homeComposerSectionStops,
   'homeComposerStopsDirectOnly': (l) => l.homeComposerStopsDirectOnly,
   'homeComposerStopsMaxOne': (l) => l.homeComposerStopsMaxOne,
@@ -6432,6 +6528,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripSwitchCurrencyConfirmMessageNoCard(placeholderMarker('currency')),
   'tripSwitchCurrencyConfirmMessage': (l) =>
       l.tripSwitchCurrencyConfirmMessage(placeholderMarker('currency')),
+  'tripPublishPerM3CurrencyReset': (l) =>
+      l.tripPublishPerM3CurrencyReset(placeholderMarker('currency')),
   'requestPublicSenderRowSemantics': (l) =>
       l.requestPublicSenderRowSemantics(placeholderMarker('name')),
   'tripParcelsSummaryInTransit': (l) =>
@@ -6748,6 +6846,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripPosterPricePerKgShort(placeholderMarker('price')),
   'suiviPhotoLost': (l) => l.suiviPhotoLost(placeholderMarker('step')),
   'suiviPhotoLostDismiss': (l) => l.suiviPhotoLostDismiss,
+  'suiviDepositPhotoRetake': (l) => l.suiviDepositPhotoRetake,
+  'suiviDepositPhotoRetakeDismiss': (l) => l.suiviDepositPhotoRetakeDismiss,
   'suiviScanClosedBeforeSync': (l) => l.suiviScanClosedBeforeSync,
   'suiviScanClosedBeforeSyncDismiss': (l) => l.suiviScanClosedBeforeSyncDismiss,
   'authRequiredFlightAlertSubtitle': (l) => l.authRequiredFlightAlertSubtitle,
@@ -7137,6 +7237,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripSeriesErrorDraftLimit': (l) => l.tripSeriesErrorDraftLimit,
   'tripSeriesErrorKyc': (l) => l.tripSeriesErrorKyc,
   'tripSeriesErrorProLimit': (l) => l.tripSeriesErrorProLimit,
+  'tripSeriesErrorGpProPending': (l) => l.tripSeriesErrorGpProPending,
   'tripSeriesErrorStripe': (l) => l.tripSeriesErrorStripe,
   'tripSeriesErrorGeneric': (l) => l.tripSeriesErrorGeneric,
   'tripSeriesBadgePublished': (l) =>
@@ -8442,6 +8543,291 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.requestCreateBudgetTechnicalMax(placeholderMarker('max')),
   'requestCreateWeightTooHeavySubmit': (l) =>
       l.requestCreateWeightTooHeavySubmit,
+  'tripPublishModeBoatTitle': (l) => l.tripPublishModeBoatTitle,
+  'tripPublishModeBoatSubtitle': (l) => l.tripPublishModeBoatSubtitle,
+  'tripPublishModeBoatTagDuration': (l) => l.tripPublishModeBoatTagDuration,
+  'tripPublishModeBoatTagCapacity': (l) => l.tripPublishModeBoatTagCapacity,
+  'tripPublishModeBoatLocked': (l) => l.tripPublishModeBoatLocked,
+  'tripPublishModeBoatBadgeLink': (l) => l.tripPublishModeBoatBadgeLink,
+  'tripPublishBoatDeparturePortLabel': (l) =>
+      l.tripPublishBoatDeparturePortLabel,
+  'tripPublishBoatArrivalPortLabel': (l) => l.tripPublishBoatArrivalPortLabel,
+  'tripPublishBoatArrivalLabel': (l) => l.tripPublishBoatArrivalLabel,
+  'tripPublishBoatArrivalEarliestLabel': (l) =>
+      l.tripPublishBoatArrivalEarliestLabel,
+  'tripPublishBoatArrivalLatestLabel': (l) =>
+      l.tripPublishBoatArrivalLatestLabel,
+  'tripPublishBoatArrivalHelp': (l) => l.tripPublishBoatArrivalHelp,
+  'tripPublishBoatArrivalRequired': (l) => l.tripPublishBoatArrivalRequired,
+  'tripPublishBoatArrivalBeforeDeparture': (l) =>
+      l.tripPublishBoatArrivalBeforeDeparture,
+  'tripPublishBoatArrivalLatestBeforeEarliest': (l) =>
+      l.tripPublishBoatArrivalLatestBeforeEarliest,
+  'tripPublishBoatArrivalTooFar': (l) =>
+      l.tripPublishBoatArrivalTooFar(intPlaceholderValue),
+  'tripPublishBoatWarehouseLabel': (l) => l.tripPublishBoatWarehouseLabel,
+  'tripPublishBoatWarehouseSubtitle': (l) => l.tripPublishBoatWarehouseSubtitle,
+  'tripPublishBoatPickupLabel': (l) => l.tripPublishBoatPickupLabel,
+  'tripPublishBoatPickupSubtitle': (l) => l.tripPublishBoatPickupSubtitle,
+  'tripPublishBoatUnitQuestion': (l) => l.tripPublishBoatUnitQuestion,
+  'tripPublishBoatUnitM3': (l) => l.tripPublishBoatUnitM3,
+  'tripPublishBoatUnitKg': (l) => l.tripPublishBoatUnitKg,
+  'tripPublishBoatVolumeLabel': (l) => l.tripPublishBoatVolumeLabel,
+  'tripPublishBoatVolumeHint': (l) => l.tripPublishBoatVolumeHint,
+  'tripPublishBoatVolumeInvalid': (l) => l.tripPublishBoatVolumeInvalid,
+  'tripPublishBoatPricePerM3Label': (l) => l.tripPublishBoatPricePerM3Label,
+  'tripPublishBoatPricePrompt': (l) => l.tripPublishBoatPricePrompt,
+  'tripPublishBoatPriceTooHigh': (l) =>
+      l.tripPublishBoatPriceTooHigh(placeholderMarker('max')),
+  'tripPublishBoatPriceEstimateLine': (l) => l.tripPublishBoatPriceEstimateLine(
+    placeholderMarker('net'),
+    placeholderMarker('total'),
+  ),
+  'tripPublishBoatDepositPayoutNotice': (l) =>
+      l.tripPublishBoatDepositPayoutNotice,
+  'tripPublishPerM3Value': (l) =>
+      l.tripPublishPerM3Value(placeholderMarker('value')),
+  'requestCreateDimensionsLabel': (l) => l.requestCreateDimensionsLabel,
+  'requestCreateDimensionsOptionalLabel': (l) =>
+      l.requestCreateDimensionsOptionalLabel,
+  'requestCreateDimensionsHelpBoat': (l) => l.requestCreateDimensionsHelpBoat,
+  'requestCreateDimensionsHelpAny': (l) => l.requestCreateDimensionsHelpAny,
+  'requestCreateDimensionsAdd': (l) => l.requestCreateDimensionsAdd,
+  'requestCreateDimensionLength': (l) => l.requestCreateDimensionLength,
+  'requestCreateDimensionWidth': (l) => l.requestCreateDimensionWidth,
+  'requestCreateDimensionHeight': (l) => l.requestCreateDimensionHeight,
+  'requestCreateDimensionRequired': (l) => l.requestCreateDimensionRequired,
+  'requestCreateDimensionInvalid': (l) => l.requestCreateDimensionInvalid,
+  'requestCreateVolumeLine': (l) =>
+      l.requestCreateVolumeLine(placeholderMarker('volume')),
+  'requestCreateDimensionsRequiredSubmit': (l) =>
+      l.requestCreateDimensionsRequiredSubmit,
+  'requestCreateWeightAndVolume': (l) => l.requestCreateWeightAndVolume(
+    placeholderMarker('weight'),
+    placeholderMarker('volume'),
+  ),
+  'requestPreviewVolumeLabel': (l) => l.requestPreviewVolumeLabel,
+  'requestPreviewVolumeValue': (l) => l.requestPreviewVolumeValue(
+    placeholderMarker('volume'),
+    intPlaceholderValue,
+    intPlaceholderValue,
+    intPlaceholderValue,
+  ),
+  'requestCreatePriceBasisPerM3': (l) => l.requestCreatePriceBasisPerM3,
+  'requestCreatePriceBasisPerM3NeedsDimensions': (l) =>
+      l.requestCreatePriceBasisPerM3NeedsDimensions,
+  'requestCreatePerM3InputHint': (l) => l.requestCreatePerM3InputHint,
+  'requestCreatePriceUnitPerM3': (l) =>
+      l.requestCreatePriceUnitPerM3(placeholderMarker('symbol')),
+  'requestCreatePerM3Computed': (l) => l.requestCreatePerM3Computed(
+    placeholderMarker('volume'),
+    placeholderMarker('perM3'),
+    placeholderMarker('total'),
+  ),
+  'requestCreateBoatDepositNotice': (l) => l.requestCreateBoatDepositNotice,
+  'bidCreateVolumeRateLine': (l) => l.bidCreateVolumeRateLine(
+    placeholderMarker('volume'),
+    placeholderMarker('rate'),
+  ),
+  'bidCreateVolumeAvailableLine': (l) =>
+      l.bidCreateVolumeAvailableLine(placeholderMarker('available')),
+  'bidCreateVolumeTooLarge': (l) => l.bidCreateVolumeTooLarge(
+    placeholderMarker('volume'),
+    placeholderMarker('available'),
+  ),
+  'bidCreateVolumeDimensionsHint': (l) => l.bidCreateVolumeDimensionsHint,
+  'bidCreateCardModeSubtitleDeposit': (l) => l.bidCreateCardModeSubtitleDeposit,
+  'bidCreateCardModeBodyDeposit': (l) => l.bidCreateCardModeBodyDeposit,
+  'bidCreateCardModeNegotiationBodyDeposit': (l) =>
+      l.bidCreateCardModeNegotiationBodyDeposit,
+  'bidCreateMobileMoneyModeBodyDeposit': (l) =>
+      l.bidCreateMobileMoneyModeBodyDeposit,
+  'bidCreateOfferPaidSubtitleDeposit': (l) =>
+      l.bidCreateOfferPaidSubtitleDeposit,
+  'bidCreateMobileMoneySuccessSubtitleDeposit': (l) =>
+      l.bidCreateMobileMoneySuccessSubtitleDeposit,
+  'homeFilterChipsVolume': (l) => l.homeFilterChipsVolume,
+  'homeFilterChipsArrival': (l) => l.homeFilterChipsArrival,
+  'homeFilterChipsArrivalActive': (l) =>
+      l.homeFilterChipsArrivalActive(intPlaceholderValue),
+  'homeFilterBoatVolumeValue': (l) =>
+      l.homeFilterBoatVolumeValue(placeholderMarker('volume')),
+  'homeFilterBoatPriceValue': (l) =>
+      l.homeFilterBoatPriceValue(placeholderMarker('price')),
+  'homeFilterFieldsMinVolume': (l) => l.homeFilterFieldsMinVolume,
+  'homeFilterFieldsMaxPricePerM3': (l) => l.homeFilterFieldsMaxPricePerM3,
+  'homeFilterBoatVolumeTitle': (l) => l.homeFilterBoatVolumeTitle,
+  'homeFilterBoatVolumeFieldLabel': (l) => l.homeFilterBoatVolumeFieldLabel,
+  'homeFilterBoatVolumeHint': (l) => l.homeFilterBoatVolumeHint,
+  'homeFilterBoatVolumeInvalid': (l) => l.homeFilterBoatVolumeInvalid,
+  'homeFilterBoatPriceTitle': (l) => l.homeFilterBoatPriceTitle,
+  'homeFilterBoatPriceFieldLabel': (l) =>
+      l.homeFilterBoatPriceFieldLabel(placeholderMarker('symbol')),
+  'homeFilterBoatPriceHint': (l) => l.homeFilterBoatPriceHint,
+  'homeFilterBoatPriceInvalid': (l) =>
+      l.homeFilterBoatPriceInvalid(placeholderMarker('max')),
+  'homeFilterBoatArrivalTitle': (l) => l.homeFilterBoatArrivalTitle,
+  'homeFilterBoatArrivalOption': (l) =>
+      l.homeFilterBoatArrivalOption(intPlaceholderValue),
+  'homeFilterBoatArrivalHelp': (l) => l.homeFilterBoatArrivalHelp,
+  'homeComposerSectionVolumePrice': (l) => l.homeComposerSectionVolumePrice,
+  'homeComposerSectionArrival': (l) => l.homeComposerSectionArrival,
+  'homeComposerVolumeHint': (l) => l.homeComposerVolumeHint,
+  'homeComposerMoreFiltersHintBoat': (l) => l.homeComposerMoreFiltersHintBoat,
+  'listingBoatArrivalRange': (l) => l.listingBoatArrivalRange(
+    placeholderMarker('from'),
+    placeholderMarker('to'),
+  ),
+  'listingBoatArrivalDate': (l) =>
+      l.listingBoatArrivalDate(placeholderMarker('date')),
+  'listingBoatVolumeRemaining': (l) =>
+      l.listingBoatVolumeRemaining(placeholderMarker('volume')),
+  'trackingBoatStepDeposit': (l) => l.trackingBoatStepDeposit,
+  'trackingBoatStepDeposited': (l) => l.trackingBoatStepDeposited,
+  'trackingBoatStepDeparture': (l) => l.trackingBoatStepDeparture,
+  'trackingBoatStepDeparted': (l) => l.trackingBoatStepDeparted,
+  'trackingBoatStepAtSea': (l) => l.trackingBoatStepAtSea,
+  'trackingBoatStepAtPort': (l) =>
+      l.trackingBoatStepAtPort(placeholderMarker('city')),
+  'trackingBoatStepAtPortElided': (l) =>
+      l.trackingBoatStepAtPortElided(placeholderMarker('city')),
+  'trackingBoatStepAtPortNoCity': (l) => l.trackingBoatStepAtPortNoCity,
+  'trackingBoatHeadlineAwaitingDeposit': (l) =>
+      l.trackingBoatHeadlineAwaitingDeposit,
+  'trackingBoatHeadlineAtSeaTo': (l) =>
+      l.trackingBoatHeadlineAtSeaTo(placeholderMarker('city')),
+  'trackingBoatPlannedDeparture': (l) =>
+      l.trackingBoatPlannedDeparture(placeholderMarker('date')),
+  'trackingBoatEstimatedRange': (l) => l.trackingBoatEstimatedRange(
+    placeholderMarker('from'),
+    placeholderMarker('to'),
+  ),
+  'trackingBoatEstimatedDate': (l) =>
+      l.trackingBoatEstimatedDate(placeholderMarker('date')),
+  'trackingBoatDelayNote': (l) =>
+      l.trackingBoatDelayNote(placeholderMarker('detail')),
+  'ticketEstimatedArrivalLabel': (l) => l.ticketEstimatedArrivalLabel,
+  'ticketArrivalRangeValue': (l) => l.ticketArrivalRangeValue(
+    placeholderMarker('from'),
+    placeholderMarker('to'),
+  ),
+  'bidDetailSenderInTransitBoatRange': (l) =>
+      l.bidDetailSenderInTransitBoatRange(
+        placeholderMarker('from'),
+        placeholderMarker('to'),
+        placeholderMarker('city'),
+      ),
+  'bidDetailSenderInTransitBoatDate': (l) => l.bidDetailSenderInTransitBoatDate(
+    placeholderMarker('date'),
+    placeholderMarker('city'),
+  ),
+  'bidDetailDepositPaidLabel': (l) => l.bidDetailDepositPaidLabel(
+    placeholderMarker('amount'),
+    placeholderMarker('date'),
+  ),
+  'bidDetailDepositPaidNoDateLabel': (l) =>
+      l.bidDetailDepositPaidNoDateLabel(placeholderMarker('amount')),
+  'bidDetailDepositPendingLabel': (l) =>
+      l.bidDetailDepositPendingLabel(placeholderMarker('amount')),
+  'bidDelayTitle': (l) => l.bidDelayTitle,
+  'bidDelayNewRange': (l) =>
+      l.bidDelayNewRange(placeholderMarker('from'), placeholderMarker('to')),
+  'bidDelayNewDate': (l) => l.bidDelayNewDate(placeholderMarker('date')),
+  'bidDelayReason': (l) => l.bidDelayReason(placeholderMarker('reason')),
+  'tripDelayReasonPortCongestion': (l) => l.tripDelayReasonPortCongestion,
+  'tripDelayReasonWeather': (l) => l.tripDelayReasonWeather,
+  'tripDelayReasonExtendedStopover': (l) => l.tripDelayReasonExtendedStopover,
+  'tripDelayReasonExtendedStop': (l) => l.tripDelayReasonExtendedStop,
+  'tripDelayReasonTransportDisruption': (l) =>
+      l.tripDelayReasonTransportDisruption,
+  'listingPricePerM3Label': (l) => l.listingPricePerM3Label,
+  'errorArrivalTimeBeforeDepartureTitle': (l) =>
+      l.errorArrivalTimeBeforeDepartureTitle,
+  'errorArrivalTimeBeforeDepartureMessage': (l) =>
+      l.errorArrivalTimeBeforeDepartureMessage,
+  'tripDelaySheetTitle': (l) => l.tripDelaySheetTitle,
+  'tripDelaySheetSubtitle': (l) =>
+      l.tripDelaySheetSubtitle(intPlaceholderValue),
+  'tripDelayReasonSection': (l) => l.tripDelayReasonSection,
+  'tripDelayArrivalSection': (l) => l.tripDelayArrivalSection,
+  'tripDelayFromLabel': (l) => l.tripDelayFromLabel,
+  'tripDelayToLabel': (l) => l.tripDelayToLabel,
+  'tripDelayArrivalLimit': (l) =>
+      l.tripDelayArrivalLimit(placeholderMarker('date')),
+  'tripDelayMessageSection': (l) => l.tripDelayMessageSection,
+  'tripDelayMessageHintBoat': (l) => l.tripDelayMessageHintBoat,
+  'tripDelayMessageHintPlane': (l) => l.tripDelayMessageHintPlane,
+  'tripDelayMessageHint': (l) => l.tripDelayMessageHint,
+  'tripDelayInfo': (l) => l.tripDelayInfo,
+  'tripDelaySubmit': (l) => l.tripDelaySubmit,
+  'tripDelaySentSnackbar': (l) => l.tripDelaySentSnackbar,
+  'tripMenuAnnounceDelaySubtitle': (l) => l.tripMenuAnnounceDelaySubtitle,
+  'tripOwnerVolumeRemainingOf': (l) =>
+      l.tripOwnerVolumeRemainingOf(placeholderMarker('total')),
+  'tripTilePaymentsDeposit': (l) => l.tripTilePaymentsDeposit,
+  'tripTilePaymentsDepositNote': (l) => l.tripTilePaymentsDepositNote,
+  'scanDepositRecordedChip': (l) => l.scanDepositRecordedChip,
+  'suiviDepositPhotoRequired': (l) => l.suiviDepositPhotoRequired,
+  'amendmentEntryButtonVolume': (l) => l.amendmentEntryButtonVolume,
+  'amendmentSheetVolumeLabel': (l) => l.amendmentSheetVolumeLabel(
+    placeholderMarker('price'),
+    placeholderMarker('free'),
+  ),
+  'amendmentSheetVolumeLabelOpen': (l) =>
+      l.amendmentSheetVolumeLabelOpen(placeholderMarker('price')),
+  'amendmentSheetVolumeLabelPlain': (l) => l.amendmentSheetVolumeLabelPlain,
+  'amendmentSheetVolumeValue': (l) =>
+      l.amendmentSheetVolumeValue(placeholderMarker('volume')),
+  'amendmentTravelerParcelVolume': (l) => l.amendmentTravelerParcelVolume,
+  'amendmentTravelerParcelVolumeValue': (l) =>
+      l.amendmentTravelerParcelVolumeValue(
+        placeholderMarker('from'),
+        placeholderMarker('to'),
+      ),
+  'amendmentTravelerAcceptedBodyVolume': (l) =>
+      l.amendmentTravelerAcceptedBodyVolume,
+  'amendmentNotBroughtVolume': (l) => l.amendmentNotBroughtVolume,
+  'amendmentNotBroughtVolumeConfirmTitle': (l) =>
+      l.amendmentNotBroughtVolumeConfirmTitle,
+  'amendmentNotBroughtVolumeConfirmMessage': (l) =>
+      l.amendmentNotBroughtVolumeConfirmMessage,
+  'amendmentSenderNotBroughtVolumeStatus': (l) =>
+      l.amendmentSenderNotBroughtVolumeStatus(placeholderMarker('name')),
+  'amendmentDeclineConfirmMessageVolume': (l) =>
+      l.amendmentDeclineConfirmMessageVolume,
+  'amendmentPaymentHeldByCardDeposit': (l) =>
+      l.amendmentPaymentHeldByCardDeposit,
+  'amendmentPaymentHeldOnlineDeposit': (l) =>
+      l.amendmentPaymentHeldOnlineDeposit,
+  'amendmentGainPaidOutDeposit': (l) => l.amendmentGainPaidOutDeposit,
+  'errorVolumePriceTooHighTitle': (l) => l.errorVolumePriceTooHighTitle,
+  'errorVolumePriceTooHighMessage': (l) => l.errorVolumePriceTooHighMessage,
+  'errorTransportModeLockedTitle': (l) => l.errorTransportModeLockedTitle,
+  'errorTransportModeLockedMessage': (l) => l.errorTransportModeLockedMessage,
+  'negotiationThreadPayHintDeposit': (l) => l.negotiationThreadPayHintDeposit,
+  'negotiationPaymentRecapSecureBannerMessageDeposit': (l) =>
+      l.negotiationPaymentRecapSecureBannerMessageDeposit,
+  'negotiationPaymentRecapSecureNoteDeposit': (l) =>
+      l.negotiationPaymentRecapSecureNoteDeposit,
+  'negotiationPaymentRecapMobileMoneyBannerMessageDeposit': (l) =>
+      l.negotiationPaymentRecapMobileMoneyBannerMessageDeposit,
+  'negotiationPaymentRecapMobileMoneyNoteDeposit': (l) =>
+      l.negotiationPaymentRecapMobileMoneyNoteDeposit,
+  'negotiationOfferAcceptedPaidSubtitleDeposit': (l) =>
+      l.negotiationOfferAcceptedPaidSubtitleDeposit,
+  'mobileMoneyPaidToTravelerValueDeposit': (l) =>
+      l.mobileMoneyPaidToTravelerValueDeposit,
+  'requestPublicReassureSecuredDeposit': (l) =>
+      l.requestPublicReassureSecuredDeposit,
+  'bidDepositPaidSupportSenderSubtitle': (l) =>
+      l.bidDepositPaidSupportSenderSubtitle,
+  'bidDepositPaidSupportTravelerSubtitle': (l) =>
+      l.bidDepositPaidSupportTravelerSubtitle,
+  'tripPublishLockedBoatBlocked': (l) => l.tripPublishLockedBoatBlocked,
+  'trackingDepositNeedsQr': (l) => l.trackingDepositNeedsQr,
+  'errorBoatDepositQrRequiredTitle': (l) => l.errorBoatDepositQrRequiredTitle,
+  'errorBoatDepositQrRequiredMessage': (l) =>
+      l.errorBoatDepositQrRequiredMessage,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8628,6 +9014,7 @@ const textParameters = <String, List<String>>{
   'travelerTileColisSubtitle': ['weight', 'recipient'],
   'bidDetailDisclaimerSignedCompact': ['date', 'time'],
   'parcelRefusalDeclaredWeight': ['weight'],
+  'parcelRefusalDeclaredVolume': ['volume'],
   'bidDetailReturnDeadlineHint': ['date'],
   'bidDetailMobileMoneySecuredLabel': ['amount'],
   'bidDetailCashAtDropoffAmountLabel': ['amount'],
@@ -8824,6 +9211,7 @@ const textParameters = <String, List<String>>{
   'suiviPhotoAndValidate': ['step'],
   'negotiationLinkedTripParcelWeight': ['weight'],
   'suiviParcelOf': ['parcel'],
+  'suiviDepositValidatedToast': ['parcel'],
   'suiviStepValidatedToast': ['step', 'parcel'],
   'suiviToastSendingIn': ['photo'],
   'suiviStepAlreadyPending': ['parcel'],
@@ -8843,6 +9231,8 @@ const textParameters = <String, List<String>>{
   'suiviQrRecognized': ['parcel'],
   'bidDetailTravelerRequestTitle': ['name'],
   'profilePublicResidesIn': ['country'],
+  'tripPublishArrivalOutOfRange': ['first', 'last'],
+  'tripPublishArrivalMovedWithDeparture': ['date'],
   'tripArrivalOnDateAtTime': ['date', 'time'],
   'tripArrivalDayOffsetSuffix': ['time'],
   'bidRescheduleBody': ['previous', 'next', 'reason'],
@@ -8851,6 +9241,7 @@ const textParameters = <String, List<String>>{
   'bidRescheduleTravelerHint': ['deadline'],
   'receptionsPromptFromSender': ['name'],
   'receptionsRowFrom': ['name'],
+  'receptionsRowStepBoat': ['status'],
   'receptionsRowStep': ['status'],
   'receptionPendingHeadline': ['name'],
   'receptionDepartureOn': ['date'],
@@ -8915,6 +9306,7 @@ const textParameters = <String, List<String>>{
   'tripSwitchCurrencyConfirmTitle': ['currency'],
   'tripSwitchCurrencyConfirmMessageNoCard': ['currency'],
   'tripSwitchCurrencyConfirmMessage': ['currency'],
+  'tripPublishPerM3CurrencyReset': ['currency'],
   'requestPublicSenderRowSemantics': ['name'],
   'pricePerKgTooLow': ['min'],
   'pricePerKgTooHigh': ['max'],
@@ -9147,4 +9539,45 @@ const textParameters = <String, List<String>>{
   'parcelSizeLabel': ['size'],
   'requestCreateBudgetMinOnly': ['min'],
   'requestCreateBudgetTechnicalMax': ['max'],
+  'tripPublishBoatPriceTooHigh': ['max'],
+  'tripPublishBoatPriceEstimateLine': ['net', 'total'],
+  'tripPublishPerM3Value': ['value'],
+  'requestCreateVolumeLine': ['volume'],
+  'requestCreateWeightAndVolume': ['weight', 'volume'],
+  'requestPreviewVolumeValue': ['volume'],
+  'requestCreatePriceUnitPerM3': ['symbol'],
+  'requestCreatePerM3Computed': ['volume', 'perM3', 'total'],
+  'bidCreateVolumeRateLine': ['volume', 'rate'],
+  'bidCreateVolumeAvailableLine': ['available'],
+  'bidCreateVolumeTooLarge': ['volume', 'available'],
+  'homeFilterBoatVolumeValue': ['volume'],
+  'homeFilterBoatPriceValue': ['price'],
+  'homeFilterBoatPriceFieldLabel': ['symbol'],
+  'homeFilterBoatPriceInvalid': ['max'],
+  'listingBoatArrivalRange': ['from', 'to'],
+  'listingBoatArrivalDate': ['date'],
+  'listingBoatVolumeRemaining': ['volume'],
+  'trackingBoatStepAtPort': ['city'],
+  'trackingBoatStepAtPortElided': ['city'],
+  'trackingBoatHeadlineAtSeaTo': ['city'],
+  'trackingBoatPlannedDeparture': ['date'],
+  'trackingBoatEstimatedRange': ['from', 'to'],
+  'trackingBoatEstimatedDate': ['date'],
+  'trackingBoatDelayNote': ['detail'],
+  'ticketArrivalRangeValue': ['from', 'to'],
+  'bidDetailSenderInTransitBoatRange': ['from', 'to', 'city'],
+  'bidDetailSenderInTransitBoatDate': ['date', 'city'],
+  'bidDetailDepositPaidLabel': ['amount', 'date'],
+  'bidDetailDepositPaidNoDateLabel': ['amount'],
+  'bidDetailDepositPendingLabel': ['amount'],
+  'bidDelayNewRange': ['from', 'to'],
+  'bidDelayNewDate': ['date'],
+  'bidDelayReason': ['reason'],
+  'tripDelayArrivalLimit': ['date'],
+  'tripOwnerVolumeRemainingOf': ['total'],
+  'amendmentSheetVolumeLabel': ['price', 'free'],
+  'amendmentSheetVolumeLabelOpen': ['price'],
+  'amendmentSheetVolumeValue': ['volume'],
+  'amendmentTravelerParcelVolumeValue': ['from', 'to'],
+  'amendmentSenderNotBroughtVolumeStatus': ['name'],
 };

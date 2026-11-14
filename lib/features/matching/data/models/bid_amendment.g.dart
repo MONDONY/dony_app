@@ -37,6 +37,7 @@ BidAmendment _$BidAmendmentFromJson(Map<String, dynamic> json) => BidAmendment(
           ?.map((e) => BidAmendmentItem.fromJson(e as Map<String, dynamic>))
           .toList() ??
       [],
+  addedVolumeM3: (json['addedVolumeM3'] as num?)?.toDouble(),
   grossAmount: (json['grossAmount'] as num).toDouble(),
   netAmount: (json['netAmount'] as num?)?.toDouble(),
   commissionAmount: (json['commissionAmount'] as num?)?.toDouble(),
@@ -59,6 +60,7 @@ Map<String, dynamic> _$BidAmendmentToJson(BidAmendment instance) =>
       'rail': instance.rail,
       'currency': instance.currency,
       'addedWeightKg': instance.addedWeightKg,
+      'addedVolumeM3': instance.addedVolumeM3,
       'items': instance.items,
       'grossAmount': instance.grossAmount,
       'netAmount': instance.netAmount,

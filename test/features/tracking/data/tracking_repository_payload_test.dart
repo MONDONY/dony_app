@@ -105,4 +105,25 @@ void main() {
     expect(r.expiresAt, DateTime.utc(2026, 6, 2));
     expect(r.publicPageVisible, isFalse);
   });
+
+  test(
+    'postScan : qrToken du QR de dépôt envoyé tel quel, absent sinon',
+    () async {
+      api.on('POST', '/tracking/events', _eventJson);
+
+      await repo.postScan(
+        bidId: 'bid-1',
+        eventType: 'DEPART',
+        qrToken: 'tok_abc',
+      );
+      expect(api.last.data, {
+        'bidId': 'bid-1',
+        'eventType': 'DEPART',
+        'qrToken': 'tok_abc',
+      });
+
+      await repo.postScan(bidId: 'bid-1', eventType: 'TRANSIT');
+      expect((api.last.data as Map).containsKey('qrToken'), isFalse);
+    },
+  );
 }

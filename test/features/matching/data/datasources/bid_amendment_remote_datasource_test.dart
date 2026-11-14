@@ -51,6 +51,50 @@ void main() {
     ]);
   });
 
+  test('quote_volume : addedVolumeM3 remplace addedKg (colis au m³)', () async {
+    api.on('POST', '$_base/quote', {'grossAmount': 36.0, 'currency': 'EUR'});
+
+    final gross = await datasource.quote(
+      _bidId,
+      addedKg: 0,
+      addedVolumeM3: 0.3,
+      items: {'g-1': 1},
+    );
+
+    expect(gross, 36.0);
+    expect(api.last.data, {
+      'addedVolumeM3': 0.3,
+      'items': [
+        {'gridItemId': 'g-1', 'quantity': 1},
+      ],
+    });
+  });
+
+  test(
+    'create_volume : addedVolumeM3 et moyen de paiement, jamais addedKg',
+    () async {
+      api.on('POST', _base, {
+        'amendment': {..._amendment('PROPOSED'), 'addedVolumeM3': 0.3},
+      });
+
+      final checkout = await datasource.create(
+        _bidId,
+        addedKg: 0,
+        addedVolumeM3: 0.3,
+        items: const {},
+        method: BidPaymentMethod.cash,
+      );
+
+      expect(checkout.amendment.addedVolumeM3, 0.3);
+      expect(checkout.amendment.isVolume, isTrue);
+      expect(api.last.data, {
+        'addedVolumeM3': 0.3,
+        'items': <Object>[],
+        'paymentMethod': 'CASH',
+      });
+    },
+  );
+
   test('quote_postsItemsAsList : kilos et articles, rend le brut', () async {
     api.on('POST', '$_base/quote', {'grossAmount': 22.4, 'currency': 'EUR'});
 

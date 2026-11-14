@@ -24,6 +24,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../../helpers/l10n_test_helpers.dart';
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
@@ -47,8 +48,10 @@ BidModel _bid({
   String? trackingToken,
   bool amendmentAllowed = false,
   BidMoneyBreakdown? moneyBreakdown,
+  PayoutTrigger payoutTrigger = PayoutTrigger.delivery,
 }) => BidModel(
   moneyBreakdown: moneyBreakdown,
+  payoutTrigger: payoutTrigger,
   id: 'bid-42',
   announcementId: 'ann-1',
   senderId: 'sender-1',
@@ -81,9 +84,12 @@ void main() {
     when(() => openBloc.state).thenReturn(const ConversationOpenInitial());
   });
 
-  Widget wrap(Widget Function(BuildContext) bar) => MaterialApp.router(
+  Widget wrap(
+    Widget Function(BuildContext) bar, {
+    Locale locale = AppL10n.fr,
+  }) => MaterialApp.router(
     theme: AppTheme.light(),
-    locale: AppL10n.fr,
+    locale: locale,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     routerConfig: GoRouter(
@@ -108,11 +114,12 @@ void main() {
     ),
   );
 
-  Widget optionsHost(BidModel bid) => wrap(
+  Widget optionsHost(BidModel bid, {Locale locale = AppL10n.fr}) => wrap(
     (context) => TextButton(
       onPressed: () => showSenderOptionsSheet(context, bid),
       child: const Text('open-options'),
     ),
+    locale: locale,
   );
 
   Future<void> openOptions(WidgetTester tester, BidModel bid) async {
@@ -158,6 +165,70 @@ void main() {
       await tester.tap(find.byType(DonyButton), warnIfMissed: false);
       await tester.pump();
       verifyNever(() => bidBloc.add(any()));
+    });
+  });
+
+  // Recette du 14/11 : « Your payment will be refunded automatically » sur un
+  // colis payé en espèces, alors qu'aucun paiement ne passe par Yadony.
+  group('espèces : aucune promesse de remboursement', () {
+    for (final locale in const [AppL10n.fr, AppL10n.en]) {
+      final l = lookupAppLocalizations(locale);
+
+      Future<void> open360(WidgetTester tester, BidModel bid) async {
+        if (locale == AppL10n.en) useEnglish();
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(optionsHost(bid, locale: locale));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('open-options'));
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('${locale.languageCode} 360 dp : avant la remise, rien à '
+          'rembourser', (tester) async {
+        await open360(
+          tester,
+          _bid(status: 'ACCEPTED', method: BidPaymentMethod.cash),
+        );
+        expect(find.text(l.bidDetailCancelCashSubtitle), findsOneWidget);
+        expect(find.text(l.bidDetailCancelRefundAutoSubtitle), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('${locale.languageCode} 360 dp : après la remise, le '
+          'voyageur rend l\'argent, Yadony ne rembourse rien', (tester) async {
+        await open360(
+          tester,
+          _bid(status: 'HANDED_OVER', method: BidPaymentMethod.cash),
+        );
+        expect(
+          find.text(l.bidDetailCancelAfterHandoverCashOptionSubtitle),
+          findsOneWidget,
+        );
+        expect(
+          find.text(l.bidDetailCancelAfterHandoverOptionSubtitle),
+          findsNothing,
+        );
+        await tester.tap(
+          find.text(l.bidDetailCancelAfterHandoverCashOptionSubtitle),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text(l.bidDetailCancelAfterHandoverCashBody),
+          findsOneWidget,
+        );
+        expect(find.text(l.bidDetailCancelAfterHandoverBody), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('carte : le remboursement automatique reste annoncé', (
+      tester,
+    ) async {
+      await openOptions(tester, _bid(status: 'ACCEPTED'));
+      expect(find.text(_l.bidDetailCancelRefundAutoSubtitle), findsOneWidget);
+      expect(find.text(_l.bidDetailCancelCashSubtitle), findsNothing);
     });
   });
 
@@ -311,6 +382,60 @@ void main() {
             any(that: isA<CancelAfterHandoverRequested>()),
           ),
         ).called(1);
+      },
+    );
+
+    testWidgets(
+      'cancelAfterHandover_hiddenForDepositPaid : le support à la place',
+      (tester) async {
+        await openOptions(
+          tester,
+          _bid(status: 'HANDED_OVER', payoutTrigger: PayoutTrigger.deposit),
+        );
+
+        expect(
+          find.text(_l.bidDetailCancelAfterHandoverOptionSubtitle),
+          findsNothing,
+        );
+        expect(find.text(_l.bidDetailCancelRequestLabel), findsNothing);
+        expect(
+          find.byKey(const Key('deposit-paid-support-tile')),
+          findsOneWidget,
+        );
+        expect(find.text(_l.supportContactCta), findsOneWidget);
+        expect(
+          find.text(_l.bidDepositPaidSupportSenderSubtitle),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'cancelAfterHandover_shownForDepositCash : espèces, rien de versé',
+      (tester) async {
+        await openOptions(
+          tester,
+          _bid(
+            status: 'HANDED_OVER',
+            method: BidPaymentMethod.cash,
+            payoutTrigger: PayoutTrigger.deposit,
+          ),
+        );
+
+        // Annulation proposée, sans promesse de remboursement : en espèces,
+        // c'est le voyageur qui rend l'argent remis (recette du 14/11).
+        expect(
+          find.text(_l.bidDetailCancelAfterHandoverCashOptionSubtitle),
+          findsOneWidget,
+        );
+        expect(
+          find.text(_l.bidDetailCancelAfterHandoverOptionSubtitle),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const Key('deposit-paid-support-tile')),
+          findsNothing,
+        );
       },
     );
 

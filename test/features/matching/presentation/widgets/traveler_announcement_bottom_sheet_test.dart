@@ -57,9 +57,11 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/label_fit_expectations.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/plane_icon_expectations.dart';
 import '../../../video_modal/moment_test_support.dart';
+import 'trip_owner/trip_card_harness.dart' show loadAppFonts;
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -145,6 +147,13 @@ AnnouncementModel _buildAnnouncement({
   String arrivalCity = 'Dakar',
   String? departureTimezone,
   TransportMode? transportMode,
+  double? pricePerKg = 8,
+  DateTime? arrivalDate,
+  DateTime? arrivalDateMax,
+  double? volumeCapacityM3,
+  double? availableVolumeM3,
+  double? pricePerM3,
+  double? pricePerM3Display,
 }) {
   final now = DateTime.now();
   return AnnouncementModel(
@@ -157,7 +166,13 @@ AnnouncementModel _buildAnnouncement({
     arrivalTime: arrivalTime,
     availableKg: 12,
     totalKg: 20,
-    pricePerKg: 8,
+    pricePerKg: pricePerKg,
+    arrivalDate: arrivalDate,
+    arrivalDateMax: arrivalDateMax,
+    volumeCapacityM3: volumeCapacityM3,
+    availableVolumeM3: availableVolumeM3,
+    pricePerM3: pricePerM3,
+    pricePerM3Display: pricePerM3Display,
     capacityUnit: capacityUnit,
     currency: currency,
     status: status,
@@ -198,6 +213,7 @@ Widget _harness({
   FavoriteIdsCubit? favorites,
   bool fromMap = false,
   bool fromDetail = false,
+  ThemeData? theme,
 }) {
   final authBloc = _MockAuthBloc();
   when(
@@ -294,6 +310,7 @@ Widget _harness({
     ],
     child: MaterialApp.router(
       routerConfig: router,
+      theme: theme,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -2117,8 +2134,49 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('block-traveler-link')), findsOneWidget);
-      expect(find.text('Bloquer ce voyageur'), findsOneWidget);
+      expect(find.text('Bloquer'), findsOneWidget);
+      // La phrase complète reste pour le lecteur d'écran.
+      expect(find.bySemanticsLabel('Bloquer ce voyageur'), findsOneWidget);
+      expect(find.bySemanticsLabel('Signaler ce trajet'), findsOneWidget);
     });
+
+    // Recette 13/11 : à 360 dp, « Signaler ce trajet » et « Bloquer ce
+    // voyageur » passaient sur deux lignes.
+    for (final english in [false, true]) {
+      testWidgets('360 dp ${english ? 'EN' : 'FR'} : Signaler et Bloquer sur '
+          'une ligne, à leur taille normale', (tester) async {
+        if (english) useEnglish();
+        // Vraies polices : la police de test (carrés de 1 em) élargit tout.
+        await loadAppFonts();
+        tester.view.physicalSize = const Size(360, 896);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          _harness(announcement: _buildAnnouncement(), theme: AppTheme.light()),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        for (final (key, label) in [
+          ('report-announcement-link', english ? 'Report' : 'Signaler'),
+          ('block-traveler-link', english ? 'Block' : 'Bloquer'),
+        ]) {
+          final button = find.byKey(Key(key));
+          await tester.ensureVisible(button);
+          await tester.pumpAndSettle();
+          final text = find.descendant(of: button, matching: find.text(label));
+          expect(text, findsOneWidget);
+          expectPlainLabelFits(tester, text, reason: key);
+          // Une seule ligne : hauteur d'une ligne de labelLarge.
+          expect(tester.getSize(text).height, lessThan(24), reason: key);
+          expect(
+            tester.widget<Text>(text).style?.fontSize,
+            isNot(lessThan(14)),
+          );
+        }
+        expect(tester.takeException(), isNull);
+      });
+    }
 
     testWidgets(
       'Signaler et Bloquer : deux boutons visibles côte à côte, cibles 44 pt',
@@ -2573,5 +2631,84 @@ void main() {
     expect(find.bySemanticsLabel('Lyon → Bamako'), findsOneWidget);
     expect(find.text('LYS'), findsOneWidget);
     expect(find.text('BKO'), findsOneWidget);
+  });
+
+  // A6 : la fiche d'un trajet bateau vendu au m³ dit sa fourchette d'arrivée
+  // et son prix au m³ frais inclus, jamais « Prix indisponible ».
+  group('trajet bateau au m³ (vue expéditeur)', () {
+    AnnouncementModel boatTrip() {
+      final now = DateTime.now();
+      return _buildAnnouncement(
+        transportMode: TransportMode.boat,
+        departureCity: 'Le Havre',
+        arrivalCity: 'Abidjan',
+        departureDate: DateTime(now.year, now.month + 1, 2),
+        arrivalDate: DateTime(now.year, now.month + 2, 11),
+        arrivalDateMax: DateTime(now.year, now.month + 2, 18),
+        pricePerKg: null,
+        volumeCapacityM3: 2,
+        availableVolumeM3: 0.4,
+        pricePerM3: 540,
+        pricePerM3Display: 600,
+      );
+    }
+
+    testWidgets('fourchette d\'arrivée et prix au m³ brut', (tester) async {
+      await tester.pumpWidget(_harness(announcement: boatTrip()));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<Text>(find.byKey(const Key('billet-arrival-label'))).data,
+        'Arrivée estimée',
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const Key('billet-arrival-value'))).data,
+        contains(' au '),
+      );
+      final price = find.byKey(const Key('trip-price-per-m3-stat'));
+      expect(price, findsOneWidget);
+      // Prix affiché à l'expéditeur, frais inclus (pricePerM3Display).
+      expect(
+        find.descendant(of: price, matching: find.textContaining('600')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: price, matching: find.text('par m³')),
+        findsOneWidget,
+      );
+      expect(find.text('Prix indisponible'), findsNothing);
+      expect(find.textContaining('0,4'), findsWidgets);
+      expect(tester.takeException(), isNull);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_harness(announcement: boatTrip()));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+      expect(find.text('Estimated arrival'), findsOneWidget);
+      expect(find.text('per m³'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('trajet en route : prix au kilo, arrivée habituelle', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _harness(
+          announcement: _buildAnnouncement(transportMode: TransportMode.car),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('trip-price-per-m3-stat')), findsNothing);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('billet-arrival-label'))).data,
+        'Arrivée',
+      );
+      expectNoPlaneIcon(tester);
+    });
   });
 }

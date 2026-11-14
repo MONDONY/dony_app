@@ -1,4 +1,6 @@
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -124,6 +126,93 @@ void main() {
 
     test('provenance inconnue : étape seule', () {
       expect(recentScanStepLabel(fr, entry(null)), 'Transit');
+    });
+
+    test('bateau : la remise se lit « Dépôt », les autres modes inchangés', () {
+      final depart = TripScanHistoryEntryModel(
+        eventType: 'DEPART',
+        scannedAt: DateTime(2026, 9, 28),
+        scanMethod: ScanMethod.qr,
+      );
+      expect(
+        recentScanStepLabel(fr, depart, mode: TransportMode.boat),
+        "Dépôt à l'entrepôt · QR",
+      );
+      expect(
+        recentScanStepLabel(en, depart, mode: TransportMode.boat),
+        'Drop-off at the warehouse · QR',
+      );
+      expect(
+        recentScanStepLabel(fr, depart, mode: TransportMode.plane),
+        'Récupération · QR',
+      );
+      expect(recentScanStepLabel(fr, depart), 'Récupération · QR');
+    });
+  });
+
+  group('TrackingEventL10n.stepLabel', () {
+    final event = TrackingEventModel(
+      id: 'e',
+      bidId: 'b',
+      eventType: 'DEPART',
+      scannedAt: DateTime(2026, 9, 28),
+      createdAt: DateTime(2026, 9, 28),
+    );
+
+    test('bateau : Dépôt ; sans mode ou autre mode : inchangé', () {
+      expect(
+        event.stepLabel(fr, mode: TransportMode.boat),
+        "Dépôt à l'entrepôt",
+      );
+      expect(event.stepLabel(fr), 'Colis récupéré');
+      expect(event.stepLabel(en, mode: TransportMode.car), 'Parcel collected');
+    });
+  });
+
+  group('libellés selon le mode du trajet', () {
+    test('bateau : DEPART est le dépôt à l\'entrepôt', () {
+      expect(
+        trackingStepLabel(fr, 'DEPART', mode: TransportMode.boat),
+        "Dépôt à l'entrepôt",
+      );
+      expect(
+        trackingStepLabel(en, 'DEPART', mode: TransportMode.boat),
+        'Drop-off at the warehouse',
+      );
+      expect(
+        trackingStepLabel(fr, 'TRANSIT', mode: TransportMode.boat),
+        'Transit',
+      );
+    });
+
+    test('route, avion, inconnu : libellés neutres, sans mot d\'avion', () {
+      for (final mode in [
+        TransportMode.car,
+        TransportMode.bus,
+        TransportMode.plane,
+        TransportMode.other,
+        null,
+      ]) {
+        for (final step in ['DEPART', 'TRANSIT', 'ARRIVEE']) {
+          final label = trackingStepLabel(fr, step, mode: mode).toLowerCase();
+          for (final word in ['vol', 'aéroport', 'escale', 'valise']) {
+            expect(label, isNot(contains(word)), reason: '$mode $step');
+          }
+        }
+        expect(trackingStepLabel(fr, 'DEPART', mode: mode), 'Récupération');
+      }
+    });
+
+    test('arrivée au port : élision devant une voyelle', () {
+      expect(boatPortArrivalLabel(fr, 'Abidjan'), "Arrivé au port d'Abidjan");
+      expect(boatPortArrivalLabel(fr, 'Dakar'), 'Arrivé au port de Dakar');
+      expect(boatPortArrivalLabel(fr, '  '), 'Arrivé au port');
+      expect(boatPortArrivalLabel(fr, null), 'Arrivé au port');
+      expect(
+        boatPortArrivalLabel(en, 'Abidjan'),
+        'Arrived at the port of Abidjan',
+      );
+      expect(boatPortArrivalLabel(en, null), 'Arrived at port');
     });
   });
 }

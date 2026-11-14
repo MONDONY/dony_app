@@ -1107,6 +1107,60 @@ void main() {
     );
   });
 
+  group('filtres du bateau', () {
+    final arrival = DateTime(2027, 1, 5);
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'boatFilters_sendParams : volume, prix au m³ et arrivée partent aux '
+      'deux pages',
+      build: () {
+        for (final page in [0, 1]) {
+          when(
+            () => mockRepo.searchAnnouncementsPage(
+              minVolumeM3: 2.5,
+              maxPricePerM3: 600,
+              arrivalBefore: arrival,
+              page: page,
+              includeFull: any(named: 'includeFull'),
+              sortBy: any(named: 'sortBy'),
+              sortDir: any(named: 'sortDir'),
+            ),
+          ).thenAnswer(
+            (_) async =>
+                _page([buildAnnouncement(id: 'p$page')], total: 2, page: page),
+          );
+        }
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(
+          AnnouncementSearchRequested(
+            minVolumeM3: 2.5,
+            maxPricePerM3: 600,
+            arrivalBefore: arrival,
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(AnnouncementSearchMoreRequested());
+      },
+      skip: 2,
+      verify: (_) {
+        for (final page in [0, 1]) {
+          verify(
+            () => mockRepo.searchAnnouncementsPage(
+              minVolumeM3: 2.5,
+              maxPricePerM3: 600,
+              arrivalBefore: arrival,
+              page: page,
+              includeFull: any(named: 'includeFull'),
+              sortBy: any(named: 'sortBy'),
+              sortDir: any(named: 'sortDir'),
+            ),
+          ).called(1);
+        }
+      },
+    );
+  });
+
   // FLUTTER-JH : les trajets complets restent listés, grisés, après les
   // réservables, mais ne comptent pas dans « N trajets ».
   group('trajets complets visibles', () {

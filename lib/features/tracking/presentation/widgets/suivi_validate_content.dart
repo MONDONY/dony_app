@@ -5,6 +5,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
@@ -113,7 +114,10 @@ class SuiviValidateContent extends StatelessWidget {
             _EnterNumberButton(onTap: onEnterNumber),
           ],
           const SizedBox(height: DonySpacing.xl),
-          _RecentScans(history: hub.scanHistory),
+          _RecentScans(
+            history: hub.scanHistory,
+            mode: hub.selectedTrip.transportMode,
+          ),
         ],
       ),
     );
@@ -668,9 +672,12 @@ class _EnterNumberButton extends StatelessWidget {
 }
 
 class _RecentScans extends StatelessWidget {
-  const _RecentScans({required this.history});
+  const _RecentScans({required this.history, this.mode});
 
   final List<TripScanHistoryEntryModel> history;
+
+  /// Mode du trajet affiché : en bateau, la remise se lit « Dépôt ».
+  final TransportMode? mode;
 
   @override
   Widget build(BuildContext context) {
@@ -720,7 +727,7 @@ class _RecentScans extends StatelessWidget {
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   Text(
-                    recentScanStepLabel(l, entry),
+                    recentScanStepLabel(l, entry, mode: mode),
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],

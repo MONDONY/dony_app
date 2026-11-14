@@ -71,6 +71,9 @@ class AnnouncementQuery {
     this.paymentMethods,
     this.minItemSize,
     this.viaCity,
+    this.minVolumeM3,
+    this.maxPricePerM3,
+    this.arrivalBefore,
   });
 
   final String? departureCity;
@@ -104,6 +107,18 @@ class AnnouncementQuery {
   /// Route seulement : ville où une étape publiée du voyage s'arrête ;
   /// `null` = aucune.
   final String? viaCity;
+
+  /// Bateau seulement : volume restant minimal (m³), déjà borné ; `null` =
+  /// peu importe.
+  final double? minVolumeM3;
+
+  /// Bateau seulement : prix maximal au m³, dans la devise du lecteur, déjà
+  /// borné ; `null` = peu importe.
+  final double? maxPricePerM3;
+
+  /// Bateau seulement : arrivée estimée au plus tard (fin de fourchette, jour) ;
+  /// `null` = peu importe.
+  final DateTime? arrivalBefore;
 }
 
 /// État de recherche de l'écran Rechercher, immuable et sans dépendance Flutter.
@@ -120,14 +135,15 @@ const double kSuitcaseKg = 23;
 const double kCapacitySliderMinKg = 1;
 const double kCapacitySliderMaxKg = 50;
 
-/// Maximum du curseur Capacité en route (voiture, bus) : un trajet y porte des
-/// centaines de kilos, le curseur de 50 kg ne laisserait rien choisir.
+/// Maximum du curseur Capacité en route (voiture, bus) et en bateau : un trajet
+/// y porte des centaines de kilos, le curseur de 50 kg ne laisserait rien
+/// choisir (même découpage que `WeightLimits.isHeavyMode` du back).
 const double kRoadCapacitySliderMaxKg = 1000;
 
-/// Maximum du curseur Capacité pour le mode filtré : 1 000 kg en route,
-/// [kCapacitySliderMaxKg] pour l'avion, le bateau et « tous les modes ».
+/// Maximum du curseur Capacité pour le mode filtré : 1 000 kg en route et en
+/// bateau, [kCapacitySliderMaxKg] pour l'avion et « tous les modes ».
 double capacitySliderMaxKgFor(TransportMode? mode) =>
-    mode != null && mode.isRoad
+    mode != null && mode.isHeavy
     ? kRoadCapacitySliderMaxKg
     : kCapacitySliderMaxKg;
 
@@ -138,7 +154,8 @@ double capacitySliderMaxKgFor(TransportMode? mode) =>
 /// `1 à 50 kg` et cachait les trajets de plus de 50 kg disponibles.
 ///
 /// [sliderMaxKg] est l'extrémité haute du curseur du mode filtré
-/// ([capacitySliderMaxKgFor]) : 50 kg par défaut, 1 000 kg en route.
+/// ([capacitySliderMaxKgFor]) : 50 kg par défaut, 1 000 kg en route et en
+/// bateau.
 ({double? min, double? max}) capacityBoundsFromSlider(
   double min,
   double max, {
@@ -177,6 +194,9 @@ class HomeSearchFilters {
     this.paymentMethods = const {},
     this.minItemSize,
     this.viaCity,
+    this.minVolumeM3,
+    this.maxPricePerM3,
+    this.arrivalWithinWeeks,
     // Colis
     this.maxWeight,
     this.parcelSize,
@@ -240,9 +260,49 @@ class HomeSearchFilters {
   /// s'arrête ; `null` = aucune. Même règle de vie que [minItemSize].
   final String? viaCity;
 
+  /// Bateau seulement : volume restant minimal cherché, en m³. Ne vit que tant
+  /// que le filtre Transport est le bateau : voir [withTransportModeChanged].
+  final double? minVolumeM3;
+
+  /// Bateau seulement : prix maximal au m³ (hors frais, comme le prix au kilo),
+  /// dans la devise du lecteur. Même règle de vie que [minVolumeM3].
+  final double? maxPricePerM3;
+
+  /// Bateau seulement : arrivée estimée au plus tard dans N semaines à partir
+  /// d'aujourd'hui (4, 6 ou 8, [BoatSearchLimits.arrivalWeeks]). Même règle de
+  /// vie que [minVolumeM3].
+  final int? arrivalWithinWeeks;
+
   /// Vrai quand le filtre Transport est la route (voiture ou bus) : les
   /// filtres propres à la route n'existent que là.
   bool get _isRoadFilter => transportMode?.isRoad ?? false;
+
+  /// Vrai quand le filtre Transport est le bateau : les filtres propres au
+  /// bateau n'existent que là.
+  bool get _isBoatFilter => transportMode == TransportMode.boat;
+
+  /// Volume minimal réellement actif : bateau seulement, et borné comme le
+  /// back (jamais une valeur qu'il refuserait en 400). Source unique de la
+  /// requête, de `activeKeys` et du compteur.
+  double? get _activeMinVolumeM3 =>
+      _isBoatFilter ? BoatSearchLimits.volume(minVolumeM3) : null;
+
+  /// Prix maximal au m³ réellement actif (bateau seulement, borné).
+  double? get _activeMaxPricePerM3 =>
+      _isBoatFilter ? BoatSearchLimits.pricePerM3(maxPricePerM3) : null;
+
+  /// Semaines d'arrivée réellement actives (bateau seulement, 4, 6 ou 8).
+  int? get _activeArrivalWeeks =>
+      _isBoatFilter ? BoatSearchLimits.weeks(arrivalWithinWeeks) : null;
+
+  /// Arrivée au plus tard envoyée au serveur : aujourd'hui + les semaines
+  /// choisies, à minuit local ; `null` sans filtre.
+  DateTime? get arrivalBefore {
+    final weeks = _activeArrivalWeeks;
+    if (weeks == null) return null;
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day + weeks * 7);
+  }
 
   /// Taille minimale réellement active : seulement quand le filtre Transport
   /// est la route. Source unique de la requête, de `activeKeys` et du compteur,
@@ -396,7 +456,9 @@ class HomeSearchFilters {
       userLat: nearMeActive ? userLat : null,
       userLng: nearMeActive ? userLng : null,
       radiusKm: nearMeActive ? nearMeRadiusKm : null,
-      urgent: urgentOnly ? true : null,
+      // « Urgent » n'existe pas en bateau (la puce y est retirée) : jamais
+      // envoyé s'il y reste d'un autre mode.
+      urgent: urgentOnly && !_isBoatFilter ? true : null,
       maxStops: stopsFilter?.maxStops,
       paymentMethods: paymentMethods.isEmpty
           ? null
@@ -405,6 +467,10 @@ class HomeSearchFilters {
       // état incohérent les avait laissés en place.
       minItemSize: _activeMinItemSize,
       viaCity: _activeViaCity,
+      // Propres au bateau : même règle.
+      minVolumeM3: _activeMinVolumeM3,
+      maxPricePerM3: _activeMaxPricePerM3,
+      arrivalBefore: arrivalBefore,
     );
   }
 
@@ -469,26 +535,53 @@ class HomeSearchFilters {
   ///
   /// * vers la route : la puce « Valise 23 kg » et les escales n'y existent
   ///   pas, elles sont effacées ;
+  /// * vers le bateau : « Valise 23 kg », « Urgent » et les escales n'y existent
+  ///   pas, ils sont effacés ;
   /// * en quittant la route : la taille minimale et la ville de passage sont
-  ///   effacées, et les bornes de capacité qui sortent de la plage du nouveau
-  ///   mode (1 à 50 kg hors route) aussi : un minimum de 600 kg ne se
-  ///   réglerait plus au curseur et viderait la liste sans qu'on sache
-  ///   pourquoi.
+  ///   effacées ;
+  /// * en quittant le bateau : le volume, le prix au m³ et l'arrivée sont
+  ///   effacés ;
+  /// * en quittant un mode lourd (route, bateau) pour l'avion ou « tous » : les
+  ///   bornes de capacité qui sortent de la plage du nouveau mode (1 à 50 kg)
+  ///   sont effacées aussi : un minimum de 600 kg ne se réglerait plus au
+  ///   curseur et viderait la liste sans qu'on sache pourquoi.
   ///
-  /// Route vers bus (ou l'inverse) et mode identique : rien d'effacé.
+  /// Route vers bus (ou l'inverse), route vers bateau (même curseur) et mode
+  /// identique : la capacité reste.
   HomeSearchFilters withTransportModeChanged(TransportMode? mode) {
     final wasRoad = _isRoadFilter;
     final goesRoad = mode?.isRoad ?? false;
+    final wasBoat = _isBoatFilter;
+    final goesBoat = mode == TransportMode.boat;
+    final wasHeavy = transportMode?.isHeavy ?? false;
+    final goesHeavy = mode?.isHeavy ?? false;
     var next = mode == null
         ? copyWith(clearTransportMode: true)
         : copyWith(transportMode: mode);
     if (goesRoad && !wasRoad) {
       next = next.copyWith(suitcase23Only: false, clearStopsFilter: true);
-    } else if (wasRoad && !goesRoad) {
+    }
+    if (goesBoat && !wasBoat) {
+      next = next.copyWith(
+        suitcase23Only: false,
+        urgentOnly: false,
+        clearStopsFilter: true,
+      );
+    }
+    if (wasRoad && !goesRoad) {
+      next = next.copyWith(clearMinItemSize: true, clearViaCity: true);
+    }
+    if (wasBoat && !goesBoat) {
+      next = next.copyWith(
+        clearMinVolumeM3: true,
+        clearMaxPricePerM3: true,
+        clearArrivalWeeks: true,
+      );
+    }
+    if (wasHeavy && !goesHeavy) {
       final max = capacitySliderMaxKgFor(mode);
       final min = weightMin;
       final top = weightMax;
-      next = next.copyWith(clearMinItemSize: true, clearViaCity: true);
       if ((min != null && min > max) || (top != null && top >= max)) {
         next = next
             .copyWith(clearWeight: true)
@@ -525,6 +618,9 @@ class HomeSearchFilters {
     if (paymentMethods.isNotEmpty) 'payment_methods',
     if (_activeMinItemSize != null) 'item_size',
     if (_activeViaCity != null) 'via_city',
+    if (_activeMinVolumeM3 != null) 'min_volume',
+    if (_activeMaxPricePerM3 != null) 'max_price_per_m3',
+    if (_activeArrivalWeeks != null) 'arrival_window',
     if (maxWeight != null) 'max_weight',
     if (parcelSize != null) 'parcel_size',
     if (matchingMyTrips) 'matching_my_trips',
@@ -591,6 +687,15 @@ class HomeSearchFilters {
     if (_activeViaCity != null) {
       n++;
     }
+    if (_activeMinVolumeM3 != null) {
+      n++;
+    }
+    if (_activeMaxPricePerM3 != null) {
+      n++;
+    }
+    if (_activeArrivalWeeks != null) {
+      n++;
+    }
     return n;
   }
 
@@ -611,7 +716,9 @@ class HomeSearchFilters {
   /// Nombre de filtres actifs pour le badge de la barre corridor : communs
   /// plus ceux du mode courant. Un filtre spécifique à l'autre mode ne compte pas.
   int activeCountFor(SearchMode mode) =>
-      _commonActiveCount +
+      _commonActiveCount -
+      // « Urgent » n'est ni envoyé ni montré en bateau : il ne se compte pas.
+      (mode.isTrips && _isBoatFilter && urgentOnly ? 1 : 0) +
       (mode.isTrips ? _tripsOnlyActiveCount : _parcelsOnlyActiveCount);
 
   /// Nombre total de filtres actifs, tous modes confondus — sert au tracking
@@ -666,6 +773,9 @@ class HomeSearchFilters {
     Set<BidPaymentMethod>? paymentMethods,
     ItemSize? minItemSize,
     String? viaCity,
+    double? minVolumeM3,
+    double? maxPricePerM3,
+    int? arrivalWithinWeeks,
     double? maxWeight,
     ParcelSize? parcelSize,
     bool? matchingMyTrips,
@@ -680,6 +790,9 @@ class HomeSearchFilters {
     bool clearStopsFilter = false,
     bool clearMinItemSize = false,
     bool clearViaCity = false,
+    bool clearMinVolumeM3 = false,
+    bool clearMaxPricePerM3 = false,
+    bool clearArrivalWeeks = false,
     bool clearMaxWeight = false,
     bool clearParcelSize = false,
     bool clearNearMe = false,
@@ -724,6 +837,13 @@ class HomeSearchFilters {
       paymentMethods: paymentMethods ?? this.paymentMethods,
       minItemSize: clearMinItemSize ? null : (minItemSize ?? this.minItemSize),
       viaCity: clearViaCity ? null : (viaCity ?? this.viaCity),
+      minVolumeM3: clearMinVolumeM3 ? null : (minVolumeM3 ?? this.minVolumeM3),
+      maxPricePerM3: clearMaxPricePerM3
+          ? null
+          : (maxPricePerM3 ?? this.maxPricePerM3),
+      arrivalWithinWeeks: clearArrivalWeeks
+          ? null
+          : (arrivalWithinWeeks ?? this.arrivalWithinWeeks),
       maxWeight: clearMaxWeight ? null : (maxWeight ?? this.maxWeight),
       parcelSize: clearParcelSize ? null : (parcelSize ?? this.parcelSize),
       matchingMyTrips: matchingMyTrips ?? this.matchingMyTrips,

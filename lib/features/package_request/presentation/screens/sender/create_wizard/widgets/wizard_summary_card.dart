@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
@@ -193,8 +194,17 @@ class WizardSummaryCard extends StatelessWidget {
     return w == null ? '-' : _weightText(l, s, w);
   }
 
+  /// Poids (et taille), suivi du volume quand les dimensions sont connues
+  /// (bateau, « peu importe » avec dimensions) : « 25 kg · 0,10 m³ ».
   String _weightText(AppLocalizations l, PackageRequestFormState s, double w) {
-    return parcelWeightWithSize(l, formatWeightKg(l, w), s.itemSize);
+    final weight = parcelWeightWithSize(l, formatWeightKg(l, w), s.itemSize);
+    final volume = s.volumeM3;
+    return volume == null
+        ? weight
+        : l.requestCreateWeightAndVolume(
+            weight,
+            formatParcelVolumeM3(l, volume),
+          );
   }
 
   /// Toutes les catégories, pas seulement la première : le récap en affichait

@@ -2,6 +2,7 @@ import 'package:dony/features/matching/data/datasources/bid_negotiation_remote_d
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/models/bid_volume_input.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 
 /// Pass-through vers [BidNegotiationRemoteDatasource].
@@ -27,6 +28,7 @@ class BidNegotiationRepository {
     List<Map<String, dynamic>>? customItems,
     List<Map<String, dynamic>>? gridItems,
     ItemSize? itemSize,
+    BidVolumeInput? volume,
   }) => _datasource.propose(
     announcementId: announcementId,
     weightKg: weightKg,
@@ -41,6 +43,7 @@ class BidNegotiationRepository {
     customItems: customItems,
     gridItems: gridItems,
     itemSize: itemSize,
+    volume: volume,
   );
 
   Future<BidNegotiation> counter(

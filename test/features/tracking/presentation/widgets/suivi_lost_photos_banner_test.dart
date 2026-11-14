@@ -11,16 +11,28 @@ class _MockOfflineSyncService extends Mock implements OfflineSyncService {}
 const _depart = LostTrackingPhoto(bidId: 'bid-1', eventType: 'DEPART');
 
 void main() {
-  setUpAll(() => registerFallbackValue(_depart));
+  setUpAll(() {
+    registerFallbackValue(_depart);
+    registerFallbackValue(
+      const DepositPhotoRetake(key: 0, bidId: '', eventType: ''),
+    );
+  });
 
   late _MockOfflineSyncService sync;
   late ValueNotifier<int> changes;
   late List<LostTrackingPhoto> lost;
+  late List<DepositPhotoRetake> retakes;
 
   setUp(() {
     sync = _MockOfflineSyncService();
     changes = ValueNotifier(0);
     lost = [_depart];
+    retakes = [];
+    when(() => sync.queueChanges).thenReturn(changes);
+    when(
+      () => sync.depositRetakeFor(any()),
+    ).thenAnswer((_) => List.of(retakes));
+    when(() => sync.dismissDepositRetake(any())).thenAnswer((_) async {});
     when(() => sync.lostPhotoChanges).thenReturn(changes);
     when(() => sync.lostPhotosFor(any())).thenAnswer((_) => List.of(lost));
     when(() => sync.dismissLostPhoto(any())).thenAnswer((invocation) async {
@@ -77,5 +89,22 @@ void main() {
     await pump(tester);
 
     expect(find.byType(IconButton), findsNothing);
+  });
+
+  testWidgets('dépôt resté en file faute de photo : « reprendre la photo », '
+      'en français et en anglais', (tester) async {
+    lost = [];
+    retakes = [
+      const DepositPhotoRetake(key: 3, bidId: 'bid-1', eventType: 'DEPART'),
+    ];
+    await pump(tester);
+    expect(find.textContaining('Reprenez la photo du dépôt'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Fermer le message sur la photo du dépôt'));
+    verify(() => sync.dismissDepositRetake(retakes.single)).called(1);
+
+    await pump(tester, locale: AppL10n.en);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Retake the deposit photo'), findsOneWidget);
   });
 }

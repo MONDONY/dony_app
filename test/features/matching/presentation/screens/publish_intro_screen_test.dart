@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -9,6 +10,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
@@ -40,6 +42,8 @@ import '../../../publish_gate/publish_gate_fixtures.dart';
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
+
+class _MockAuthRepository extends Mock implements AuthRepository {}
 
 class _MockStripeAccountBloc
     extends MockBloc<StripeAccountEvent, StripeAccountState>
@@ -78,6 +82,7 @@ Future<void> _pump(
   Map<String, dynamic>? localDraft,
   List<Object> serverDrafts = const [],
   List<TripTemplate> tripTemplates = const [],
+  AuthRepository? authRepository,
 }) async {
   tester.view.physicalSize = const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
@@ -91,6 +96,9 @@ Future<void> _pump(
     getIt.registerLazySingleton<AnalyticsService>(() => analytics);
   }
   addTearDown(getIt.reset);
+  if (authRepository != null) {
+    getIt.registerSingleton<AuthRepository>(authRepository);
+  }
 
   _commitmentRepo = _MockCommitments();
   when(() => _commitmentRepo.fetch()).thenAnswer(
@@ -161,6 +169,7 @@ Future<void> _pump(
   visited = [];
   extras = [];
   final authBloc = _MockAuthBloc();
+  when(() => authBloc.isClosed).thenReturn(false);
   when(
     () => authBloc.state,
   ).thenReturn(AuthAuthenticated(_user(kycStatus: kycStatus)));
@@ -327,6 +336,121 @@ void main() {
         expect(find.text('Vérifier mon identité'), findsNothing);
       },
     );
+
+    group('profil en cache périmé (identité validée hors du flux Didit)', () {
+      testWidgets(
+        'cache non vérifié, serveur VERIFIED : pas de blocage, formulaire direct',
+        (tester) async {
+          final repo = _MockAuthRepository();
+          when(
+            () => repo.getProfile(),
+          ).thenAnswer((_) async => _user(kycStatus: 'VERIFIED'));
+          await _pump(
+            tester,
+            role: PublishIntroRole.trip,
+            kycStatus: 'NOT_STARTED',
+            commitmentRequired: false,
+            authRepository: repo,
+          );
+          await tester.pumpAndSettle();
+
+          verify(() => repo.getProfile()).called(1);
+          expect(visited, ['/trips/create']);
+          expect(
+            find.textContaining('identité doit être vérifiée'),
+            findsNothing,
+          );
+        },
+      );
+
+      testWidgets('cache non vérifié, serveur non vérifié : blocage conservé', (
+        tester,
+      ) async {
+        final repo = _MockAuthRepository();
+        when(
+          () => repo.getProfile(),
+        ).thenAnswer((_) async => _user(kycStatus: 'NOT_STARTED'));
+        await _pump(
+          tester,
+          role: PublishIntroRole.trip,
+          kycStatus: 'NOT_STARTED',
+          commitmentRequired: false,
+          authRepository: repo,
+        );
+        await tester.pumpAndSettle();
+
+        expect(visited, isEmpty);
+        expect(find.text('Vérifier mon identité'), findsOneWidget);
+        expect(
+          find.textContaining('identité doit être vérifiée'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('serveur injoignable : blocage conservé (comme avant)', (
+        tester,
+      ) async {
+        final repo = _MockAuthRepository();
+        when(() => repo.getProfile()).thenThrow(Exception('hors ligne'));
+        await _pump(
+          tester,
+          role: PublishIntroRole.trip,
+          kycStatus: 'NOT_STARTED',
+          authRepository: repo,
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Vérifier mon identité'), findsOneWidget);
+        expect(visited, isEmpty);
+      });
+
+      testWidgets(
+        'cache vérifié : aucune relecture du serveur (comportement nominal)',
+        (tester) async {
+          final repo = _MockAuthRepository();
+          await _pump(
+            tester,
+            role: PublishIntroRole.trip,
+            kycStatus: 'VERIFIED',
+            commitmentRequired: false,
+            authRepository: repo,
+          );
+          await tester.pumpAndSettle();
+
+          verifyNever(() => repo.getProfile());
+          expect(visited, ['/trips/create']);
+        },
+      );
+
+      testWidgets(
+        'tap sur « Vérifier » : le serveur dit VERIFIED, la feuille ne s\'ouvre pas',
+        (tester) async {
+          final repo = _MockAuthRepository();
+          // Premier appel (démarrage) : encore non vérifié ; second (tap) :
+          // l'admin a validé entre-temps.
+          var calls = 0;
+          when(() => repo.getProfile()).thenAnswer((_) async {
+            calls++;
+            return _user(kycStatus: calls == 1 ? 'NOT_STARTED' : 'VERIFIED');
+          });
+          await _pump(
+            tester,
+            role: PublishIntroRole.trip,
+            kycStatus: 'NOT_STARTED',
+            commitmentRequired: false,
+            authRepository: repo,
+          );
+          await tester.pumpAndSettle();
+          expect(visited, isEmpty);
+
+          await tester.tap(find.text('Vérifier mon identité'));
+          await tester.pumpAndSettle();
+
+          expect(calls, 2);
+          expect(visited, ['/trips/create']);
+        },
+      );
+    });
 
     testWidgets('non vérifié : bouton Vérifier + invite, pas de Continuer', (
       tester,
@@ -545,10 +669,32 @@ void main() {
       await _pump(tester, role: PublishIntroRole.parcel, kycStatus: 'VERIFIED');
 
       expect(
-        find.text('Un voyageur transporte votre colis avec lui.'),
+        find.text('Un voyageur ou un transporteur achemine votre colis.'),
         findsOneWidget,
       );
       expect(find.textContaining('bagage'), findsNothing);
+    });
+
+    testWidgets('avant le choix du mode : ni aéroport ni versement propre à un '
+        'mode (FR et EN)', (tester) async {
+      await _pump(tester, role: PublishIntroRole.parcel, kycStatus: 'VERIFIED');
+
+      final images = tester.widgetList<Image>(find.byType(Image));
+      final assets = images
+          .map((i) => i.image)
+          .whereType<AssetImage>()
+          .map((a) => a.assetName);
+      expect(assets, contains(kSendIntroIllustration));
+      expect(assets, isNot(contains('assets/illustrations/envoie_colis.png')));
+      // « libéré à la livraison » est faux en bateau (payé au dépôt).
+      expect(find.textContaining('livraison'), findsNothing);
+      expect(
+        find.text(
+          'Paiement sécurisé : vous savez avant de payer quand le '
+          'transporteur est payé.',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('vérifié : case cochée puis Continuer ouvre le wizard', (
@@ -595,11 +741,43 @@ void main() {
 
       expect(find.text('Terminer un trajet commencé ?'), findsOneWidget);
       expect(find.textContaining('Marseille → Douala'), findsOneWidget);
-      expect(find.textContaining('étape 2 sur 3'), findsOneWidget);
+      // Ancien brouillon (index à trois étapes) relu sur le formulaire sans
+      // étape Mode (un seul mode proposé) : Capacité, 2e de 4.
+      expect(find.textContaining('étape 2 sur 4'), findsOneWidget);
       expect(find.textContaining('Paris → Dakar'), findsOneWidget);
       expect(find.text('Brouillon complet, prêt à publier'), findsOneWidget);
       expect(find.text('Créer un nouveau trajet'), findsOneWidget);
     });
+
+    // Recette 13/11 : « étape 3 sur 3 » pour une saisie quittée à l'étape 5.
+    for (final english in [false, true]) {
+      testWidgets('trajet ${english ? 'EN' : 'FR'}, modes ouverts : brouillon '
+          'quitté aux Conditions, étape 5 sur 5', (tester) async {
+        if (english) useEnglish();
+        setTransportModes(
+          const TransportModesAvailability(road: true, boat: false),
+        );
+        addTearDown(resetTransportModesForTest);
+        await _pump(
+          tester,
+          role: PublishIntroRole.trip,
+          kycStatus: 'VERIFIED',
+          commitmentRequired: false,
+          localDraft: {
+            'stepId': 'conditions',
+            'step': 2,
+            'departureCity': 'Marseille',
+            'arrivalCity': 'Douala',
+          },
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining(english ? 'step 5 of 5' : 'étape 5 sur 5'),
+          findsOneWidget,
+        );
+      });
+    }
 
     testWidgets('trajet : terminer le brouillon local le recharge', (
       tester,
@@ -846,6 +1024,13 @@ void main() {
       await _pump(tester, role: PublishIntroRole.parcel, kycStatus: 'VERIFIED');
 
       expect(find.text('Post a parcel'), findsOneWidget);
+      expect(find.textContaining('delivery'), findsNothing);
+      expect(
+        find.text(
+          'Secure payment: you know before paying when the carrier gets paid.',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('trajet, non vérifié : phrase complète en anglais', (

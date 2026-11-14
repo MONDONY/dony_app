@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:equatable/equatable.dart';
 
@@ -133,6 +134,7 @@ class MobileMoneyPaymentStatus extends Equatable {
     this.amount,
     this.currency = 'XOF',
     this.deposit,
+    this.payoutTrigger = PayoutTrigger.delivery,
   });
 
   /// UUID du bid ou du fil de négociation payé.
@@ -156,6 +158,11 @@ class MobileMoneyPaymentStatus extends Equatable {
   /// Dernier dépôt tenté, nul tant qu'aucune tentative n'a été faite.
   final MobileMoneyDeposit? deposit;
 
+  /// Quand le voyageur est payé : à la livraison (défaut, aussi quand le back
+  /// ne sert pas la clé) ou au dépôt du colis (bateau). Dit le texte de la
+  /// ligne « Versé au voyageur » de l'écran d'attente.
+  final PayoutTrigger payoutTrigger;
+
   factory MobileMoneyPaymentStatus.fromJson(Map<String, dynamic> json) =>
       MobileMoneyPaymentStatus(
         subjectId: (json['bidId'] ?? json['threadId']) as String,
@@ -169,6 +176,7 @@ class MobileMoneyPaymentStatus extends Equatable {
                 json['deposit'] as Map<String, dynamic>,
               )
             : null,
+        payoutTrigger: PayoutTrigger.fromWire(json['payoutTrigger']),
       );
 
   /// Paiement déjà séquestré (ou versé) : le compte à rebours ne s'applique
@@ -245,5 +253,6 @@ class MobileMoneyPaymentStatus extends Equatable {
     amount,
     currency,
     deposit,
+    payoutTrigger,
   ];
 }

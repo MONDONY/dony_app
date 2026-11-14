@@ -394,6 +394,78 @@
   "@errorArrivalTooFarTitle": {"description": "Erreur arrival-too-far du back : l'arrivée est trop loin après le départ pour ce mode de transport (error_catalog.dart)."},
   "errorArrivalTooFarMessage": "La date d'arrivée est trop loin après le départ pour ce mode.",
   "@errorArrivalTooFarMessage": {"description": "Erreur arrival-too-far du back : l'arrivée est trop loin après le départ pour ce mode de transport (error_catalog.dart)."},
+  "errorBoatCarrierNotVerifiedTitle": "Fret par bateau réservé",
+  "@errorBoatCarrierNotVerifiedTitle": {"description": "Erreur boat-carrier-not-verified du back, titre (error_catalog.dart)."},
+  "errorBoatCarrierNotVerifiedMessage": "Le transport par bateau est réservé aux professionnels et aux voyageurs vérifiés (badge GP Pro).",
+  "@errorBoatCarrierNotVerifiedMessage": {"description": "Erreur boat-carrier-not-verified du back, message (error_catalog.dart)."},
+  "errorBoatTemplateUnsupportedTitle": "Modèles indisponibles en bateau",
+  "@errorBoatTemplateUnsupportedTitle": {"description": "Erreur boat-template-unsupported du back, titre (error_catalog.dart)."},
+  "errorBoatTemplateUnsupportedMessage": "Les modèles et les trajets récurrents ne sont pas disponibles pour le bateau.",
+  "@errorBoatTemplateUnsupportedMessage": {"description": "Erreur boat-template-unsupported du back, message (error_catalog.dart)."},
+  "errorArrivalRangeInvalidTitle": "Arrivée estimée invalide",
+  "@errorArrivalRangeInvalidTitle": {"description": "Erreur arrival-range-invalid du back, titre de repli (error_catalog.dart). Couvre fin avant début, fin dans le passé, début avant le départ."},
+  "errorArrivalRangeInvalidMessage": "Vérifiez l'arrivée estimée : elle ne peut pas précéder le départ, et la fin ne peut être ni avant le début ni dans le passé.",
+  "@errorArrivalRangeInvalidMessage": {"description": "Erreur arrival-range-invalid du back, message de repli (error_catalog.dart). Le back localise un détail plus précis selon le cas."},
+  "errorArrivalBeforeDepartureTitle": "Arrivée avant le départ",
+  "@errorArrivalBeforeDepartureTitle": {"description": "Erreur arrival-before-departure du back, titre (error_catalog.dart)."},
+  "errorArrivalBeforeDepartureMessage": "La date d'arrivée ne peut pas précéder la date de départ.",
+  "@errorArrivalBeforeDepartureMessage": {"description": "Erreur arrival-before-departure du back, message de repli (error_catalog.dart)."},
+  "errorBoatVolumeRequiredTitle": "Volume requis",
+  "@errorBoatVolumeRequiredTitle": {"description": "Erreur boat-volume-required du back, titre (error_catalog.dart)."},
+  "errorBoatVolumeRequiredMessage": "Un trajet en bateau facturé au m³ doit indiquer le volume proposé.",
+  "@errorBoatVolumeRequiredMessage": {"description": "Erreur boat-volume-required du back, message (error_catalog.dart)."},
+  "errorBoatVolumeUnitInvalidTitle": "Unité de capacité incompatible",
+  "@errorBoatVolumeUnitInvalidTitle": {"description": "Erreur boat-volume-unit-invalid du back, titre (error_catalog.dart)."},
+  "errorBoatVolumeUnitInvalidMessage": "Un trajet facturé au m³ ne peut pas avoir une capacité en kilos libres : indiquez le volume proposé.",
+  "@errorBoatVolumeUnitInvalidMessage": {"description": "Erreur boat-volume-unit-invalid du back, message (error_catalog.dart)."},
+  "errorBoatPriceRequiredTitle": "Prix du trajet en bateau",
+  "@errorBoatPriceRequiredTitle": {"description": "Erreur boat-price-required du back, titre (error_catalog.dart)."},
+  "errorBoatPriceRequiredMessage": "Un trajet en bateau a un seul prix : au m³ ou au kilo, sans grille de prix par article.",
+  "@errorBoatPriceRequiredMessage": {"description": "Erreur boat-price-required du back, message (error_catalog.dart)."},
+  "errorPricingUnitLockedTitle": "Unité de prix verrouillée",
+  "@errorPricingUnitLockedTitle": {"description": "Erreur pricing-unit-locked du back, titre (error_catalog.dart)."},
+  "errorPricingUnitLockedMessage": "Le prix au m³ ou au kilo ne peut plus changer : ce trajet a déjà reçu une demande ou une offre.",
+  "@errorPricingUnitLockedMessage": {"description": "Erreur pricing-unit-locked du back, message (error_catalog.dart)."},
+  "errorDimensionsIncompleteTitle": "Dimensions incomplètes",
+  "@errorDimensionsIncompleteTitle": {"description": "Erreur dimensions-incomplete du back, titre (error_catalog.dart)."},
+  "errorDimensionsIncompleteMessage": "Indiquez la longueur, la largeur et la hauteur du colis, ou aucune des trois.",
+  "@errorDimensionsIncompleteMessage": {"description": "Erreur dimensions-incomplete du back, message (error_catalog.dart)."},
+  "errorBoatDimensionsRequiredTitle": "Dimensions requises",
+  "@errorBoatDimensionsRequiredTitle": {"description": "Erreur boat-dimensions-required du back, titre (error_catalog.dart)."},
+  "errorBoatDimensionsRequiredMessage": "Pour un envoi par bateau, indiquez la longueur, la largeur et la hauteur du colis.",
+  "@errorBoatDimensionsRequiredMessage": {"description": "Erreur boat-dimensions-required du back, message (error_catalog.dart)."},
+  "errorInsufficientVolumeTitle": "Volume insuffisant",
+  "@errorInsufficientVolumeTitle": {"description": "Erreur insufficient-volume du back, titre (error_catalog.dart)."},
+  "errorInsufficientVolumeMessage": "Ce trajet n'a pas assez de volume restant pour ce colis.",
+  "@errorInsufficientVolumeMessage": {"description": "Erreur insufficient-volume du back, message (error_catalog.dart)."},
+  "errorTripDelayNotAllowedTitle": "Retard impossible",
+  "@errorTripDelayNotAllowedTitle": {"description": "Erreur trip-delay-not-allowed du back, titre (error_catalog.dart)."},
+  "errorTripDelayNotAllowedMessage": "Un retard ne peut être annoncé que sur un trajet en cours : il doit être parti et ne pas être terminé.",
+  "@errorTripDelayNotAllowedMessage": {"description": "Erreur trip-delay-not-allowed du back, message (error_catalog.dart)."},
+  "errorTripDelayReasonInvalidTitle": "Motif non applicable",
+  "@errorTripDelayReasonInvalidTitle": {"description": "Erreur trip-delay-reason-invalid du back, titre (error_catalog.dart)."},
+  "errorTripDelayReasonInvalidMessage": "Ce motif ne s'applique pas au mode de transport de ce trajet. Choisissez-en un autre.",
+  "@errorTripDelayReasonInvalidMessage": {"description": "Erreur trip-delay-reason-invalid du back, message (error_catalog.dart)."},
+  "errorTripDelayTooFrequentTitle": "Trop de retards annoncés",
+  "@errorTripDelayTooFrequentTitle": {"description": "Erreur trip-delay-too-frequent du back, titre (error_catalog.dart)."},
+  "errorTripDelayTooFrequentMessage": "Vous avez annoncé trop de retards sur ce trajet ces dernières 24 heures. Réessayez plus tard ou contactez le support.",
+  "@errorTripDelayTooFrequentMessage": {"description": "Erreur trip-delay-too-frequent du back, message (error_catalog.dart)."},
+  "errorBoatDepositPhotoRequiredTitle": "Photo de dépôt requise",
+  "@errorBoatDepositPhotoRequiredTitle": {"description": "Erreur boat-deposit-photo-required du back, titre (error_catalog.dart)."},
+  "errorBoatDepositPhotoRequiredMessage": "Ajoutez une photo du colis au dépôt pour valider cette étape.",
+  "@errorBoatDepositPhotoRequiredMessage": {"description": "Erreur boat-deposit-photo-required du back, message (error_catalog.dart)."},
+  "errorDepositPaidNoRefundTitle": "Remboursement impossible",
+  "@errorDepositPaidNoRefundTitle": {"description": "Erreur deposit-paid-no-refund du back, titre (error_catalog.dart)."},
+  "errorDepositPaidNoRefundMessage": "Le voyageur a déjà été payé au dépôt : ce colis ne peut plus être remboursé automatiquement.",
+  "@errorDepositPaidNoRefundMessage": {"description": "Erreur deposit-paid-no-refund du back, message (error_catalog.dart)."},
+  "errorSupplementAfterDepositTitle": "Supplément impossible",
+  "@errorSupplementAfterDepositTitle": {"description": "Erreur supplement-after-deposit du back, titre (error_catalog.dart)."},
+  "errorSupplementAfterDepositMessage": "Un supplément ne peut plus être demandé une fois le colis déposé.",
+  "@errorSupplementAfterDepositMessage": {"description": "Erreur supplement-after-deposit du back, message (error_catalog.dart)."},
+  "errorSurplusVolumeTripUnsupportedTitle": "Surplus indisponible",
+  "@errorSurplusVolumeTripUnsupportedTitle": {"description": "Erreur surplus/volume-trip-unsupported du back, titre (error_catalog.dart)."},
+  "errorSurplusVolumeTripUnsupportedMessage": "Le surplus de capacité n'est pas disponible pour un trajet facturé au m³.",
+  "@errorSurplusVolumeTripUnsupportedMessage": {"description": "Erreur surplus/volume-trip-unsupported du back, message (error_catalog.dart)."},
   "errorWeightTooHeavyTitle": "Poids trop élevé",
   "@errorWeightTooHeavyTitle": {"description": "Erreur weight-too-heavy du back : le poids dépasse le maximum du mode de transport (error_catalog.dart)."},
   "errorWeightTooHeavyMessage": "Ce poids dépasse le maximum accepté pour ce mode de transport.",
@@ -1100,6 +1172,10 @@
   "homeComposerLocating": "Localisation en cours…",
   "commonDateThisMonth": "Ce mois",
   "homeModeSelectorSending": "J'envoie un colis",
+  "homeModeSelectorSendingShort": "J'envoie",
+  "@homeModeSelectorSendingShort": {
+    "description": "Accueil, segment Envoi du sélecteur de mode, titre affiché (court : il tient avec la pastille du compteur à 360 dp) ; la phrase complète homeModeSelectorSending reste pour le lecteur d'écran (search_mode_selector.dart)"
+  },
   "homeModeSelectorTraveling": "Je voyage",
   "homeModeSelectorTravelersAvailable": "{count, plural, =1{{count} voyageur disponible} other{{count} voyageurs disponibles}}",
   "@homeModeSelectorTravelersAvailable": {
@@ -1543,13 +1619,13 @@
   "@requestPublishIntroWhyTitle": {
     "description": "Titre de la section « comment ça marche », rôle expéditeur"
   },
-  "requestPublishIntroWhyBulletCarried": "Un voyageur transporte votre colis avec lui.",
+  "requestPublishIntroWhyBulletCarried": "Un voyageur ou un transporteur achemine votre colis.",
   "@requestPublishIntroWhyBulletCarried": {
     "description": "Puce « comment ça marche », rôle expéditeur : transport"
   },
-  "requestPublishIntroWhyBulletPayment": "Paiement sécurisé, libéré à la livraison confirmée.",
+  "requestPublishIntroWhyBulletPayment": "Paiement sécurisé : vous savez avant de payer quand le transporteur est payé.",
   "@requestPublishIntroWhyBulletPayment": {
-    "description": "Puce « comment ça marche », rôle expéditeur : paiement séquestré"
+    "description": "Puce « comment ça marche », rôle expéditeur : paiement. Vraie pour tous les modes (avion et route : versé à la livraison, bateau : au dépôt), affichée avant le choix du mode"
   },
   "requestPublishIntroWhyBulletTracking": "Suivi par QR de la remise jusqu'à la réception.",
   "@requestPublishIntroWhyBulletTracking": {
@@ -4797,6 +4873,14 @@
   "@listingPickupParcelTitle": {
     "description": "Titre de la ligne remise du colis (traveler_announcement_bottom_sheet.dart, parcel_locations_card.dart, traveler_tile_sheets.dart)"
   },
+  "listingReportTripShort": "Signaler",
+  "@listingReportTripShort": {
+    "description": "Bouton court de signalement du trajet, à côté de « Bloquer » (traveler_announcement_bottom_sheet.dart) ; la phrase complète est listingReportTripLink, lue par le lecteur d'écran"
+  },
+  "listingBlockTravelerShort": "Bloquer",
+  "@listingBlockTravelerShort": {
+    "description": "Bouton court de blocage du voyageur, à côté de « Signaler » (traveler_announcement_bottom_sheet.dart) ; la phrase complète est listingBlockTravelerLink, lue par le lecteur d'écran"
+  },
   "listingReportTripLink": "Signaler ce trajet",
   "@listingReportTripLink": {
     "description": "Lien de signalement du trajet (traveler_announcement_bottom_sheet.dart)"
@@ -5536,6 +5620,10 @@
   "bidCreateRefundAssurance": "Remboursé si le colis n'arrive pas",
   "@bidCreateRefundAssurance": {
     "description": "Rappel de garantie sous le mode carte et mobile money (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateDepositDisputeAssurance": "Un litige se règle avec le support Yadony.",
+  "@bidCreateDepositDisputeAssurance": {
+    "description": "Rappel sous le mode carte et mobile money quand le voyageur est payé au dépôt du colis (trajet bateau) : aucun remboursement automatique, le support tranche un litige (create_bid_bottom_sheet.dart)"
   },
   "bidCreateCashEscrowWarning": "Paiement en espèces : pas de séquestre, vous payez le voyageur directement, sans garantie de remboursement par Yadony.",
   "@bidCreateCashEscrowWarning": {
@@ -7580,6 +7668,18 @@
   "@bidDetailCancelledSnackbar": {
     "description": "Snackbar BidCancelled (bid_detail_screen.dart)"
   },
+  "bidDetailCancelledSenderSnackbar": "Demande annulée. Vous serez remboursé.",
+  "@bidDetailCancelledSenderSnackbar": {
+    "description": "Snackbar de l'expéditeur qui vient d'annuler un colis payé par carte ou mobile money (bid_labels.dart, bid_detail_screen.dart)"
+  },
+  "bidDetailCancelledSenderCashSnackbar": "Demande annulée. Paiement en espèces : aucune somme à rembourser par Yadony.",
+  "@bidDetailCancelledSenderCashSnackbar": {
+    "description": "Snackbar de l'expéditeur qui vient d'annuler un colis payé en espèces : aucun paiement n'est passé par Yadony (bid_labels.dart, bid_detail_screen.dart)"
+  },
+  "bidDetailCancelledCashSnackbar": "Demande annulée. Paiement en espèces : l'expéditeur n'a rien à payer.",
+  "@bidDetailCancelledCashSnackbar": {
+    "description": "Vue voyageur, variante espèces de bidDetailCancelledSnackbar : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_screen.dart)"
+  },
   "bidDetailDeletedSnackbar": "Demande supprimée.",
   "@bidDetailDeletedSnackbar": {
     "description": "Snackbar BidDeleted (bid_detail_screen.dart)"
@@ -7685,9 +7785,17 @@
   "@bidDetailCancelRefundAutoSubtitle": {
     "description": "Sous-titre annulation avant remise (bid_detail_action_bars.dart)"
   },
+  "bidDetailCancelCashSubtitle": "Paiement en espèces : rien à rembourser",
+  "@bidDetailCancelCashSubtitle": {
+    "description": "Variante espèces de bidDetailCancelRefundAutoSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_action_bars.dart)"
+  },
   "bidDetailCancelAfterHandoverOptionSubtitle": "Remboursement intégral · vous récupérez votre colis",
   "@bidDetailCancelAfterHandoverOptionSubtitle": {
     "description": "Sous-titre annulation après remise, tuile d'options (bid_detail_action_bars.dart)"
+  },
+  "bidDetailCancelAfterHandoverCashOptionSubtitle": "Le voyageur vous rend le colis et l'argent remis",
+  "@bidDetailCancelAfterHandoverCashOptionSubtitle": {
+    "description": "Variante espèces de bidDetailCancelAfterHandoverOptionSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_action_bars.dart)"
   },
   "bidDetailRemoveFromHistorySubtitle": "Retirer définitivement de votre historique",
   "@bidDetailRemoveFromHistorySubtitle": {
@@ -7712,6 +7820,10 @@
   "bidDetailCancelAfterHandoverBody": "Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.",
   "@bidDetailCancelAfterHandoverBody": {
     "description": "Corps du dialog d'annulation après remise (bid_detail_action_bars.dart)"
+  },
+  "bidDetailCancelAfterHandoverCashBody": "Le colis est déjà chez le voyageur. Paiement en espèces : Yadony ne peut rien rembourser, c'est le voyageur qui vous rend l'argent remis avec votre colis. Il confirme la restitution en saisissant votre code de retour.",
+  "@bidDetailCancelAfterHandoverCashBody": {
+    "description": "Variante espèces de bidDetailCancelAfterHandoverBody : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_action_bars.dart)"
   },
   "bidDetailMoreDetails": "Plus de détails",
   "@bidDetailMoreDetails": {
@@ -7989,6 +8101,10 @@
   "@bidDetailCancelTransportAcceptedSubtitle": {
     "description": "Sous-titre annuler ce transport, autre statut (traveler_options_sheet.dart)"
   },
+  "bidDetailCancelTransportAcceptedCashSubtitle": "Paiement en espèces : l'expéditeur n'a rien à payer",
+  "@bidDetailCancelTransportAcceptedCashSubtitle": {
+    "description": "Variante espèces de bidDetailCancelTransportAcceptedSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (traveler_options_sheet.dart)"
+  },
   "bidDetailRefuseParcelLabel": "Le colis ne correspond pas",
   "@bidDetailRefuseParcelLabel": {
     "description": "Tuile d'options voyageur : refuser un colis non conforme (traveler_options_sheet.dart)"
@@ -7996,6 +8112,10 @@
   "bidDetailRefuseParcelSubtitle": "Refusez-le sans pénalité, l'expéditeur est remboursé",
   "@bidDetailRefuseParcelSubtitle": {
     "description": "Sous-titre de la tuile refus du colis (traveler_options_sheet.dart)"
+  },
+  "bidDetailRefuseParcelCashSubtitle": "Refusez-le sans pénalité, l'expéditeur ne vous doit rien",
+  "@bidDetailRefuseParcelCashSubtitle": {
+    "description": "Variante espèces de bidDetailRefuseParcelSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (traveler_options_sheet.dart)"
   },
   "parcelRefusalTitle": "Refuser le colis",
   "@parcelRefusalTitle": {
@@ -8014,6 +8134,15 @@
     "description": "Poids déclaré (parcel_refusal_sheet.dart)",
     "placeholders": {
       "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "parcelRefusalDeclaredVolume": "Volume : {volume}",
+  "@parcelRefusalDeclaredVolume": {
+    "description": "Volume déclaré d'un colis au m³ (bateau), à la place du poids ; {volume} est déjà formaté avec son unité et ses dimensions éventuelles (parcel_refusal_sheet.dart)",
+    "placeholders": {
+      "volume": {
         "type": "String"
       }
     }
@@ -8543,6 +8672,10 @@
   "@ticketHandoverDeadlineExpiredSender": {
     "description": "Message expéditeur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)"
   },
+  "ticketHandoverDeadlineExpiredSenderCash": "La date limite de dépôt est passée : demande annulée. Paiement en espèces : rien à rembourser.",
+  "@ticketHandoverDeadlineExpiredSenderCash": {
+    "description": "Variante espèces de ticketHandoverDeadlineExpiredSender (billet_talon.dart)"
+  },
   "ticketHandoverDeadlineExpiredTraveler": "La date limite de dépôt est passée : demande annulée.",
   "@ticketHandoverDeadlineExpiredTraveler": {
     "description": "Message voyageur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)"
@@ -8550,6 +8683,10 @@
   "ticketMiniStatWeightLabel": "POIDS",
   "@ticketMiniStatWeightLabel": {
     "description": "Libellé de la mini-stat poids du talon voyageur, casse conservée telle quelle dans le code source (billet_talon.dart)"
+  },
+  "ticketMiniStatVolumeLabel": "VOLUME",
+  "@ticketMiniStatVolumeLabel": {
+    "description": "Libellé de la mini-stat volume du talon voyageur, à la place du poids pour un colis au m³ (bateau), casse conservée telle quelle (billet_talon.dart)"
   },
   "ticketMiniStatCategoryLabel": "TYPE",
   "@ticketMiniStatCategoryLabel": {
@@ -9490,6 +9627,10 @@
   "@bidCancelAcceptedSubtitle": {
     "description": "Sous-titre du cas colis pas encore remis (cancellation_dialog.dart)."
   },
+  "bidCancelAcceptedCashSubtitle": "Paiement en espèces : l'expéditeur n'a rien à payer.",
+  "@bidCancelAcceptedCashSubtitle": {
+    "description": "Variante espèces de bidCancelAcceptedSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (cancellation_dialog.dart)"
+  },
   "bidCancelWarningMessage": "Le colis a déjà été remis. Vous devrez le restituer à l'expéditeur sous 3 jours en saisissant le code de retour qu'il vous communiquera.",
   "@bidCancelWarningMessage": {
     "description": "Message d'avertissement du cas colis déjà remis (cancellation_dialog.dart)."
@@ -9497,6 +9638,10 @@
   "bidCancelWarningRefundNote": "L'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l'expéditeur n'a rien à payer et les frais de service Yadony sont recrédités au voyageur.",
   "@bidCancelWarningRefundNote": {
     "description": "Note de remboursement du cas colis déjà remis (cancellation_dialog.dart)."
+  },
+  "bidCancelWarningRefundNoteCash": "Paiement en espèces : rendez à l'expéditeur l'argent qu'il vous a déjà remis. Les frais de service Yadony vous sont recrédités.",
+  "@bidCancelWarningRefundNoteCash": {
+    "description": "Variante espèces de bidCancelWarningRefundNote : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (cancellation_dialog.dart)"
   },
   "bidCancelReasonRequiredHint": "Motif de l'annulation *",
   "@bidCancelReasonRequiredHint": {
@@ -10192,6 +10337,10 @@
   "paymentSummaryWeightLabel": "Poids",
   "@paymentSummaryWeightLabel": {
     "description": "Libellé de la ligne poids du récapitulatif de paiement (payment_screen.dart _SummaryCard)."
+  },
+  "paymentSummaryVolumeLabel": "Volume",
+  "@paymentSummaryVolumeLabel": {
+    "description": "Libellé de la ligne volume du récapitulatif de paiement d'un colis au m³ (bateau), à la place du poids (payment_screen.dart)"
   },
   "paymentSummaryPricePerKgLabel": "Prix/kg",
   "@paymentSummaryPricePerKgLabel": {
@@ -11895,6 +12044,8 @@
   "@scanOfflineEventDefaultLabel": {
     "description": "Libellé court de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
   },
+  "scanOfflineDescDeposit": "Dépôt enregistré",
+  "@scanOfflineDescDeposit": {"description": "Phrase de la ligne d'un dépôt à l'entrepôt (colis bateau) en attente dans la file hors ligne (offline_scan_queue_screen.dart)."},
   "scanOfflineDescPickup": "Récupération enregistrée",
   "@scanOfflineDescPickup": {
     "description": "Description de l'étape DEPART dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
@@ -17850,6 +18001,15 @@
   "@trackingNotLinkedBody": {
     "description": "Explication du refus 403, sans « Réessayer » (parcel_not_linked_notice.dart)."
   },
+  "suiviDepositValidatedToast": "Dépôt de {parcel} validé",
+  "@suiviDepositValidatedToast": {
+    "description": "Titre du bandeau d'une validation rapide annulable quand l'étape est le dépôt à l'entrepôt d'un colis bateau (suivi_validation_toast.dart).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
   "suiviStepValidatedToast": "{step, select, DEPART{{parcel} récupéré} other{Transit de {parcel} validé}}",
   "@suiviStepValidatedToast": {
     "description": "Titre du bandeau d'une validation rapide annulable (suivi_validation_toast.dart).",
@@ -18344,6 +18504,33 @@
       }
     }
   },
+  "tripPublishArrivalOutOfRange": "Choisissez entre le {first} et le {last} : l'arrivée est au plus {days} jours après le départ.",
+  "@tripPublishArrivalOutOfRange": {
+    "description": "Jour d'arrivée en route, « Autre date » : erreur du sélecteur de date pour une date saisie hors de la fenêtre (remplace le « Hors de portée. » générique, arrival_day_chips.dart)",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "tripPublishArrivalMovedWithDeparture": "Date d'arrivée déplacée au {date} pour rester dans les {days} jours après le départ.",
+  "@tripPublishArrivalMovedWithDeparture": {
+    "description": "Création de trajet en route : message affiché quand le changement de la date de départ oblige à déplacer la date d'arrivée choisie (create_trip_screen.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "tripPublishArrivalOtherDate": "Autre date",
   "@tripPublishArrivalOtherDate": {
     "description": "Jour d'arrivée en route : puce qui ouvre le choix d'une date à partir de J+3 (arrival_day_chips.dart)"
@@ -18410,7 +18597,7 @@
   },
   "tripRescheduleReasonOther": "Autre raison",
   "@tripRescheduleReasonOther": {
-    "description": "Motif de report"
+    "description": "Motif de report ; aussi motif de retard OTHER (trip_delay_labels.dart)"
   },
   "tripRescheduleNoteHint": "Ex. : départ décalé au lendemain",
   "@tripRescheduleNoteHint": {
@@ -18458,7 +18645,7 @@
   },
   "bidRescheduleNote": "Message du voyageur : {note}",
   "@bidRescheduleNote": {
-    "description": "Carte de report : message libre du voyageur",
+    "description": "Carte de report et carte du dernier retard (TripDelayCard, trip_reschedule_card.dart) : message libre du voyageur",
     "placeholders": {
       "note": {
         "type": "String"
@@ -18499,9 +18686,17 @@
   "@bidRescheduleWithdrawConfirmMessage": {
     "description": "Confirmation du retrait, colis pas encore remis"
   },
+  "bidRescheduleWithdrawConfirmCashMessage": "Paiement en espèces : aucune somme à rembourser par Yadony. Nous vous proposons d'autres trajets.",
+  "@bidRescheduleWithdrawConfirmCashMessage": {
+    "description": "Variante espèces de bidRescheduleWithdrawConfirmMessage, colis pas encore remis : rien n'est passé par Yadony (trip_reschedule_card.dart)"
+  },
   "bidRescheduleWithdrawConfirmReturnMessage": "Vous êtes remboursé intégralement. Le voyageur vous rend le colis contre votre code de retour.",
   "@bidRescheduleWithdrawConfirmReturnMessage": {
     "description": "Confirmation du retrait, colis déjà remis"
+  },
+  "bidRescheduleWithdrawConfirmReturnCashMessage": "Paiement en espèces : Yadony n'a rien à rembourser, le voyageur vous rend l'argent remis avec le colis, contre votre code de retour.",
+  "@bidRescheduleWithdrawConfirmReturnCashMessage": {
+    "description": "Variante espèces de bidRescheduleWithdrawConfirmReturnMessage, colis déjà remis (trip_reschedule_card.dart)"
   },
   "bidRescheduleKeptSnackbar": "C'est noté : votre colis part à la nouvelle date.",
   "@bidRescheduleKeptSnackbar": {
@@ -18510,6 +18705,10 @@
   "bidRescheduleWithdrawnSnackbar": "Envoi annulé. Votre remboursement est en cours.",
   "@bidRescheduleWithdrawnSnackbar": {
     "description": "Confirmation après le retrait"
+  },
+  "bidRescheduleWithdrawnCashSnackbar": "Envoi annulé.",
+  "@bidRescheduleWithdrawnCashSnackbar": {
+    "description": "Variante espèces de bidRescheduleWithdrawnSnackbar : aucun remboursement n'est promis (bid_detail_screen.dart)"
   },
   "errorRescheduleLimitReachedTitle": "Report impossible",
   "@errorRescheduleLimitReachedTitle": {
@@ -18705,6 +18904,15 @@
   "receptionsPendingChip": "À confirmer",
   "@receptionsPendingChip": {
     "description": "Puce d'un colis à recevoir que l'utilisateur n'a pas encore confirmé (receptions_section.dart)."
+  },
+  "receptionsRowStepBoat": "{status, select, ACCEPTED{À déposer} HANDED_OVER{Déposé} IN_TRANSIT{En mer} ARRIVED{Arrivé au port} COMPLETED{Remis} other{En cours}}",
+  "@receptionsRowStepBoat": {
+    "description": "Étape courte d'un colis confirmé d'un trajet bateau, ligne « Colis à recevoir » (receptions_section.dart).",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
   },
   "receptionsRowStep": "{status, select, ACCEPTED{Bientôt récupéré} HANDED_OVER{En route} IN_TRANSIT{En route} ARRIVED{Arrivé} COMPLETED{Remis} other{En cours}}",
   "@receptionsRowStep": {
@@ -19393,9 +19601,17 @@
   "@bidCreatePhotosRequiredHelp": {
     "description": "Aide sous le titre des photos (create_bid_bottom_sheet.dart)"
   },
+  "bidCreateAddPhotoRequiredSubtitle": "Obligatoire, rassure le voyageur",
+  "@bidCreateAddPhotoRequiredSubtitle": {
+    "description": "Sous-titre de la tuile « Ajouter une photo » de la réservation d'un colis : une photo au moins est obligatoire pour envoyer la demande, bateau compris (create_bid/photo_section.dart)"
+  },
   "bidCreateHandoverCheckNotice": "À la remise, le voyageur vérifie le colis. S'il ne correspond pas à votre déclaration, il peut le refuser : vous êtes alors remboursé.",
   "@bidCreateHandoverCheckNotice": {
     "description": "Mention sous l'avertissement douane (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateHandoverCheckNoticeCash": "À la remise, le voyageur vérifie le colis. S'il ne correspond pas à votre déclaration, il peut le refuser : vous ne payez alors rien.",
+  "@bidCreateHandoverCheckNoticeCash": {
+    "description": "Variante espèces de bidCreateHandoverCheckNotice : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (create_bid_bottom_sheet.dart)"
   },
   "callStatusRinging": "Ça sonne…",
   "@callStatusRinging": {
@@ -20345,8 +20561,6 @@
   "@tripStopsBadgeOne": {"description": "Badge de carte et détail de trajet : une escale (FLUTTER-GE)"},
   "tripStopsBadgeTwoOrMore": "2 escales et +",
   "@tripStopsBadgeTwoOrMore": {"description": "Badge de carte et détail de trajet : deux escales ou plus (FLUTTER-GE)"},
-  "tripStopsDetailLabel": "Escales",
-  "@tripStopsDetailLabel": {"description": "Détail de trajet : intitulé de la ligne escales (FLUTTER-GE)"},
   "homeComposerSectionStops": "ESCALES",
   "@homeComposerSectionStops": {"description": "Filtres de recherche de trajets : section escales (FLUTTER-GD)"},
   "homeComposerStopsDirectOnly": "Direct uniquement",
@@ -20425,6 +20639,15 @@
   "@tripSwitchCurrencyConfirmMessageNoCard": {"description": "Confirmation du changement de devise quand la carte n'existe pas dans la devise cible (FLUTTER-GK).", "placeholders": {"currency": {"type": "String"}}},
   "tripSwitchCurrencyConfirmMessage": "Tous les prix du voyage passent en {currency}.",
   "@tripSwitchCurrencyConfirmMessage": {"description": "Confirmation du changement de devise quand la carte reste possible (FLUTTER-GK).", "placeholders": {"currency": {"type": "String"}}},
+  "tripPublishPerM3CurrencyReset": "Devise changée : saisissez à nouveau le prix au m³ en {currency}.",
+  "@tripPublishPerM3CurrencyReset": {
+    "description": "Message (snackbar) à l'étape Prix d'un trajet bateau vendu au m³ : la devise a changé alors qu'un prix au m³ était saisi, le champ est vidé pour ne jamais garder le nombre dans la nouvelle devise. {currency} : symbole de la nouvelle devise (create_trip_screen.dart)",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
   "requestPublicSenderRowSemantics": "Expéditeur : {name}. Voir son profil",
   "@requestPublicSenderRowSemantics": {"description": "Lecture d'écran de la ligne expéditeur en tête de la fiche publique d'une demande (request_sender_row.dart, FLUTTER-GF).", "placeholders": {"name": {"type": "String"}}},
   "tripParcelsSummaryInTransit": "{count, plural, =1{colis en route} other{colis en route}}",
@@ -20869,6 +21092,10 @@
   "@suiviPhotoLost": {"description": "Onglet Suivi : une étape de la file hors ligne est partie sans sa photo, dont le fichier local a disparu (cache purgé, FLUTTER-MJ). step = libellé d'étape traduit.", "placeholders": {"step": {"type": "String"}}},
   "suiviPhotoLostDismiss": "Fermer le message sur la photo perdue",
   "@suiviPhotoLostDismiss": {"description": "Libellé d'accessibilité du bouton qui ferme le message de photo perdue (onglet Suivi)"},
+  "suiviDepositPhotoRetake": "La photo du dépôt n'a pas pu être envoyée : le dépôt n'est pas enregistré. Reprenez la photo du dépôt pour le confirmer.",
+  "@suiviDepositPhotoRetake": {"description": "Onglet Suivi : un dépôt mis en file hors ligne est resté en attente parce que sa photo (preuve du dépôt) n'a pas pu partir (refusée, quota, fichier perdu). Message jusqu'à ce que l'utilisateur le ferme."},
+  "suiviDepositPhotoRetakeDismiss": "Fermer le message sur la photo du dépôt",
+  "@suiviDepositPhotoRetakeDismiss": {"description": "Libellé d'accessibilité du bouton qui ferme le message de la photo du dépôt à reprendre (onglet Suivi)"},
   "suiviScanClosedBeforeSync": "Ce colis a été clos avant la synchronisation de votre scan. Si vous avez le colis, contactez le support.",
   "@suiviScanClosedBeforeSync": {"description": "Onglet Suivi : une remise (DEPART) scannée hors ligne a été refusée à la synchronisation (422 bid-not-accepted) parce que le colis a été clos entre-temps (absence confirmée, annulation). Ne jamais promettre une alerte de l'équipe : le back n'alerte que dans quelques cas (suivi_closed_scans_banner.dart)."},
   "suiviScanClosedBeforeSyncDismiss": "Fermer le message sur le scan non synchronisé",
@@ -21629,7 +21856,9 @@
   "tripSeriesErrorKyc": "Vérifiez votre identité pour publier ces trajets, ou créez des brouillons.",
   "@tripSeriesErrorKyc": {"description": "Refus kyc-not-verified."},
   "tripSeriesErrorProLimit": "Limite de trajets du mois atteinte.",
-  "@tripSeriesErrorProLimit": {"description": "Refus pro-limit-reached."},
+  "@tripSeriesErrorProLimit": {"description": "Refus monthly-limit-reached, traveler-status-required ou pro-limit-reached."},
+  "tripSeriesErrorGpProPending": "Votre demande GP Pro est en cours d'examen. Vous pouvez créer des brouillons en attendant.",
+  "@tripSeriesErrorGpProPending": {"description": "Refus gp-pro-pending."},
   "tripSeriesErrorStripe": "Configurez vos paiements par carte pour publier ces trajets, ou créez des brouillons.",
   "@tripSeriesErrorStripe": {"description": "Refus stripe-onboarding-incomplete."},
   "tripSeriesErrorGeneric": "Impossible d'ajouter ces dates pour le moment. Réessayez.",
@@ -22072,8 +22301,8 @@
   "@aiFormDraftWarningCardCurrency": {"description": "Avertissement : carte demandée dans une devise sans carte (franc CFA)."},
   "aiFormDraftWarningMobileMoney": "Le mobile money n'est proposé qu'en franc CFA : je ne l'ai pas coché.",
   "@aiFormDraftWarningMobileMoney": {"description": "Avertissement : mobile money demandé hors zone CFA."},
-  "aiFormDraftWarningModeUnavailable": "Ce mode n'est pas encore proposé : le trajet sera publié en avion.",
-  "@aiFormDraftWarningModeUnavailable": {"description": "Avertissement : un mode de transport pas proposé à la publication a été dit, le trajet repasse en avion."},
+  "aiFormDraftWarningModeUnavailable": "L'assistant ne peut pas choisir ce mode : vérifiez le mode de transport avant de publier.",
+  "@aiFormDraftWarningModeUnavailable": {"description": "Avertissement : un mode de transport que l'assistant ne remplit pas a été dit, il est retiré du brouillon et se choisit dans le formulaire."},
   "aiFormDraftWarningBudget": "Ce budget sort des montants acceptés : saisissez-le à l'étape 3.",
   "@aiFormDraftWarningBudget": {"description": "Avertissement : budget hors des bornes du formulaire."},
   "aiFormDraftFilledBanner": "Rempli par l'IA. Vérifiez chaque champ avant de publier.",
@@ -23127,8 +23356,8 @@
   "@tripSectionYourTrip": {"description": "Écran du trajet vu par son voyageur : titre de la grille de tuiles (itinéraire et lieux, paiements, conditions, affiche, arrivée), chacune ouvrant un bottom sheet (trip_owner_body.dart)."},
   "tripOwnerMenuTooltip": "Options du trajet",
   "@tripOwnerMenuTooltip": {"description": "Écran du trajet (propriétaire) : libellé d'accessibilité et info-bulle du bouton ⋮ de la barre d'application, qui ouvre le menu des actions du trajet (trip_owner_options_sheet.dart)."},
-  "tripMenuEditSubtitle": "Villes, dates, kilos, prix et conditions",
-  "@tripMenuEditSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Modifier », présente tant qu'aucune demande n'engage le trajet (trip_owner_options_sheet.dart)."},
+  "tripMenuEditSubtitle": "Villes, dates, capacité, prix et conditions",
+  "@tripMenuEditSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Modifier », présente tant qu'aucune demande n'engage le trajet (trip_owner_options_sheet.dart). Neutre selon le mode : « capacité » couvre les kilos et le volume en m³ du bateau."},
   "tripMenuRecurringSubtitle": "Le même trajet à d'autres dates",
   "@tripMenuRecurringSubtitle": {"description": "Menu ⋮ de l'écran du trajet : sous-titre de l'entrée « Rendre ce trajet récurrent » (trajet direct actif ou terminé), qui ouvre le calendrier du trajet récurrent (trip_owner_options_sheet.dart)."},
   "tripMenuSaveTemplate": "Enregistrer en modèle",
@@ -23697,5 +23926,854 @@
   "requestCreateWeightTooHeavySubmit": "Ce colis dépasse 32 kg : modifiez son poids ou choisissez Route.",
   "@requestCreateWeightTooHeavySubmit": {
     "description": "Message de la publication refusée : poids au-delà de 32 kg pour le mode choisi, affiché depuis l'étape budget (package_request_create_screen.dart)"
-  }
+  },
+  "tripPublishModeBoatTitle": "Voie maritime",
+  "@tripPublishModeBoatTitle": {
+    "description": "Titre de la carte Bateau de l'étape Mode (mode_step.dart)"
+  },
+  "tripPublishModeBoatSubtitle": "Bateau, groupage en conteneur",
+  "@tripPublishModeBoatSubtitle": {
+    "description": "Sous-titre de la carte Bateau de l'étape Mode (mode_step.dart)"
+  },
+  "tripPublishModeBoatTagDuration": "Plusieurs semaines",
+  "@tripPublishModeBoatTagDuration": {
+    "description": "Étiquette de durée de la carte Bateau (mode_step.dart)"
+  },
+  "tripPublishModeBoatTagCapacity": "Volume en m³",
+  "@tripPublishModeBoatTagCapacity": {
+    "description": "Étiquette de capacité de la carte Bateau (mode_step.dart)"
+  },
+  "tripPublishModeBoatLocked": "Réservé aux transporteurs vérifiés",
+  "@tripPublishModeBoatLocked": {
+    "description": "Carte Bateau grisée : voyageur sans badge GP Pro ni compte pro (mode_step.dart)"
+  },
+  "tripPublishModeBoatBadgeLink": "Demander le badge GP Pro",
+  "@tripPublishModeBoatBadgeLink": {
+    "description": "Lien texte de la carte Bateau grisée, ouvre la demande GP Pro (mode_step.dart)"
+  },
+  "tripPublishBoatDeparturePortLabel": "Port de départ",
+  "@tripPublishBoatDeparturePortLabel": {
+    "description": "Champ de la ville de départ d'un trajet bateau (trajet_step.dart)"
+  },
+  "tripPublishBoatArrivalPortLabel": "Port d'arrivée",
+  "@tripPublishBoatArrivalPortLabel": {
+    "description": "Champ de la ville d'arrivée d'un trajet bateau (trajet_step.dart)"
+  },
+  "tripPublishBoatArrivalLabel": "Arrivée estimée",
+  "@tripPublishBoatArrivalLabel": {
+    "description": "Titre des deux dates d'arrivée d'un trajet bateau (trajet_step.dart)"
+  },
+  "tripPublishBoatArrivalEarliestLabel": "Au plus tôt",
+  "@tripPublishBoatArrivalEarliestLabel": {
+    "description": "Champ de la première date d'arrivée estimée d'un bateau (trajet_step.dart)"
+  },
+  "tripPublishBoatArrivalLatestLabel": "Au plus tard",
+  "@tripPublishBoatArrivalLatestLabel": {
+    "description": "Champ de la dernière date d'arrivée estimée d'un bateau (trajet_step.dart)"
+  },
+  "tripPublishBoatArrivalHelp": "Les expéditeurs voient une fourchette : les retards au port sont fréquents.",
+  "@tripPublishBoatArrivalHelp": {
+    "description": "Aide sous l'arrivée estimée d'un trajet bateau (trajet_step.dart)"
+  },
+  "tripPublishBoatArrivalRequired": "Indiquez l'arrivée au plus tôt et au plus tard",
+  "@tripPublishBoatArrivalRequired": {
+    "description": "Erreur : arrivée estimée d'un bateau incomplète (create_trip_screen.dart)"
+  },
+  "tripPublishBoatArrivalBeforeDeparture": "L'arrivée estimée ne peut pas précéder le départ",
+  "@tripPublishBoatArrivalBeforeDeparture": {
+    "description": "Erreur : arrivée au plus tôt d'un bateau avant le départ (create_trip_screen.dart)"
+  },
+  "tripPublishBoatArrivalLatestBeforeEarliest": "L'arrivée au plus tard ne peut pas précéder l'arrivée au plus tôt",
+  "@tripPublishBoatArrivalLatestBeforeEarliest": {
+    "description": "Erreur : fin de la fourchette d'arrivée avant son début (create_trip_screen.dart)"
+  },
+  "tripPublishBoatArrivalTooFar": "L'arrivée au plus tard doit tomber dans les {days} jours qui suivent le départ",
+  "@tripPublishBoatArrivalTooFar": {
+    "description": "Erreur : fin de la fourchette d'arrivée au-delà du maximum du bateau (create_trip_screen.dart)",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "tripPublishBoatWarehouseLabel": "Adresse de l'entrepôt",
+  "@tripPublishBoatWarehouseLabel": {
+    "description": "Adresse de remise d'un trajet bateau (lieux_capacite_step.dart)"
+  },
+  "tripPublishBoatWarehouseSubtitle": "Où les expéditeurs déposent leurs colis",
+  "@tripPublishBoatWarehouseSubtitle": {
+    "description": "Aide de l'adresse de l'entrepôt d'un trajet bateau (lieux_capacite_step.dart)"
+  },
+  "tripPublishBoatPickupLabel": "Adresse de retrait",
+  "@tripPublishBoatPickupLabel": {
+    "description": "Adresse de livraison d'un trajet bateau (lieux_capacite_step.dart)"
+  },
+  "tripPublishBoatPickupSubtitle": "Où les destinataires récupèrent leurs colis",
+  "@tripPublishBoatPickupSubtitle": {
+    "description": "Aide de l'adresse de retrait d'un trajet bateau (lieux_capacite_step.dart)"
+  },
+  "tripPublishBoatUnitQuestion": "Vous vendez la place",
+  "@tripPublishBoatUnitQuestion": {
+    "description": "Titre du choix de l'unité de vente d'un trajet bateau (capacity_control.dart)"
+  },
+  "tripPublishBoatUnitM3": "Au m³",
+  "@tripPublishBoatUnitM3": {
+    "description": "Segment de l'unité de vente d'un trajet bateau : au mètre cube (capacity_control.dart)"
+  },
+  "tripPublishBoatUnitKg": "Au kilo",
+  "@tripPublishBoatUnitKg": {
+    "description": "Segment de l'unité de vente d'un trajet bateau : au kilo (capacity_control.dart)"
+  },
+  "tripPublishBoatVolumeLabel": "Volume disponible (m³)",
+  "@tripPublishBoatVolumeLabel": {
+    "description": "Champ du volume proposé d'un trajet bateau au m³ (capacity_control.dart)"
+  },
+  "tripPublishBoatVolumeHint": "De 0,1 à 9 999 m³, une décimale",
+  "@tripPublishBoatVolumeHint": {
+    "description": "Aide du champ du volume proposé (capacity_control.dart)"
+  },
+  "tripPublishBoatVolumeInvalid": "Indiquez un volume entre 0,1 et 9 999 m³",
+  "@tripPublishBoatVolumeInvalid": {
+    "description": "Erreur : volume proposé hors bornes (capacity_control.dart)"
+  },
+  "tripPublishBoatPricePerM3Label": "Prix par m³",
+  "@tripPublishBoatPricePerM3Label": {
+    "description": "Titre et champ du prix au m³ d'un trajet bateau (prix_step.dart)"
+  },
+  "tripPublishBoatPricePrompt": "Indiquez votre prix par m³ pour voir l'estimation",
+  "@tripPublishBoatPricePrompt": {
+    "description": "Invite sous le champ du prix au m³ encore vide (prix_step.dart)"
+  },
+  "tripPublishBoatPriceTooHigh": "Le prix par m³ ne peut pas dépasser {max}",
+  "@tripPublishBoatPriceTooHigh": {
+    "description": "Erreur sous le champ du prix au m³ au-dessus du plafond du serveur, montant déjà formaté dans la devise (prix_step.dart)",
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishBoatPriceEstimateLine": "Vous touchez {net} par m³ · l'expéditeur paie {total}",
+  "@tripPublishBoatPriceEstimateLine": {
+    "description": "Estimation du prix au m³, montants déjà formatés dans la devise (prix_step.dart)",
+    "placeholders": {
+      "net": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishBoatDepositPayoutNotice": "Par bateau, vous êtes payé dès que l'expéditeur dépose son colis à l'entrepôt, sans attendre la livraison.",
+  "@tripPublishBoatDepositPayoutNotice": {
+    "description": "Encadré de l'étape Prix d'un trajet bateau : versement au dépôt (prix_step.dart)"
+  },
+  "tripPublishPerM3Value": "{value}/m³",
+  "@tripPublishPerM3Value": {
+    "description": "Montant ou symbole suivi de « par m³ » (prix_step.dart, announcement_preview_sheet.dart)",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "requestCreateDimensionsLabel": "Dimensions du colis",
+  "@requestCreateDimensionsLabel": {
+    "description": "Titre du bloc des dimensions d'une demande en bateau (step_2_details.dart)"
+  },
+  "requestCreateDimensionsOptionalLabel": "Dimensions du colis (facultatif)",
+  "@requestCreateDimensionsOptionalLabel": {
+    "description": "Titre du bloc des dimensions d'une demande « peu importe » (step_2_details.dart)"
+  },
+  "requestCreateDimensionsHelpBoat": "Le transporteur facture au volume : mesurez votre colis emballé, en centimètres.",
+  "@requestCreateDimensionsHelpBoat": {
+    "description": "Aide sous le titre des dimensions d'une demande en bateau (step_2_details.dart)"
+  },
+  "requestCreateDimensionsHelpAny": "Utile par bateau : le prix se calcule au volume.",
+  "@requestCreateDimensionsHelpAny": {
+    "description": "Aide des dimensions facultatives d'une demande « peu importe » (step_2_details.dart)"
+  },
+  "requestCreateDimensionsAdd": "Ajouter les dimensions",
+  "@requestCreateDimensionsAdd": {
+    "description": "Ligne qui déplie les dimensions facultatives (step_2_details.dart)"
+  },
+  "requestCreateDimensionLength": "Longueur",
+  "@requestCreateDimensionLength": {
+    "description": "Libellé du champ longueur du colis (step_2_details.dart)"
+  },
+  "requestCreateDimensionWidth": "Largeur",
+  "@requestCreateDimensionWidth": {
+    "description": "Libellé du champ largeur du colis (step_2_details.dart)"
+  },
+  "requestCreateDimensionHeight": "Hauteur",
+  "@requestCreateDimensionHeight": {
+    "description": "Libellé du champ hauteur du colis (step_2_details.dart)"
+  },
+  "requestCreateDimensionRequired": "Obligatoire",
+  "@requestCreateDimensionRequired": {
+    "description": "Erreur : dimension du colis manquante (step_2_details.dart)"
+  },
+  "requestCreateDimensionInvalid": "Entre 1 et 400 cm",
+  "@requestCreateDimensionInvalid": {
+    "description": "Erreur : dimension du colis hors bornes (step_2_details.dart)"
+  },
+  "requestCreateVolumeLine": "Volume : {volume}",
+  "@requestCreateVolumeLine": {
+    "description": "Aperçu du volume du colis, déjà formaté en m³ (step_2_details.dart)",
+    "placeholders": {
+      "volume": {"type": "String"}
+    }
+  },
+  "requestCreateDimensionsRequiredSubmit": "Indiquez les dimensions du colis à l'étape « Le colis ».",
+  "@requestCreateDimensionsRequiredSubmit": {
+    "description": "Message : publication d'une demande en bateau sans dimensions (package_request_create_screen.dart)"
+  },
+  "requestCreateWeightAndVolume": "{weight} · {volume}",
+  "@requestCreateWeightAndVolume": {
+    "description": "Poids suivi du volume d'un colis, déjà formatés (wizard_summary_card.dart)",
+    "placeholders": {
+      "weight": {"type": "String"},
+      "volume": {"type": "String"}
+    }
+  },
+  "requestPreviewVolumeLabel": "Volume",
+  "@requestPreviewVolumeLabel": {
+    "description": "Ligne de l'aperçu : volume du colis (package_request_preview_sheet.dart)"
+  },
+  "requestPreviewVolumeValue": "{volume} ({length} × {width} × {height} cm)",
+  "@requestPreviewVolumeValue": {
+    "description": "Ligne de l'aperçu : volume et dimensions du colis (package_request_preview_sheet.dart)",
+    "placeholders": {
+      "volume": {"type": "String"},
+      "length": {"type": "int"},
+      "width": {"type": "int"},
+      "height": {"type": "int"}
+    }
+  },
+  "requestCreatePriceBasisPerM3": "Prix au m³",
+  "@requestCreatePriceBasisPerM3": {
+    "description": "Sélecteur : le prix saisi est au m³, le total est calculé (step_3_recap_budget.dart)"
+  },
+  "requestCreatePriceBasisPerM3NeedsDimensions": "Indiquez d'abord les dimensions du colis pour fixer un prix au m³.",
+  "@requestCreatePriceBasisPerM3NeedsDimensions": {
+    "description": "Explication quand le prix au m³ est grisé faute de dimensions (step_3_recap_budget.dart)"
+  },
+  "requestCreatePerM3InputHint": "Ex. 600,00",
+  "@requestCreatePerM3InputHint": {"description": "Exemple dans le champ du prix au m³ d'une demande bateau (étape 3 du formulaire d'une demande d'envoi)."},
+  "requestCreatePriceUnitPerM3": "{symbol} / m³",
+  "@requestCreatePriceUnitPerM3": {
+    "description": "Unité du champ prix en mode au m³ (step_3_recap_budget.dart)",
+    "placeholders": {
+      "symbol": {"type": "String"}
+    }
+  },
+  "requestCreatePerM3Computed": "{volume} × {perM3} / m³ = {total} au total",
+  "@requestCreatePerM3Computed": {
+    "description": "Calcul du total en mode prix au m³, montants déjà formatés (step_3_recap_budget.dart)",
+    "placeholders": {
+      "volume": {"type": "String"},
+      "perM3": {"type": "String"},
+      "total": {"type": "String"}
+    }
+  },
+  "requestCreateBoatDepositNotice": "Par bateau, comptez plusieurs semaines. Le transporteur est payé dès le dépôt de votre colis à l'entrepôt : le paiement n'attend pas la livraison.",
+  "@requestCreateBoatDepositNotice": {
+    "description": "Encadré de l'étape Prix d'une demande en bateau : délai et versement au dépôt (step_3_recap_budget.dart)"
+  },
+  "bidCreateVolumeRateLine": "{volume} × {rate} par m³",
+  "@bidCreateVolumeRateLine": {
+    "description": "Ligne de calcul du prix d'une réservation au m³ : volume du colis × prix au m³, déjà formatés (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "volume": {"type": "String"},
+      "rate": {"type": "String"}
+    }
+  },
+  "bidCreateVolumeAvailableLine": "Volume restant sur ce trajet : {available}",
+  "@bidCreateVolumeAvailableLine": {
+    "description": "Volume encore disponible sur le trajet bateau, déjà formaté en m³ (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "available": {"type": "String"}
+    }
+  },
+  "bidCreateVolumeTooLarge": "Ce colis fait {volume} et il ne reste que {available} sur ce trajet.",
+  "@bidCreateVolumeTooLarge": {
+    "description": "Erreur locale : le volume du colis dépasse le volume restant du trajet, déjà formatés en m³ (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "volume": {"type": "String"},
+      "available": {"type": "String"}
+    }
+  },
+  "bidCreateVolumeDimensionsHint": "Indiquez les trois dimensions du colis pour calculer le prix.",
+  "@bidCreateVolumeDimensionsHint": {
+    "description": "Aide du bouton d'envoi grisé : dimensions du colis manquantes sur un trajet au m³ (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeSubtitleDeposit": "Versé au transporteur au dépôt du colis",
+  "@bidCreateCardModeSubtitleDeposit": {
+    "description": "Sous-titre du choix de paiement par carte, trajet bateau : le transporteur est payé au dépôt du colis (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeBodyDeposit": "Bloqué par Yadony dès maintenant, versé au transporteur quand vous déposez le colis.",
+  "@bidCreateCardModeBodyDeposit": {
+    "description": "Explication du mode carte d'un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeNegotiationBodyDeposit": "Payé par carte une fois votre prix accepté, puis versé au transporteur au dépôt du colis.",
+  "@bidCreateCardModeNegotiationBodyDeposit": {
+    "description": "Explication du mode carte d'une proposition de prix sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateMobileMoneyModeBodyDeposit": "Après l'accord du transporteur, vous recevez une demande de paiement sur votre téléphone. Le montant est versé au transporteur au dépôt du colis.",
+  "@bidCreateMobileMoneyModeBodyDeposit": {
+    "description": "Explication du mode mobile money d'un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateOfferPaidSubtitleDeposit": "Votre paiement est sécurisé par Yadony jusqu'au dépôt de votre colis, puis versé au transporteur. Le transporteur est notifié de votre demande.",
+  "@bidCreateOfferPaidSubtitleDeposit": {
+    "description": "Écran de succès d'un paiement par carte sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateMobileMoneySuccessSubtitleDeposit": "Paiement mobile money : si le transporteur accepte, vous recevrez une notification et aurez 30 minutes pour valider le paiement sur votre téléphone. Le montant est gardé en sécurité par Yadony jusqu'au dépôt du colis.",
+  "@bidCreateMobileMoneySuccessSubtitleDeposit": {
+    "description": "Écran de succès d'une offre mobile money sur un trajet bateau : versement au dépôt (create_bid_bottom_sheet.dart)"
+  },
+  "homeFilterChipsVolume": "Volume",
+  "@homeFilterChipsVolume": {
+    "description": "Puce de l'accueil (mode Trajets filtré sur le bateau) : volume restant minimal en m³, remplace « Urgent » et « Valise 23 kg »."
+  },
+  "homeFilterChipsArrival": "Arrivée",
+  "@homeFilterChipsArrival": {
+    "description": "Puce de l'accueil (mode Trajets filtré sur le bateau) : arrivée estimée au plus tard."
+  },
+  "homeFilterChipsArrivalActive": "Arrivée ≤ {weeks} sem.",
+  "@homeFilterChipsArrivalActive": {
+    "description": "Puce Arrivée active : arrivée estimée sous N semaines (4, 6 ou 8).",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFilterBoatVolumeValue": "≥ {volume}",
+  "@homeFilterBoatVolumeValue": {
+    "description": "Valeur du volume minimal de la recherche bateau (champ du composeur et puce Volume de l'accueil), volume déjà formaté en m³.",
+    "placeholders": {
+      "volume": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFilterBoatPriceValue": "≤ {price}",
+  "@homeFilterBoatPriceValue": {
+    "description": "Valeur du champ du prix maximal au m³ du composeur de recherche bateau, prix déjà formaté avec « /m³ ».",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFilterFieldsMinVolume": "VOLUME MIN",
+  "@homeFilterFieldsMinVolume": {
+    "description": "Libellé du champ du volume restant minimal (composeur de recherche, bateau)."
+  },
+  "homeFilterFieldsMaxPricePerM3": "PRIX MAX AU M³",
+  "@homeFilterFieldsMaxPricePerM3": {
+    "description": "Libellé du champ du prix maximal au m³ (composeur de recherche, bateau)."
+  },
+  "homeFilterBoatVolumeTitle": "Volume minimum",
+  "@homeFilterBoatVolumeTitle": {
+    "description": "Titre de la feuille du volume restant minimal d'un trajet bateau (boat_search_fields.dart)."
+  },
+  "homeFilterBoatVolumeFieldLabel": "Volume minimum (m³)",
+  "@homeFilterBoatVolumeFieldLabel": {
+    "description": "Champ de la feuille du volume minimal (boat_search_fields.dart)."
+  },
+  "homeFilterBoatVolumeHint": "De 0,1 à 9 999 m³. Laissez vide pour tous les trajets.",
+  "@homeFilterBoatVolumeHint": {
+    "description": "Aide sous le champ du volume minimal (boat_search_fields.dart)."
+  },
+  "homeFilterBoatVolumeInvalid": "Indiquez un volume entre 0,1 et 9 999 m³",
+  "@homeFilterBoatVolumeInvalid": {
+    "description": "Erreur : volume minimal hors bornes (boat_search_fields.dart)."
+  },
+  "homeFilterBoatPriceTitle": "Prix maximum au m³",
+  "@homeFilterBoatPriceTitle": {
+    "description": "Titre de la feuille du prix maximal au m³ d'un trajet bateau (boat_search_fields.dart)."
+  },
+  "homeFilterBoatPriceFieldLabel": "Prix maximum par m³ ({symbol})",
+  "@homeFilterBoatPriceFieldLabel": {
+    "description": "Champ de la feuille du prix maximal ; {symbol} est le symbole de la devise du lecteur (boat_search_fields.dart).",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFilterBoatPriceHint": "Dans votre devise. Laissez vide pour tous les prix.",
+  "@homeFilterBoatPriceHint": {
+    "description": "Aide sous le champ du prix maximal au m³ (boat_search_fields.dart)."
+  },
+  "homeFilterBoatPriceInvalid": "Indiquez un prix supérieur à zéro, {max} au plus",
+  "@homeFilterBoatPriceInvalid": {
+    "description": "Erreur : prix maximal au m³ hors bornes, plafond déjà formaté dans la devise (boat_search_fields.dart).",
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFilterBoatArrivalTitle": "Arrivée estimée",
+  "@homeFilterBoatArrivalTitle": {
+    "description": "Titre de la feuille de l'arrivée estimée au plus tard (boat_search_fields.dart)."
+  },
+  "homeFilterBoatArrivalOption": "Sous {weeks} semaines",
+  "@homeFilterBoatArrivalOption": {
+    "description": "Pastille de l'arrivée estimée au plus tard : 4, 6 ou 8 semaines à partir d'aujourd'hui (boat_search_fields.dart).",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFilterBoatArrivalHelp": "Toute la fourchette d'arrivée annoncée par le transporteur tombe avant cette limite.",
+  "@homeFilterBoatArrivalHelp": {
+    "description": "Aide sous le filtre d'arrivée d'un trajet bateau (feuille et composeur). Le back compare la FIN de la fourchette (arrival_date_max, sinon arrival_date) à la limite (AnnouncementSpecification.arrivalNotAfter) : un trajet « du 20 déc. au 10 janv. » n'entre pas dans « Sous 8 semaines » si le 10 janv. dépasse la limite."
+  },
+  "homeComposerSectionVolumePrice": "VOLUME ET PRIX",
+  "@homeComposerSectionVolumePrice": {
+    "description": "Composeur de recherche de trajets, bateau seulement : section du volume minimal et du prix maximal au m³."
+  },
+  "homeComposerSectionArrival": "ARRIVÉE ESTIMÉE",
+  "@homeComposerSectionArrival": {
+    "description": "Composeur de recherche de trajets, bateau seulement : section de l'arrivée estimée au plus tard."
+  },
+  "homeComposerVolumeHint": "Ces filtres ne montrent que les trajets facturés au m³.",
+  "@homeComposerVolumeHint": {
+    "description": "Composeur de recherche, bateau : explication des filtres de volume et de prix au m³ (le serveur n'y laisse passer qu'un trajet au m³)."
+  },
+  "homeComposerMoreFiltersHintBoat": "Type de contenu, note, paiement",
+  "@homeComposerMoreFiltersHintBoat": {
+    "description": "Sous-titre de « Plus de filtres » du composeur de recherche quand le filtre Transport est le bateau : pas d'escales."
+  },
+  "listingBoatArrivalRange": "Arrivée estimée du {from} au {to}",
+  "@listingBoatArrivalRange": {
+    "description": "Carte de recherche d'un trajet bateau : fourchette d'arrivée, dates déjà formatées.",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "listingBoatArrivalDate": "Arrivée estimée le {date}",
+  "@listingBoatArrivalDate": {
+    "description": "Carte de recherche d'un trajet bateau sans fourchette : une date d'arrivée estimée, déjà formatée.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "listingBoatVolumeRemaining": "{volume} restants",
+  "@listingBoatVolumeRemaining": {
+    "description": "Carte de recherche d'un trajet bateau au m³ : volume encore disponible, déjà formaté en m³.",
+    "placeholders": {
+      "volume": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatStepDeposit": "Dépôt à l'entrepôt",
+  "@trackingBoatStepDeposit": {
+    "description": "Frise de suivi d'un colis bateau (tracking_timeline_bottom_sheet.dart) : étape en cours tant que le colis n'est pas déposé ; libellé court de l'étape DEPART en bateau (tracking_labels.dart)."
+  },
+  "trackingBoatStepDeposited": "Déposé à l'entrepôt",
+  "@trackingBoatStepDeposited": {
+    "description": "Frise de suivi d'un colis bateau : étape DEPART faite (dépôt scanné à l'entrepôt), aussi phrase d'état avant le départ du bateau (tracking_timeline_bottom_sheet.dart, journey_timeline.dart)."
+  },
+  "trackingBoatStepDeparture": "Départ du bateau",
+  "@trackingBoatStepDeparture": {
+    "description": "Frise de suivi d'un colis bateau : jalon du trajet à venir, le bateau n'est pas encore parti."
+  },
+  "trackingBoatStepDeparted": "Bateau parti",
+  "@trackingBoatStepDeparted": {
+    "description": "Frise de suivi d'un colis bateau : jalon du trajet fait, le bateau est parti. Aussi titre et bouton de l'action « Je pars » d'un trajet bateau (trip_todo_labels.dart, trip_depart_action.dart)."
+  },
+  "trackingBoatStepAtSea": "En mer",
+  "@trackingBoatStepAtSea": {
+    "description": "Frise de suivi d'un colis bateau : étape en cours entre le départ et l'arrivée au port ; aussi phrase d'état sans ville d'arrivée."
+  },
+  "trackingBoatStepAtPort": "Arrivé au port de {city}",
+  "@trackingBoatStepAtPort": {
+    "description": "Frise de suivi d'un colis bateau : jalon de l'arrivée au port (à venir ou fait), aussi phrase d'état une fois arrivé, et titre de l'action « Arrivé » d'un trajet bateau (trip_todo_labels.dart). Ville commençant par une consonne.",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatStepAtPortElided": "Arrivé au port d'{city}",
+  "@trackingBoatStepAtPortElided": {
+    "description": "Comme trackingBoatStepAtPort, pour une ville commençant par une voyelle (élision : « port d'Abidjan »).",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatStepAtPortNoCity": "Arrivé au port",
+  "@trackingBoatStepAtPortNoCity": {
+    "description": "Comme trackingBoatStepAtPort, quand la ville d'arrivée n'est pas connue (colis lu par QR). Aussi bouton de l'action « Arrivé » d'un trajet bateau (trip_todo_labels.dart)."
+  },
+  "trackingBoatHeadlineAwaitingDeposit": "En attente du dépôt à l'entrepôt",
+  "@trackingBoatHeadlineAwaitingDeposit": {
+    "description": "Phrase d'état de la frise d'un colis bateau pas encore déposé (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingBoatHeadlineAtSeaTo": "En mer vers {city}",
+  "@trackingBoatHeadlineAtSeaTo": {
+    "description": "Phrase d'état de la frise d'un colis bateau parti, pas encore arrivé au port (tracking_timeline_bottom_sheet.dart).",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatPlannedDeparture": "Prévu le {date}",
+  "@trackingBoatPlannedDeparture": {
+    "description": "Sous le jalon « Départ du bateau » à venir : date de départ prévue du trajet (« 2 déc. »).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatEstimatedRange": "Estimé du {from} au {to}",
+  "@trackingBoatEstimatedRange": {
+    "description": "Sous le jalon « Arrivé au port » à venir : fourchette d'arrivée estimée (celle du dernier retard s'il existe).",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatEstimatedDate": "Estimé le {date}",
+  "@trackingBoatEstimatedDate": {
+    "description": "Sous le jalon « Arrivé au port » à venir : arrivée estimée à une seule date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingBoatDelayNote": "Retard annoncé : {detail}",
+  "@trackingBoatDelayNote": {
+    "description": "Sous l'étape « En mer » : dernier retard annoncé par le transporteur, son message ou à défaut son motif.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketEstimatedArrivalLabel": "Arrivée estimée",
+  "@ticketEstimatedArrivalLabel": {
+    "description": "Billet (billet_route.dart) : libellé de l'arrivée quand le trajet annonce une fourchette (bateau), à la place de « Arrivée »."
+  },
+  "ticketArrivalRangeValue": "{from} au {to}",
+  "@ticketArrivalRangeValue": {
+    "description": "Billet (billet_route.dart) : fourchette d'arrivée estimée (« 11 janv. au 18 janv. »).",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderInTransitBoatRange": "Arrivée estimée du {from} au {to} à {city}.",
+  "@bidDetailSenderInTransitBoatRange": {
+    "description": "Résumé d'état d'un colis bateau parti (sender_hero_card.dart, tuile Suivi) : fourchette d'arrivée estimée.",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderInTransitBoatDate": "Arrivée estimée le {date} à {city}.",
+  "@bidDetailSenderInTransitBoatDate": {
+    "description": "Résumé d'état d'un colis bateau parti dont l'arrivée estimée tient sur une date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailDepositPaidLabel": "{amount} versé au transporteur au dépôt du colis, le {date}",
+  "@bidDetailDepositPaidLabel": {
+    "description": "Carte Paiement de l'expéditeur (paiement_card.dart), colis payé au dépôt (payoutTrigger DEPOSIT) une fois déposé, avec la date du dépôt.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailDepositPaidNoDateLabel": "{amount} versé au transporteur au dépôt du colis",
+  "@bidDetailDepositPaidNoDateLabel": {
+    "description": "Comme bidDetailDepositPaidLabel quand la date du dépôt n'est pas encore lue.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailDepositPendingLabel": "{amount} payé, versé au transporteur au dépôt du colis",
+  "@bidDetailDepositPendingLabel": {
+    "description": "Carte Paiement de l'expéditeur, colis payé au dépôt (payoutTrigger DEPOSIT) pas encore déposé.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDelayTitle": "Retard annoncé",
+  "@bidDelayTitle": {
+    "description": "Carte du dernier retard du trajet dans la fiche colis de l'expéditeur (trip_reschedule_card.dart, TripDelayCard)."
+  },
+  "bidDelayNewRange": "Nouvelle arrivée estimée : du {from} au {to}.",
+  "@bidDelayNewRange": {
+    "description": "Carte du retard : nouvelle fourchette d'arrivée estimée.",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDelayNewDate": "Nouvelle arrivée estimée : le {date}.",
+  "@bidDelayNewDate": {
+    "description": "Carte du retard : nouvelle arrivée estimée à une seule date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDelayReason": "Motif : {reason}",
+  "@bidDelayReason": {
+    "description": "Carte du retard : motif annoncé par le transporteur (libellé de trip_delay_labels.dart).",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "tripDelayReasonPortCongestion": "Congestion au port",
+  "@tripDelayReasonPortCongestion": {
+    "description": "Motif de retard PORT_CONGESTION, bateau seulement (trip_delay_labels.dart)."
+  },
+  "tripDelayReasonWeather": "Météo",
+  "@tripDelayReasonWeather": {
+    "description": "Motif de retard WEATHER, tous modes (trip_delay_labels.dart)."
+  },
+  "tripDelayReasonExtendedStopover": "Escale prolongée",
+  "@tripDelayReasonExtendedStopover": {
+    "description": "Motif de retard EXTENDED_STOPOVER en bateau et en avion (trip_delay_labels.dart)."
+  },
+  "tripDelayReasonExtendedStop": "Arrêt prolongé",
+  "@tripDelayReasonExtendedStop": {
+    "description": "Motif de retard EXTENDED_STOPOVER sur la route ou un mode inconnu : jamais « escale » hors bateau et avion (trip_delay_labels.dart)."
+  },
+  "tripDelayReasonTransportDisruption": "Perturbation du transport",
+  "@tripDelayReasonTransportDisruption": {
+    "description": "Motif de retard TRANSPORT_DISRUPTION, neutre, tous modes (trip_delay_labels.dart)."
+  },
+  "listingPricePerM3Label": "par m³",
+  "@listingPricePerM3Label": {
+    "description": "Carte de prix de la fiche d'un trajet bateau vendu au m³, vue expéditeur (traveler_announcement_bottom_sheet.dart), sous le prix frais inclus."
+  },
+  "errorArrivalTimeBeforeDepartureTitle": "Heure d'arrivée avant le départ",
+  "@errorArrivalTimeBeforeDepartureTitle": {
+    "description": "Erreur arrival-time-before-departure du back, titre (error_catalog.dart) : arrivée le même jour que le départ, à une heure qui ne le suit pas."
+  },
+  "errorArrivalTimeBeforeDepartureMessage": "Le même jour, l'heure d'arrivée doit suivre l'heure de départ.",
+  "@errorArrivalTimeBeforeDepartureMessage": {
+    "description": "Erreur arrival-time-before-departure du back, message de repli (error_catalog.dart)."
+  },
+  "tripDelaySheetTitle": "Annoncer un retard",
+  "@tripDelaySheetTitle": {
+    "description": "Titre de la feuille d'annonce de retard (trip_delay_bottom_sheet.dart) et entrée du menu ⋮ de l'écran du trajet (trip_owner_options_sheet.dart), tous modes."
+  },
+  "tripDelaySheetSubtitle": "{count, plural, =0{Les expéditeurs dont le colis est à bord sont prévenus en une fois.} =1{L'expéditeur dont le colis est à bord est prévenu.} other{Les {count} expéditeurs de ce trajet sont prévenus en une fois.}}",
+  "@tripDelaySheetSubtitle": {
+    "description": "Sous-titre de la feuille d'annonce de retard : expéditeurs distincts des colis remis, en transit ou arrivés (0 tant que les colis ne sont pas chargés).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripDelayReasonSection": "Motif",
+  "@tripDelayReasonSection": {
+    "description": "Feuille d'annonce de retard : titre de la section des motifs."
+  },
+  "tripDelayArrivalSection": "Nouvelle arrivée estimée",
+  "@tripDelayArrivalSection": {
+    "description": "Feuille d'annonce de retard : titre de la section des dates (début et fin de la fourchette)."
+  },
+  "tripDelayFromLabel": "Du",
+  "@tripDelayFromLabel": {
+    "description": "Feuille d'annonce de retard : libellé court du début de la nouvelle arrivée estimée."
+  },
+  "tripDelayToLabel": "Au",
+  "@tripDelayToLabel": {
+    "description": "Feuille d'annonce de retard : libellé court de la fin de la nouvelle arrivée estimée."
+  },
+  "tripDelayArrivalLimit": "Au plus tard le {date} pour ce trajet",
+  "@tripDelayArrivalLimit": {
+    "description": "Feuille d'annonce de retard : dernière date d'arrivée possible (départ + durée maximale du mode), sous les dates.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "tripDelayMessageSection": "Message aux expéditeurs",
+  "@tripDelayMessageSection": {
+    "description": "Feuille d'annonce de retard : titre du champ de message libre (300 caractères)."
+  },
+  "tripDelayMessageHintBoat": "Ex. : attente à Tanger Med, départ prévu jeudi",
+  "@tripDelayMessageHintBoat": {
+    "description": "Aide du message de retard, trajet bateau."
+  },
+  "tripDelayMessageHintPlane": "Ex. : vol retardé, nouvel horaire annoncé demain",
+  "@tripDelayMessageHintPlane": {
+    "description": "Aide du message de retard, trajet avion seulement (« vol »)."
+  },
+  "tripDelayMessageHint": "Ex. : contretemps, reprise prévue jeudi",
+  "@tripDelayMessageHint": {
+    "description": "Aide du message de retard, route ou mode inconnu : neutre, ni vol ni port."
+  },
+  "tripDelayInfo": "Le report du trajet reste bloqué une fois les colis à bord ; l'annonce de retard, elle, reste possible jusqu'à l'arrivée.",
+  "@tripDelayInfo": {
+    "description": "Feuille d'annonce de retard : encadré d'information, tous modes."
+  },
+  "tripDelaySubmit": "Prévenir les expéditeurs",
+  "@tripDelaySubmit": {
+    "description": "Bouton du pied de la feuille d'annonce de retard (stickyBottom)."
+  },
+  "tripDelaySentSnackbar": "Retard annoncé : les expéditeurs sont prévenus.",
+  "@tripDelaySentSnackbar": {
+    "description": "Confirmation après l'annonce d'un retard (trip_owner_actions.dart)."
+  },
+  "tripMenuAnnounceDelaySubtitle": "Prévenez les expéditeurs de la nouvelle arrivée estimée",
+  "@tripMenuAnnounceDelaySubtitle": {
+    "description": "Sous-titre de l'entrée « Annoncer un retard » du menu ⋮ de l'écran du trajet (trajet parti)."
+  },
+  "tripOwnerVolumeRemainingOf": "restants sur {total}",
+  "@tripOwnerVolumeRemainingOf": {
+    "description": "Pastille de capacité de l'écran du trajet bateau vendu au m³ (trip_owner_header.dart), sous le volume restant : « 0,4 m³ » puis « restants sur 2 m³ ».",
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "tripTilePaymentsDeposit": "Payé au dépôt de chaque colis",
+  "@tripTilePaymentsDeposit": {
+    "description": "Sous-titre de la tuile Paiements de l'écran du trajet bateau (interrupteur bateau allumé, trip_tiles.dart)."
+  },
+  "tripTilePaymentsDepositNote": "Chaque colis vous est versé dès son dépôt à l'entrepôt.",
+  "@tripTilePaymentsDepositNote": {
+    "description": "Feuille de la tuile Paiements d'un trajet bateau (trip_tile_sheets.dart)."
+  },
+  "scanDepositRecordedChip": "Dépôt enregistré",
+  "@scanDepositRecordedChip": {
+    "description": "Pastille de l'étape sur la confirmation d'une lecture (scan_confirm_screen.dart) quand DEPART est le dépôt à l'entrepôt (bateau, colis payé au dépôt)."
+  },
+  "suiviDepositPhotoRequired": "Obligatoire pour valider le dépôt à l'entrepôt",
+  "@suiviDepositPhotoRequired": {
+    "description": "Sous-titre de l'écran photo en mode retour de résultat (scan_photo_screen.dart) quand DEPART est le dépôt à l'entrepôt."
+  },
+  "amendmentEntryButtonVolume": "Ajouter du volume ou des articles",
+  "@amendmentEntryButtonVolume": {"description": "Bouton d'entrée de la modification d'un colis au m³ (trajet bateau), à la place de amendmentEntryButton"},
+  "amendmentSheetVolumeLabel": "VOLUME EN PLUS · {price}/M³ · {free} M³ LIBRES",
+  "@amendmentSheetVolumeLabel": {"description": "Titre du sélecteur de volume (colis au m³). {price} : prix au m³ formaté, {free} : volume libre en m³", "placeholders": {"price": {"type": "String"}, "free": {"type": "String"}}},
+  "amendmentSheetVolumeLabelOpen": "VOLUME EN PLUS · {price}/M³",
+  "@amendmentSheetVolumeLabelOpen": {"description": "Titre du sélecteur de volume quand la capacité est libre. {price} : prix au m³ formaté", "placeholders": {"price": {"type": "String"}}},
+  "amendmentSheetVolumeLabelPlain": "VOLUME EN PLUS",
+  "@amendmentSheetVolumeLabelPlain": {"description": "Titre du sélecteur de volume quand le serveur ne donne pas le prix au m³"},
+  "amendmentSheetVolumeValue": "+{volume} m³",
+  "@amendmentSheetVolumeValue": {"description": "Valeur du sélecteur de volume. {volume} : nombre de m³ déjà formaté", "placeholders": {"volume": {"type": "String"}}},
+  "amendmentTravelerParcelVolume": "Volume du colis",
+  "@amendmentTravelerParcelVolume": {"description": "Libellé du volume avant/après (vue voyageur, colis au m³)"},
+  "amendmentTravelerParcelVolumeValue": "{from} → {to} m³",
+  "@amendmentTravelerParcelVolumeValue": {"description": "Volume avant → après, en m³", "placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
+  "amendmentTravelerAcceptedBodyVolume": "Récupérez le volume en plus à la remise. S'il n'est pas là, dites-le avant de scanner le QR.",
+  "@amendmentTravelerAcceptedBodyVolume": {"description": "Colis au m³ : consigne du voyageur après l'acceptation d'une modification"},
+  "amendmentNotBroughtVolume": "Le volume en plus n'est pas là",
+  "@amendmentNotBroughtVolume": {"description": "Bouton du voyageur (colis au m³) : le volume ajouté n'a pas été apporté"},
+  "amendmentNotBroughtVolumeConfirmTitle": "Le volume en plus n'est pas là ?",
+  "@amendmentNotBroughtVolumeConfirmTitle": {"description": "Titre de la confirmation « volume en plus absent » (colis au m³)"},
+  "amendmentNotBroughtVolumeConfirmMessage": "La modification sera annulée et l'expéditeur remboursé. Le colis reste à son volume d'origine.",
+  "@amendmentNotBroughtVolumeConfirmMessage": {"description": "Message de la confirmation « volume en plus absent » (colis au m³)"},
+  "amendmentSenderNotBroughtVolumeStatus": "{name} a signalé que le volume en plus n'était pas là",
+  "@amendmentSenderNotBroughtVolumeStatus": {"description": "Statut côté expéditeur d'une modification au m³ non apportée. {name} : prénom du voyageur", "placeholders": {"name": {"type": "String"}}},
+  "amendmentDeclineConfirmMessageVolume": "Le colis garde son volume d'origine et son prix.",
+  "@amendmentDeclineConfirmMessageVolume": {"description": "Message de la confirmation de refus d'une modification au m³"},
+  "amendmentPaymentHeldByCardDeposit": "Payé par carte, versé au transporteur au dépôt",
+  "@amendmentPaymentHeldByCardDeposit": {"description": "Ligne : part payée par carte et séquestrée, colis payé au dépôt (trajet bateau)"},
+  "amendmentPaymentHeldOnlineDeposit": "Payé en ligne, versé au transporteur au dépôt",
+  "@amendmentPaymentHeldOnlineDeposit": {"description": "Ligne : part payée en ligne (mobile money) et séquestrée, colis payé au dépôt (trajet bateau)"},
+  "amendmentGainPaidOutDeposit": "Versé sur votre compte au dépôt du colis",
+  "@amendmentGainPaidOutDeposit": {"description": "Ligne : part versée, colis payé au dépôt (trajet bateau)"},
+  "errorVolumePriceTooHighTitle": "Prix au m³ trop élevé",
+  "@errorVolumePriceTooHighTitle": {"description": "Erreur volume-price-too-high du back, titre (error_catalog.dart)."},
+  "errorVolumePriceTooHighMessage": "Le prix au m³ dépasse le plafond autorisé. Baissez-le puis réessayez.",
+  "@errorVolumePriceTooHighMessage": {"description": "Erreur volume-price-too-high du back, message (error_catalog.dart)."},
+  "errorTransportModeLockedTitle": "Mode de transport verrouillé",
+  "@errorTransportModeLockedTitle": {"description": "Erreur transport-mode-locked du back, titre (error_catalog.dart)."},
+  "errorTransportModeLockedMessage": "Tant que des colis sont en cours sur ce trajet, son mode ne peut pas passer au bateau ni le quitter.",
+  "@errorTransportModeLockedMessage": {"description": "Erreur transport-mode-locked du back, message (error_catalog.dart)."},
+  "negotiationThreadPayHintDeposit": "Prix accepté. Réglez maintenant pour réserver votre place, le montant est versé au transporteur au dépôt de votre colis.",
+  "@negotiationThreadPayHintDeposit": {"description": "Fil de prix d'un trajet : indication de paiement quand le transporteur est payé au dépôt du colis (bateau), à la place de negotiationThreadPayHint"},
+  "negotiationPaymentRecapSecureBannerMessageDeposit": "Sécurisé · versé au dépôt du colis",
+  "@negotiationPaymentRecapSecureBannerMessageDeposit": {"description": "Bandeau du récapitulatif de paiement par carte quand le transporteur est payé au dépôt (bateau)"},
+  "negotiationPaymentRecapSecureNoteDeposit": "Le montant est bloqué et sécurisé. Le transporteur le reçoit au dépôt de votre colis. Un litige se règle avec le support Yadony.",
+  "@negotiationPaymentRecapSecureNoteDeposit": {"description": "Note du récapitulatif de paiement par carte quand le transporteur est payé au dépôt (bateau)"},
+  "negotiationPaymentRecapMobileMoneyBannerMessageDeposit": "Vous validez le paiement sur votre téléphone. Yadony garde l'argent et le verse au transporteur au dépôt de votre colis.",
+  "@negotiationPaymentRecapMobileMoneyBannerMessageDeposit": {"description": "Bandeau du récapitulatif mobile money quand le transporteur est payé au dépôt (bateau)"},
+  "negotiationPaymentRecapMobileMoneyNoteDeposit": "Une demande de paiement arrive sur le numéro indiqué ci-dessous. Le transporteur reçoit le montant au dépôt de votre colis.",
+  "@negotiationPaymentRecapMobileMoneyNoteDeposit": {"description": "Note du récapitulatif mobile money quand le transporteur est payé au dépôt (bateau)"},
+  "negotiationOfferAcceptedPaidSubtitleDeposit": "Votre argent est sécurisé par Yadony, puis versé au transporteur au dépôt de votre colis. Suivez votre colis depuis le fil.",
+  "@negotiationOfferAcceptedPaidSubtitleDeposit": {"description": "Écran de succès d'un fil payé quand le transporteur est payé au dépôt (bateau)"},
+  "mobileMoneyPaidToTravelerValueDeposit": "Au dépôt du colis",
+  "@mobileMoneyPaidToTravelerValueDeposit": {"description": "Écran d'attente mobile money : moment où le transporteur est payé, au dépôt (bateau)"},
+  "requestPublicReassureSecuredDeposit": "Paiement sécurisé : versé dès le dépôt du colis",
+  "@requestPublicReassureSecuredDeposit": {"description": "Fiche publique d'une demande par bateau : réassurance du voyageur, payé au dépôt"},
+  "bidDepositPaidSupportSenderSubtitle": "Le transporteur a été payé au dépôt du colis : un litige se règle avec le support Yadony.",
+  "@bidDepositPaidSupportSenderSubtitle": {"description": "Menu d'options de l'expéditeur : sous-titre de l'entrée « Contacter le support » qui remplace l'annulation après remise d'un colis payé au dépôt (bateau)"},
+  "bidDepositPaidSupportTravelerSubtitle": "Vous avez été payé au dépôt du colis : un litige se règle avec le support Yadony.",
+  "@bidDepositPaidSupportTravelerSubtitle": {"description": "Menu d'options du voyageur : sous-titre de l'entrée « Contacter le support » qui remplace le refus et l'annulation d'un colis payé au dépôt (bateau)"},
+  "tripPublishLockedBoatBlocked": "Cette demande est en bateau, un mode réservé aux transporteurs vérifiés. Demandez le badge GP Pro pour proposer votre trajet.",
+  "@tripPublishLockedBoatBlocked": {"description": "Trajet dédié à une demande par bateau : bandeau d'un voyageur sans badge GP Pro ni compte pro, « Continuer » reste grisé"},
+  "trackingDepositNeedsQr": "Scannez le QR de l'expéditeur",
+  "@trackingDepositNeedsQr": {"description": "Dépôt d'un colis payé au dépôt (bateau) tenté sans QR (numéro saisi, bouton d'une ligne colis) : le dépôt exige le QR de l'expéditeur"},
+  "errorBoatDepositQrRequiredTitle": "QR de l'expéditeur requis",
+  "@errorBoatDepositQrRequiredTitle": {"description": "Erreur boat-deposit-qr-required du back, titre (error_catalog.dart)."},
+  "errorBoatDepositQrRequiredMessage": "Pour valider le dépôt, scannez le QR code de l'expéditeur : un numéro saisi ne suffit pas.",
+  "@errorBoatDepositQrRequiredMessage": {"description": "Erreur boat-deposit-qr-required du back, message (error_catalog.dart)."}
 }

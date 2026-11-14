@@ -11,11 +11,13 @@ import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/payout_wording.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -25,6 +27,7 @@ import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/data/per_kilo_pricing.dart';
+import 'package:dony/features/package_request/data/per_m3_pricing.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_palette.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
@@ -72,10 +75,11 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   final _budgetCtrl = TextEditingController();
   final _promoCtrl = TextEditingController();
 
-  /// « Prix au kilo » choisi : l'utilisateur saisit un prix au kilo, l'app en
-  /// déduit le total (poids × prix) et n'envoie que ce total. État de pure
-  /// présentation, absent du contrat avec le back.
-  final _perKiloMode = ValueNotifier<bool>(false);
+  /// Base du prix saisie : le total, un prix au kilo (l'app en déduit le total,
+  /// poids × prix) ou, en bateau, un prix au m³ (volume × prix). Dans tous les
+  /// cas seul le total part au back. État de pure présentation, absent du
+  /// contrat.
+  final _basis = ValueNotifier<_PriceBasis>(_PriceBasis.total);
 
   // NegotiationQuote une fois chargé, String si le dernier essai de promo a
   // échoué (message affiché inline), null tant qu'aucun devis serveur n'est
@@ -312,7 +316,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     _backgroundQuoteTimer?.cancel();
     _budgetCtrl.dispose();
     _promoCtrl.dispose();
-    _perKiloMode.dispose();
+    _basis.dispose();
     _quoteNotifier.dispose();
     _quoteLoadingNotifier.dispose();
     _frozenGridNotifier
@@ -351,31 +355,51 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     );
   }
 
-  /// Bascule entre « Prix total » et « Prix au kilo » en gardant la valeur
-  /// saisie quand c'est possible : total → au kilo si le prix au kilo qui
-  /// redonne exactement ce total existe, au kilo → total toujours (le total
-  /// calculé devient la valeur du champ).
-  void _setPriceBasis(bool perKilo, PackageRequestFormState state) {
-    if (_perKiloMode.value == perKilo) return;
-    if (perKilo && !PerKiloPricing.isAvailable(state.weightKg)) return;
+  /// La base [basis] est-elle utilisable ? Le prix au kilo demande un poids
+  /// connu ; le prix au m³ n'existe qu'en bateau, avec un volume connu.
+  static bool _isBasisAvailable(
+    _PriceBasis basis,
+    PackageRequestFormState state,
+  ) => switch (basis) {
+    _PriceBasis.total => true,
+    _PriceBasis.perKilo => PerKiloPricing.isAvailable(state.weightKg),
+    _PriceBasis.perM3 =>
+      state.requestTransportMode == TransportMode.boat &&
+          PerM3Pricing.isAvailable(state.volumeM3),
+  };
+
+  /// Bascule entre « Prix total », « Prix au kilo » et « Prix au m³ » en
+  /// gardant la valeur saisie quand c'est possible : total → au kilo (ou au
+  /// m³) si le prix unitaire qui redonne exactement ce total existe, vers le
+  /// total toujours (le total calculé devient la valeur du champ).
+  void _setPriceBasis(_PriceBasis basis, PackageRequestFormState state) {
+    if (_basis.value == basis) return;
+    if (!_isBasisAvailable(basis, state)) return;
     final bloc = context.read<PackageRequestFormBloc>();
     final total = state.totalBudgetEur;
-    _perKiloMode.value = perKilo;
-    if (perKilo) {
-      final perKiloValue = PerKiloPricing.perKiloFor(
-        total: total,
-        weightKg: state.weightKg,
-        currency: _resolveCurrency(state),
-      );
-      _budgetCtrl.text = perKiloValue == null ? '' : _plainNumber(perKiloValue);
-      // Le total ne se convertit pas exactement : on repart d'un champ vide
-      // plutôt que de changer le total en silence.
-      if (total != null && perKiloValue == null) {
-        bloc.add(const PackageRequestTotalBudgetChanged(null));
-        _invalidateQuote();
-      }
-    } else {
+    _basis.value = basis;
+    if (basis == _PriceBasis.total) {
       _budgetCtrl.text = total == null ? '' : _plainNumber(total);
+      return;
+    }
+    final currency = _resolveCurrency(state);
+    final unitValue = basis == _PriceBasis.perKilo
+        ? PerKiloPricing.perKiloFor(
+            total: total,
+            weightKg: state.weightKg,
+            currency: currency,
+          )
+        : PerM3Pricing.perM3For(
+            total: total,
+            volumeM3: state.volumeM3,
+            currency: currency,
+          );
+    _budgetCtrl.text = unitValue == null ? '' : _plainNumber(unitValue);
+    // Le total ne se convertit pas exactement : on repart d'un champ vide
+    // plutôt que de changer le total en silence.
+    if (total != null && unitValue == null) {
+      bloc.add(const PackageRequestTotalBudgetChanged(null));
+      _invalidateQuote();
     }
   }
 
@@ -394,14 +418,15 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
         WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
         final currency = _resolveCurrency(state);
         final l10n = context.l10n;
-        return ValueListenableBuilder<bool>(
-          valueListenable: _perKiloMode,
-          builder: (context, perKiloChosen, _) {
-            final weightKnown = PerKiloPricing.isAvailable(state.weightKg);
-            // Sans poids connu, le prix au kilo n'existe pas : on retombe sur
-            // le prix total, quoi qu'ait choisi l'utilisateur avant.
-            final perKilo = perKiloChosen && weightKnown;
-            return _buildBody(context, state, currency, l10n, p, perKilo);
+        return ValueListenableBuilder<_PriceBasis>(
+          valueListenable: _basis,
+          builder: (context, chosen, _) {
+            // Sans poids (ou volume) connu, la base choisie n'existe pas : on
+            // retombe sur le prix total, quoi qu'ait choisi l'utilisateur avant.
+            final basis = _isBasisAvailable(chosen, state)
+                ? chosen
+                : _PriceBasis.total;
+            return _buildBody(context, state, currency, l10n, p, basis);
           },
         );
       },
@@ -414,9 +439,13 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     SupportedCurrency currency,
     AppLocalizations l10n,
     WizardPalette p,
-    bool perKilo,
+    _PriceBasis basis,
   ) {
+    final perKilo = basis == _PriceBasis.perKilo;
+    final perM3 = basis == _PriceBasis.perM3;
+    final isBoat = state.requestTransportMode == TransportMode.boat;
     final weight = state.weightKg;
+    final volume = state.volumeM3;
     final grid = _legacyPricing(state)
         ? null
         : _frozenGridNotifier.value ?? activeCommissionGrid;
@@ -489,10 +518,26 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
             ),
             const SizedBox(height: 7),
             _PriceBasisSelector(
-              perKilo: perKilo,
+              basis: basis,
               perKiloAvailable: PerKiloPricing.isAvailable(weight),
+              showPerM3: isBoat,
+              perM3Available: _isBasisAvailable(_PriceBasis.perM3, state),
               onChanged: (v) => _setPriceBasis(v, state),
             ),
+            if (isBoat && !PerM3Pricing.isAvailable(volume))
+              Padding(
+                padding: const EdgeInsets.fromLTRB(1, 3, 1, 0),
+                child: Text(
+                  l10n.requestCreatePriceBasisPerM3NeedsDimensions,
+                  key: const Key('price-basis-per-m3-hint'),
+                  style: WizardPalette.text(
+                    size: 11.5,
+                    weight: FontWeight.w400,
+                    color: p.n600,
+                    height: 1.4,
+                  ),
+                ),
+              ),
             if (!PerKiloPricing.isAvailable(weight))
               Padding(
                 padding: const EdgeInsets.fromLTRB(1, 3, 1, 0),
@@ -517,6 +562,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
               legacy: _legacyPricing(state),
               mode: state.requestTransportMode,
               perKiloWeightKg: perKilo ? weight : null,
+              perM3Volume: perM3 ? volume : null,
               semanticLabel: state.negotiable
                   ? l10n.requestCreateBudgetLabelNegotiable
                   : l10n.requestCreateBudgetLabelFixed,
@@ -526,8 +572,49 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
             // service n'est jamais cité (YADONY-FLUTTER-PROD-1J).
             if (!state.negotiable) _Hint(l10n.requestCreateBudgetHintFixed),
 
-            // ── Calcul au kilo + frais : le total est ce qui part au back ──
+            // ── Calcul au kilo ou au m³ + frais : le total part au back ────
             if (state.totalBudgetEur != null) ...[
+              if (perM3)
+                ListenableBuilder(
+                  listenable: _budgetCtrl,
+                  builder: (context, _) {
+                    final perM3Value = _parseNumber(_budgetCtrl.text);
+                    final total = state.totalBudgetEur!;
+                    if (perM3Value == null || volume == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 7),
+                      child: Container(
+                        key: const Key('price-per-m3-computed'),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 9,
+                        ),
+                        decoration: BoxDecoration(
+                          color: p.blue50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          l10n.requestCreatePerM3Computed(
+                            formatParcelVolumeM3(l10n, volume),
+                            CurrencyFormatter.format(
+                              perM3Value,
+                              currency,
+                              compact: true,
+                            ),
+                            CurrencyFormatter.format(total, currency),
+                          ),
+                          style: WizardPalette.text(
+                            size: 12.5,
+                            weight: FontWeight.w700,
+                            color: p.calcText,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               if (perKilo)
                 ListenableBuilder(
                   listenable: _budgetCtrl,
@@ -591,6 +678,15 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                     priceLabel: perKilo && weight != null
                         ? l10n.requestCreateShipmentPriceWithCalc(
                             formatWeightKg(l10n, weight),
+                            CurrencyFormatter.format(
+                              _parseNumber(_budgetCtrl.text) ?? 0,
+                              currency,
+                              compact: true,
+                            ),
+                          )
+                        : perM3 && volume != null
+                        ? l10n.requestCreateShipmentPriceWithCalc(
+                            formatParcelVolumeM3(l10n, volume),
                             CurrencyFormatter.format(
                               _parseNumber(_budgetCtrl.text) ?? 0,
                               currency,
@@ -729,6 +825,33 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 },
               ),
             ],
+
+            // ── Bateau : délai et versement au dépôt ───────────────────────
+            // Seulement quand le serveur a allumé le bateau (même règle que
+            // les autres textes « versé au dépôt »).
+            if (paidAtDeposit(state.requestTransportMode))
+              Container(
+                key: const Key('request-boat-deposit-notice'),
+                margin: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: p.info,
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: p.infoBorder),
+                ),
+                child: Text(
+                  l10n.requestCreateBoatDepositNotice,
+                  style: WizardPalette.text(
+                    size: 11.5,
+                    weight: FontWeight.w400,
+                    color: p.n600,
+                    height: 1.4,
+                  ),
+                ),
+              ),
 
             // ── Information de publication ─────────────────────────────────
             // L'écran s'arrêtait sur la mention CGU, qui répond à une
@@ -1064,6 +1187,7 @@ class _BudgetTotalInput extends StatelessWidget {
     this.legacy = false,
     this.mode,
     this.perKiloWeightKg,
+    this.perM3Volume,
     this.semanticLabel,
   });
   final TextEditingController controller;
@@ -1086,6 +1210,10 @@ class _BudgetTotalInput extends StatelessWidget {
   /// saisit le total. Dans les deux cas le bloc ne reçoit que le total.
   final double? perKiloWeightKg;
 
+  /// Volume du colis (m³) quand le champ saisit un prix AU M³ (bateau) ; `null`
+  /// sinon. Là aussi le bloc ne reçoit que le total.
+  final double? perM3Volume;
+
   /// Libellé lu par les lecteurs d'écran (la maquette n'affiche pas de titre
   /// au-dessus du champ).
   final String? semanticLabel;
@@ -1095,11 +1223,19 @@ class _BudgetTotalInput extends StatelessWidget {
     final p = WizardPalette.of(context);
     final l10n = context.l10n;
     final perKilo = perKiloWeightKg != null;
+    final perM3 = perM3Volume != null;
     final effectiveCurrency = currency ?? SupportedCurrency.eur;
 
     /// Total que représente la saisie : elle-même, ou poids × prix au kilo.
     double? totalOf(String text) {
       final value = _parseNumber(text);
+      if (perM3) {
+        return PerM3Pricing.totalFor(
+          volumeM3: perM3Volume,
+          perM3: value,
+          currency: effectiveCurrency,
+        );
+      }
       if (!perKilo) return value;
       return PerKiloPricing.totalFor(
         weightKg: perKiloWeightKg,
@@ -1135,6 +1271,8 @@ class _BudgetTotalInput extends StatelessWidget {
           ),
           hintText: perKilo
               ? l10n.requestCreatePerKiloInputHint
+              : perM3
+              ? l10n.requestCreatePerM3InputHint
               : l10n.requestCreateBudgetInputHint,
           hintStyle: WizardPalette.text(
             size: 15,
@@ -1143,6 +1281,8 @@ class _BudgetTotalInput extends StatelessWidget {
           ),
           suffixText: perKilo
               ? l10n.requestCreatePriceUnitPerKilo(symbol)
+              : perM3
+              ? l10n.requestCreatePriceUnitPerM3(symbol)
               : l10n.requestCreatePriceUnitTotal(symbol),
           suffixStyle: WizardPalette.text(
             size: 12,
@@ -1166,7 +1306,7 @@ class _BudgetTotalInput extends StatelessWidget {
           // ne change pas.
           context.read<PackageRequestFormBloc>().add(
             PackageRequestTotalBudgetChanged(
-              perKilo ? totalOf(text) : _parseNumber(text),
+              perKilo || perM3 ? totalOf(text) : _parseNumber(text),
             ),
           );
           onBudgetChanged?.call();
@@ -1695,18 +1835,28 @@ class _PriceModeCard extends StatelessWidget {
   }
 }
 
-/// Sélecteur « Prix total » / « Prix au kilo » : deux segments, le segment
-/// actif en blanc sur fond gris. « Prix au kilo » est grisé sans poids connu.
+/// Base du prix saisie à l'étape « Le prix ».
+enum _PriceBasis { total, perKilo, perM3 }
+
+/// Sélecteur « Prix total » / « Prix au kilo » (/ « Prix au m³ » en bateau) :
+/// des segments, le segment actif en blanc sur fond gris. « Prix au kilo » est
+/// grisé sans poids connu, « Prix au m³ » sans volume connu.
 class _PriceBasisSelector extends StatelessWidget {
   const _PriceBasisSelector({
-    required this.perKilo,
+    required this.basis,
     required this.perKiloAvailable,
+    required this.showPerM3,
+    required this.perM3Available,
     required this.onChanged,
   });
 
-  final bool perKilo;
+  final _PriceBasis basis;
   final bool perKiloAvailable;
-  final ValueChanged<bool> onChanged;
+
+  /// Bateau seulement : le segment « Prix au m³ » n'existe pas ailleurs.
+  final bool showPerM3;
+  final bool perM3Available;
+  final ValueChanged<_PriceBasis> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -1724,20 +1874,30 @@ class _PriceBasisSelector extends StatelessWidget {
             child: _Segment(
               key: const Key('price-basis-total'),
               label: l10n.requestCreatePriceBasisTotal,
-              selected: !perKilo,
+              selected: basis == _PriceBasis.total,
               enabled: true,
-              onTap: () => onChanged(false),
+              onTap: () => onChanged(_PriceBasis.total),
             ),
           ),
           Expanded(
             child: _Segment(
               key: const Key('price-basis-per-kilo'),
               label: l10n.requestCreatePriceBasisPerKilo,
-              selected: perKilo,
+              selected: basis == _PriceBasis.perKilo,
               enabled: perKiloAvailable,
-              onTap: () => onChanged(true),
+              onTap: () => onChanged(_PriceBasis.perKilo),
             ),
           ),
+          if (showPerM3)
+            Expanded(
+              child: _Segment(
+                key: const Key('price-basis-per-m3'),
+                label: l10n.requestCreatePriceBasisPerM3,
+                selected: basis == _PriceBasis.perM3,
+                enabled: perM3Available,
+                onTap: () => onChanged(_PriceBasis.perM3),
+              ),
+            ),
         ],
       ),
     );
