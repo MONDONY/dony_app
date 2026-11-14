@@ -36,6 +36,8 @@ import 'package:dony/features/matching/data/repositories/bid_negotiation_reposit
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
+import 'package:dony/features/messaging/bloc/ask_question/ask_question_cubit.dart';
+import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/data/payer_phone_memory.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
@@ -64,6 +66,22 @@ import '../../../video_modal/moment_test_support.dart';
 
 class _MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
+
+class _MockConversationRepository extends Mock
+    implements ConversationRepository {}
+
+/// Tuile « Poser une question » : la feuille ne l'affiche que si son cubit
+/// est injecté (garde des points d'ouverture sans DI complète).
+void _registerAskQuestion() {
+  getIt.registerFactory<AskQuestionCubit>(
+    () => AskQuestionCubit(
+      _MockConversationRepository(),
+      makeDisabledAnalytics(MockAnalyticsBackend()),
+      hasRealSession: () => true,
+    ),
+  );
+  addTearDown(() => getIt.unregister<AskQuestionCubit>());
+}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
@@ -2264,6 +2282,7 @@ void main() {
     );
 
     testWidgets('ni demande, ni négociation, ni signet', (tester) async {
+      _registerAskQuestion();
       final a = _buildAnnouncement(negotiable: true);
       await tester.pumpWidget(
         _harness(announcement: a, authState: proprietaire(a), favorites: cubit),
@@ -2318,6 +2337,7 @@ void main() {
       'tuile « Poser une question » entre la carte voyageur et la suite, '
       'pied collant inchangé',
       (tester) async {
+        _registerAskQuestion();
         final a = _buildAnnouncement(
           negotiable: true,
           arrivalInstructions: 'Hall des arrivées',

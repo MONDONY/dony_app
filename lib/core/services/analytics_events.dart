@@ -450,6 +450,17 @@ abstract final class AnalyticsEvents {
   /// Modification ou suppression refusée ou échouée. Propriétés `action`
   /// (`edit` / `delete`) et `reason` (`MessageEditFailure.name`).
   static const messageEditFailed = 'message_edit_failed';
+
+  /// Question avant réservation : conversation ouverte (ou rouverte) depuis
+  /// la tuile « Poser une question » de la feuille d'un trajet
+  /// (`AskQuestionCubit`).
+  static const inquiryOpened = 'inquiry_opened';
+
+  /// Ouverture d'une question impossible (`AskQuestionCubit`). Propriété
+  /// `error_code` : `auth-required` (visiteur), `kyc-required`,
+  /// `announcement-not-found`, `inquiry-announcement-closed`, code métier du
+  /// back, ou `unknown`.
+  static const inquiryOpenFailed = 'inquiry_open_failed';
   static const conversationCallInitiated = 'conversation_call_initiated';
   // Appels audio Yadony (Stream Video).
   static const callModeChosen = 'call_mode_chosen';

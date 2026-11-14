@@ -8,6 +8,7 @@ import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/messaging/bloc/ask_question/ask_question_cubit.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/widgets/ask_question_tile.dart';
@@ -17,6 +18,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements ConversationRepository {}
 
@@ -106,7 +109,12 @@ void main() {
               announcement: announcement ?? _announcement(),
               viewerId: viewerId,
               viewerKycStatus: kycStatus,
-              conversationRepository: repo,
+              cubit: AskQuestionCubit(
+                repo,
+                makeDisabledAnalytics(MockAnalyticsBackend()),
+                hasRealSession: () =>
+                    getIt<FirebaseSessionProbe>().hasRealSession,
+              ),
               onOpenChat: (c) => pushed = '/conversations/${c.id}',
               onFollowUp: (run) => run(navKey.currentContext!),
             ),
@@ -211,9 +219,10 @@ void main() {
   });
 
   testWidgets('InquiryUnavailable : snackbar et tuile retirée', (t) async {
-    when(
-      () => repo.openInquiry('a1'),
-    ).thenAnswer((_) async => throw const InquiryUnavailableException());
+    when(() => repo.openInquiry('a1')).thenAnswer(
+      (_) async =>
+          throw const InquiryUnavailableException(kAnnouncementNotFound),
+    );
     await t.pumpWidget(harness());
     await pump(t);
     await t.tap(find.text('Poser une question'));

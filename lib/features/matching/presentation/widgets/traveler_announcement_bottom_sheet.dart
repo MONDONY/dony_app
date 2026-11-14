@@ -42,6 +42,7 @@ import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sh
 import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart'
     show canShareTripPoster;
+import 'package:dony/features/messaging/bloc/ask_question/ask_question_cubit.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/widgets/ask_question_tile.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
@@ -790,13 +791,16 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           ),
         const SizedBox(height: DonySpacing.md),
         _TravelerCard(announcement: announcement),
-        AskQuestionTile(
-          announcement: announcement,
-          viewerId: lecteurId,
-          viewerKycStatus: lecteurKycStatus,
-          onOpenChat: (conversation) => _openChat(context, conversation),
-          onFollowUp: (run) => _leaveThen(context, run),
-        ),
+        // Même garde que les étapes du voyage : sans DI complète (tests,
+        // aperçus), la fiche reste sans tuile.
+        if (getIt.isRegistered<AskQuestionCubit>())
+          AskQuestionTile(
+            announcement: announcement,
+            viewerId: lecteurId,
+            viewerKycStatus: lecteurKycStatus,
+            onOpenChat: (conversation) => _openChat(context, conversation),
+            onFollowUp: (run) => _leaveThen(context, run),
+          ),
         if (announcement.pickupAddress != null ||
             announcement.deliveryAddress != null) ...[
           const SizedBox(height: DonySpacing.md),

@@ -98,9 +98,11 @@ class ConversationRepository {
       if (status == 403 && code == 'kyc-required') {
         throw const InquiryKycRequiredException();
       }
-      if (status == 404 ||
-          (status == 422 && code == 'inquiry-announcement-closed')) {
-        throw const InquiryUnavailableException();
+      if (status == 404) {
+        throw InquiryUnavailableException(code ?? kAnnouncementNotFound);
+      }
+      if (status == 422 && code == kInquiryAnnouncementClosed) {
+        throw const InquiryUnavailableException(kInquiryAnnouncementClosed);
       }
       rethrow;
     }
@@ -340,13 +342,22 @@ class InquiryKycRequiredException implements Exception {
   String toString() => 'InquiryKycRequiredException';
 }
 
+/// Code métier d'une annonce introuvable, bloquée ou en brouillon (404).
+const kAnnouncementNotFound = 'announcement-not-found';
+
+/// Code métier d'une annonce qui n'accepte plus de question (422).
+const kInquiryAnnouncementClosed = 'inquiry-announcement-closed';
+
 /// L'annonce n'accepte plus de question : introuvable, bloquée, brouillon
-/// (404) ou fermée (422 `inquiry-announcement-closed`).
+/// (404 [kAnnouncementNotFound]) ou fermée (422 [kInquiryAnnouncementClosed]).
 class InquiryUnavailableException implements Exception {
-  const InquiryUnavailableException();
+  const InquiryUnavailableException(this.code);
+
+  /// Code métier du refus, repris tel quel par l'analytics.
+  final String code;
 
   @override
-  String toString() => 'InquiryUnavailableException';
+  String toString() => 'InquiryUnavailableException($code)';
 }
 
 /// Variante d'une photo du chat servie par le back.
