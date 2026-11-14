@@ -127,6 +127,7 @@ class VideoModalLocalHistory extends Equatable {
       case VideoModalFrequency.upToN:
         if (current.displays >= campaign.maxDisplays) return false;
       case VideoModalFrequency.everyOpen:
+      case VideoModalFrequency.everyTime:
         break;
       case VideoModalFrequency.everyNDays:
         final last = current.lastShownAt;

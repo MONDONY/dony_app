@@ -85,6 +85,16 @@ void main() {
       expect(c.priority, -2);
     });
 
+    test('EVERY_TIME est lue, sans date de fin ni jours', () {
+      final c = VideoModalCampaign.tryParse(
+        infoJson(extra: {'frequency': 'EVERY_TIME', 'frequencyDays': 5}),
+      )!;
+      expect(c.frequency, VideoModalFrequency.everyTime);
+      expect(c.isEveryTime, isTrue);
+      expect(c.frequencyDays, isNull);
+      expect(c.displayCap, isNull);
+    });
+
     test('fréquence inconnue : la campagne est ignorée', () {
       expect(
         VideoModalCampaign.tryParse(
@@ -136,16 +146,20 @@ void main() {
       expect(campaign(displays: 3).underDisplayCap, isFalse);
     });
 
-    test('à chaque lancement et tous les N jours : sans plafond', () {
-      for (final f in [
-        VideoModalFrequency.everyOpen,
-        VideoModalFrequency.everyNDays,
-      ]) {
-        final c = campaign(frequency: f, frequencyDays: 2, displays: 99);
-        expect(c.displayCap, isNull);
-        expect(c.underDisplayCap, isTrue);
-      }
-    });
+    test(
+      'à chaque lancement, tous les N jours, à chaque fois : sans plafond',
+      () {
+        for (final f in [
+          VideoModalFrequency.everyOpen,
+          VideoModalFrequency.everyNDays,
+          VideoModalFrequency.everyTime,
+        ]) {
+          final c = campaign(frequency: f, frequencyDays: 2, displays: 99);
+          expect(c.displayCap, isNull);
+          expect(c.underDisplayCap, isTrue);
+        }
+      },
+    );
   });
 
   group('tri par priorité', () {

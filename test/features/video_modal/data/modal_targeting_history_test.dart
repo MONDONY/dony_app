@@ -67,6 +67,33 @@ void main() {
     });
   });
 
+  group('EVERY_TIME', () {
+    final c = campaign(
+      frequency: VideoModalFrequency.everyTime,
+      stopAfterAnswer: false,
+    );
+
+    test('toujours éligible, aucun plafond', () {
+      final h = after(c, List.filled(20, VideoModalEventType.shown));
+      expect(h.isEligible(c, now: now), isTrue);
+    });
+
+    test('« Ne plus afficher » et la réponse (si activée) s\'appliquent', () {
+      expect(
+        after(c, [VideoModalEventType.dontShowAgain]).isEligible(c, now: now),
+        isFalse,
+      );
+      final stop = campaign(frequency: VideoModalFrequency.everyTime);
+      expect(
+        after(stop, [
+          VideoModalEventType.shown,
+          VideoModalEventType.dismissed,
+        ]).isEligible(stop, now: now),
+        isFalse,
+      );
+    });
+  });
+
   group('EVERY_N_DAYS', () {
     final c = campaign(
       frequency: VideoModalFrequency.everyNDays,

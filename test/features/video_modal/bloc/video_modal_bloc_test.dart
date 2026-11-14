@@ -42,8 +42,12 @@ void main() {
     ).thenAnswer((_) async {});
   });
 
-  VideoModalBloc build() =>
-      VideoModalBloc(repo, analytics, hasRealSession: () => realSession);
+  VideoModalBloc build() => VideoModalBloc(
+    repo,
+    analytics,
+    hasRealSession: () => realSession,
+    clock: () => DateTime.utc(2026, 11, 10),
+  );
 
   blocTest<VideoModalBloc, VideoModalState>(
     'compte : synchronise les réponses visiteur puis charge',
@@ -55,6 +59,7 @@ void main() {
       VideoModalState(
         status: VideoModalStatus.ready,
         campaigns: [campaign()],
+        loadedAt: DateTime.utc(2026, 11, 10),
         loadedLang: 'fr',
         loadedForRealSession: true,
       ),
@@ -131,7 +136,7 @@ void main() {
       VideoModalState(
         status: VideoModalStatus.ready,
         campaigns: [campaign()],
-        shownThisSession: true,
+        usedSlots: const {VideoModalSlot.videoAmbient},
       ),
     ],
     verify: (b) {
@@ -305,4 +310,52 @@ void main() {
       ),
     );
   });
+
+  /// Rechargement forcé : relit les campagnes sans repasser par le chargement.
+  blocTest<VideoModalBloc, VideoModalState>(
+    'rechargement forcé : pas d\'état de chargement, nouvelle liste',
+    build: build,
+    seed: () => VideoModalState(
+      status: VideoModalStatus.ready,
+      loadedLang: 'fr',
+      loadedForRealSession: true,
+      loadedAt: DateTime.utc(2026, 11, 9),
+    ),
+    act: (b) => b.add(
+      const VideoModalLoadRequested(lang: 'fr', realSession: true, force: true),
+    ),
+    expect: () => [
+      isA<VideoModalState>()
+          .having((s) => s.status, 'status', VideoModalStatus.ready)
+          .having((s) => s.campaigns, 'campaigns', [campaign()])
+          .having((s) => s.loadedAt, 'loadedAt', DateTime.utc(2026, 11, 10)),
+    ],
+  );
+
+  /// Chaque case est indépendante ; « à chaque fois » n'en prend aucune.
+  blocTest<VideoModalBloc, VideoModalState>(
+    'affichages : une case par type et nature, rien pour « à chaque fois »',
+    build: build,
+    act: (b) {
+      for (final (c, t) in [
+        (campaign(), VideoModalTrigger.searchTab),
+        (campaign(id: 'm'), VideoModalTrigger.kycVerified),
+        (infoCampaign(), VideoModalTrigger.searchTab),
+        (infoCampaign(id: 'im'), VideoModalTrigger.kycVerified),
+        (
+          campaign(id: 'e', frequency: VideoModalFrequency.everyTime),
+          VideoModalTrigger.deliveryConfirmed,
+        ),
+      ]) {
+        b.add(
+          VideoModalAnswerRequested(
+            campaign: c,
+            trigger: t,
+            event: VideoModalEventType.shown,
+          ),
+        );
+      }
+    },
+    verify: (b) => expect(b.state.usedSlots, VideoModalSlot.values.toSet()),
+  );
 }

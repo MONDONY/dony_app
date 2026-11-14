@@ -41,6 +41,9 @@ bool isVideoModalUserTyping() {
 abstract final class VideoModalPresenter {
   static bool _presenting = false;
 
+  /// Un modal est en cours d'affichage : jamais deux en même temps.
+  static bool get isPresenting => _presenting;
+
   @visibleForTesting
   static void resetForTest() => _presenting = false;
 

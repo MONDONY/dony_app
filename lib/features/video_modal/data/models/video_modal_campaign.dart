@@ -271,7 +271,11 @@ enum VideoModalFrequency {
   everyOpen('EVERY_OPEN'),
 
   /// Une fois tous les `frequencyDays` jours.
-  everyNDays('EVERY_N_DAYS');
+  everyNDays('EVERY_N_DAYS'),
+
+  /// À chaque fois que l'action se produit : aucun plafond, aucun drapeau de
+  /// session (un modal d'écran ou de moment peut revenir à chaque occurrence).
+  everyTime('EVERY_TIME');
 
   const VideoModalFrequency(this.wire);
 
@@ -510,7 +514,9 @@ class VideoModalCampaign extends Equatable {
   int? get displayCap => switch (frequency) {
     VideoModalFrequency.once => 1,
     VideoModalFrequency.upToN => maxDisplays,
-    VideoModalFrequency.everyOpen || VideoModalFrequency.everyNDays => null,
+    VideoModalFrequency.everyOpen ||
+    VideoModalFrequency.everyNDays ||
+    VideoModalFrequency.everyTime => null,
   };
 
   /// Le plafond d'affichages n'est pas atteint.
@@ -526,6 +532,9 @@ class VideoModalCampaign extends Equatable {
   bool get isPoster => hasImage && imageMode == VideoModalImageMode.poster;
 
   bool get isInfo => type == VideoModalType.info;
+
+  /// Affichée à chaque occurrence de l'action, hors limites de session.
+  bool get isEveryTime => frequency == VideoModalFrequency.everyTime;
 
   /// Campagne lisible, ou `null` si un champ indispensable manque ou est
   /// invalide : le back peut être plus ancien ou plus récent que l'app, une

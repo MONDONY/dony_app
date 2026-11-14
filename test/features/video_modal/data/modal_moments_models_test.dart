@@ -485,37 +485,127 @@ void main() {
   group('VideoModalState.candidateForMoment', () {
     VideoModalState ready(
       List<VideoModalCampaign> campaigns, {
-      bool shown = false,
+      Set<VideoModalSlot> used = const {},
     }) => VideoModalState(
       status: VideoModalStatus.ready,
       campaigns: campaigns,
-      shownThisSession: shown,
+      usedSlots: used,
     );
 
     final moment = VideoModalMoment.action(VideoModalTrigger.kycVerified);
+    const search = {VideoModalTrigger.searchTab};
+    final kyc = {VideoModalTrigger.kycVerified};
 
+    /// Première campagne qui convient, dans l'ordre du back.
     test('première campagne qui convient, dans l\'ordre du back', () {
       final state = ready([
         campaign(id: 'a', triggers: {VideoModalTrigger.searchTab}),
-        campaign(id: 'b', triggers: {VideoModalTrigger.kycVerified}),
-        campaign(id: 'c', triggers: {VideoModalTrigger.kycVerified}),
+        campaign(id: 'b', triggers: kyc),
+        campaign(id: 'c', triggers: kyc),
       ]);
       expect(state.candidateForMoment(moment)?.id, 'b');
     });
 
-    test('rien avant le chargement ni après un modal de la session', () {
-      final c = campaign(triggers: {VideoModalTrigger.kycVerified});
+    /// Rien avant le chargement, rien dans une case déjà prise.
+    test('rien avant le chargement ni dans une case prise', () {
+      final c = campaign(triggers: kyc);
       expect(
         VideoModalState(campaigns: [c]).candidateForMoment(moment),
         isNull,
       );
-      expect(ready([c], shown: true).candidateForMoment(moment), isNull);
+      expect(
+        ready(
+          [c],
+          used: {VideoModalSlot.videoMoment},
+        ).candidateForMoment(moment),
+        isNull,
+      );
       expect(ready(const []).candidateForMoment(moment), isNull);
     });
 
+    /// Un modal d'écran (vidéo ou info) ne bloque jamais un moment.
+    test('les cases « où » ne bloquent pas les moments', () {
+      final v = campaign(triggers: kyc);
+      final i = infoCampaign(triggers: kyc);
+      final used = {VideoModalSlot.videoAmbient, VideoModalSlot.infoAmbient};
+      expect(ready([v], used: used).candidateForMoment(moment)?.id, 'c1');
+      expect(ready([i], used: used).candidateForMoment(moment)?.id, 'i1');
+    });
+
+    /// Un moment ne bloque pas les écrans.
+    test('les cases « moment » ne bloquent pas les écrans', () {
+      final c = campaign();
+      final used = {VideoModalSlot.videoMoment, VideoModalSlot.infoMoment};
+      expect(ready([c], used: used).candidateFor(search)?.id, 'c1');
+      expect(
+        ready([c], used: {VideoModalSlot.videoAmbient}).candidateFor(search),
+        isNull,
+      );
+    });
+
+    /// Vidéo et information sont deux cases distinctes, même nature.
+    test('vidéo et information ne se bloquent pas', () {
+      final v = campaign(id: 'v', triggers: kyc);
+      final i = infoCampaign(id: 'i', triggers: kyc);
+      final state = ready([v, i], used: {VideoModalSlot.videoMoment});
+      expect(state.candidateForMoment(moment)?.id, 'i');
+      expect(
+        ready(
+          [v, i],
+          used: {VideoModalSlot.infoMoment},
+        ).candidateForMoment(moment)?.id,
+        'v',
+      );
+    });
+
+    /// « À chaque fois » n'est bloquée par aucune case.
+    test('« à chaque fois » n\'est bloquée par aucune case', () {
+      final m = campaign(
+        id: 'm',
+        triggers: kyc,
+        frequency: VideoModalFrequency.everyTime,
+      );
+      final s = campaign(id: 's', frequency: VideoModalFrequency.everyTime);
+      final both = ready([m, s], used: VideoModalSlot.values.toSet());
+      expect(both.candidateForMoment(moment)?.id, 'm');
+      expect(both.candidateFor(search)?.id, 's');
+    });
+
+    /// Un moment bloqué laisse passer le « à chaque fois » derrière.
+    test('un moment bloqué laisse passer le « à chaque fois » derrière', () {
+      final once = campaign(id: 'o', triggers: kyc);
+      final every = campaign(
+        id: 'e',
+        triggers: kyc,
+        frequency: VideoModalFrequency.everyTime,
+      );
+      expect(
+        ready(
+          [once, every],
+          used: {VideoModalSlot.videoMoment},
+        ).candidateForMoment(moment)?.id,
+        'e',
+      );
+    });
+
+    /// `hasShown` : case prise, ou « à chaque fois ».
+    test('hasShown suit la case de la campagne', () {
+      final c = campaign();
+      expect(ready([c]).hasShown(c, moment: true), isFalse);
+      expect(
+        ready(
+          [c],
+          used: {VideoModalSlot.videoMoment},
+        ).hasShown(c, moment: true),
+        isTrue,
+      );
+      final e = campaign(frequency: VideoModalFrequency.everyTime);
+      expect(ready([e]).hasShown(e, moment: false), isTrue);
+    });
+
     test('les déclencheurs d\'écran ne voient pas les moments', () {
-      final c = campaign(triggers: {VideoModalTrigger.kycVerified});
-      expect(ready([c]).candidateFor({VideoModalTrigger.searchTab}), isNull);
+      final c = campaign(triggers: kyc);
+      expect(ready([c]).candidateFor(search), isNull);
     });
   });
 }

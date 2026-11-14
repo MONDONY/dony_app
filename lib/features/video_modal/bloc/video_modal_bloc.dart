@@ -11,8 +11,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 export 'video_modal_event.dart';
 export 'video_modal_state.dart';
 
-/// Modals vidéo de la session : campagnes éligibles, « un seul modal par
-/// session », réponses envoyées au back ou gardées sur le téléphone.
+/// Modals vidéo de la session : campagnes éligibles, un seul modal par case
+/// (type × où/moment) et par lancement, réponses envoyées au back ou gardées sur le téléphone.
 ///
 /// Singleton (une session = un lancement de l'app) : le shell et les boutons
 /// « Publier un trajet » / « Envoyer un colis » lisent le même état.
@@ -21,7 +21,9 @@ class VideoModalBloc extends Bloc<VideoModalEvent, VideoModalState> {
     this._repository,
     this._analytics, {
     required bool Function() hasRealSession,
+    DateTime Function()? clock,
   }) : _hasRealSession = hasRealSession,
+       _clock = clock ?? DateTime.now,
        super(const VideoModalState()) {
     on<VideoModalLoadRequested>(_onLoad);
     on<VideoModalAppOpenConsumedRequested>(
@@ -33,6 +35,7 @@ class VideoModalBloc extends Bloc<VideoModalEvent, VideoModalState> {
   final VideoModalRepository _repository;
   final AnalyticsService _analytics;
   final bool Function() _hasRealSession;
+  final DateTime Function() _clock;
 
   /// Clé du chargement en vol (`langue/compte`) : la même demande arrivée
   /// pendant le chargement est ignorée, une autre (connexion pendant le
@@ -45,14 +48,15 @@ class VideoModalBloc extends Bloc<VideoModalEvent, VideoModalState> {
   ) async {
     final key = '${event.lang}/${event.realSession}';
     if (_inFlight == key) return;
-    if (_inFlight == null &&
+    if (!event.force &&
+        _inFlight == null &&
         state.status == VideoModalStatus.ready &&
         state.loadedLang == event.lang &&
         state.loadedForRealSession == event.realSession) {
       return;
     }
     _inFlight = key;
-    emit(state.copyWith(status: VideoModalStatus.loading));
+    if (!event.force) emit(state.copyWith(status: VideoModalStatus.loading));
     if (event.realSession) {
       await _repository.syncGuestEvents();
     }
@@ -66,6 +70,7 @@ class VideoModalBloc extends Bloc<VideoModalEvent, VideoModalState> {
       state.copyWith(
         status: VideoModalStatus.ready,
         campaigns: campaigns,
+        loadedAt: _clock(),
         loadedLang: event.lang,
         loadedForRealSession: event.realSession,
       ),
@@ -77,7 +82,18 @@ class VideoModalBloc extends Bloc<VideoModalEvent, VideoModalState> {
     Emitter<VideoModalState> emit,
   ) async {
     if (event.event == VideoModalEventType.shown) {
-      emit(state.copyWith(shownThisSession: true));
+      // « À chaque fois » : aucune case. Sinon la case (type de modal, nature
+      // du déclencheur) : les autres cases restent libres.
+      if (!event.campaign.isEveryTime) {
+        emit(
+          state.copyWith(
+            usedSlots: {
+              ...state.usedSlots,
+              VideoModalSlot.of(event.campaign, moment: event.trigger.isMoment),
+            },
+          ),
+        );
+      }
     }
     final realSession = _hasRealSession();
     unawaited(
