@@ -1248,7 +1248,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                   InquiryNote(
                                     text: l.inquiryIntroNote(
                                       conversation.inquiryMessageLimit ??
-                                          kInquiryDefaultMessageLimit,
+                                          ConversationModel
+                                              .defaultInquiryMessageLimit,
                                     ),
                                   ),
                                   if (!inquiryLocked)
@@ -1429,7 +1430,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                 remaining: inquiryRemaining,
                                 limit:
                                     conversation.inquiryMessageLimit ??
-                                    kInquiryDefaultMessageLimit,
+                                    ConversationModel
+                                        .defaultInquiryMessageLimit,
                               )
                             : null,
                         compose: _ComposeArea(

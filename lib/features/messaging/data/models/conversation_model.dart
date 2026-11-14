@@ -62,12 +62,20 @@ class ConversationModel {
   /// Annonce de la question ([kindInquiry]) ; nulle pour les autres types.
   final String? announcementId;
 
-  /// Nombre de messages que l'expéditeur peut envoyer avant réservation
-  /// ([kindInquiry]). Nul sur les autres types ou un ancien back.
+  /// Nombre de messages que le demandeur peut envoyer avant réservation
+  /// ([kindInquiry]). Nul sur les autres types, sur un fil levé ou un ancien
+  /// back ; une valeur nulle ou négative est lue comme
+  /// [defaultInquiryMessageLimit].
   final int? inquiryMessageLimit;
 
-  /// Quota levé (le voyageur a répondu ou une demande est acceptée) : les
-  /// messages de l'expéditeur ne sont plus comptés. Faux par défaut.
+  /// Plafond de messages du demandeur quand le back ne le sert pas (même
+  /// valeur que `InquiryPolicy.MESSAGE_LIMIT` du back).
+  static const defaultInquiryMessageLimit = 10;
+
+  /// Quota levé : le demandeur a créé une demande sur ce trajet, le fil passe
+  /// en conversation de réservation et ses messages ne sont plus comptés. Le
+  /// back le reverrouille si cette demande se termine sans avoir été
+  /// acceptée. Faux par défaut.
   final bool inquiryQuotaLifted;
   final String firestoreConversationId;
   final ParticipantModel otherParticipant;
@@ -278,7 +286,7 @@ class ConversationModel {
         id: json['id'] as String,
         bidId: json['bidId'] as String?,
         announcementId: json['announcementId'] as String?,
-        inquiryMessageLimit: (json['inquiryMessageLimit'] as num?)?.toInt(),
+        inquiryMessageLimit: _inquiryLimit(json['inquiryMessageLimit']),
         inquiryQuotaLifted: json['inquiryQuotaLifted'] == true,
         firestoreConversationId: json['firestoreConversationId'] as String,
         otherParticipant: ParticipantModel.fromJson(
@@ -321,6 +329,14 @@ class ConversationModel {
         messagesPurgeAt: _serverDate(json['messagesPurgeAt']),
         messagesPurged: json['messagesPurged'] == true,
       );
+
+  /// Plafond servi par le back, borné : une valeur nulle ou négative ferait
+  /// lever `clamp` dans le compteur.
+  static int? _inquiryLimit(Object? value) {
+    final limit = value is num ? value.toInt() : null;
+    if (limit == null) return null;
+    return limit > 0 ? limit : defaultInquiryMessageLimit;
+  }
 
   static DateTime? _serverDate(Object? value) {
     if (value is! String || value.trim().isEmpty) return null;

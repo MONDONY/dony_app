@@ -22,9 +22,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// confiée à l'appelant ([onOpenChat], [onFollowUp]) : c'est lui qui connaît
 /// le mécanisme de navigation de la feuille.
 class AskQuestionTile extends StatelessWidget {
-  /// Quota annoncé tant que le serveur ne l'a pas donné.
-  static const int defaultLimit = 10;
-
   const AskQuestionTile({
     super.key,
     required this.announcement,
@@ -217,7 +214,9 @@ class _AskQuestionTileBody extends StatelessWidget {
                     borderRadius: BorderRadius.circular(DonyRadius.full),
                   ),
                   child: Text(
-                    l.inquiryAskTileBadge(AskQuestionTile.defaultLimit),
+                    l.inquiryAskTileBadge(
+                      ConversationModel.defaultInquiryMessageLimit,
+                    ),
                     style: tt.labelSmall?.copyWith(
                       color: cs.primary,
                       fontWeight: FontWeight.w700,

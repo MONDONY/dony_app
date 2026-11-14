@@ -42,14 +42,20 @@ ChatSubscribeRequested _subscribe({
   bool limited = true,
   int? limit = 10,
   String announcementId = 'ann-1',
+  bool mediaAllowed = false,
 }) => ChatSubscribeRequested(
   _conv,
   currentUserUid: _me,
   conversationId: 'api-1',
+  mediaAllowed: mediaAllowed,
   inquiryLimited: limited,
   inquiryMessageLimit: limit,
   announcementId: announcementId,
 );
+
+/// Conversation ordinaire, née d'un bid : pas d'annonce de question.
+ChatSubscribeRequested _ordinarySubscribe() =>
+    _subscribe(limited: false, limit: null, announcementId: '');
 
 ChatTextSendRequested _send([String body = 'Bonjour', String? replyToId]) =>
     ChatTextSendRequested(
@@ -141,7 +147,11 @@ void main() {
     ).thenAnswer((_) => calls++ == 0 ? sentCtrl.stream : Stream.value(value));
   }
 
-  ChatBloc makeBloc({Duration? parentTimeout, Duration? reconcileTimeout}) {
+  ChatBloc makeBloc({
+    Duration? parentTimeout,
+    Duration? reconcileTimeout,
+    Duration? refreshRetryDelay,
+  }) {
     final backend = MockAnalyticsBackend();
     final analytics = makeDisabledAnalytics(backend);
     analytics.onConfigured();
@@ -151,6 +161,7 @@ void main() {
       analytics,
       inquiryParentTimeout: parentTimeout ?? const Duration(seconds: 5),
       inquiryReconcileTimeout: reconcileTimeout ?? const Duration(seconds: 10),
+      inquiryRefreshRetryDelay: refreshRetryDelay ?? const Duration(seconds: 2),
     );
   }
 
@@ -162,10 +173,12 @@ void main() {
     bool emitSent = true,
     Duration? parentTimeout,
     Duration? reconcileTimeout,
+    Duration? refreshRetryDelay,
   }) async {
     final bloc = makeBloc(
       parentTimeout: parentTimeout,
       reconcileTimeout: reconcileTimeout,
+      refreshRetryDelay: refreshRetryDelay,
     );
     bloc.add(event);
     await pumpEventQueue();
@@ -230,6 +243,14 @@ void main() {
     final bloc = await open(_subscribe());
     expect(loaded(bloc).inquiryRemaining, 10);
     await bloc.close();
+  });
+
+  test('limite négative ou nulle : repli sur 10, sans exception', () async {
+    for (final bad in [0, -2]) {
+      final bloc = await open(_subscribe(limit: bad), sent: 3);
+      expect(loaded(bloc).inquiryRemaining, 7, reason: '$bad');
+      await bloc.close();
+    }
   });
 
   test('limite nulle : repli sur 10', () async {
@@ -640,7 +661,7 @@ void main() {
   });
 
   test('conversation ordinaire : aucun champ, aucun abonnement', () async {
-    final bloc = await open(_subscribe(limited: false), parent: false);
+    final bloc = await open(_ordinarySubscribe(), parent: false);
     expect(loaded(bloc).inquiryRemaining, isNull);
     expect(loaded(bloc).inquiryLimitReached, isFalse);
     verifyNever(() => fs.inquirySentStream(any()));
@@ -752,7 +773,7 @@ void main() {
     'réouverture d\'un autre fil : abonnements précédents annulés',
     () async {
       final bloc = await open(_subscribe(), sent: 1);
-      bloc.add(_subscribe(limited: false));
+      bloc.add(_ordinarySubscribe());
       await pumpEventQueue();
       expect(sentCtrl.hasListener, isFalse);
       expect(parentCtrl.hasListener, isFalse);
@@ -898,7 +919,7 @@ void main() {
     stubWrite(() async {
       if (calls++ == 0) await gate.future;
     });
-    final bloc = await open(_subscribe(limited: false), parent: false);
+    final bloc = await open(_ordinarySubscribe(), parent: false);
     bloc.add(_send('un'));
     bloc.add(_send('deux'));
     await pumpEventQueue();
@@ -1034,4 +1055,224 @@ void main() {
       await bloc.close();
     },
   );
+
+  group('fil né d\'une question, ouvert levé (I4)', () {
+    test('parent suivi dès l\'annonce connue, envois ordinaires sans '
+        'attendre', () async {
+      final bloc = makeBloc();
+      bloc.add(_subscribe(limited: false, limit: null));
+      await pumpEventQueue();
+      expect(parentCtrl.hasListener, isTrue);
+      bloc.add(_send('avant le parent'));
+      await pumpEventQueue();
+      verifySentBefore(null, body: 'avant le parent').called(1);
+      expect(loaded(bloc).inquiryRemaining, isNull);
+      await bloc.close();
+    });
+
+    test('reverrouillage : limité, compteur lu, modèle relu, photos '
+        'coupées', () async {
+      when(
+        () => conv.getConversation('api-1'),
+      ).thenAnswer((_) async => _conversation());
+      final bloc = makeBloc();
+      bloc.add(_subscribe(limited: false, limit: null, mediaAllowed: true));
+      await pumpEventQueue();
+      parentCtrl.add(_p(_me, lifted: true));
+      await pumpEventQueue();
+      expect(loaded(bloc).mediaAllowed, isTrue);
+      expect(sentCtrl.hasListener, isFalse);
+
+      parentCtrl.add(_p(_me));
+      await pumpEventQueue();
+      expect(sentCtrl.hasListener, isTrue);
+      expect(loaded(bloc).mediaAllowed, isFalse);
+      sentCtrl.add(6);
+      await pumpEventQueue();
+      expect(loaded(bloc).inquiryRemaining, 4);
+      expect(loaded(bloc).conversation?.isInquiry, isTrue);
+      expect(loaded(bloc).conversation?.inquiryLimited, isTrue);
+
+      bloc.add(_send('après'));
+      await pumpEventQueue();
+      verifySentBefore(6, body: 'après').called(1);
+      await bloc.close();
+    });
+
+    test(
+      'reverrouillage côté créateur : texte libre, photos coupées',
+      () async {
+        final bloc = makeBloc();
+        bloc.add(_subscribe(limited: false, limit: null, mediaAllowed: true));
+        await pumpEventQueue();
+        parentCtrl.add(_p('autre-uid'));
+        await pumpEventQueue();
+        expect(loaded(bloc).mediaAllowed, isFalse);
+        expect(loaded(bloc).inquiryRemaining, isNull);
+        bloc.add(_send());
+        await pumpEventQueue();
+        verifySentBefore(null).called(1);
+        await bloc.close();
+      },
+    );
+
+    test(
+      'reverrouillage lu trop tôt par l\'API : une relance différée',
+      () async {
+        var calls = 0;
+        when(() => conv.getConversation('api-1')).thenAnswer((_) async {
+          // Le back écrit Firestore avant de valider sa transaction.
+          return calls++ == 0 ? _direct : _conversation();
+        });
+        final bloc = await open(
+          _subscribe(limited: false, limit: null),
+          parent: false,
+          refreshRetryDelay: const Duration(milliseconds: 50),
+        );
+        parentCtrl.add(_p(_me));
+        await pumpEventQueue();
+        verify(() => conv.getConversation('api-1')).called(1);
+        expect(loaded(bloc).conversation, isNull);
+        await Future<void>.delayed(const Duration(milliseconds: 120));
+        verify(() => conv.getConversation('api-1')).called(1);
+        expect(loaded(bloc).conversation?.inquiryLimited, isTrue);
+        await bloc.close();
+      },
+    );
+  });
+
+  group('relance différée de la relecture (revue m2)', () {
+    test(
+      'levée lue trop tôt : une seule relance, puis le modèle levé',
+      () async {
+        var calls = 0;
+        when(() => conv.getConversation('api-1')).thenAnswer((_) async {
+          return calls++ == 0 ? _conversation() : _direct;
+        });
+        final bloc = await open(
+          _subscribe(),
+          sent: 2,
+          refreshRetryDelay: const Duration(milliseconds: 50),
+        );
+        parentCtrl.add(_p(_me, lifted: true));
+        await pumpEventQueue();
+        verify(() => conv.getConversation('api-1')).called(1);
+        expect(loaded(bloc).conversation, isNull);
+        await Future<void>.delayed(const Duration(milliseconds: 120));
+        verify(() => conv.getConversation('api-1')).called(1);
+        expect(loaded(bloc).conversation?.bidId, 'bid-1');
+        await bloc.close();
+      },
+    );
+
+    test('toujours périmée : bornée à une relance', () async {
+      when(
+        () => conv.getConversation('api-1'),
+      ).thenAnswer((_) async => _conversation());
+      final bloc = await open(
+        _subscribe(),
+        sent: 2,
+        refreshRetryDelay: const Duration(milliseconds: 30),
+      );
+      parentCtrl.add(_p(_me, lifted: true));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      verify(() => conv.getConversation('api-1')).called(2);
+      expect(loaded(bloc).conversation, isNull);
+      expect(loaded(bloc).inquiryRemaining, isNull); // la levée tient
+      await bloc.close();
+    });
+
+    test('retour de fiche sans levée : aucune relance', () async {
+      final bloc = await open(
+        _subscribe(),
+        sent: 2,
+        refreshRetryDelay: const Duration(milliseconds: 30),
+      );
+      bloc.add(const ChatConversationRefreshRequested());
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      verify(() => conv.getConversation('api-1')).called(1);
+      await bloc.close();
+    });
+
+    test('fermeture avant la relance : rien ne repart', () async {
+      when(
+        () => conv.getConversation('api-1'),
+      ).thenAnswer((_) async => _conversation());
+      final bloc = await open(
+        _subscribe(),
+        sent: 2,
+        refreshRetryDelay: const Duration(milliseconds: 30),
+      );
+      parentCtrl.add(_p(_me, lifted: true));
+      await pumpEventQueue();
+      await bloc.close();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      verify(() => conv.getConversation('api-1')).called(1);
+    });
+  });
+
+  group('flux en erreur (revue T3 m1, m2, m4)', () {
+    test('fil levé + erreur du parent : envois jamais bloqués, réabonnement '
+        'paresseux', () async {
+      final bloc = await open(_subscribe(), sent: 1);
+      parentCtrl.add(_p(_me, lifted: true));
+      await pumpEventQueue();
+      parentCtrl.addError(Exception('hors ligne'));
+      await pumpEventQueue();
+      bloc.add(_send('libre'));
+      await pumpEventQueue();
+      verifySentBefore(null, body: 'libre').called(1);
+      verify(() => fs.inquiryParentStream(_conv)).called(2);
+      await bloc.close();
+    });
+
+    test('ouvert levé + erreur du parent : envois jamais bloqués', () async {
+      final bloc = makeBloc();
+      bloc.add(_subscribe(limited: false, limit: null));
+      await pumpEventQueue();
+      parentCtrl.addError(Exception('hors ligne'));
+      await pumpEventQueue();
+      bloc.add(_send('libre'));
+      await pumpEventQueue();
+      verifySentBefore(null, body: 'libre').called(1);
+      await bloc.close();
+    });
+
+    test('erreur du compteur avant sa première valeur : réabonnement à '
+        'l\'envoi suivant', () async {
+      final bloc = await open(_subscribe(), emitSent: false);
+      sentCtrl.addError(Exception('hors ligne'));
+      await pumpEventQueue();
+      bloc.add(_send());
+      await pumpEventQueue();
+      verifyNoWrite();
+      verify(() => fs.inquirySentStream(_conv)).called(2);
+      sentCtrl.add(3);
+      await pumpEventQueue();
+      verifySentBefore(3).called(1);
+      await bloc.close();
+    });
+
+    test(
+      'deux abonnements rapprochés : aucun écouteur du parent oublié',
+      () async {
+        final controllers = <StreamController<_Parent>>[];
+        when(() => fs.inquiryParentStream(_conv)).thenAnswer((_) {
+          final c = StreamController<_Parent>();
+          controllers.add(c);
+          return c.stream;
+        });
+        final bloc = makeBloc();
+        bloc.add(_subscribe());
+        bloc.add(_subscribe());
+        await pumpEventQueue();
+        await bloc.close();
+        await pumpEventQueue();
+        expect(controllers, isNotEmpty);
+        for (final c in controllers) {
+          expect(c.hasListener, isFalse);
+        }
+      },
+    );
+  });
 }

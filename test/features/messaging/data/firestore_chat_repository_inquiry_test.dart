@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 
 /// Lot dont le commit est refusé comme le ferait une règle Firestore.
 class _DenyingBatch implements WriteBatch {
@@ -13,6 +14,50 @@ class _DenyingBatch implements WriteBatch {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => null;
+}
+
+class _MockFirestore extends Mock implements FirebaseFirestore {}
+
+// ignore: subtype_of_sealed_class
+class _MockCollection extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
+// ignore: subtype_of_sealed_class
+class _MockDoc extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
+
+// ignore: subtype_of_sealed_class
+class _MockSnap extends Mock
+    implements DocumentSnapshot<Map<String, dynamic>> {}
+
+class _MockMetadata extends Mock implements SnapshotMetadata {}
+
+/// Instantané du compteur, du serveur ou du cache local.
+DocumentSnapshot<Map<String, dynamic>> _quotaSnap({
+  required bool exists,
+  required bool fromCache,
+  int? sent,
+}) {
+  final snap = _MockSnap();
+  final metadata = _MockMetadata();
+  when(() => metadata.isFromCache).thenReturn(fromCache);
+  when(() => snap.exists).thenReturn(exists);
+  when(() => snap.metadata).thenReturn(metadata);
+  when(() => snap.data()).thenReturn(sent == null ? null : {'sent': sent});
+  return snap;
+}
+
+/// Dépôt dont le compteur `inquiryQuota/c1` rend [snaps].
+FirestoreChatRepository _repoWithQuota(
+  List<DocumentSnapshot<Map<String, dynamic>>> snaps,
+) {
+  final firestore = _MockFirestore();
+  final collection = _MockCollection();
+  final doc = _MockDoc();
+  when(() => firestore.collection('inquiryQuota')).thenReturn(collection);
+  when(() => collection.doc('c1')).thenReturn(doc);
+  when(doc.snapshots).thenAnswer((_) => Stream.fromIterable(snaps));
+  return FirestoreChatRepository(firestore);
 }
 
 class _DenyingFirestore extends FakeFirebaseFirestore {
@@ -164,6 +209,30 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       await sub.cancel();
       expect(values, [0, 1, 2]);
+    });
+  });
+
+  group('inquirySentStream hors ligne (revue m7)', () {
+    test('compteur absent du cache local : ignoré, jamais un faux 0', () async {
+      final repo = _repoWithQuota([
+        _quotaSnap(exists: false, fromCache: true),
+        _quotaSnap(exists: true, fromCache: false, sent: 4),
+      ]);
+      expect(await repo.inquirySentStream('c1').toList(), [4]);
+    });
+
+    test('compteur absent côté serveur : 0', () async {
+      final repo = _repoWithQuota([
+        _quotaSnap(exists: false, fromCache: false),
+      ]);
+      expect(await repo.inquirySentStream('c1').toList(), [0]);
+    });
+
+    test('compteur présent dans le cache (écriture locale) : gardé', () async {
+      final repo = _repoWithQuota([
+        _quotaSnap(exists: true, fromCache: true, sent: 2),
+      ]);
+      expect(await repo.inquirySentStream('c1').toList(), [2]);
     });
   });
 

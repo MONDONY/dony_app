@@ -124,7 +124,10 @@ void main() {
     await sentCtrl.close();
   });
 
-  Future<ChatBloc> pumpScreen(WidgetTester tester) async {
+  Future<ChatBloc> pumpScreen(
+    WidgetTester tester, {
+    ConversationModel conversation = _inquiry,
+  }) async {
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -141,7 +144,7 @@ void main() {
         home: BlocProvider<ChatBloc>.value(
           value: bloc,
           child: ChatScreen(
-            conversation: _inquiry,
+            conversation: conversation,
             currentUidOverride: _me,
             onNavigate: (path, _) => pushed.add(path),
           ),
@@ -186,7 +189,11 @@ void main() {
     expect(composer, findsOneWidget);
     expect(pushed, isEmpty, reason: 'aucune navigation');
 
-    // Le plafond est rétabli : retour en mode limité, compteur exact.
+    // Le plafond est rétabli : retour en mode limité, compteur exact. Le back
+    // rend de nouveau le fil de questions, relu par le bloc.
+    when(
+      () => conversations.getConversation('conv-q'),
+    ).thenAnswer((_) async => _inquiry);
     parentCtrl.add(_parent());
     await settle(tester);
     sentCtrl.add(3);
@@ -195,6 +202,40 @@ void main() {
     expect(find.text('7 messages restants'), findsOneWidget);
     expect(bookingButton, findsOneWidget);
     expect(pushed, isEmpty);
+  });
+
+  testWidgets('ouvert promu (déjà levé) puis reverrouillé : barre de quota '
+      'et carte de réservation reviennent (I4)', (tester) async {
+    const promotedWithTrip = ConversationModel(
+      id: 'conv-q',
+      firestoreConversationId: _fsId,
+      otherParticipant: ParticipantModel(id: 'uid-1', name: 'Moussa Diallo'),
+      bidId: 'bid-1',
+      announcementId: 'ann-9',
+      inquiryQuotaLifted: true,
+      tripOrigin: 'Paris',
+      tripDestination: 'Dakar',
+    );
+    when(
+      () => conversations.getConversation('conv-q'),
+    ).thenAnswer((_) async => _inquiry);
+    await pumpScreen(tester, conversation: promotedWithTrip);
+    parentCtrl.add(_parent(lifted: true));
+    await settle(tester);
+    expect(quotaBar, findsNothing);
+    expect(composer, findsOneWidget);
+
+    // La demande s'est terminée sans être acceptée : le back reverrouille.
+    parentCtrl.add(_parent());
+    await settle(tester);
+    sentCtrl.add(4);
+    await settle(tester);
+    expect(quotaBar, findsOneWidget);
+    expect(find.text('6 messages restants'), findsOneWidget);
+    expect(bookingButton, findsOneWidget);
+    await tester.tap(bookingButton);
+    await tester.pump();
+    expect(pushed, ['/traveler/ann-9']);
   });
 
   testWidgets('plafond atteint puis levé : le verrou cède la place au '

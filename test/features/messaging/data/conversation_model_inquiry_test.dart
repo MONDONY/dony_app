@@ -75,5 +75,25 @@ void main() {
       expect(model.inquiryMessageLimit, 10);
       expect(model.inquiryQuotaLifted, isTrue);
     });
+
+    test('plafond nul ou négatif : défaut (10), jamais un clamp qui lève', () {
+      for (final bad in [0, -3]) {
+        final model = ConversationModel.fromJson(
+          _json(extra: {'kind': 'INQUIRY', 'inquiryMessageLimit': bad}),
+        );
+        expect(
+          model.inquiryMessageLimit,
+          ConversationModel.defaultInquiryMessageLimit,
+          reason: '$bad',
+        );
+      }
+    });
+
+    test('plafond absent (fil levé) : nul', () {
+      final model = ConversationModel.fromJson(
+        _json(extra: {'kind': 'INQUIRY', 'inquiryQuotaLifted': true}),
+      );
+      expect(model.inquiryMessageLimit, isNull);
+    });
   });
 }
