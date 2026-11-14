@@ -46,9 +46,14 @@ class FirestoreChatRepository {
     return _firestore
         .collection('inquiryQuota')
         .doc(firestoreConversationId)
-        .snapshots()
+        // Sans `includeMetadataChanges`, la confirmation du serveur sur un
+        // document absent n'émet rien (seul `sync_state` change) : le filtre
+        // ci-dessous écarterait l'instantané du cache et le flux resterait
+        // muet pour toujours.
+        .snapshots(includeMetadataChanges: true)
         .where((snap) => snap.exists || !snap.metadata.isFromCache)
-        .map((snap) => (snap.data()?['sent'] as num?)?.toInt() ?? 0);
+        .map((snap) => (snap.data()?['sent'] as num?)?.toInt() ?? 0)
+        .distinct();
   }
 
   /// Demandeur (`askerId`, UID Firebase) et levée du quota (`quotaLifted`) du

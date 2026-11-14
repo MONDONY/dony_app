@@ -1070,6 +1070,26 @@ void main() {
       await bloc.close();
     });
 
+    test('copie périmée du cache (lifted: false) : jamais de reverrouillage, '
+        'le serveur décide', () async {
+      final bloc = makeBloc();
+      bloc.add(_subscribe(limited: false, limit: null, mediaAllowed: true));
+      await pumpEventQueue();
+      parentCtrl.add(_p(_me, fromCache: true));
+      await pumpEventQueue();
+      expect(sentCtrl.hasListener, isFalse);
+      expect(loaded(bloc).mediaAllowed, isTrue);
+      verifyNever(() => conv.getConversation(any()));
+      bloc.add(_send('ordinaire'));
+      await pumpEventQueue();
+      verifySentBefore(null, body: 'ordinaire').called(1);
+      // Le serveur confirme « levé » : rien ne change.
+      parentCtrl.add(_p(_me, lifted: true));
+      await pumpEventQueue();
+      expect(loaded(bloc).mediaAllowed, isTrue);
+      await bloc.close();
+    });
+
     test('reverrouillage : limité, compteur lu, modèle relu, photos '
         'coupées', () async {
       when(

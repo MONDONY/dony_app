@@ -434,6 +434,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     // Fil ouvert levé dont le parent est absent du serveur : aucune
     // information, rien n'est reverrouillé sur un document manquant.
     if (!parent.exists && !_inquiryLimited) return;
+    // Une copie du cache peut être périmée (rien n'écoute `conversations`
+    // chat fermé) : on ne reverrouille un fil levé que sur l'avis du serveur.
+    if (!_inquiryLimited && parent.fromCache) return;
     if (!_inquiryLimited) {
       // Reverrouillage (la demande s'est terminée sans être acceptée) : le
       // modèle de l'ouverture ou celui relu après la levée ne vaut plus.

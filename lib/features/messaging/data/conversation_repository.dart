@@ -112,7 +112,9 @@ class ConversationRepository {
       if (status == 404 && code == kAnnouncementNotFound) {
         throw const InquiryUnavailableException(kAnnouncementNotFound);
       }
-      if (status == 405 || status == 404) {
+      // Une route inconnue ne porte pas de code ; un 404 avec code (fil
+      // masqué par un blocage, interlocuteur supprimé…) vient du nouveau back.
+      if (status == 405 || (status == 404 && code == null)) {
         _inquiryUnsupported = true;
         throw const InquiryUnsupportedException();
       }

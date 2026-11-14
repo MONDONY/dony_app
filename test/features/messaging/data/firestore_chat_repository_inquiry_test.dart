@@ -56,7 +56,12 @@ FirestoreChatRepository _repoWithQuota(
   final doc = _MockDoc();
   when(() => firestore.collection('inquiryQuota')).thenReturn(collection);
   when(() => collection.doc('c1')).thenReturn(doc);
-  when(doc.snapshots).thenAnswer((_) => Stream.fromIterable(snaps));
+  // `includeMetadataChanges: true` est obligatoire : sans lui, la
+  // confirmation du serveur sur un compteur absent n'émet rien et le flux
+  // reste muet (le stub ne répond qu'à cet appel précis).
+  when(
+    () => doc.snapshots(includeMetadataChanges: true),
+  ).thenAnswer((_) => Stream.fromIterable(snaps));
   return FirestoreChatRepository(firestore);
 }
 

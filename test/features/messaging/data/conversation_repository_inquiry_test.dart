@@ -140,15 +140,16 @@ void main() {
       expect(repository.inquiryUnsupported, isTrue);
     });
 
-    test('404 d\'un autre code : non pris en charge', () async {
+    test('404 avec un code du back : pas « non pris en charge »', () async {
       adapter
         ..status = 404
-        ..body = {'code': 'conversation-not-found'};
+        ..body = {'code': 'conversation-counterpart-deleted'};
 
       await expectLater(
         repository.openInquiry('a1'),
-        throwsA(isA<InquiryUnsupportedException>()),
+        throwsA(isNot(isA<InquiryUnsupportedException>())),
       );
+      expect(repository.inquiryUnsupported, isFalse);
     });
 
     test('après un refus 405 : plus aucun appel réseau', () async {
