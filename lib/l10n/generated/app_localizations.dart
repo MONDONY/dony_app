@@ -38700,11 +38700,11 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{Plus de message avant réservation} =1{1 message restant} other{{count} messages restants}}'**
   String inquiryQuotaRemaining(int count);
 
-  /// Note d'introduction d'une conversation de question ; {limit} = quota de messages.
+  /// Note d'accueil d'une conversation de question (fil vide, et aperçu d'un fil vide dans la liste) ; {limit} = quota de messages, {name} = prénom du voyageur.
   ///
   /// In fr, this message translates to:
-  /// **'Vous pouvez envoyer {limit} messages avant de réserver. Texte seul, sans photo.'**
-  String inquiryIntroNote(int limit);
+  /// **'Vous pouvez envoyer {limit} messages avant de réserver. {name} peut répondre sans limite. Texte seul, sans photo.'**
+  String inquiryIntroNote(int limit, String name);
 
   /// Note quand l'expéditeur a épuisé son quota de messages avant réservation.
   ///
@@ -38712,11 +38712,11 @@ abstract class AppLocalizations {
   /// **'Limite atteinte. Réservez pour continuer la discussion.'**
   String get inquiryLimitReachedNote;
 
-  /// Explication affichée sur le trombone ou l'appel grisés d'une conversation de question.
+  /// Barre qui remplace le composeur quand le demandeur a épuisé son quota (maquette « Limite atteinte ») ; {limit} = quota, {name} = prénom du voyageur.
   ///
   /// In fr, this message translates to:
-  /// **'Les photos et l\'appel sont disponibles après la réservation.'**
-  String get inquiryLockedExplanation;
+  /// **'Vous avez utilisé vos {limit} messages. Faites une demande à {name} pour continuer à discuter sans limite.'**
+  String inquiryLockedBarMessage(int limit, String name);
 
   /// Titre de la carte de réservation d'une conversation de question.
   ///

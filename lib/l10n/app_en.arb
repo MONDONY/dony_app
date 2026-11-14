@@ -11898,12 +11898,15 @@
           }
       }
   },
-  "inquiryIntroNote": "You can send {limit} messages before booking. Text only, no photos.",
+  "inquiryIntroNote": "You can send {limit} messages before booking. {name} can reply without limits. Text only, no photos.",
   "@inquiryIntroNote": {
-      "description": "Intro note of a question conversation; {limit} = message quota.",
+      "description": "Welcome note of a question thread (empty thread, and preview of an empty thread in the list); {limit} = message quota, {name} = traveler first name.",
       "placeholders": {
           "limit": {
               "type": "int"
+          },
+          "name": {
+              "type": "String"
           }
       }
   },
@@ -11911,9 +11914,17 @@
   "@inquiryLimitReachedNote": {
       "description": "Note shown when the sender used up the pre-booking message quota."
   },
-  "inquiryLockedExplanation": "Photos and calls are available after booking.",
-  "@inquiryLockedExplanation": {
-      "description": "Explanation on the greyed paperclip or call button of a question conversation."
+  "inquiryLockedBarMessage": "You've used your {limit} messages. Make a request to {name} to keep chatting without limits.",
+  "@inquiryLockedBarMessage": {
+      "description": "Bar replacing the composer once the asker has used up the quota (\"Limit reached\" mockup); {limit} = quota, {name} = traveler first name.",
+      "placeholders": {
+          "limit": {
+              "type": "int"
+          },
+          "name": {
+              "type": "String"
+          }
+      }
   },
   "inquiryBookingCardTitle": "Ready to book?",
   "@inquiryBookingCardTitle": {

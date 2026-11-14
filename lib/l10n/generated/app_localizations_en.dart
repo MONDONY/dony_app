@@ -24025,8 +24025,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String inquiryIntroNote(int limit) {
-    return 'You can send $limit messages before booking. Text only, no photos.';
+  String inquiryIntroNote(int limit, String name) {
+    return 'You can send $limit messages before booking. $name can reply without limits. Text only, no photos.';
   }
 
   @override
@@ -24034,8 +24034,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Limit reached. Book to keep the conversation going.';
 
   @override
-  String get inquiryLockedExplanation =>
-      'Photos and calls are available after booking.';
+  String inquiryLockedBarMessage(int limit, String name) {
+    return 'You\'ve used your $limit messages. Make a request to $name to keep chatting without limits.';
+  }
 
   @override
   String get inquiryBookingCardTitle => 'Ready to book?';

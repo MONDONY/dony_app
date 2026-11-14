@@ -6,9 +6,19 @@ import 'package:flutter/material.dart';
 /// Remplace le composeur quand le demandeur a épuisé ses messages avant
 /// réservation : explication terracotta et bouton « Faire une demande ».
 class InquiryLockedBar extends StatelessWidget {
+  /// Quota de messages épuisé.
+  final int limit;
+
+  /// Prénom du voyageur à qui faire la demande.
+  final String name;
   final VoidCallback onBook;
 
-  const InquiryLockedBar({super.key, required this.onBook});
+  const InquiryLockedBar({
+    super.key,
+    required this.limit,
+    required this.name,
+    required this.onBook,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +65,7 @@ class InquiryLockedBar extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
-                    l.inquiryLockedExplanation,
+                    l.inquiryLockedBarMessage(limit, name),
                     style: tt.bodyMedium?.copyWith(
                       color: cs.onSecondaryContainer,
                     ),

@@ -5,6 +5,7 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/chat_labels.dart';
+import 'package:dony/features/messaging/presentation/widgets/inquiry_note.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -278,8 +279,9 @@ String? _contextLabel(AppLocalizations l, ConversationModel c) {
 String _previewText(AppLocalizations l, ConversationModel c) {
   final preview = c.lastMessagePreview;
   if (preview == null || preview.isEmpty) {
-    // Le back n'envoie aucun message d'accueil dans une question.
-    if (c.isInquiry) return l.inquiryAskTileTitle;
+    // Le back n'envoie aucun message d'accueil dans une question : la note
+    // d'accueil du fil vide en tient lieu.
+    if (c.isInquiry) return inquiryIntroText(l, c);
     return l.conversationStartedFallback;
   }
   return chatPreviewLabel(l, preview);

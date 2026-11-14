@@ -15,6 +15,7 @@ import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:dony/features/messaging/presentation/chat_screen.dart';
+import 'package:dony/features/messaging/presentation/widgets/chat_retention_banner.dart';
 import 'package:dony/features/messaging/presentation/widgets/conversation_tile.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -228,6 +229,31 @@ void main() {
       expect(quotaBar, findsNothing);
       expect(bookingButton, findsOneWidget);
       expect(find.byKey(const Key('inquiry-booking-card')), findsNothing);
+      // Texte de la maquette (revue m5).
+      expect(
+        find.text(
+          'Vous avez utilisé vos 10 messages. Faites une demande à Moussa '
+          'pour continuer à discuter sans limite.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('pas de bandeau « effacés après la livraison » sur une '
+        'question (I6)', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(ChatLoaded([_msg('m1', 'Bonjour')], inquiryRemaining: 4));
+      await _pump(tester, bloc, _inquiry);
+      expect(find.byType(ChatRetentionBanner), findsNothing);
+    });
+
+    testWidgets('conversation ordinaire : bandeau de rétention gardé (I6)', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(ChatLoaded([_msg('m1', 'Bonjour')]));
+      await _pump(tester, bloc, _ordinary);
+      expect(find.byType(ChatRetentionBanner), findsOneWidget);
     });
 
     testWidgets('créateur (pas de compteur) : aucun élément de question', (
@@ -300,7 +326,7 @@ void main() {
       expect(
         find.text(
           'Vous pouvez envoyer 10 messages avant de réserver. '
-          'Texte seul, sans photo.',
+          'Moussa peut répondre sans limite. Texte seul, sans photo.',
         ),
         findsOneWidget,
       );
@@ -436,7 +462,15 @@ void main() {
           home: const Scaffold(body: ConversationTile(conversation: _inquiry)),
         ),
       );
-      expect(find.text('Poser une question'), findsOneWidget);
+      // Note d'accueil localisée (revue m6), pas le titre de la tuile.
+      expect(
+        find.text(
+          'Vous pouvez envoyer 10 messages avant de réserver. '
+          'Moussa peut répondre sans limite. Texte seul, sans photo.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Poser une question'), findsNothing);
     });
   });
 }

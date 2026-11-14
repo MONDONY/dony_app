@@ -23455,12 +23455,15 @@
           }
       }
   },
-  "inquiryIntroNote": "Vous pouvez envoyer {limit} messages avant de réserver. Texte seul, sans photo.",
+  "inquiryIntroNote": "Vous pouvez envoyer {limit} messages avant de réserver. {name} peut répondre sans limite. Texte seul, sans photo.",
   "@inquiryIntroNote": {
-      "description": "Note d'introduction d'une conversation de question ; {limit} = quota de messages.",
+      "description": "Note d'accueil d'une conversation de question (fil vide, et aperçu d'un fil vide dans la liste) ; {limit} = quota de messages, {name} = prénom du voyageur.",
       "placeholders": {
           "limit": {
               "type": "int"
+          },
+          "name": {
+              "type": "String"
           }
       }
   },
@@ -23468,9 +23471,17 @@
   "@inquiryLimitReachedNote": {
       "description": "Note quand l'expéditeur a épuisé son quota de messages avant réservation."
   },
-  "inquiryLockedExplanation": "Les photos et l'appel sont disponibles après la réservation.",
-  "@inquiryLockedExplanation": {
-      "description": "Explication affichée sur le trombone ou l'appel grisés d'une conversation de question."
+  "inquiryLockedBarMessage": "Vous avez utilisé vos {limit} messages. Faites une demande à {name} pour continuer à discuter sans limite.",
+  "@inquiryLockedBarMessage": {
+      "description": "Barre qui remplace le composeur quand le demandeur a épuisé son quota (maquette « Limite atteinte ») ; {limit} = quota, {name} = prénom du voyageur.",
+      "placeholders": {
+          "limit": {
+              "type": "int"
+          },
+          "name": {
+              "type": "String"
+          }
+      }
   },
   "inquiryBookingCardTitle": "Prêt à réserver ?",
   "@inquiryBookingCardTitle": {

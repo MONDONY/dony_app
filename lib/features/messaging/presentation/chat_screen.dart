@@ -1158,8 +1158,11 @@ class _ChatScreenState extends State<ChatScreen> {
           return Column(
             children: [
               // Effacement des échanges 3 jours après la livraison : rappelé
-              // en tête de chaque fil, avant comme après la purge.
-              ChatRetentionBanner(conversation: conversation),
+              // en tête de chaque fil, avant comme après la purge. Pas sur une
+              // question avant réservation, sans colis ni livraison (supprimée
+              // après 30 jours sans activité).
+              if (!conversation.isInquiry)
+                ChatRetentionBanner(conversation: conversation),
               if (conversation.tripLabel != null)
                 _TripBanner(
                   conversation: conversation,
@@ -1253,11 +1256,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 ),
                                 if (inquiryAsker) ...[
                                   InquiryNote(
-                                    text: l.inquiryIntroNote(
-                                      conversation.inquiryMessageLimit ??
-                                          ConversationModel
-                                              .defaultInquiryMessageLimit,
-                                    ),
+                                    text: inquiryIntroText(l, conversation),
                                   ),
                                   if (!inquiryLocked)
                                     _inquiryBookingCard(conversation),
@@ -1431,6 +1430,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     ? _MutedBanner(until: mutedUntil)
                     : inquiryLocked
                     ? InquiryLockedBar(
+                        limit:
+                            conversation.inquiryMessageLimit ??
+                            ConversationModel.defaultInquiryMessageLimit,
+                        name: inquiryCounterpartFirstName(l, conversation),
                         onBook: () =>
                             _openInquiryTrip(source: InquiryBookingSource.lock),
                       )

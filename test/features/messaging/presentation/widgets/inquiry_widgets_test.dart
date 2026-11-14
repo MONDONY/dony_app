@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/widgets/inquiry_booking_card.dart';
 import 'package:dony/features/messaging/presentation/widgets/inquiry_locked_bar.dart';
+import 'package:dony/features/messaging/presentation/widgets/inquiry_note.dart';
 import 'package:dony/features/messaging/presentation/widgets/inquiry_quota_bar.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -172,13 +174,48 @@ void main() {
     );
   });
 
+  group('note d\'accueil', () {
+    ConversationModel conv(String name, {int? limit}) => ConversationModel(
+      id: 'c',
+      firestoreConversationId: 'f',
+      otherParticipant: ParticipantModel(id: 'o', name: name),
+      kind: ConversationModel.kindInquiry,
+      inquiryMessageLimit: limit,
+    );
+
+    test('prénom du voyageur, repli « Voyageur » sans nom', () {
+      final fr = lookupAppLocalizations(AppL10n.fr);
+      expect(inquiryCounterpartFirstName(fr, conv('Moussa Diallo')), 'Moussa');
+      expect(inquiryCounterpartFirstName(fr, conv('  ')), 'Voyageur');
+    });
+
+    test('quota servi, sinon 10, en français et en anglais', () {
+      final fr = lookupAppLocalizations(AppL10n.fr);
+      final en = lookupAppLocalizations(AppL10n.en);
+      expect(
+        inquiryIntroText(fr, conv('Awa', limit: 5)),
+        'Vous pouvez envoyer 5 messages avant de réserver. '
+        'Awa peut répondre sans limite. Texte seul, sans photo.',
+      );
+      expect(
+        inquiryIntroText(en, conv('Awa')),
+        'You can send 10 messages before booking. '
+        'Awa can reply without limits. Text only, no photos.',
+      );
+    });
+  });
+
   group('InquiryLockedBar', () {
     testWidgets('explication + bouton, appelle onBook', (tester) async {
       var taps = 0;
-      await _pump(tester, InquiryLockedBar(onBook: () => taps++));
+      await _pump(
+        tester,
+        InquiryLockedBar(limit: 10, name: 'Moussa', onBook: () => taps++),
+      );
       expect(
         find.text(
-          'Les photos et l\'appel sont disponibles après la réservation.',
+          'Vous avez utilisé vos 10 messages. Faites une demande à Moussa '
+          'pour continuer à discuter sans limite.',
         ),
         findsOneWidget,
       );
@@ -189,7 +226,11 @@ void main() {
     testWidgets('même hauteur de bouton en FR et EN à 360 dp', (tester) async {
       final heights = <double>[];
       for (final locale in [AppL10n.fr, AppL10n.en]) {
-        await _pump(tester, InquiryLockedBar(onBook: () {}), locale: locale);
+        await _pump(
+          tester,
+          InquiryLockedBar(limit: 10, name: 'Moussa', onBook: () {}),
+          locale: locale,
+        );
         await tester.pump();
         expect(tester.takeException(), isNull);
         heights.add(
