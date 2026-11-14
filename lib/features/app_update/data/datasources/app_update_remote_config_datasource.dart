@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:dony/features/app_update/data/datasources/remote_config_interval_store.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 
 /// Source de la clé Remote Config `min_supported_build` : le plus petit
 /// `buildNumber` (`package_info_plus`) encore autorisé à faire tourner
@@ -22,6 +22,19 @@ abstract interface class AppUpdateConfigSource {
   /// suivantes. Best-effort : toute erreur est avalée, [minSupportedBuild]
   /// retombe alors sur la dernière valeur connue.
   Future<void> fetchAndActivate();
+
+  /// Émet (sans valeur) chaque fois que `recommended_build` ou
+  /// `min_supported_build` vient de changer côté console ET d'être activée,
+  /// pendant que l'app tourne. Flux broadcast, jamais en erreur.
+  Stream<void> get changes;
+
+  /// Démarre l'écoute temps réel de Remote Config. Idempotent (une seule
+  /// souscription) et sans effet visible en cas d'erreur : plateforme sans
+  /// prise en charge, Firebase absent, flux en erreur.
+  void startRealtimeUpdates();
+
+  /// Annule l'écoute temps réel.
+  Future<void> stopRealtimeUpdates();
 }
 
 abstract interface class AppUpdateRemoteConfigClient {
@@ -30,6 +43,11 @@ abstract interface class AppUpdateRemoteConfigClient {
   Future<void> setConfigSettings(RemoteConfigSettings settings);
 
   Future<bool> fetchAndActivate();
+
+  Future<bool> activate();
+
+  /// Clés modifiées de chaque mise à jour Remote Config reçue en temps réel.
+  Stream<Set<String>> get onConfigUpdated;
 }
 
 final class FirebaseAppUpdateRemoteConfigClient
@@ -40,6 +58,13 @@ final class FirebaseAppUpdateRemoteConfigClient
 
   @override
   Future<bool> fetchAndActivate() => _remoteConfig.fetchAndActivate();
+
+  @override
+  Future<bool> activate() => _remoteConfig.activate();
+
+  @override
+  Stream<Set<String>> get onConfigUpdated =>
+      _remoteConfig.onConfigUpdated.map((update) => update.updatedKeys);
 
   @override
   int getInt(String key) => _remoteConfig.getInt(key);
@@ -83,6 +108,64 @@ final class AppUpdateRemoteConfigDatasource implements AppUpdateConfigSource {
   final RemoteConfigIntervalStore _intervalStore;
   final RemoteConfigIntervalRemote? _intervalRemote;
   bool _isConfigured = false;
+  final StreamController<void> _changes = StreamController<void>.broadcast();
+  // ignore: cancel_subscriptions
+  StreamSubscription<Set<String>>? _realtimeSubscription;
+  bool _realtimeErrorLogged = false;
+
+  @override
+  Stream<void> get changes => _changes.stream;
+
+  @override
+  void startRealtimeUpdates() {
+    if (_realtimeSubscription != null) {
+      return;
+    }
+    try {
+      _realtimeSubscription = _remoteConfig.onConfigUpdated.listen(
+        _onRealtimeUpdate,
+        onError: _logRealtimeErrorOnce,
+      );
+    } catch (error) {
+      _logRealtimeErrorOnce(error);
+    }
+  }
+
+  @override
+  Future<void> stopRealtimeUpdates() async {
+    final subscription = _realtimeSubscription;
+    _realtimeSubscription = null;
+    try {
+      await subscription?.cancel();
+    } catch (_) {
+      // Rien à faire : l'écoute est de toute façon abandonnée.
+    }
+  }
+
+  Future<void> _onRealtimeUpdate(Set<String> updatedKeys) async {
+    if (!updatedKeys.contains(configKey) &&
+        !updatedKeys.contains(recommendedConfigKey)) {
+      return;
+    }
+    try {
+      await _remoteConfig.activate();
+      if (!_changes.isClosed) {
+        _changes.add(null);
+      }
+    } catch (error) {
+      _logRealtimeErrorOnce(error);
+    }
+  }
+
+  /// Un seul journal par lancement : une erreur d'écoute ne doit jamais
+  /// remonter en boucle (Sentry) ni casser l'app.
+  void _logRealtimeErrorOnce(Object error) {
+    if (_realtimeErrorLogged) {
+      return;
+    }
+    _realtimeErrorLogged = true;
+    debugPrint('Remote Config temps réel indisponible : $error');
+  }
 
   @override
   int get minSupportedBuild {

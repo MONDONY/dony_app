@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/features/app_update/data/datasources/app_update_remote_config_datasource.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -24,6 +26,36 @@ class AppUpdateService {
   /// récente ne sera prise en compte qu'au prochain lancement, pas pendant
   /// la session en cours (voir [isUpdateRequired]).
   Future<void> refresh() => _configSource.fetchAndActivate();
+
+  /// Dernière valeur activée de `recommended_build` (0 = rien de publié).
+  int get recommendedBuild {
+    try {
+      return _configSource.recommendedBuild;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /// Émet quand une mise à jour temps réel de Remote Config a été activée.
+  Stream<void> get configChanges => _configSource.changes;
+
+  /// Écoute Remote Config en temps réel (app ouverte uniquement). Idempotent
+  /// et muet en cas d'erreur.
+  void startRealtimeUpdates() {
+    try {
+      _configSource.startRealtimeUpdates();
+    } catch (_) {
+      // Best effort.
+    }
+  }
+
+  Future<void> stopRealtimeUpdates() async {
+    try {
+      await _configSource.stopRealtimeUpdates();
+    } catch (_) {
+      // Best effort.
+    }
+  }
 
   /// `true` seulement si le `buildNumber` installé est strictement inférieur
   /// au seuil publié. Ne déclenche jamais de requête réseau : lit la

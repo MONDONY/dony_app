@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/features/app_update/data/datasources/app_update_remote_config_datasource.dart';
 import 'package:dony/features/app_update/data/services/app_update_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -178,6 +180,36 @@ void main() {
       expect(configSource.fetchAndActivateCount, 1);
     });
   });
+
+  group('temps réel', () {
+    AppUpdateService serviceFor(_FakeConfigSource source) =>
+        AppUpdateService(source);
+
+    test('relaie le démarrage, l\'arrêt et les changements', () async {
+      final source = _FakeConfigSource(recommendedBuild: 7);
+      final service = serviceFor(source);
+
+      service.startRealtimeUpdates();
+      await service.stopRealtimeUpdates();
+      final changed = expectLater(service.configChanges, emits(anything));
+      source.controller.add(null);
+      await changed;
+
+      expect(source.startCount, 1);
+      expect(source.stopCount, 1);
+      expect(service.recommendedBuild, 7);
+    });
+
+    test('toute erreur est avalée', () async {
+      final source = _FakeConfigSource(throwsOnRead: true)
+        ..startError = StateError('boom');
+      final service = serviceFor(source);
+
+      expect(service.startRealtimeUpdates, returnsNormally);
+      await expectLater(service.stopRealtimeUpdates(), completes);
+      expect(service.recommendedBuild, 0);
+    });
+  });
 }
 
 final class _FakeConfigSource implements AppUpdateConfigSource {
@@ -212,5 +244,26 @@ final class _FakeConfigSource implements AppUpdateConfigSource {
   @override
   Future<void> fetchAndActivate() async {
     fetchAndActivateCount++;
+  }
+
+  // ignore: close_sinks
+  final controller = StreamController<void>.broadcast();
+  var startCount = 0;
+  var stopCount = 0;
+  Object? startError;
+
+  @override
+  Stream<void> get changes => controller.stream;
+
+  @override
+  void startRealtimeUpdates() {
+    startCount++;
+    if (startError case final error?) throw error;
+  }
+
+  @override
+  Future<void> stopRealtimeUpdates() async {
+    stopCount++;
+    if (startError case final error?) throw error;
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/app_update/bloc/app_update_prompt_cubit.dart';
@@ -22,9 +24,10 @@ void main() {
   AppUpdatePromptCubit cubitFor({
     int recommended = 50,
     String installed = '40',
+    _FakeConfigSource? source,
   }) => AppUpdatePromptCubit(
     AppUpdateService(
-      _FakeConfigSource(recommended),
+      source ?? _FakeConfigSource(recommended),
       packageInfoLoader: () async => PackageInfo(
         appName: 'Yadony',
         packageName: 'com.yadony.yadony',
@@ -45,6 +48,151 @@ void main() {
     await cubit.check();
     return cubit.state;
   }
+
+  Future<void> settle() => Future<void>.delayed(Duration.zero);
+
+  group('mise à jour temps réel', () {
+    test(
+      'une valeur publiée en cours de session fait apparaître le modal',
+      () async {
+        final source = _FakeConfigSource(0);
+        final cubit = cubitFor(source: source);
+        addTearDown(cubit.close);
+        await cubit.check();
+        expect(cubit.state, isFalse);
+
+        source.push(50);
+        await settle();
+        await settle();
+
+        expect(cubit.state, isTrue);
+        expect(analytics.events, [AnalyticsEvents.appUpdateBannerShown]);
+      },
+    );
+
+    test('un « Plus tard » récent est ignoré quand la valeur monte', () async {
+      store.value = now.subtract(const Duration(hours: 1));
+      final source = _FakeConfigSource(50);
+      final cubit = cubitFor(source: source);
+      addTearDown(cubit.close);
+      await cubit.check();
+      expect(cubit.state, isFalse);
+
+      source.push(60);
+      await settle();
+      await settle();
+
+      expect(cubit.state, isTrue);
+    });
+
+    test('fermé puis valeur qui monte : il se réaffiche', () async {
+      final source = _FakeConfigSource(50);
+      final cubit = cubitFor(source: source);
+      addTearDown(cubit.close);
+      await cubit.check();
+      await cubit.later();
+      expect(cubit.state, isFalse);
+
+      source.push(60);
+      await settle();
+      await settle();
+
+      expect(cubit.state, isTrue);
+      expect(analytics.events, [
+        AnalyticsEvents.appUpdateBannerShown,
+        AnalyticsEvents.appUpdateBannerDismissed,
+        AnalyticsEvents.appUpdateBannerShown,
+      ]);
+    });
+
+    test('même valeur republiée : pas de doublon', () async {
+      final source = _FakeConfigSource(50);
+      final cubit = cubitFor(source: source);
+      addTearDown(cubit.close);
+      await cubit.check();
+      await cubit.later();
+
+      source.push(50);
+      await settle();
+      await settle();
+
+      expect(cubit.state, isFalse);
+      expect(analytics.events, [
+        AnalyticsEvents.appUpdateBannerShown,
+        AnalyticsEvents.appUpdateBannerDismissed,
+      ]);
+    });
+
+    test('modal déjà affiché : une mise à jour ne le double pas', () async {
+      final source = _FakeConfigSource(50);
+      final cubit = cubitFor(source: source);
+      addTearDown(cubit.close);
+      await cubit.check();
+
+      source.push(60);
+      await settle();
+      await settle();
+
+      expect(cubit.state, isTrue);
+      expect(analytics.events, [AnalyticsEvents.appUpdateBannerShown]);
+    });
+
+    test(
+      'valeur qui baisse sous le build installé : le modal se retire',
+      () async {
+        final source = _FakeConfigSource(50);
+        final cubit = cubitFor(source: source);
+        addTearDown(cubit.close);
+        await cubit.check();
+        expect(cubit.state, isTrue);
+
+        source.push(30);
+        await settle();
+        await settle();
+
+        expect(cubit.state, isFalse);
+      },
+    );
+
+    test('valeur retirée (0) : rien à proposer, sans erreur', () async {
+      final source = _FakeConfigSource(0);
+      final cubit = cubitFor(source: source);
+      addTearDown(cubit.close);
+
+      source.push(0);
+      await settle();
+
+      expect(cubit.state, isFalse);
+    });
+
+    test('mise à jour pendant une évaluation : réévaluée ensuite', () async {
+      final source = _FakeConfigSource(0);
+      final cubit = cubitFor(source: source);
+      addTearDown(cubit.close);
+
+      final pending = cubit.check();
+      source.push(50);
+      await pending;
+      await settle();
+      await settle();
+      await settle();
+
+      expect(cubit.state, isTrue);
+    });
+
+    test('flux en erreur ou fermé : sans effet', () async {
+      final source = _FakeConfigSource(50);
+      final cubit = cubitFor(source: source);
+      source.controller.addError(StateError('flux cassé'));
+      await settle();
+      expect(cubit.state, isFalse);
+
+      await cubit.close();
+      source.push(60);
+      await settle();
+      expect(cubit.isClosed, isTrue);
+    });
+  });
 
   test('la durée de report est de 12 heures', () {
     expect(kAppUpdatePromptSnooze, const Duration(hours: 12));
@@ -229,11 +377,28 @@ final class _FakeConfigSource implements AppUpdateConfigSource {
   _FakeConfigSource(this.recommendedBuild);
 
   @override
-  final int recommendedBuild;
+  int recommendedBuild;
+
+  final controller = StreamController<void>.broadcast();
+
+  /// Simule une mise à jour temps réel déjà activée.
+  void push(int recommended) {
+    recommendedBuild = recommended;
+    controller.add(null);
+  }
 
   @override
   int get minSupportedBuild => 0;
 
   @override
   Future<void> fetchAndActivate() async {}
+
+  @override
+  Stream<void> get changes => controller.stream;
+
+  @override
+  void startRealtimeUpdates() {}
+
+  @override
+  Future<void> stopRealtimeUpdates() async {}
 }
