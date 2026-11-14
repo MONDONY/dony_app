@@ -39,6 +39,10 @@ import 'package:dony/features/messaging/presentation/chat_photo_viewer_screen.da
 import 'package:dony/features/messaging/presentation/widgets/chat_photo.dart';
 import 'package:dony/features/messaging/presentation/widgets/chat_retention_banner.dart';
 import 'package:dony/features/messaging/presentation/widgets/edit_message_sheet.dart';
+import 'package:dony/features/messaging/presentation/widgets/inquiry_booking_card.dart';
+import 'package:dony/features/messaging/presentation/widgets/inquiry_locked_bar.dart';
+import 'package:dony/features/messaging/presentation/widgets/inquiry_note.dart';
+import 'package:dony/features/messaging/presentation/widgets/inquiry_quota_bar.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -131,15 +135,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<ChatBloc>().add(
-      ChatSubscribeRequested(
-        widget.conversation.firestoreConversationId,
-        currentUserUid: _myUid,
-        isReadOnly: widget.conversation.isWriteClosed,
-        conversationId: widget.conversation.id,
-        mediaAllowed: widget.conversation.mediaAllowed,
-      ),
-    );
+    context.read<ChatBloc>().add(_subscribeEvent());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(
@@ -251,6 +247,39 @@ class _ChatScreenState extends State<ChatScreen> {
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  ChatSubscribeRequested _subscribeEvent() {
+    final c = widget.conversation;
+    return ChatSubscribeRequested(
+      c.firestoreConversationId,
+      currentUserUid: _myUid,
+      isReadOnly: c.isWriteClosed,
+      conversationId: c.id,
+      mediaAllowed: c.mediaAllowed,
+      inquiryLimited: c.inquiryLimited,
+      inquiryMessageLimit: c.inquiryMessageLimit,
+      announcementId: c.announcementId ?? '',
+    );
+  }
+
+  Widget _inquiryBookingCard(ConversationModel c) {
+    final date = c.tripDate;
+    return InquiryBookingCard(
+      routeLabel: c.tripOrigin != null && c.tripDestination != null
+          ? '${c.tripOrigin} → ${c.tripDestination}'
+          : '',
+      detailLine: date == null
+          ? ''
+          : DateFormat.MMMd(AppL10n.localeName).format(date),
+      onBook: _openInquiryTrip,
+    );
+  }
+
+  /// Rouvre la fiche du trajet (feuille « Faire une demande »).
+  void _openInquiryTrip() {
+    final path = inquiryTripPathFor(widget.conversation);
+    if (path != null) _navigate(path, null);
   }
 
   void _navigate(String path, Object? extra) {
@@ -702,7 +731,9 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     DonySnackbar.show(
       context,
-      message: context.l10n.chatSendRejected,
+      message: state.inquiryLimit
+          ? context.l10n.inquirySendLimitError
+          : context.l10n.chatSendRejected,
       type: DonySnackbarType.error,
     );
   }
@@ -1075,6 +1106,14 @@ class _ChatScreenState extends State<ChatScreen> {
           final pendingImages = state is ChatLoaded
               ? state.pendingImages
               : const <PendingChatImage>[];
+          // Le bloc ne sert un compteur qu'au demandeur d'un fil limité : le
+          // créateur, un fil ordinaire ou un fil levé n'ont rien de tout cela.
+          final inquiryRemaining = conversation.isInquiry && state is ChatLoaded
+              ? state.inquiryRemaining
+              : null;
+          final inquiryAsker = inquiryRemaining != null;
+          final inquiryLocked =
+              inquiryAsker && state is ChatLoaded && state.inquiryLimitReached;
           final attachState = chatAttachStateFor(
             conversation,
             mediaAllowed: state is ChatLoaded && state.mediaAllowed,
@@ -1093,7 +1132,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   disabled: isReadOnly,
                   // Le destinataire n'a pas accès au détail du bid : son
                   // bandeau mène à l'écran du colis qu'il va recevoir.
-                  onTap: () => _navigate(trackingPathFor(conversation), null),
+                  onTap: conversation.isInquiry
+                      ? _openInquiryTrip
+                      : () => _navigate(trackingPathFor(conversation), null),
                 ),
               if (isReadOnly && !conversation.messagesPurged)
                 _ReadOnlyBanner(cs: cs, tt: tt),
@@ -1121,15 +1162,8 @@ class _ChatScreenState extends State<ChatScreen> {
                           l10n: context.l10n,
                         ).message,
                         actionLabel: l.commonRetry,
-                        onAction: () => context.read<ChatBloc>().add(
-                          ChatSubscribeRequested(
-                            widget.conversation.firestoreConversationId,
-                            currentUserUid: _myUid,
-                            isReadOnly: widget.conversation.isWriteClosed,
-                            conversationId: widget.conversation.id,
-                            mediaAllowed: widget.conversation.mediaAllowed,
-                          ),
-                        ),
+                        onAction: () =>
+                            context.read<ChatBloc>().add(_subscribeEvent()),
                       );
                     }
 
@@ -1154,29 +1188,45 @@ class _ChatScreenState extends State<ChatScreen> {
                     if (messages != null) {
                       if (messages.isEmpty && pendingImages.isEmpty) {
                         return Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              DonyIcon(
-                                'message-circle',
-                                size: 48,
-                                color: cs.onSurfaceVariant.withValues(
-                                  alpha: 0.35,
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.lg,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                DonyIcon(
+                                  'message-circle',
+                                  size: 48,
+                                  color: cs.onSurfaceVariant.withValues(
+                                    alpha: 0.35,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: DonySpacing.md),
-                              Text(
-                                conversation.messagesPurged
-                                    ? l.chatMessagesPurgedEmptyTitle
-                                    : l.chatEmptyStateTitle,
-                                style: tt.bodyMedium?.copyWith(
-                                  color: cs.onSurfaceVariant,
+                                const SizedBox(height: DonySpacing.md),
+                                Text(
+                                  conversation.messagesPurged
+                                      ? l.chatMessagesPurgedEmptyTitle
+                                      : l.chatEmptyStateTitle,
+                                  style: tt.bodyMedium?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
                                 ),
-                              ),
-                            ],
+                                if (inquiryAsker) ...[
+                                  InquiryNote(
+                                    text: l.inquiryIntroNote(
+                                      conversation.inquiryMessageLimit ??
+                                          kInquiryDefaultMessageLimit,
+                                    ),
+                                  ),
+                                  if (!inquiryLocked)
+                                    _inquiryBookingCard(conversation),
+                                ],
+                              ],
+                            ),
                           ),
                         );
                       }
+                      final inquiryTail = inquiryAsker ? 1 : 0;
 
                       return ListView.builder(
                         controller: _scrollController,
@@ -1187,8 +1237,20 @@ class _ChatScreenState extends State<ChatScreen> {
                           DonySpacing.lg,
                           DonySpacing.md,
                         ),
-                        itemCount: pendingImages.length + messages.length,
-                        itemBuilder: (context, itemIndex) {
+                        itemCount:
+                            inquiryTail +
+                            pendingImages.length +
+                            messages.length,
+                        itemBuilder: (context, rawIndex) {
+                          // Liste inversée : l'index 0 est le bas du fil, où
+                          // la carte de réservation (ou la note de limite)
+                          // d'une question avant réservation se place.
+                          if (rawIndex < inquiryTail) {
+                            return inquiryLocked
+                                ? InquiryNote(text: l.inquiryLimitReachedNote)
+                                : _inquiryBookingCard(conversation);
+                          }
+                          final itemIndex = rawIndex - inquiryTail;
                           // Photos en cours d'envoi en bas du fil (liste
                           // inversée : index 0 = le plus récent).
                           if (itemIndex < pendingImages.length) {
@@ -1323,9 +1385,18 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
 
+              if (inquiryAsker && !inquiryLocked && !isReadOnly)
+                InquiryQuotaBar(
+                  remaining: inquiryRemaining,
+                  limit:
+                      conversation.inquiryMessageLimit ??
+                      kInquiryDefaultMessageLimit,
+                ),
               _MessagingMuteGate(
                 builder: (mutedUntil) => mutedUntil != null
                     ? _MutedBanner(until: mutedUntil)
+                    : inquiryLocked
+                    ? InquiryLockedBar(onBook: _openInquiryTrip)
                     : _ComposeArea(
                         replyingTo: state is ChatLoaded
                             ? state.replyingTo
@@ -1624,7 +1695,9 @@ class _TripBanner extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          conversation.viewerIsRecipient
+                          conversation.isInquiry
+                              ? context.l10n.inquiryLinkedTripLabel
+                              : conversation.viewerIsRecipient
                               ? context.l10n.chatLinkedParcelLabel
                               : context.l10n.chatLinkedTripLabel,
                           style: tt.labelSmall?.copyWith(
@@ -2851,19 +2924,23 @@ class _InputBar extends StatelessWidget {
   }
 }
 
+/// Fiche du trajet d'une question avant réservation : rouvre la feuille
+/// « Faire une demande ». `null` hors question ou sans annonce.
+@visibleForTesting
+String? inquiryTripPathFor(ConversationModel conversation) {
+  final announcementId = conversation.announcementId;
+  if (!conversation.isInquiry || announcementId == null) return null;
+  return '/traveler/$announcementId';
+}
+
 /// Chemin du suivi du colis d'une conversation : le destinataire n'a pas accès
 /// au détail du bid, son suivi est l'écran du colis qu'il va recevoir.
 @visibleForTesting
 String trackingPathFor(ConversationModel conversation) {
   final bidId = conversation.bidId;
-  // Une question avant réservation n'a pas de bid : on renvoie à l'annonce.
-  if (bidId == null) {
-    final announcementId = conversation.announcementId;
-    return announcementId == null ? '/messages' : '/traveler/$announcementId';
-  }
-  return conversation.viewerIsRecipient
-      ? '/receptions/$bidId'
-      : '/bids/$bidId';
+  // Une question avant réservation n'a pas de suivi (voir [inquiryTripPathFor]).
+  if (bidId == null) return '/messages';
+  return conversation.viewerIsRecipient ? '/receptions/$bidId' : '/bids/$bidId';
 }
 
 /// Message système qui renvoie au suivi du colis (FLUTTER-CD), par exemple

@@ -278,6 +278,8 @@ String? _contextLabel(AppLocalizations l, ConversationModel c) {
 String _previewText(AppLocalizations l, ConversationModel c) {
   final preview = c.lastMessagePreview;
   if (preview == null || preview.isEmpty) {
+    // Le back n'envoie aucun message d'accueil dans une question.
+    if (c.isInquiry) return l.inquiryAskTileTitle;
     return l.conversationStartedFallback;
   }
   return chatPreviewLabel(l, preview);

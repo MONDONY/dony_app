@@ -28,6 +28,7 @@ enum ChatAttachState {
 ///   copie supprimée), ou si la demande est terminée sans photo possible
 ///   (annulée, ou livrée et fenêtre de J+3 refermée) ;
 /// - **actif** si le back dit `mediaAllowed` ;
+/// - **masqué** aussi pour une question avant réservation sans photo permise ;
 /// - **grisé** sinon : demande en attente d'acceptation ou de paiement (aucun
 ///   statut affiché), ou back antérieur qui ne sert pas encore le champ.
 ChatAttachState chatAttachStateFor(
@@ -39,6 +40,8 @@ ChatAttachState chatAttachStateFor(
     return ChatAttachState.hidden;
   }
   if (mediaAllowed) return ChatAttachState.enabled;
+  // Une question avant réservation est en texte seul : aucun « + » grisé.
+  if (conversation.isInquiry) return ChatAttachState.hidden;
   return switch (conversation.bidStatus) {
     'TRIP_CANCELLED' || 'DELIVERY_CONFIRMED' => ChatAttachState.hidden,
     _ => ChatAttachState.locked,
