@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/data/message_edit_repository.dart';
+import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 
 abstract class ChatState {
@@ -34,12 +35,27 @@ class ChatLoaded extends ChatState {
   /// Photos permises dans ce fil : valeur de la conversation à l'ouverture,
   /// relue auprès du back après un refus `media-not-allowed`.
   final bool mediaAllowed;
+
+  /// Messages restants du demandeur dans une conversation de questions sous
+  /// quota ; `null` hors de ce cas (conversation ordinaire, créateur de
+  /// l'annonce, quota levé).
+  final int? inquiryRemaining;
+
+  /// Le demandeur a épuisé son quota : le champ de saisie se verrouille.
+  final bool inquiryLimitReached;
+
+  /// Conversation relue après le passage en direct d'un fil de questions
+  /// (`bidId`, type ordinaire) ; `null` tant que celle de l'ouverture vaut.
+  final ConversationModel? conversation;
   const ChatLoaded(
     this.messages, {
     this.replyingTo,
     this.quotedMessages = const {},
     this.pendingImages = const [],
     this.mediaAllowed = false,
+    this.inquiryRemaining,
+    this.inquiryLimitReached = false,
+    this.conversation,
   });
 }
 
@@ -131,7 +147,11 @@ class ChatConversationDeleted extends ChatState {
 class ChatSendRejected extends ChatState {
   final ChatState previous;
   final String? text;
-  const ChatSendRejected(this.previous, {this.text});
+
+  /// Refus dû au plafond de messages d'une conversation de questions : l'écran
+  /// affiche `inquirySendLimitError` plutôt que le message générique.
+  final bool inquiryLimit;
+  const ChatSendRejected(this.previous, {this.text, this.inquiryLimit = false});
 }
 
 /// Envoi d'un texte ou d'une position échoué hors refus des règles (réseau,

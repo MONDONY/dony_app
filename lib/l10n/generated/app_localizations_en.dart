@@ -23990,4 +23990,58 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get taxInfoVatWillBeErased =>
       'Leaving this field empty deletes your saved VAT number.';
+
+  @override
+  String get inquiryAskTileTitle => 'Ask a question';
+
+  @override
+  String inquiryAskTileSubtitle(String name) {
+    return 'Write to $name before booking';
+  }
+
+  @override
+  String get inquiryAskUnavailable =>
+      'Questions are no longer possible on this trip.';
+
+  @override
+  String get inquiryAskNotYetAvailable =>
+      'Asking a question isn\'t available yet.';
+
+  @override
+  String inquiryAskTileBadge(int limit) {
+    return '$limit messages';
+  }
+
+  @override
+  String inquiryQuotaRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages left',
+      one: '1 message left',
+      zero: 'No messages left before booking',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String inquiryIntroNote(int limit, String name) {
+    return 'You can send $limit messages before booking. $name can reply without limits. Text only, no photos.';
+  }
+
+  @override
+  String get inquiryLimitReachedNote =>
+      'Limit reached. Book to keep the conversation going.';
+
+  @override
+  String inquiryLockedBarMessage(int limit, String name) {
+    return 'You\'ve used your $limit messages. Make a request to $name to keep chatting without limits.';
+  }
+
+  @override
+  String get inquiryBookingCardTitle => 'Ready to book?';
+
+  @override
+  String get inquirySendLimitError =>
+      'Message limit reached. Book to continue.';
 }

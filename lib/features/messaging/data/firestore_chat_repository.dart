@@ -1,6 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 
+/// Document parent d'une conversation INQUIRY vu par [FirestoreChatRepository.inquiryParentStream].
+typedef InquiryParentSnapshot = ({
+  String? askerId,
+  bool quotaLifted,
+  bool exists,
+  bool fromCache,
+});
+
+/// Plafond de messages d'une conversation INQUIRY atteint (refus des règles).
+class InquiryLimitReachedException implements Exception {
+  @override
+  String toString() => 'InquiryLimitReachedException';
+}
+
 class FirestoreChatRepository {
   final FirebaseFirestore _firestore;
   FirestoreChatRepository(this._firestore);
@@ -20,25 +34,102 @@ class FirestoreChatRepository {
         );
   }
 
+  /// Nombre de messages déjà envoyés par le demandeur dans une conversation
+  /// INQUIRY (`inquiryQuota/{id}.sent`), 0 tant que le document n'existe pas.
+  ///
+  /// Un compteur absent du seul cache local (hors ligne, avant la première
+  /// réponse du serveur) est ignoré, comme le document parent : ce n'est pas
+  /// « 0 envoyé », et l'écran afficherait un faux « 10 restants ». Un compteur
+  /// présent dans le cache (dernière valeur connue, écriture locale en
+  /// attente) passe.
+  Stream<int> inquirySentStream(String firestoreConversationId) {
+    return _firestore
+        .collection('inquiryQuota')
+        .doc(firestoreConversationId)
+        // Sans `includeMetadataChanges`, la confirmation du serveur sur un
+        // document absent n'émet rien (seul `sync_state` change) : le filtre
+        // ci-dessous écarterait l'instantané du cache et le flux resterait
+        // muet pour toujours.
+        .snapshots(includeMetadataChanges: true)
+        .where((snap) => snap.exists || !snap.metadata.isFromCache)
+        .map((snap) => (snap.data()?['sent'] as num?)?.toInt() ?? 0)
+        .distinct();
+  }
+
+  /// Demandeur (`askerId`, UID Firebase) et levée du quota (`quotaLifted`) du
+  /// document de conversation INQUIRY, posés par le back. L'API ne sert pas le
+  /// demandeur : c'est la seule façon de savoir si l'utilisateur est le
+  /// demandeur (plafonné) ou le créateur de l'annonce. Flux réactif, repris à
+  /// la reconnexion ; un champ absent ou d'un type inattendu donne `null` /
+  /// `false`.
+  ///
+  /// `exists` / `fromCache` laissent distinguer un document réellement absent
+  /// d'un instantané vide du cache local, vu avant la première réponse du
+  /// serveur.
+  Stream<InquiryParentSnapshot> inquiryParentStream(
+    String firestoreConversationId,
+  ) => _conversationSnapshots(firestoreConversationId).map((snap) {
+    final data = snap.data();
+    final asker = data?['askerId'];
+    return (
+      askerId: asker is String && asker.isNotEmpty ? asker : null,
+      quotaLifted: data?['quotaLifted'] == true,
+      exists: snap.exists,
+      fromCache: snap.metadata.isFromCache,
+    );
+  });
+
+  Stream<DocumentSnapshot<Map<String, dynamic>>> _conversationSnapshots(
+    String id,
+  ) => _firestore.collection('conversations').doc(id).snapshots();
+
+  /// [inquirySentBefore] non nul : message du demandeur dans une conversation
+  /// INQUIRY sous quota. Les règles Firestore exigent alors, dans UN seul lot,
+  /// le message à l'id `inq<n>` (n = nouvelle valeur de `sent`) et le compteur
+  /// `inquiryQuota/{id} = {sent: n}`. Un refus `permission-denied` signifie
+  /// que le plafond est atteint ([InquiryLimitReachedException]).
   Future<void> sendTextMessage({
     required String firestoreConversationId,
     required String senderFirebaseUid,
     required String body,
     String? replyToId,
+    int? inquirySentBefore,
   }) async {
-    await _firestore
+    final messages = _firestore
         .collection('conversations')
         .doc(firestoreConversationId)
-        .collection('messages')
-        .add({
-          'senderId': senderFirebaseUid,
-          'body': body,
-          'imageUrl': null,
-          'type': 'TEXT',
-          'sentAt': DateTime.now().toUtc().toIso8601String(),
-          'readAt': null,
-          ..._replyTo(replyToId),
-        });
+        .collection('messages');
+    final data = <String, Object?>{
+      'senderId': senderFirebaseUid,
+      'body': body,
+      'imageUrl': null,
+      'type': 'TEXT',
+      'sentAt': DateTime.now().toUtc().toIso8601String(),
+      'readAt': null,
+      ..._replyTo(replyToId),
+    };
+    if (inquirySentBefore == null) {
+      await messages.add(data);
+      return;
+    }
+    final sent = inquirySentBefore + 1;
+    final quota = _firestore
+        .collection('inquiryQuota')
+        .doc(firestoreConversationId);
+    final batch = _firestore.batch()..set(messages.doc('inq$sent'), data);
+    if (inquirySentBefore == 0) {
+      batch.set(quota, {'sent': sent});
+    } else {
+      batch.update(quota, {'sent': sent});
+    }
+    try {
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        throw InquiryLimitReachedException();
+      }
+      rethrow;
+    }
   }
 
   Future<void> sendLocationMessage({
@@ -184,11 +275,9 @@ class FirestoreChatRepository {
   }
 
   Stream<bool> conversationDeletedStream(String firestoreConversationId) {
-    return _firestore
-        .collection('conversations')
-        .doc(firestoreConversationId)
-        .snapshots()
-        .map((snap) => snap.data()?['deletedAt'] != null);
+    return _conversationSnapshots(
+      firestoreConversationId,
+    ).map((snap) => snap.data()?['deletedAt'] != null);
   }
 
   /// Zero out per-conversation unread counters whose firestoreConversationId

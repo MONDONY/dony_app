@@ -38663,6 +38663,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Laisser ce champ vide supprime votre numéro de TVA enregistré.'**
   String get taxInfoVatWillBeErased;
+
+  /// Titre de la tuile « Poser une question » sur la fiche d'un trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poser une question'**
+  String get inquiryAskTileTitle;
+
+  /// Sous-titre de la tuile de question ; {name} = prénom du voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Écrivez à {name} avant de réserver'**
+  String inquiryAskTileSubtitle(String name);
+
+  /// Message quand le back refuse d'ouvrir une conversation de question (trajet fermé ou introuvable).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les questions ne sont plus possibles sur ce trajet.'**
+  String get inquiryAskUnavailable;
+
+  /// Message neutre au premier appui sur « Poser une question » quand le back ne connaît pas encore les questions (405, ou 404 sans code) ; la tuile se retire ensuite.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poser une question n\'est pas encore disponible.'**
+  String get inquiryAskNotYetAvailable;
+
+  /// Pastille de la tuile de question ; {limit} = quota de messages avant réservation.
+  ///
+  /// In fr, this message translates to:
+  /// **'{limit} messages'**
+  String inquiryAskTileBadge(int limit);
+
+  /// Compteur de messages restants dans une conversation de question ; {count} = messages restants.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Plus de message avant réservation} =1{1 message restant} other{{count} messages restants}}'**
+  String inquiryQuotaRemaining(int count);
+
+  /// Note d'accueil d'une conversation de question (fil vide, et aperçu d'un fil vide dans la liste) ; {limit} = quota de messages, {name} = prénom du voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pouvez envoyer {limit} messages avant de réserver. {name} peut répondre sans limite. Texte seul, sans photo.'**
+  String inquiryIntroNote(int limit, String name);
+
+  /// Note quand l'expéditeur a épuisé son quota de messages avant réservation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite atteinte. Réservez pour continuer la discussion.'**
+  String get inquiryLimitReachedNote;
+
+  /// Barre qui remplace le composeur quand le demandeur a épuisé son quota (maquette « Limite atteinte ») ; {limit} = quota, {name} = prénom du voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez utilisé vos {limit} messages. Faites une demande à {name} pour continuer à discuter sans limite.'**
+  String inquiryLockedBarMessage(int limit, String name);
+
+  /// Titre de la carte de réservation d'une conversation de question.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prêt à réserver ?'**
+  String get inquiryBookingCardTitle;
+
+  /// Erreur affichée quand l'envoi d'un message de question est refusé faute de quota.
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite de messages atteinte. Réservez pour continuer.'**
+  String get inquirySendLimitError;
 }
 
 class _AppLocalizationsDelegate

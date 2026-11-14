@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 
 abstract class ChatEvent {
@@ -17,12 +18,32 @@ class ChatSubscribeRequested extends ChatEvent {
 
   /// Photos permises à l'ouverture (`ConversationModel.mediaAllowed`).
   final bool mediaAllowed;
+
+  /// Conversation de questions avant réservation dont le quota n'est pas levé
+  /// (`ConversationModel.inquiryLimited`). Le bloc cherche alors lui-même si
+  /// l'utilisateur est le demandeur (soumis au plafond) ou le créateur.
+  final bool inquiryLimited;
+
+  /// Plafond servi par le back ; `null` : 10 (`InquiryPolicy` du back).
+  final int? inquiryMessageLimit;
+
+  /// Annonce de la question, nécessaire au recalage du quota. Non vide pour
+  /// tout fil né d'une question, même promu : son parent est alors suivi.
+  final String announcementId;
+
+  /// Type de la conversation à l'ouverture (`ConversationModel.kind`), repris
+  /// par la mesure `message_sent`.
+  final String conversationKind;
   const ChatSubscribeRequested(
     this.firestoreConversationId, {
     this.currentUserUid = '',
     this.isReadOnly = false,
     this.conversationId = '',
     this.mediaAllowed = false,
+    this.inquiryLimited = false,
+    this.inquiryMessageLimit,
+    this.announcementId = '',
+    this.conversationKind = ConversationModel.kindSenderTraveler,
   });
 }
 
@@ -128,4 +149,27 @@ class ChatMessageDeleteRequested extends ChatEvent {
 class ChatAppVisibilityChanged extends ChatEvent {
   final bool visible;
   const ChatAppVisibilityChanged({required this.visible});
+}
+
+/// Relit la conversation auprès du back : après la levée du plafond d'un fil
+/// de questions (suivie sur Firestore) ou au retour de la fiche du trajet. Si
+/// le fil est passé en direct, l'écran reçoit le modèle à jour (`bidId`).
+class ChatConversationRefreshRequested extends ChatEvent {
+  const ChatConversationRefreshRequested();
+}
+
+/// Bouton « Faire une demande » d'un fil de questions avant réservation.
+enum InquiryBookingSource {
+  /// Carte « Prêt à réserver ? » en bas du fil.
+  card,
+
+  /// Barre qui remplace le composeur, plafond atteint.
+  lock,
+}
+
+/// « Faire une demande » touché dans un fil de questions : mesure seule, la
+/// navigation reste à l'écran.
+class ChatInquiryBookingTapped extends ChatEvent {
+  final InquiryBookingSource source;
+  const ChatInquiryBookingTapped(this.source);
 }

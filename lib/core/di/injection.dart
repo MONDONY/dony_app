@@ -182,6 +182,7 @@ import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
 import 'package:dony/features/matching/data/repositories/tools_completion_repository.dart';
+import 'package:dony/features/messaging/bloc/ask_question/ask_question_cubit.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_notifications/conversation_notifications_cubit.dart';
@@ -1123,6 +1124,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ConversationOpenBloc(
       getIt<ConversationRepository>(),
       getIt<AnalyticsService>(),
+    ),
+  );
+  // Tuile « Poser une question » de la feuille d'un trajet : une instance
+  // par tuile. Session lue au moment de l'appui, comme la feuille.
+  getIt.registerFactory<AskQuestionCubit>(
+    () => AskQuestionCubit(
+      getIt<ConversationRepository>(),
+      getIt<AnalyticsService>(),
+      hasRealSession: () =>
+          getIt.isRegistered<FirebaseSessionProbe>() &&
+          getIt<FirebaseSessionProbe>().hasRealSession,
     ),
   );
   // Révélation du numéro au tap sur « appeler » (le numéro n'est plus dans les DTO).

@@ -36,6 +36,8 @@ import 'package:dony/features/matching/data/repositories/bid_negotiation_reposit
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
+import 'package:dony/features/messaging/bloc/ask_question/ask_question_cubit.dart';
+import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/data/payer_phone_memory.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
@@ -64,6 +66,24 @@ import '../../../video_modal/moment_test_support.dart';
 
 class _MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
+
+class _MockConversationRepository extends Mock
+    implements ConversationRepository {}
+
+/// Tuile « Poser une question » : la feuille ne l'affiche que si son cubit
+/// est injecté (garde des points d'ouverture sans DI complète).
+void _registerAskQuestion() {
+  final repository = _MockConversationRepository();
+  when(() => repository.inquiryUnsupported).thenReturn(false);
+  getIt.registerFactory<AskQuestionCubit>(
+    () => AskQuestionCubit(
+      repository,
+      makeDisabledAnalytics(MockAnalyticsBackend()),
+      hasRealSession: () => true,
+    ),
+  );
+  addTearDown(() => getIt.unregister<AskQuestionCubit>());
+}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
@@ -809,6 +829,40 @@ void main() {
       expect(find.byKey(const Key('see-my-parcel-btn')), findsOneWidget);
       expect(find.text('Voir mon colis'), findsOneWidget);
       expect(find.text('Faire une demande'), findsNothing);
+    });
+
+    testWidgets('demande en cours sur ce trajet : pas de « Poser une '
+        'question » (I2)', (tester) async {
+      _registerAskQuestion();
+      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          bidState: BidListLoaded([bidOn('a1', 'PENDING')]),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('see-my-parcel-btn')), findsOneWidget);
+      expect(find.byKey(const Key('ask-question-tile')), findsNothing);
+    });
+
+    testWidgets('colis terminé hors suivi (refusé) : la tuile revient', (
+      tester,
+    ) async {
+      _registerAskQuestion();
+      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          bidState: BidListLoaded([bidOn('a1', 'REJECTED')]),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('ask-question-tile')), findsOneWidget);
     });
 
     testWidgets(
@@ -2264,6 +2318,7 @@ void main() {
     );
 
     testWidgets('ni demande, ni négociation, ni signet', (tester) async {
+      _registerAskQuestion();
       final a = _buildAnnouncement(negotiable: true);
       await tester.pumpWidget(
         _harness(announcement: a, authState: proprietaire(a), favorites: cubit),
@@ -2275,6 +2330,7 @@ void main() {
       expect(find.byKey(const Key('negotiate-price-btn')), findsNothing);
       expect(find.byType(FavoriteHeartButton), findsNothing);
       expect(find.byKey(const Key('own-trip-footer')), findsOneWidget);
+      expect(find.byKey(const Key('ask-question-tile')), findsNothing);
       expect(
         find.text(
           "C'est votre trajet : vous ne pouvez pas vous envoyer de demande.",
@@ -2312,6 +2368,41 @@ void main() {
       expect(find.byType(FavoriteHeartButton), findsOneWidget);
       expect(find.byKey(const Key('own-trip-footer')), findsNothing);
     });
+
+    testWidgets(
+      'tuile « Poser une question » entre la carte voyageur et la suite, '
+      'pied collant inchangé',
+      (tester) async {
+        _registerAskQuestion();
+        final a = _buildAnnouncement(
+          negotiable: true,
+          arrivalInstructions: 'Hall des arrivées',
+        );
+        await tester.pumpWidget(_harness(announcement: a, favorites: cubit));
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        final tile = find.byKey(const Key('ask-question-tile'));
+        expect(tile, findsOneWidget);
+        final travelerY = tester
+            .getTopLeft(find.byKey(const Key('traveler-block')))
+            .dy;
+        final tileY = tester.getTopLeft(tile).dy;
+        expect(tileY, greaterThan(travelerY));
+        expect(
+          tileY,
+          lessThan(
+            tester
+                .getTopLeft(find.byKey(const Key('report-announcement-link')))
+                .dy,
+          ),
+        );
+        // Pied collant : toujours les deux mêmes boutons, pas de troisième.
+        expect(find.text('Faire une demande'), findsOneWidget);
+        expect(find.byKey(const Key('negotiate-price-btn')), findsOneWidget);
+        expect(find.text('Poser une question'), findsOneWidget);
+      },
+    );
 
     testWidgets('en anglais', (tester) async {
       useEnglish();

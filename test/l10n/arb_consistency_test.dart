@@ -116,6 +116,7 @@ const _sameInBothLanguages = <String>{
   'tripPosterTimeRange', // « {departure} → {arrival} » : heures déjà localisées
   'tripPosterPricePerKgShort', // « {price}/kg » : montant et unité
   'assistantCharCount', // « {count}/500 » : chiffres seuls
+  'inquiryAskTileBadge', // « {limit} messages » : même mot en anglais
   'moneyChannelMobileMoney', // nom de service, FLUTTER-P3
   'flightsRouteTitle', // « {origin} → {destination} » : le trajet, sans mot
   'flightsStopsDirect', // « Direct » se dit pareil

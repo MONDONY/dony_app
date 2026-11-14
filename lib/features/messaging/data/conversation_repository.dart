@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 
@@ -73,6 +74,64 @@ class ConversationRepository {
   Future<ConversationModel> getRecipientConversation(String bidId) async {
     final response = await _api.dio.get('/conversations/bid/$bidId/recipient');
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Passe à `true` quand le back ne connaît pas `POST /conversations/inquiry`
+  /// (back pas encore déployé) : la tuile « Poser une question » se masque,
+  /// sans message, pour le reste de la session, et plus aucun appel ne part.
+  bool get inquiryUnsupported => _inquiryUnsupported;
+  bool _inquiryUnsupported = false;
+
+  /// Ouvre (ou rouvre) la conversation de question de l'utilisateur courant
+  /// sur l'annonce [announcementId], avant toute réservation
+  /// (`POST /conversations/inquiry`, idempotent côté back).
+  ///
+  /// Erreurs : 403 `kyc-required` → [InquiryKycRequiredException] ; 404
+  /// [kAnnouncementNotFound] (annonce absente, bloquée ou brouillon) et 422
+  /// [kInquiryAnnouncementClosed] → [InquiryUnavailableException] ; 405 (un
+  /// back antérieur fait tomber la requête sur `/{id}`, qui n'accepte que GET
+  /// et DELETE) ou 404 sans ce code (route inconnue) →
+  /// [InquiryUnsupportedException], mémorisé dans [inquiryUnsupported]. Les
+  /// autres (403 `messaging-muted`, `inquiry-own-announcement`, réseau, 5xx)
+  /// gardent leur [DioException], déjà convertie en `AppException` par
+  /// `ApiClient`.
+  Future<ConversationModel> openInquiry(String announcementId) async {
+    if (_inquiryUnsupported) throw const InquiryUnsupportedException();
+    try {
+      final response = await _api.dio.post(
+        '/conversations/inquiry',
+        data: {'announcementId': announcementId},
+      );
+      return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final code = _problemCode(e);
+      if (status == 403 && code == 'kyc-required') {
+        throw const InquiryKycRequiredException();
+      }
+      if (status == 404 && code == kAnnouncementNotFound) {
+        throw const InquiryUnavailableException(kAnnouncementNotFound);
+      }
+      // Une route inconnue ne porte pas de code ; un 404 avec code (fil
+      // masqué par un blocage, interlocuteur supprimé…) vient du nouveau back.
+      if (status == 405 || (status == 404 && code == null)) {
+        _inquiryUnsupported = true;
+        throw const InquiryUnsupportedException();
+      }
+      if (status == 422 && code == kInquiryAnnouncementClosed) {
+        throw const InquiryUnavailableException(kInquiryAnnouncementClosed);
+      }
+      rethrow;
+    }
+  }
+
+  /// Code métier du problem+json : lu sur l'exception déjà convertie par
+  /// `ApiClient`, à défaut dans le corps de la réponse.
+  static String? _problemCode(DioException e) {
+    final inner = e.error;
+    if (inner is AppException && inner.code != null) return inner.code;
+    final data = e.response?.data;
+    return data is Map ? data['code'] as String? : null;
   }
 
   Future<void> updateLastMessage(String id, String preview) async {
@@ -290,6 +349,44 @@ class ConversationRepository {
     final data = response.data ?? const <int>[];
     return data is Uint8List ? data : Uint8List.fromList(data);
   }
+}
+
+/// Poser une question exige une identité vérifiée (403 `kyc-required`).
+class InquiryKycRequiredException implements Exception {
+  const InquiryKycRequiredException();
+
+  @override
+  String toString() => 'InquiryKycRequiredException';
+}
+
+/// Code métier d'une annonce introuvable, bloquée ou en brouillon (404).
+const kAnnouncementNotFound = 'announcement-not-found';
+
+/// Code métier d'une annonce qui n'accepte plus de question (422).
+const kInquiryAnnouncementClosed = 'inquiry-announcement-closed';
+
+/// L'annonce n'accepte plus de question : introuvable, bloquée, brouillon
+/// (404 [kAnnouncementNotFound]) ou fermée (422 [kInquiryAnnouncementClosed]).
+class InquiryUnavailableException implements Exception {
+  const InquiryUnavailableException(this.code);
+
+  /// Code métier du refus, repris tel quel par l'analytics.
+  final String code;
+
+  @override
+  String toString() => 'InquiryUnavailableException($code)';
+}
+
+/// Le back ne connaît pas encore les questions avant réservation (405, ou 404
+/// sans [kAnnouncementNotFound]) : back antérieur, pas encore déployé.
+class InquiryUnsupportedException implements Exception {
+  const InquiryUnsupportedException();
+
+  /// Code d'échec repris par l'analytics.
+  static const code = 'inquiry-unsupported';
+
+  @override
+  String toString() => 'InquiryUnsupportedException';
 }
 
 /// Variante d'une photo du chat servie par le back.

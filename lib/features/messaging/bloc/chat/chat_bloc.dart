@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -8,6 +9,7 @@ import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/messaging/data/message_edit_repository.dart';
+import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -23,6 +25,17 @@ class _QuoteResolved extends ChatEvent {
   final String id;
   final MessageModel? message;
   const _QuoteResolved(this.id, this.message);
+}
+
+/// Nouveau compteur de messages du demandeur lu dans Firestore.
+class _InquirySentChanged extends ChatEvent {
+  final int sent;
+  const _InquirySentChanged(this.sent);
+}
+
+/// Le document parent ou le compteur a changé : l'état est reconstruit.
+class _InquiryChanged extends ChatEvent {
+  const _InquiryChanged();
 }
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
@@ -58,9 +71,74 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   // Photos (FLUTTER-B4).
   String _conversationId = '';
+
+  /// Conversation relue après la levée du plafond d'un fil de questions ;
+  /// `null` tant que le fil n'a pas basculé en direct.
+  ConversationModel? _refreshedConversation;
+  bool _refreshedForLift = false;
+
+  /// Une relecture est en cours : une seule `getConversation` par levée, quel
+  /// que soit le déclencheur (flux parent ou retour de la fiche du trajet).
+  bool _refreshInFlight = false;
+
+  /// Un déclencheur est arrivé pendant la lecture (rien lancé) : à reprendre
+  /// si cette lecture ne dit rien d'utile. Borne les reprises.
+  bool _refreshMissed = false;
+
+  /// Compté à chaque reverrouillage : une relecture lancée avant est périmée.
+  int _lockEpoch = 0;
+
+  /// Reverrouillage vu sur le document parent : la relecture doit rendre le
+  /// modèle limité (type INQUIRY, sans bid) avant de l'installer.
+  bool _relockPending = false;
+
+  /// Le back écrit Firestore avant de valider sa transaction : une relecture
+  /// arrivée trop tôt contredit le parent. Une seule relance différée est
+  /// permise par levée ou reverrouillage.
+  bool _staleRetryArmed = false;
+  Timer? _refreshRetryTimer;
   bool _mediaAllowed = false;
   List<PendingChatImage> _pendingImages = const [];
   int _localImageSeq = 0;
+
+  // Conversation de questions avant réservation (quota non levé) : seul le
+  // texte est écrit dans le fil (règles Firestore), pour les deux parties.
+  bool _inquiryLimited = false;
+
+  // L'utilisateur est le demandeur d'une telle conversation : ses messages
+  // sont comptés et plafonnés. Le créateur de l'annonce ne l'est jamais.
+  bool _inquiryCounting = false;
+  int _inquiryLimit = ConversationModel.defaultInquiryMessageLimit;
+  int _inquirySent = 0;
+  String _announcementId = '';
+
+  /// Type de la conversation à l'ouverture, pour la mesure `message_sent`.
+  String _openingKind = ConversationModel.kindSenderTraveler;
+  StreamSubscription<int>? _inquirySub;
+  StreamSubscription<InquiryParentSnapshot>? _inquiryParentSub;
+
+  // Le document parent est suivi pour tout fil né d'une question (annonce
+  // connue), ouvert limité ou déjà levé : le back peut reverrouiller le quota
+  // tant que la demande n'a pas été acceptée. Jamais pour une conversation
+  // ordinaire, sans annonce.
+  bool _inquiryWatching = false;
+
+  // Complété à la première lecture (serveur) du document parent : demandeur
+  // connu. Tout envoi en attend la fin, jamais de chemin ordinaire « par
+  // défaut ».
+  Completer<void> _inquiryParentKnown = Completer<void>()..complete();
+
+  // Complété à la première valeur du compteur du demandeur.
+  Completer<void> _inquirySentKnown = Completer<void>()..complete();
+  int _inquiryGeneration = 0;
+  bool _closing = false;
+  final Duration _inquiryParentTimeout;
+  final Duration _inquiryReconcileTimeout;
+  final Duration _inquiryRefreshRetryDelay;
+
+  // Envois d'une INQUIRY limitée traités l'un après l'autre : deux envois
+  // rapprochés liraient sinon le même compteur.
+  Future<void> _sendChain = Future<void>.value();
 
   ChatBloc(
     this._firestoreRepo,
@@ -68,8 +146,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     this._analytics, {
     MessageEditRepository? editRepository,
     Duration markReadDelay = const Duration(milliseconds: 500),
+    Duration inquiryParentTimeout = const Duration(seconds: 5),
+    Duration inquiryReconcileTimeout = const Duration(seconds: 10),
+    Duration inquiryRefreshRetryDelay = const Duration(seconds: 2),
   }) : _editRepo = editRepository,
        _markReadDelay = markReadDelay,
+       _inquiryParentTimeout = inquiryParentTimeout,
+       _inquiryReconcileTimeout = inquiryReconcileTimeout,
+       _inquiryRefreshRetryDelay = inquiryRefreshRetryDelay,
        super(const ChatInitial()) {
     on<ChatSubscribeRequested>(_onSubscribe);
     on<ChatTextSendRequested>(_onSendText);
@@ -85,6 +169,301 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatMessageEditRequested>(_onEditMessage);
     on<ChatMessageDeleteRequested>(_onDeleteMessage);
     on<ChatAppVisibilityChanged>(_onAppVisibilityChanged);
+    on<_InquirySentChanged>(_onInquirySentChanged);
+    on<_InquiryChanged>(_onInquiryChanged);
+    on<ChatConversationRefreshRequested>(_onConversationRefresh);
+    on<ChatInquiryBookingTapped>(_onInquiryBookingTapped);
+  }
+
+  /// Type mesuré : INQUIRY tant que le plafond s'applique, sinon celui du
+  /// modèle relu, à défaut celui de l'ouverture.
+  String get _analyticsKind => _inquiryLimited
+      ? ConversationModel.kindInquiry
+      : (_refreshedConversation?.kind ?? _openingKind);
+
+  void _onInquiryBookingTapped(
+    ChatInquiryBookingTapped event,
+    Emitter<ChatState> emit,
+  ) => unawaited(
+    _analytics.logEvent(
+      AnalyticsEvents.inquiryBookingTapped,
+      properties: {'source': event.source.name},
+    ),
+  );
+
+  /// Envoi compté réussi : le dernier message autorisé verrouille le
+  /// composeur, mesuré une fois ici (le refus local qui suit ne l'est pas).
+  void _afterCountedSend() {
+    if (_inquiryRemaining != 0) return;
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.inquiryLimitReached,
+        properties: {'limit': _inquiryLimit},
+      ),
+    );
+  }
+
+  /// Compteur affichable : demandeur connu et première valeur reçue.
+  bool get _inquiryShown => _inquiryCounting && _inquirySentKnown.isCompleted;
+
+  int get _inquiryRemaining =>
+      (_inquiryLimit - _inquirySent).clamp(0, _inquiryLimit);
+
+  void _onInquirySentChanged(
+    _InquirySentChanged event,
+    Emitter<ChatState> emit,
+  ) {
+    if (!_inquiryCounting) return;
+    _inquirySent = event.sent;
+    if (!_inquirySentKnown.isCompleted) _inquirySentKnown.complete();
+    if (_syncWithThread()) emit(_snapshot());
+  }
+
+  void _onInquiryChanged(_InquiryChanged event, Emitter<ChatState> emit) {
+    if (_syncWithThread()) emit(_snapshot());
+  }
+
+  /// Conversation relue après une levée ou un reverrouillage du plafond : le
+  /// back rend alors le `bidId` et le type ordinaire (levée), ou le type
+  /// INQUIRY sans bid (reverrouillage), que l'écran, ouvert sur la photo prise
+  /// à l'ouverture, ne connaît pas. Une seule lecture par transition ; un
+  /// échec laisse l'ancien modèle (journal) et la prochaine demande réessaie.
+  /// Une lecture qui contredit le parent (transaction du back pas encore
+  /// validée) est relancée une fois, après [_inquiryRefreshRetryDelay].
+  Future<void> _onConversationRefresh(
+    ChatConversationRefreshRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    if (_conversationId.isEmpty || _refreshedForLift) return;
+    if (_refreshInFlight) {
+      _refreshMissed = true;
+      return;
+    }
+    final generation = _inquiryGeneration;
+    final epoch = _lockEpoch;
+    var retry = false;
+    var stale = false;
+    _refreshMissed = false;
+    _refreshInFlight = true;
+    try {
+      final fresh = await _conversationRepo.getConversation(_conversationId);
+      if (isClosed || generation != _inquiryGeneration) return;
+      if (epoch != _lockEpoch) {
+        // Reverrouillé pendant la lecture : résultat périmé, ignoré.
+        retry = true;
+        return;
+      }
+      if (fresh.inquiryLimited) {
+        if (_relockPending) {
+          _relockPending = false;
+          _installConversation(fresh, emit);
+        } else if (!_inquiryLimited) {
+          // Levée vue sur Firestore, pas encore en base.
+          stale = true;
+        } else {
+          retry = true;
+        }
+        return;
+      }
+      if (_relockPending) {
+        // Reverrouillage vu sur Firestore, pas encore en base.
+        stale = true;
+        return;
+      }
+      _refreshedForLift = true;
+      if (_inquiryLimited) _liftInquiry();
+      _installConversation(fresh, emit);
+    } catch (e) {
+      AppLog.warn(
+        'chat.conversation_refresh_failed',
+        data: {'reason': _reasonOf(e)},
+      );
+    } finally {
+      _refreshInFlight = false;
+      if (stale) {
+        _scheduleStaleRefresh(epoch);
+      } else if (retry && _refreshMissed && !isClosed && _modelWanted) {
+        // Un déclencheur arrivé pendant la lecture n'a pas pu en lancer une :
+        // il reprend ici si ce résultat n'a rien appris.
+        add(const ChatConversationRefreshRequested());
+      }
+    }
+  }
+
+  /// Un modèle aligné sur le parent reste à installer : levée sans modèle
+  /// levé, ou reverrouillage pas encore relu.
+  bool get _modelWanted =>
+      _relockPending || (!_inquiryLimited && !_refreshedForLift);
+
+  /// Installe le modèle relu : l'écran le préfère à celui de l'ouverture, et
+  /// ses photos permises (`mediaAllowed`) font foi.
+  void _installConversation(ConversationModel fresh, Emitter<ChatState> emit) {
+    final shown = _syncWithThread();
+    _refreshedConversation = fresh;
+    _mediaAllowed = fresh.mediaAllowed;
+    final limit = fresh.inquiryMessageLimit;
+    if (limit != null && limit > 0) _inquiryLimit = limit;
+    if (shown) emit(_snapshot());
+  }
+
+  /// Une seule relance différée par transition, jamais après la fermeture ni
+  /// après un nouveau reverrouillage (qui a sa propre relecture).
+  void _scheduleStaleRefresh(int epoch) {
+    if (!_staleRetryArmed || isClosed) return;
+    _staleRetryArmed = false;
+    _refreshRetryTimer?.cancel();
+    _refreshRetryTimer = Timer(_inquiryRefreshRetryDelay, () {
+      if (isClosed || epoch != _lockEpoch || !_modelWanted) return;
+      add(const ChatConversationRefreshRequested());
+    });
+  }
+
+  /// Quota levé : plus de compteur ni de verrou, les envois en attente
+  /// repartent en ordinaire. Le document parent reste suivi (reverrouillage).
+  void _liftInquiry() {
+    if (_inquiryLimited && !_refreshedForLift && !isClosed) {
+      add(const ChatConversationRefreshRequested());
+    }
+    _inquiryLimited = false;
+    _relockPending = false;
+    _staleRetryArmed = true;
+    _inquiryCounting = false;
+    _inquirySent = 0;
+    _completeInquiryWaiters();
+    final sub = _inquirySub;
+    _inquirySub = null;
+    unawaited(sub?.cancel());
+  }
+
+  void _completeInquiryWaiters() {
+    if (!_inquiryParentKnown.isCompleted) _inquiryParentKnown.complete();
+    if (!_inquirySentKnown.isCompleted) _inquirySentKnown.complete();
+  }
+
+  Future<void> _cancelInquirySubs() async {
+    await _inquirySub?.cancel();
+    _inquirySub = null;
+    await _inquiryParentSub?.cancel();
+    _inquiryParentSub = null;
+  }
+
+  /// Suit le document de conversation : `askerId` dit si l'utilisateur est le
+  /// demandeur (compteur suivi, plafond) ou le créateur (jamais limité) ;
+  /// `quotaLifted` lève ou rétablit le plafond en direct. Un abonnement
+  /// précédent est annulé d'abord : jamais deux écouteurs du même parent.
+  void _watchInquiryParent(String firestoreConversationId, String uid) {
+    final previous = _inquiryParentSub;
+    if (previous != null) unawaited(previous.cancel());
+    final generation = _inquiryGeneration;
+    late final StreamSubscription<InquiryParentSnapshot> sub;
+    sub = _firestoreRepo
+        .inquiryParentStream(firestoreConversationId)
+        .listen(
+          (parent) {
+            if (isClosed || generation != _inquiryGeneration) return;
+            _applyInquiryParent(firestoreConversationId, uid, parent);
+          },
+          onError: (Object e) {
+            AppLog.warn(
+              'chat.inquiry_parent_watch_failed',
+              data: {'reason': _reasonOf(e)},
+            );
+            if (identical(_inquiryParentSub, sub)) _inquiryParentFailed();
+          },
+        );
+    _inquiryParentSub = sub;
+  }
+
+  /// Erreur terminale du flux parent : réabonnement paresseux à l'envoi
+  /// suivant (pas de boucle). Seul un fil limité attend de nouveau le
+  /// demandeur ; levé, ses envois restent libres.
+  void _inquiryParentFailed() {
+    unawaited(_inquiryParentSub?.cancel());
+    _inquiryParentSub = null;
+    if (_inquiryLimited && _inquiryParentKnown.isCompleted) {
+      _inquiryParentKnown = Completer<void>();
+    }
+  }
+
+  /// Suit le compteur du demandeur. Une erreur du flux (même avant sa
+  /// première valeur) le libère : réabonnement paresseux à l'envoi suivant,
+  /// comme le parent.
+  void _watchInquirySent(String firestoreConversationId) {
+    final previous = _inquirySub;
+    if (previous != null) unawaited(previous.cancel());
+    final generation = _inquiryGeneration;
+    late final StreamSubscription<int> sub;
+    sub = _firestoreRepo
+        .inquirySentStream(firestoreConversationId)
+        .listen(
+          (sent) {
+            if (!isClosed && generation == _inquiryGeneration) {
+              add(_InquirySentChanged(sent));
+            }
+          },
+          onError: (Object e) {
+            AppLog.warn(
+              'chat.inquiry_quota_watch_failed',
+              data: {'reason': _reasonOf(e)},
+            );
+            if (!identical(_inquirySub, sub)) return;
+            unawaited(sub.cancel());
+            _inquirySub = null;
+          },
+        );
+    _inquirySub = sub;
+  }
+
+  void _applyInquiryParent(
+    String firestoreConversationId,
+    String uid,
+    InquiryParentSnapshot parent,
+  ) {
+    // Instantané vide du cache, avant la première réponse du serveur : le
+    // demandeur n'est pas encore connu.
+    if (!parent.exists && parent.fromCache) return;
+    if (parent.quotaLifted) {
+      if (_inquiryLimited) {
+        _liftInquiry();
+      } else {
+        _completeInquiryWaiters();
+      }
+      add(const _InquiryChanged());
+      return;
+    }
+    // Fil ouvert levé dont le parent est absent du serveur : aucune
+    // information, rien n'est reverrouillé sur un document manquant.
+    if (!parent.exists && !_inquiryLimited) return;
+    // Une copie du cache peut être périmée (rien n'écoute `conversations`
+    // chat fermé) : on ne reverrouille un fil levé que sur l'avis du serveur.
+    if (!_inquiryLimited && parent.fromCache) return;
+    if (!_inquiryLimited) {
+      // Reverrouillage (la demande s'est terminée sans être acceptée) : le
+      // modèle de l'ouverture ou celui relu après la levée ne vaut plus.
+      _lockEpoch++;
+      _relockPending = true;
+      _staleRetryArmed = true;
+      add(const ChatConversationRefreshRequested());
+    }
+    _inquiryLimited = true;
+    _refreshedConversation = null;
+    _refreshedForLift = false;
+    final asker = parent.askerId != null && parent.askerId == uid;
+    if (asker && !_inquiryCounting) {
+      _inquiryCounting = true;
+      _inquirySent = 0;
+      _inquirySentKnown = Completer<void>();
+      _watchInquirySent(firestoreConversationId);
+    } else if (!asker && _inquiryCounting) {
+      _inquiryCounting = false;
+      unawaited(_inquirySub?.cancel());
+      _inquirySub = null;
+    }
+    if (!_inquiryParentKnown.isCompleted) _inquiryParentKnown.complete();
+    if (!_inquiryCounting && !_inquirySentKnown.isCompleted) {
+      _inquirySentKnown.complete();
+    }
+    add(const _InquiryChanged());
   }
 
   ChatState _snapshot() {
@@ -96,7 +475,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             replyingTo: _replyingTo,
             quotedMessages: quoted,
             pendingImages: List.unmodifiable(_pendingImages),
-            mediaAllowed: _mediaAllowed,
+            // Fil de questions sous quota : les règles Firestore n'acceptent
+            // que du texte, pour les deux parties.
+            mediaAllowed: _mediaAllowed && !_inquiryLimited,
+            inquiryRemaining: _inquiryShown ? _inquiryRemaining : null,
+            inquiryLimitReached: _inquiryShown && _inquiryRemaining == 0,
+            conversation: _refreshedConversation,
           );
   }
 
@@ -190,8 +574,38 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _messages = const [];
     _replyingTo = null;
     _conversationId = event.conversationId;
+    _refreshedConversation = null;
+    _refreshedForLift = false;
+    _relockPending = false;
+    _staleRetryArmed = false;
+    _refreshRetryTimer?.cancel();
+    _refreshRetryTimer = null;
     _mediaAllowed = event.mediaAllowed;
     _pendingImages = const [];
+    _inquiryGeneration++;
+    _completeInquiryWaiters();
+    await _cancelInquirySubs();
+    _inquiryLimited = event.inquiryLimited && !event.isReadOnly;
+    // Fil né d'une question : INQUIRY, ou promu en réservation (le back garde
+    // l'annonce). Ouvert levé, il reste suivi : la demande peut se terminer
+    // sans avoir été acceptée et le back reverrouiller le quota.
+    _inquiryWatching =
+        !event.isReadOnly &&
+        event.currentUserUid.isNotEmpty &&
+        (_inquiryLimited || event.announcementId.isNotEmpty);
+    _inquiryParentKnown = Completer<void>();
+    // Ouvert levé : rien à attendre, les envois partent en ordinaire tant que
+    // le parent ne dit pas le contraire.
+    if (!_inquiryLimited) _inquiryParentKnown.complete();
+    _inquirySentKnown = Completer<void>()..complete();
+    _inquiryCounting = false;
+    _inquirySent = 0;
+    final limit = event.inquiryMessageLimit;
+    _inquiryLimit = limit != null && limit > 0
+        ? limit
+        : ConversationModel.defaultInquiryMessageLimit;
+    _announcementId = event.announcementId;
+    _openingKind = event.conversationKind;
     await _messageSub?.cancel();
     await _deletedSub?.cancel();
 
@@ -205,6 +619,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (_currentUserUid.isNotEmpty) {
       _markRead();
       _watchUnreadWhileOpen();
+    }
+
+    if (_inquiryWatching) {
+      _watchInquiryParent(event.firestoreConversationId, _currentUserUid);
+    } else if (!_inquiryParentKnown.isCompleted) {
+      // Pas de compte lisible : rien à attendre.
+      _inquiryParentKnown.complete();
     }
 
     // Only watch deletion stream when NOT already in read-only
@@ -243,24 +664,221 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatTextSendRequested event,
     Emitter<ChatState> emit,
   ) async {
-    final sent = await _rejectable(
-      emit,
-      () => _firestoreRepo.sendTextMessage(
-        firestoreConversationId: event.firestoreConversationId,
-        senderFirebaseUid: event.senderFirebaseUid,
-        body: event.body,
-        replyToId: event.replyToId,
-      ),
-      retry: event,
-      text: event.body,
-    );
+    // Seul le demandeur sous quota (ou tant qu'on ne sait pas qui il est) est
+    // sérialisé : un envoi ordinaire, dont un commit hors ligne peut durer, ne
+    // doit jamais bloquer la file.
+    final serialize =
+        _inquiryWatching &&
+        (_inquiryCounting || !_inquiryParentKnown.isCompleted);
+    if (!serialize) return _sendText(event, emit);
+    final previous = _sendChain;
+    final done = Completer<void>();
+    _sendChain = done.future;
+    try {
+      await previous;
+      await _sendText(event, emit);
+    } finally {
+      done.complete();
+    }
+  }
+
+  Future<void> _sendText(
+    ChatTextSendRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    if (_inquiryWatching && !_closing) {
+      // Flux terminés par une erreur : réabonnement paresseux, ici seulement.
+      if (_inquiryParentSub == null) {
+        _watchInquiryParent(_firestoreConversationId, _currentUserUid);
+      }
+      if (_inquiryCounting && _inquirySub == null) {
+        _watchInquirySent(_firestoreConversationId);
+      }
+    }
+    if (_inquiryWatching &&
+        (!_inquiryParentKnown.isCompleted ||
+            (_inquiryCounting && !_inquirySentKnown.isCompleted))) {
+      // Demandeur et compteur pas encore connus : jamais d'envoi ordinaire à
+      // l'aveugle, ni avec un compteur à 0 par défaut.
+      final generation = _inquiryGeneration;
+      try {
+        await _awaitInquiryReady().timeout(_inquiryParentTimeout);
+      } catch (e) {
+        if (_closing || generation != _inquiryGeneration) return;
+        _reportSendFailure(emit, e, event, event.body);
+        return;
+      }
+      if (_closing || generation != _inquiryGeneration) return;
+    }
+    final sent = _inquiryCounting
+        ? await _sendInquiryText(event, emit)
+        : await _rejectable(
+            emit,
+            () => _writeText(event),
+            retry: event,
+            text: event.body,
+          );
     if (!sent) return;
     _clearReplyAfterSend(event.replyToId, emit);
     final preview = event.body.length > 80
         ? '${event.body.substring(0, 77)}...'
         : event.body;
     await _updateLastMessage(event.conversationId, preview);
-    unawaited(_analytics.logEvent(AnalyticsEvents.messageSent));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.messageSent,
+        properties: {'kind': _analyticsKind},
+      ),
+    );
+  }
+
+  Future<void> _awaitInquiryReady() async {
+    await _inquiryParentKnown.future;
+    if (_inquiryCounting) await _inquirySentKnown.future;
+  }
+
+  Future<void> _writeText(
+    ChatTextSendRequested event, {
+    int? inquirySentBefore,
+  }) => _firestoreRepo.sendTextMessage(
+    firestoreConversationId: event.firestoreConversationId,
+    senderFirebaseUid: event.senderFirebaseUid,
+    body: event.body,
+    replyToId: event.replyToId,
+    inquirySentBefore: inquirySentBefore,
+  );
+
+  /// Envoi du demandeur dans une conversation de questions sous quota : le
+  /// compteur est écrit avec le message. À 0 restant, refus local sans appel
+  /// réseau.
+  Future<bool> _sendInquiryText(
+    ChatTextSendRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    if (_inquiryRemaining == 0) {
+      _rejectInquiryLimit(emit, event.body);
+      return false;
+    }
+    final before = _inquirySent;
+    final startedAt = DateTime.now();
+    try {
+      await _writeText(event, inquirySentBefore: before);
+    } on InquiryLimitReachedException {
+      return _reconcileAndRetry(event, emit, before, startedAt);
+    } on FirebaseException catch (e) {
+      // Compteur absent alors que le nôtre dit > 0 : même dérive.
+      if (e.code == 'not-found') {
+        return _reconcileAndRetry(event, emit, before, startedAt);
+      }
+      _reportSendFailure(emit, e, event, event.body);
+      return false;
+    } catch (e) {
+      _reportSendFailure(emit, e, event, event.body);
+      return false;
+    }
+    _inquirySent = math.max(_inquirySent, before + 1);
+    _afterCountedSend();
+    if (_syncWithThread()) emit(_snapshot());
+    return true;
+  }
+
+  /// Les règles ont refusé l'envoi alors que le compteur local laissait de la
+  /// place : il a dérivé. `openInquiry` fait recaler Firestore par le back (et
+  /// dit si le quota est levé), puis un seul nouvel essai part avec le compteur
+  /// frais, sauf si l'écriture précédente est déjà dans le fil (commit réussi,
+  /// réponse perdue) : aucun doublon, aucun quota brûlé.
+  Future<bool> _reconcileAndRetry(
+    ChatTextSendRequested event,
+    Emitter<ChatState> emit,
+    int attempted,
+    DateTime startedAt,
+  ) async {
+    AppLog.warn('chat.inquiry_reconcile', data: {'attempted': attempted});
+    try {
+      if (_announcementId.isNotEmpty) {
+        final fresh = await _conversationRepo
+            .openInquiry(_announcementId)
+            .timeout(_inquiryReconcileTimeout);
+        if (fresh.inquiryQuotaLifted) {
+          _liftInquiry();
+          if (_syncWithThread()) emit(_snapshot());
+          await _writeText(event);
+          return true;
+        }
+      }
+      final fresh = await _firestoreRepo
+          .inquirySentStream(event.firestoreConversationId)
+          .first
+          .timeout(_inquiryParentTimeout);
+      if (!_inquiryCounting) {
+        // Levée arrivée pendant le recalage : envoi ordinaire.
+        await _writeText(event);
+        return true;
+      }
+      _inquirySent = fresh;
+      if (fresh == attempted + 1 &&
+          await _alreadyWritten(event, fresh, startedAt)) {
+        _afterCountedSend();
+        if (_syncWithThread()) emit(_snapshot());
+        return true;
+      }
+      if (_inquiryRemaining == 0) {
+        _rejectInquiryLimit(emit, event.body);
+        return false;
+      }
+      await _writeText(event, inquirySentBefore: fresh);
+      _inquirySent = math.max(_inquirySent, fresh + 1);
+      _afterCountedSend();
+      if (_syncWithThread()) emit(_snapshot());
+      return true;
+    } on InquiryLimitReachedException {
+      if (_inquiryRemaining == 0) {
+        _rejectInquiryLimit(emit, event.body);
+      } else {
+        // Refus malgré de la place : autre cause (sourdine, fil fermé…).
+        final previous = _syncWithThread() ? _snapshot() : state;
+        emit(ChatSendRejected(previous, text: event.body));
+        emit(previous);
+      }
+      return false;
+    } catch (e) {
+      _reportSendFailure(emit, e, event, event.body);
+      return false;
+    }
+  }
+
+  /// Le message `inq<n>` est déjà dans le fil, écrit par nous avec ce texte.
+  /// Il doit avoir été écrit après le début de la tentative (marge 2 s pour
+  /// l'écart d'horloge) : un ancien message identique n'est pas un doublon.
+  Future<bool> _alreadyWritten(
+    ChatTextSendRequested event,
+    int n,
+    DateTime startedAt,
+  ) async {
+    try {
+      final message = await _firestoreRepo.getMessage(
+        event.firestoreConversationId,
+        'inq$n',
+      );
+      return message != null &&
+          message.senderId == event.senderFirebaseUid &&
+          message.body == event.body &&
+          !message.sentAt.isBefore(
+            startedAt.subtract(const Duration(seconds: 2)),
+          );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _rejectInquiryLimit(Emitter<ChatState> emit, String text) {
+    AppLog.info(
+      'chat.inquiry_limit_reached',
+      data: {'sent': _inquirySent, 'limit': _inquiryLimit},
+    );
+    final previous = _syncWithThread() ? _snapshot() : state;
+    emit(ChatSendRejected(previous, text: text, inquiryLimit: true));
+    emit(previous);
   }
 
   /// Aperçu « dernier message » de la liste des conversations : opération
@@ -385,7 +1003,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatImageSendRequested event,
     Emitter<ChatState> emit,
   ) async {
-    if (!_syncWithThread() || _readOnly) return;
+    // Les règles n'acceptent que du texte dans une conversation de questions.
+    if (_inquiryLimited || !_syncWithThread() || _readOnly) return;
     if (event.conversationId.isNotEmpty) _conversationId = event.conversationId;
     final pending = PendingChatImage(
       localId: 'local-${++_localImageSeq}',
@@ -499,6 +1118,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatLocationSendRequested event,
     Emitter<ChatState> emit,
   ) async {
+    if (_inquiryLimited) return;
     final sent = await _rejectable(
       emit,
       () => _firestoreRepo.sendLocationMessage(
@@ -533,16 +1153,25 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       await write();
       return true;
     } catch (e) {
-      final previous = state;
-      if (e is FirebaseException && e.code == 'permission-denied') {
-        emit(ChatSendRejected(previous, text: text));
-      } else {
-        AppLog.warn('chat.send_failed', data: {'reason': _reasonOf(e)});
-        emit(ChatSendFailed(previous, retry: retry, text: text));
-      }
-      emit(previous);
+      _reportSendFailure(emit, e, retry, text);
       return false;
     }
+  }
+
+  void _reportSendFailure(
+    Emitter<ChatState> emit,
+    Object e,
+    ChatEvent retry,
+    String? text,
+  ) {
+    final previous = state;
+    if (e is FirebaseException && e.code == 'permission-denied') {
+      emit(ChatSendRejected(previous, text: text));
+    } else {
+      AppLog.warn('chat.send_failed', data: {'reason': _reasonOf(e)});
+      emit(ChatSendFailed(previous, retry: retry, text: text));
+    }
+    emit(previous);
   }
 
   Future<void> _onEditMessage(
@@ -679,6 +1308,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     await _messageSub?.cancel();
     await _deletedSub?.cancel();
     await _unreadSub?.cancel();
+    _closing = true;
+    _inquiryGeneration++;
+    _completeInquiryWaiters();
+    await _cancelInquirySubs();
+    _refreshRetryTimer?.cancel();
     _markReadTimer?.cancel();
     // Sortie du fil : dernière remise à « lu » pour un message arrivé pendant
     // le délai anti-rebond, sinon il resterait compté à l'arrivée sur la liste.

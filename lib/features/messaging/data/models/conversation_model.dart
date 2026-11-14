@@ -54,7 +54,29 @@ class ParticipantModel {
 
 class ConversationModel {
   final String id;
-  final String bidId;
+
+  /// Commande rattachée. Nulle pour une conversation [kindInquiry] : une
+  /// question avant réservation n'a pas encore de bid.
+  final String? bidId;
+
+  /// Annonce de la question ([kindInquiry]) ; nulle pour les autres types.
+  final String? announcementId;
+
+  /// Nombre de messages que le demandeur peut envoyer avant réservation
+  /// ([kindInquiry]). Nul sur les autres types, sur un fil levé ou un ancien
+  /// back ; une valeur nulle ou négative est lue comme
+  /// [defaultInquiryMessageLimit].
+  final int? inquiryMessageLimit;
+
+  /// Plafond de messages du demandeur quand le back ne le sert pas (même
+  /// valeur que `InquiryPolicy.MESSAGE_LIMIT` du back).
+  static const defaultInquiryMessageLimit = 10;
+
+  /// Quota levé : le demandeur a créé une demande sur ce trajet, le fil passe
+  /// en conversation de réservation et ses messages ne sont plus comptés. Le
+  /// back le reverrouille si cette demande se termine sans avoir été
+  /// acceptée. Faux par défaut.
+  final bool inquiryQuotaLifted;
   final String firestoreConversationId;
   final ParticipantModel otherParticipant;
   final String? lastMessagePreview;
@@ -81,6 +103,7 @@ class ConversationModel {
 
   static const kindSenderTraveler = 'SENDER_TRAVELER';
   static const kindRecipientTraveler = 'RECIPIENT_TRAVELER';
+  static const kindInquiry = 'INQUIRY';
 
   /// Côté de l'utilisateur courant dans une conversation
   /// [kindRecipientTraveler] : `TRAVELER` ou `RECIPIENT`, `null` pour une
@@ -136,7 +159,10 @@ class ConversationModel {
 
   const ConversationModel({
     required this.id,
-    required this.bidId,
+    this.bidId,
+    this.announcementId,
+    this.inquiryMessageLimit,
+    this.inquiryQuotaLifted = false,
     required this.firestoreConversationId,
     required this.otherParticipant,
     this.lastMessagePreview,
@@ -161,6 +187,12 @@ class ConversationModel {
     this.messagesPurgeAt,
     this.messagesPurged = false,
   });
+
+  /// Question posée avant réservation, sans bid.
+  bool get isInquiry => kind == kindInquiry;
+
+  /// Question dont l'expéditeur est encore soumis au quota de messages.
+  bool get inquiryLimited => isInquiry && !inquiryQuotaLifted;
 
   /// Plus rien ne peut s'écrire dans ce fil : l'autre partie l'a quitté, ou
   /// ses messages ont été effacés après la livraison.
@@ -221,6 +253,9 @@ class ConversationModel {
   }) => ConversationModel(
     id: id,
     bidId: bidId,
+    announcementId: announcementId,
+    inquiryMessageLimit: inquiryMessageLimit,
+    inquiryQuotaLifted: inquiryQuotaLifted,
     firestoreConversationId: firestoreConversationId,
     otherParticipant: otherParticipant,
     lastMessagePreview: lastMessagePreview ?? this.lastMessagePreview,
@@ -249,7 +284,10 @@ class ConversationModel {
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
       ConversationModel(
         id: json['id'] as String,
-        bidId: json['bidId'] as String,
+        bidId: json['bidId'] as String?,
+        announcementId: json['announcementId'] as String?,
+        inquiryMessageLimit: _inquiryLimit(json['inquiryMessageLimit']),
+        inquiryQuotaLifted: json['inquiryQuotaLifted'] == true,
         firestoreConversationId: json['firestoreConversationId'] as String,
         otherParticipant: ParticipantModel.fromJson(
           json['otherParticipant'] as Map<String, dynamic>,
@@ -291,6 +329,14 @@ class ConversationModel {
         messagesPurgeAt: _serverDate(json['messagesPurgeAt']),
         messagesPurged: json['messagesPurged'] == true,
       );
+
+  /// Plafond servi par le back, borné : une valeur nulle ou négative ferait
+  /// lever `clamp` dans le compteur.
+  static int? _inquiryLimit(Object? value) {
+    final limit = value is num ? value.toInt() : null;
+    if (limit == null) return null;
+    return limit > 0 ? limit : defaultInquiryMessageLimit;
+  }
 
   static DateTime? _serverDate(Object? value) {
     if (value is! String || value.trim().isEmpty) return null;
