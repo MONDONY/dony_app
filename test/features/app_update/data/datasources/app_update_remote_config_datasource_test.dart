@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/features/app_update/data/datasources/app_update_remote_config_datasource.dart';
 import 'package:dony/features/app_update/data/datasources/remote_config_interval_store.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
@@ -228,6 +230,112 @@ void main() {
       // l'échec du fetch : seule la partie réseau a raté.
       expect(client.settings, isNotEmpty);
     });
+
+    group('temps réel', () {
+      late _FakeRemoteConfigClient client;
+      late AppUpdateRemoteConfigDatasource datasource;
+
+      setUp(() {
+        client = _FakeRemoteConfigClient(minSupportedBuild: 0);
+        datasource = AppUpdateRemoteConfigDatasource(
+          remoteConfig: client,
+          isDevelopment: true,
+        );
+      });
+
+      test('activate puis émet quand recommended_build change', () async {
+        datasource.startRealtimeUpdates();
+        final changes = expectLater(datasource.changes, emits(anything));
+
+        client.updates.add({'recommended_build'});
+        await changes;
+
+        expect(client.activateCount, 1);
+      });
+
+      test('min_supported_build déclenche aussi', () async {
+        datasource.startRealtimeUpdates();
+        final changes = expectLater(datasource.changes, emits(anything));
+
+        client.updates.add({'min_supported_build', 'autre'});
+        await changes;
+
+        expect(client.activateCount, 1);
+      });
+
+      test('une clé sans rapport est ignorée', () async {
+        datasource.startRealtimeUpdates();
+        var emitted = 0;
+        final sub = datasource.changes.listen((_) => emitted++);
+        addTearDown(sub.cancel);
+
+        client.updates.add({'help_center_url'});
+        await Future<void>.delayed(Duration.zero);
+
+        expect(client.activateCount, 0);
+        expect(emitted, 0);
+      });
+
+      test('une seule souscription même démarrée deux fois', () {
+        datasource.startRealtimeUpdates();
+        datasource.startRealtimeUpdates();
+
+        expect(client.listenCount, 1);
+      });
+
+      test(
+        'stopRealtimeUpdates annule l\'écoute et permet de repartir',
+        () async {
+          datasource.startRealtimeUpdates();
+          await datasource.stopRealtimeUpdates();
+          await datasource.stopRealtimeUpdates();
+          var emitted = 0;
+          final sub = datasource.changes.listen((_) => emitted++);
+          addTearDown(sub.cancel);
+
+          client.updates.add({'recommended_build'});
+          await Future<void>.delayed(Duration.zero);
+
+          expect(emitted, 0);
+          datasource.startRealtimeUpdates();
+          expect(client.listenCount, 2);
+        },
+      );
+
+      test('plateforme sans prise en charge : avalé', () {
+        client.listenError = UnsupportedError('pas de temps réel');
+
+        expect(datasource.startRealtimeUpdates, returnsNormally);
+        expect(datasource.startRealtimeUpdates, returnsNormally);
+      });
+
+      test('flux en erreur : avalé, l\'écoute continue', () async {
+        datasource.startRealtimeUpdates();
+        var emitted = 0;
+        final sub = datasource.changes.listen((_) => emitted++);
+        addTearDown(sub.cancel);
+
+        client.updates.addError(StateError('flux cassé'));
+        client.updates.addError(StateError('encore'));
+        client.updates.add({'recommended_build'});
+        await Future<void>.delayed(Duration.zero);
+
+        expect(emitted, 1);
+      });
+
+      test('activate qui échoue : avalé, rien n\'est émis', () async {
+        client.activateError = StateError('activate KO');
+        datasource.startRealtimeUpdates();
+        var emitted = 0;
+        final sub = datasource.changes.listen((_) => emitted++);
+        addTearDown(sub.cancel);
+
+        client.updates.add({'recommended_build'});
+        await Future<void>.delayed(Duration.zero);
+
+        expect(emitted, 0);
+      });
+    });
   });
 }
 
@@ -247,6 +355,26 @@ final class _FakeRemoteConfigClient implements AppUpdateRemoteConfigClient {
   final Object? settingsError;
   final settings = <RemoteConfigSettings>[];
   var fetchCount = 0;
+  var activateCount = 0;
+  Object? activateError;
+  Object? listenError;
+  var listenCount = 0;
+  // ignore: close_sinks
+  final updates = StreamController<Set<String>>.broadcast();
+
+  @override
+  Future<bool> activate() async {
+    if (activateError case final error?) throw error;
+    activateCount++;
+    return true;
+  }
+
+  @override
+  Stream<Set<String>> get onConfigUpdated {
+    listenCount++;
+    if (listenError case final error?) throw error;
+    return updates.stream;
+  }
 
   @override
   Future<bool> fetchAndActivate() async {

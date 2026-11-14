@@ -268,6 +268,15 @@ final class _FakeConfigSource implements AppUpdateConfigSource {
 
   @override
   Future<void> fetchAndActivate() async {}
+
+  @override
+  Stream<void> get changes => const Stream<void>.empty();
+
+  @override
+  void startRealtimeUpdates() {}
+
+  @override
+  Future<void> stopRealtimeUpdates() async {}
 }
 
 final class _NoopAnalytics extends Fake implements AnalyticsService {

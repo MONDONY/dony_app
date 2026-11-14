@@ -199,6 +199,12 @@ Future<void> _bootstrap() async {
   // lancement (voir plus haut).
   unawaited(getIt<AppUpdateService>().refresh());
 
+  // Mises à jour Remote Config en temps réel (app ouverte) : le modal de mise
+  // à jour recommandée réagit dès que `recommended_build` change dans l'admin.
+  // Une seule souscription pour toute la vie du processus ; une app en
+  // arrière-plan relit à son prochain lancement.
+  getIt<AppUpdateService>().startRealtimeUpdates();
+
   // Taux de commission Yadony (SOURCE UNIQUE : dony.commission.rate côté backend) :
   // chargé une fois pour que les prix calculés côté app (aperçu checkout, repli des
   // surfaces sans champ *Display) suivent automatiquement. Non bloquant.

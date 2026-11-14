@@ -247,5 +247,12 @@ void main() {
     expect(client.getInt('min_supported_build'), 42);
     await client.setConfigSettings(settings);
     verify(() => remoteConfig.setConfigSettings(settings)).called(1);
+
+    when(remoteConfig.activate).thenAnswer((_) async => true);
+    when(() => remoteConfig.onConfigUpdated).thenAnswer(
+      (_) => Stream.value(RemoteConfigUpdate({'recommended_build'})),
+    );
+    expect(await client.activate(), isTrue);
+    expect(await client.onConfigUpdated.first, {'recommended_build'});
   });
 }
