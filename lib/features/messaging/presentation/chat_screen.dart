@@ -141,7 +141,10 @@ class _ChatScreenState extends State<ChatScreen> {
       unawaited(
         getIt<AnalyticsService>().logEvent(
           AnalyticsEvents.conversationOpened,
-          properties: {'context': 'conversation'},
+          properties: {
+            'context': 'conversation',
+            'kind': widget.conversation.kind,
+          },
         ),
       );
       // Appel Yadony possible ici : prévenir, une fois, si le téléphone
@@ -260,6 +263,7 @@ class _ChatScreenState extends State<ChatScreen> {
       inquiryLimited: c.inquiryLimited,
       inquiryMessageLimit: c.inquiryMessageLimit,
       announcementId: c.announcementId ?? '',
+      conversationKind: c.kind,
     );
   }
 
@@ -279,17 +283,20 @@ class _ChatScreenState extends State<ChatScreen> {
       detailLine: date == null
           ? ''
           : DateFormat.MMMd(AppL10n.localeName).format(date),
-      onBook: _openInquiryTrip,
+      onBook: () => _openInquiryTrip(source: InquiryBookingSource.card),
     );
   }
 
   /// Rouvre la fiche du trajet (feuille « Faire une demande »). Au retour, le
   /// BLoC relit la conversation : si la demande a été créée, le fil passe en
   /// direct et le modèle à jour (`bidId`) remplace celui de l'ouverture.
-  Future<void> _openInquiryTrip() async {
+  /// [source] : bouton « Faire une demande » touché (carte ou verrou), mesuré
+  /// par le BLoC ; `null` pour le bandeau du trajet.
+  Future<void> _openInquiryTrip({InquiryBookingSource? source}) async {
     final path = inquiryTripPathFor(_conversation);
     if (path == null) return;
     final bloc = context.read<ChatBloc>();
+    if (source != null) bloc.add(ChatInquiryBookingTapped(source));
     final override = widget.onNavigate;
     if (override != null) {
       override(path, null);
@@ -1423,7 +1430,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 builder: (mutedUntil) => mutedUntil != null
                     ? _MutedBanner(until: mutedUntil)
                     : inquiryLocked
-                    ? InquiryLockedBar(onBook: _openInquiryTrip)
+                    ? InquiryLockedBar(
+                        onBook: () =>
+                            _openInquiryTrip(source: InquiryBookingSource.lock),
+                      )
                     : _withInquiryQuota(
                         quota: inquiryAsker && !isReadOnly
                             ? InquiryQuotaBar(

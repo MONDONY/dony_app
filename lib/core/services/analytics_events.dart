@@ -462,6 +462,16 @@ abstract final class AnalyticsEvents {
   /// `inquiry-unsupported` (back pas encore déployé : 405, ou 404 sans code),
   /// code métier du back, ou `unknown`.
   static const inquiryOpenFailed = 'inquiry_open_failed';
+
+  /// Le demandeur vient d'envoyer son dernier message autorisé avant
+  /// réservation : le composeur se verrouille (`ChatBloc`). Propriété
+  /// `limit`. Une fois par message, jamais au refus local qui suit.
+  static const inquiryLimitReached = 'inquiry_limit_reached';
+
+  /// « Faire une demande » touché dans un fil de questions (`ChatBloc`, la
+  /// fiche du trajet s'ouvre). Propriété `source` : `card` (carte « Prêt à
+  /// réserver ? ») / `lock` (barre du plafond atteint).
+  static const inquiryBookingTapped = 'inquiry_booking_tapped';
   static const conversationCallInitiated = 'conversation_call_initiated';
   // Appels audio Yadony (Stream Video).
   static const callModeChosen = 'call_mode_chosen';

@@ -111,6 +111,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   int _inquiryLimit = ConversationModel.defaultInquiryMessageLimit;
   int _inquirySent = 0;
   String _announcementId = '';
+
+  /// Type de la conversation à l'ouverture, pour la mesure `message_sent`.
+  String _openingKind = ConversationModel.kindSenderTraveler;
   StreamSubscription<int>? _inquirySub;
   StreamSubscription<InquiryParentSnapshot>? _inquiryParentSub;
 
@@ -169,6 +172,35 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<_InquirySentChanged>(_onInquirySentChanged);
     on<_InquiryChanged>(_onInquiryChanged);
     on<ChatConversationRefreshRequested>(_onConversationRefresh);
+    on<ChatInquiryBookingTapped>(_onInquiryBookingTapped);
+  }
+
+  /// Type mesuré : INQUIRY tant que le plafond s'applique, sinon celui du
+  /// modèle relu, à défaut celui de l'ouverture.
+  String get _analyticsKind => _inquiryLimited
+      ? ConversationModel.kindInquiry
+      : (_refreshedConversation?.kind ?? _openingKind);
+
+  void _onInquiryBookingTapped(
+    ChatInquiryBookingTapped event,
+    Emitter<ChatState> emit,
+  ) => unawaited(
+    _analytics.logEvent(
+      AnalyticsEvents.inquiryBookingTapped,
+      properties: {'source': event.source.name},
+    ),
+  );
+
+  /// Envoi compté réussi : le dernier message autorisé verrouille le
+  /// composeur, mesuré une fois ici (le refus local qui suit ne l'est pas).
+  void _afterCountedSend() {
+    if (_inquiryRemaining != 0) return;
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.inquiryLimitReached,
+        properties: {'limit': _inquiryLimit},
+      ),
+    );
   }
 
   /// Compteur affichable : demandeur connu et première valeur reçue.
@@ -570,6 +602,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ? limit
         : ConversationModel.defaultInquiryMessageLimit;
     _announcementId = event.announcementId;
+    _openingKind = event.conversationKind;
     await _messageSub?.cancel();
     await _deletedSub?.cancel();
 
@@ -688,7 +721,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ? '${event.body.substring(0, 77)}...'
         : event.body;
     await _updateLastMessage(event.conversationId, preview);
-    unawaited(_analytics.logEvent(AnalyticsEvents.messageSent));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.messageSent,
+        properties: {'kind': _analyticsKind},
+      ),
+    );
   }
 
   Future<void> _awaitInquiryReady() async {
@@ -736,6 +774,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       return false;
     }
     _inquirySent = math.max(_inquirySent, before + 1);
+    _afterCountedSend();
     if (_syncWithThread()) emit(_snapshot());
     return true;
   }
@@ -776,6 +815,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _inquirySent = fresh;
       if (fresh == attempted + 1 &&
           await _alreadyWritten(event, fresh, startedAt)) {
+        _afterCountedSend();
         if (_syncWithThread()) emit(_snapshot());
         return true;
       }
@@ -785,6 +825,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       }
       await _writeText(event, inquirySentBefore: fresh);
       _inquirySent = math.max(_inquirySent, fresh + 1);
+      _afterCountedSend();
       if (_syncWithThread()) emit(_snapshot());
       return true;
     } on InquiryLimitReachedException {

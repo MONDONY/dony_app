@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -93,6 +94,7 @@ Future<void> _pump(
 
 void main() {
   late _MockChatBloc bloc;
+  final analyticsBackend = MockAnalyticsBackend();
   final bookingButton = find.byKey(const Key('inquiry-booking-button'));
   final quotaBar = find.byKey(const Key('inquiry-quota-bar'));
   final lockedBar = find.byKey(const Key('inquiry-locked-bar'));
@@ -102,9 +104,9 @@ void main() {
     await initializeDateFormatting('fr');
     registerFallbackValue(const ChatSubscribeRequested('x'));
     if (!getIt.isRegistered<AnalyticsService>()) {
-      getIt.registerSingleton<AnalyticsService>(
-        makeEnabledAnalytics(MockAnalyticsBackend()),
-      );
+      final analytics = makeEnabledAnalytics(analyticsBackend);
+      await analytics.onConfigured();
+      getIt.registerSingleton<AnalyticsService>(analytics);
     }
     if (!getIt.isRegistered<BlockEventsService>()) {
       getIt.registerSingleton<BlockEventsService>(BlockEventsService());
@@ -119,6 +121,7 @@ void main() {
     addTearDown(() => Intl.defaultLocale = previous);
     bloc = _MockChatBloc();
     when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+    clearInteractions(analyticsBackend);
   });
 
   tearDown(() => bloc.close());
@@ -160,6 +163,52 @@ void main() {
       expect(event.inquiryLimited, isTrue);
       expect(event.inquiryMessageLimit, 10);
       expect(event.announcementId, 'ann-9');
+      expect(event.conversationKind, ConversationModel.kindInquiry);
+    });
+
+    testWidgets('ouverture mesurée avec le type de conversation (I5)', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(const ChatLoading());
+      await _pump(tester, bloc, _inquiry);
+      verify(
+        () => analyticsBackend.capture(AnalyticsEvents.conversationOpened, {
+          'context': 'conversation',
+          'kind': ConversationModel.kindInquiry,
+        }),
+      ).called(1);
+    });
+
+    testWidgets('« Faire une demande » de la carte mesuré, source card (I5)', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(ChatLoaded([_msg('m1', 'Bonjour')], inquiryRemaining: 7));
+      await _pump(tester, bloc, _inquiry, onNavigate: (_, _) {});
+      await tester.tap(bookingButton);
+      await tester.pump();
+      final events = verify(() => bloc.add(captureAny())).captured;
+      expect(
+        events.whereType<ChatInquiryBookingTapped>().single.source,
+        InquiryBookingSource.card,
+      );
+    });
+
+    testWidgets('« Faire une demande » du verrou mesuré, source lock (I5)', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        const ChatLoaded([], inquiryRemaining: 0, inquiryLimitReached: true),
+      );
+      await _pump(tester, bloc, _inquiry, onNavigate: (_, _) {});
+      await tester.tap(bookingButton);
+      await tester.pump();
+      final events = verify(() => bloc.add(captureAny())).captured;
+      expect(
+        events.whereType<ChatInquiryBookingTapped>().single.source,
+        InquiryBookingSource.lock,
+      );
     });
 
     testWidgets('0 restant : verrou à la place du composeur, sans carte', (
