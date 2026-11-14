@@ -38712,12 +38712,6 @@ abstract class AppLocalizations {
   /// **'Prêt à réserver ?'**
   String get inquiryBookingCardTitle;
 
-  /// Étiquette de l'annonce rattachée à une conversation de question.
-  ///
-  /// In fr, this message translates to:
-  /// **'Trajet concerné'**
-  String get inquiryLinkedTripLabel;
-
   /// Titre de la feuille affichée quand la vérification d'identité est requise pour poser une question.
   ///
   /// In fr, this message translates to:

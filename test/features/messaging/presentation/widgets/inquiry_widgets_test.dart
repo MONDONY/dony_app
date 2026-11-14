@@ -82,6 +82,25 @@ void main() {
       expect(find.text('1 message restant'), findsOneWidget);
     });
 
+    for (final limit in [10, 30, 100]) {
+      testWidgets('plafond $limit à 360 dp, texte x1.3 : pas de débordement', (
+        tester,
+      ) async {
+        tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await _pump(
+          tester,
+          InquiryQuotaBar(remaining: limit - 1, limit: limit),
+        );
+        expect(tester.takeException(), isNull);
+        expect(find.text('${limit - 1} messages restants'), findsOneWidget);
+        final dots =
+            find.byKey(const Key('inquiry-dot-filled')).evaluate().length +
+            find.byKey(const Key('inquiry-dot-used')).evaluate().length;
+        expect(dots, lessThanOrEqualTo(10));
+      });
+    }
+
     testWidgets('anglais à 360 dp : pas d\'exception', (tester) async {
       await _pump(
         tester,

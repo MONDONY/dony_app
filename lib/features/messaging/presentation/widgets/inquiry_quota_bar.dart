@@ -10,6 +10,10 @@ class InquiryQuotaBar extends StatelessWidget {
   /// Seuil à partir duquel la barre prévient (terracotta).
   static const int lowThreshold = 3;
 
+  /// Pastilles affichées au plus : le plafond vient du back et une rangée
+  /// plus longue déborde à 360 dp. Au-delà, la proportion est conservée.
+  static const int maxDots = 10;
+
   final int remaining;
   final int limit;
 
@@ -27,7 +31,11 @@ class InquiryQuotaBar extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final filledColor = _low ? cs.secondary : cs.primary;
     final textColor = _low ? cs.onSecondaryContainer : cs.onSurfaceVariant;
-    final filled = remaining.clamp(0, limit);
+    final dots = limit < 1 ? 1 : (limit < maxDots ? limit : maxDots);
+    final r = remaining.clamp(0, limit);
+    final filled = limit <= dots
+        ? r
+        : (r == 0 ? 0 : (r * dots / limit).ceil().clamp(1, dots));
     return Container(
       key: const Key('inquiry-quota-bar'),
       width: double.infinity,
@@ -45,7 +53,7 @@ class InquiryQuotaBar extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                for (var i = 0; i < limit; i++)
+                for (var i = 0; i < dots; i++)
                   Padding(
                     padding: EdgeInsets.only(left: i == 0 ? 0 : 3),
                     child: Container(

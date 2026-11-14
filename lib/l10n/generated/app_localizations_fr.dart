@@ -24207,9 +24207,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get inquiryBookingCardTitle => 'Prêt à réserver ?';
 
   @override
-  String get inquiryLinkedTripLabel => 'Trajet concerné';
-
-  @override
   String get inquiryKycTitle => 'Vérifiez votre identité';
 
   @override

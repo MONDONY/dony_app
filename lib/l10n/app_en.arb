@@ -11911,10 +11911,6 @@
   "@inquiryBookingCardTitle": {
       "description": "Title of the booking card in a question conversation."
   },
-  "inquiryLinkedTripLabel": "Related trip",
-  "@inquiryLinkedTripLabel": {
-      "description": "Label of the announcement linked to a question conversation."
-  },
   "inquiryKycTitle": "Verify your identity",
   "@inquiryKycTitle": {
       "description": "Title of the sheet shown when identity verification is required to ask a question."

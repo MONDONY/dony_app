@@ -263,6 +263,13 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  /// Barre de quota au-dessus du composeur, sans la repousser quand il est
+  /// remplacé (sourdine admin, verrou).
+  Widget _withInquiryQuota({Widget? quota, required Widget compose}) {
+    if (quota == null) return compose;
+    return Column(mainAxisSize: MainAxisSize.min, children: [quota, compose]);
+  }
+
   Widget _inquiryBookingCard(ConversationModel c) {
     final date = c.tripDate;
     return InquiryBookingCard(
@@ -1129,9 +1136,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   conversation: conversation,
                   cs: cs,
                   tt: tt,
-                  disabled: isReadOnly,
+                  disabled:
+                      isReadOnly ||
+                      (conversation.isInquiry &&
+                          inquiryTripPathFor(conversation) == null),
                   // Le destinataire n'a pas accès au détail du bid : son
                   // bandeau mène à l'écran du colis qu'il va recevoir.
+                  // Question sans annonce : bandeau désactivé (`disabled`).
                   onTap: conversation.isInquiry
                       ? _openInquiryTrip
                       : () => _navigate(trackingPathFor(conversation), null),
@@ -1385,42 +1396,46 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
 
-              if (inquiryAsker && !inquiryLocked && !isReadOnly)
-                InquiryQuotaBar(
-                  remaining: inquiryRemaining,
-                  limit:
-                      conversation.inquiryMessageLimit ??
-                      kInquiryDefaultMessageLimit,
-                ),
               _MessagingMuteGate(
                 builder: (mutedUntil) => mutedUntil != null
                     ? _MutedBanner(until: mutedUntil)
                     : inquiryLocked
                     ? InquiryLockedBar(onBook: _openInquiryTrip)
-                    : _ComposeArea(
-                        replyingTo: state is ChatLoaded
-                            ? state.replyingTo
+                    : _withInquiryQuota(
+                        quota: inquiryAsker && !isReadOnly
+                            ? InquiryQuotaBar(
+                                remaining: inquiryRemaining,
+                                limit:
+                                    conversation.inquiryMessageLimit ??
+                                    kInquiryDefaultMessageLimit,
+                              )
                             : null,
-                        replyAuthorIsMe: state is ChatLoaded
-                            ? state.replyingTo?.senderId == _myUid
-                            : false,
-                        otherName: displayName,
-                        onCancelReply: () => context.read<ChatBloc>().add(
-                          const ChatReplyCancelled(),
-                        ),
-                        input: _InputBar(
-                          controller: _controller,
-                          focusNode: _inputFocus,
-                          showTopBorder:
-                              state is! ChatLoaded || state.replyingTo == null,
-                          isSending: _isSending,
-                          disabled: isReadOnly,
-                          onSendText: _sendText,
-                          attachState: attachState,
-                          onPlus: () => unawaited(_onPlusTapped()),
-                          onCamera: () =>
-                              unawaited(_sendPhotoFrom(ImageSource.camera)),
-                          onAttachLocked: _onAttachLocked,
+                        compose: _ComposeArea(
+                          replyingTo: state is ChatLoaded
+                              ? state.replyingTo
+                              : null,
+                          replyAuthorIsMe: state is ChatLoaded
+                              ? state.replyingTo?.senderId == _myUid
+                              : false,
+                          otherName: displayName,
+                          onCancelReply: () => context.read<ChatBloc>().add(
+                            const ChatReplyCancelled(),
+                          ),
+                          input: _InputBar(
+                            controller: _controller,
+                            focusNode: _inputFocus,
+                            showTopBorder:
+                                state is! ChatLoaded ||
+                                state.replyingTo == null,
+                            isSending: _isSending,
+                            disabled: isReadOnly,
+                            onSendText: _sendText,
+                            attachState: attachState,
+                            onPlus: () => unawaited(_onPlusTapped()),
+                            onCamera: () =>
+                                unawaited(_sendPhotoFrom(ImageSource.camera)),
+                            onAttachLocked: _onAttachLocked,
+                          ),
                         ),
                       ),
               ),
@@ -1695,9 +1710,7 @@ class _TripBanner extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          conversation.isInquiry
-                              ? context.l10n.inquiryLinkedTripLabel
-                              : conversation.viewerIsRecipient
+                          conversation.viewerIsRecipient
                               ? context.l10n.chatLinkedParcelLabel
                               : context.l10n.chatLinkedTripLabel,
                           style: tt.labelSmall?.copyWith(

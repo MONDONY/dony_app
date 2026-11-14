@@ -24033,9 +24033,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inquiryBookingCardTitle => 'Ready to book?';
 
   @override
-  String get inquiryLinkedTripLabel => 'Related trip';
-
-  @override
   String get inquiryKycTitle => 'Verify your identity';
 
   @override

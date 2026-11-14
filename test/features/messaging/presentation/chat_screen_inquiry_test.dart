@@ -3,6 +3,11 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
@@ -20,6 +25,9 @@ import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/mock_analytics_backend.dart';
+
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
 class _MockChatBloc extends MockBloc<ChatEvent, ChatState>
     implements ChatBloc {}
@@ -58,6 +66,7 @@ Future<void> _pump(
   ConversationModel conversation, {
   void Function(String, Object?)? onNavigate,
   Locale locale = AppL10n.fr,
+  AuthBloc? auth,
 }) async {
   tester.view.physicalSize = const Size(360, 800);
   tester.view.devicePixelRatio = 1;
@@ -68,8 +77,11 @@ Future<void> _pump(
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: BlocProvider<ChatBloc>.value(
-        value: bloc,
+      home: MultiBlocProvider(
+        providers: [
+          if (auth != null) BlocProvider<AuthBloc>.value(value: auth),
+          BlocProvider<ChatBloc>.value(value: bloc),
+        ],
         child: ChatScreen(conversation: conversation, onNavigate: onNavigate),
       ),
     ),
@@ -131,7 +143,7 @@ void main() {
       expect(find.text('4 messages restants'), findsOneWidget);
       expect(bookingButton, findsOneWidget);
       expect(find.text('Prêt à réserver ?'), findsOneWidget);
-      expect(find.text('Trajet concerné'), findsOneWidget);
+      expect(find.text('Trajet lié'), findsOneWidget);
       expect(find.byKey(const Key('chat-trip-banner')), findsOneWidget);
       expect(composer, findsOneWidget);
       expect(find.byKey(const Key('chat-attach-button')), findsNothing);
@@ -192,7 +204,6 @@ void main() {
       await _pump(tester, bloc, _ordinary);
 
       expectNoInquiryUi();
-      expect(find.text('Trajet concerné'), findsNothing);
     });
 
     testWidgets('« Faire une demande » ouvre /traveler/<annonce>', (
@@ -280,8 +291,79 @@ void main() {
       ).thenReturn(ChatLoaded([_msg('m1', 'Hello')], inquiryRemaining: 2));
       await _pump(tester, bloc, _inquiry, locale: AppL10n.en);
       expect(find.text('Make a request'), findsOneWidget);
-      expect(find.text('Related trip'), findsOneWidget);
+      expect(find.text('Linked trip'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('ChatScreen, cas limites de la question', () {
+    testWidgets(
+      'demandeur sans compteur connu : aucune carte, barre ni verrou',
+      (tester) async {
+        when(() => bloc.state).thenReturn(ChatLoaded([_msg('m1', 'Bonjour')]));
+        await _pump(tester, bloc, _inquiry);
+        expectNoInquiryUi();
+        expect(composer, findsOneWidget);
+      },
+    );
+
+    testWidgets('fil en sourdine admin : barre de quota masquée', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(ChatLoaded([_msg('m1', 'Bonjour')], inquiryRemaining: 4));
+      final auth = _MockAuthBloc();
+      registerFallbackValue(const AuthProfileRefreshRequested());
+      when(() => auth.isClosed).thenReturn(false);
+      when(() => auth.state).thenReturn(
+        AuthAuthenticated(
+          UserModel(
+            id: 'me',
+            roles: const ['SENDER'],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+            messagingMutedUntil: DateTime.now().add(const Duration(days: 2)),
+          ),
+        ),
+      );
+      await _pump(tester, bloc, _inquiry, auth: auth);
+      expect(find.text('Messagerie suspendue'), findsOneWidget);
+      expect(quotaBar, findsNothing);
+      expect(composer, findsNothing);
+    });
+
+    testWidgets('sans annonce : bandeau non cliquable', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(ChatLoaded([_msg('m1', 'Bonjour')], inquiryRemaining: 4));
+      await _pump(
+        tester,
+        bloc,
+        const ConversationModel(
+          id: 'conv-q',
+          firestoreConversationId: 'conv_q',
+          otherParticipant: ParticipantModel(id: 'uid-1', name: 'Moussa'),
+          kind: ConversationModel.kindInquiry,
+          tripOrigin: 'Paris',
+          tripDestination: 'Dakar',
+        ),
+      );
+      final inkWell = tester.widget<InkWell>(
+        find.byKey(const Key('chat-trip-banner')),
+      );
+      expect(inkWell.onTap, isNull);
+    });
+
+    testWidgets('bouton de réservation avec icône d\'envoi', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(ChatLoaded([_msg('m1', 'Bonjour')], inquiryRemaining: 4));
+      await _pump(tester, bloc, _inquiry);
+      expect(
+        find.descendant(of: bookingButton, matching: find.byType(DonyIcon)),
+        findsOneWidget,
+      );
     });
   });
 

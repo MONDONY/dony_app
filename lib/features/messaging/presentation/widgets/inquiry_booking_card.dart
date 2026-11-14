@@ -79,6 +79,7 @@ class InquiryBookingCard extends StatelessWidget {
           DonyButton(
             key: const Key('inquiry-booking-button'),
             label: l.listingMakeRequestButton,
+            iconAsset: 'send',
             onPressed: onBook,
           ),
         ],
