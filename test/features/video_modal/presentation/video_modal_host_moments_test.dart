@@ -101,6 +101,7 @@ void main() {
       repo,
       makeEnabledAnalytics(MockAnalyticsBackend()),
       hasRealSession: () => realSession,
+      clock: () => now,
     );
     addTearDown(bloc.close);
     router = GoRouter(
@@ -173,6 +174,19 @@ void main() {
       extra: {'priority': priority, ...extra},
     ),
   )!;
+
+  VideoModalCampaign infoMoment(
+    VideoModalTrigger trigger, {
+    String id = 'info',
+    Map<String, Object?> extra = const {},
+  }) => VideoModalCampaign.tryParse(
+    infoJson(id: id, triggers: [trigger.wire], extra: extra),
+  )!;
+
+  final noTrip = VideoModalMoment.search(
+    kind: VideoModalSearchKind.trip,
+    resultCount: 0,
+  );
 
   List<String> shownIds() => verify(
     () => repo.record(
@@ -698,7 +712,7 @@ void main() {
     expect(find.text('Bienvenue sur Yadony'), findsOneWidget);
   });
 
-  testWidgets('un modal d\'écran s\'ouvre avant : le moment est abandonné', (
+  testWidgets('un modal d\'écran déjà affiché ne bloque pas un moment', (
     tester,
   ) async {
     usePhone360(tester);
@@ -737,8 +751,79 @@ void main() {
     await settleAfterOpenDelay(tester);
     expect(shownIds(), ['ouverture']);
     await closeModal(tester);
+    await settleAfterOpenDelay(tester);
     await tester.pump(const Duration(seconds: 5));
-    expect(find.text('Bienvenue sur Yadony'), findsNothing);
+    await settleTransitions(tester);
+    expect(shownIds(), ['moment']);
+    expect(bloc.state.usedSlots, {
+      VideoModalSlot.videoAmbient,
+      VideoModalSlot.videoMoment,
+    });
+  });
+
+  testWidgets('deux moments non « à chaque fois » : un seul par lancement', (
+    tester,
+  ) async {
+    usePhone360(tester);
+    loadResult = [
+      forMoment(VideoModalTrigger.kycVerified, id: 'a'),
+      forMoment(VideoModalTrigger.paymentSucceeded, id: 'b'),
+    ];
+    await pumpHost(tester);
+    emit(VideoModalMoment.action(VideoModalTrigger.kycVerified));
+    await settleAfterOpenDelay(tester);
+    await closeModal(tester);
+    emit(VideoModalMoment.action(VideoModalTrigger.paymentSucceeded));
+    await settleAfterOpenDelay(tester);
+    expect(shownIds(), ['a']);
+    expect(bloc.state.usedSlots, {VideoModalSlot.videoMoment});
+  });
+
+  testWidgets('« à chaque fois » : le modal revient à chaque occurrence', (
+    tester,
+  ) async {
+    usePhone360(tester);
+    loadResult = [
+      forMoment(
+        VideoModalTrigger.searchNoTripResults,
+        id: 'chaque',
+        extra: {'frequency': 'EVERY_TIME', 'stopAfterAnswer': false},
+      ),
+    ];
+    await pumpHost(tester);
+    final moment = VideoModalMoment.search(
+      kind: VideoModalSearchKind.trip,
+      resultCount: 0,
+    );
+    for (var i = 0; i < 3; i++) {
+      emit(moment);
+      await settleAfterOpenDelay(tester);
+      expect(find.text('Bienvenue sur Yadony'), findsOneWidget);
+      await closeModal(tester);
+    }
+    expect(shownIds(), ['chaque', 'chaque', 'chaque']);
+    expect(bloc.state.usedSlots, isEmpty);
+  });
+
+  testWidgets('« à chaque fois » passe après un autre moment de la session', (
+    tester,
+  ) async {
+    usePhone360(tester);
+    loadResult = [
+      forMoment(VideoModalTrigger.kycVerified, id: 'a'),
+      forMoment(
+        VideoModalTrigger.paymentSucceeded,
+        id: 'chaque',
+        extra: {'frequency': 'EVERY_TIME'},
+      ),
+    ];
+    await pumpHost(tester);
+    emit(VideoModalMoment.action(VideoModalTrigger.kycVerified));
+    await settleAfterOpenDelay(tester);
+    await closeModal(tester);
+    emit(VideoModalMoment.action(VideoModalTrigger.paymentSucceeded));
+    await settleAfterOpenDelay(tester);
+    expect(shownIds(), ['a', 'chaque']);
   });
 
   testWidgets('connexion pendant la session : campagnes rechargées', (
@@ -753,5 +838,162 @@ void main() {
     await settleAfterOpenDelay(tester);
     verify(() => repo.loadEligible(lang: 'fr', realSession: false)).called(1);
     expect(find.text('Bienvenue sur Yadony'), findsOneWidget);
+  });
+
+  /// Bug d'origine : le modal « Bienvenue » (onglet) ne bloque plus le modal
+  /// INFO « Pas de trajet » (moment).
+  testWidgets('vidéo d\'onglet affichée, puis moment INFO : il s\'ouvre', (
+    tester,
+  ) async {
+    usePhone360(tester);
+    loadResult = [
+      campaign(id: 'bienvenue', triggers: {VideoModalTrigger.searchTab}),
+      infoMoment(VideoModalTrigger.searchNoTripResults),
+    ];
+    await pumpHost(tester);
+    await settleAfterOpenDelay(tester);
+    expect(find.text('Bienvenue sur Yadony'), findsOneWidget);
+    await closeModal(tester);
+    emit(noTrip);
+    await settleAfterOpenDelay(tester);
+    expect(find.text('Mon argent'), findsOneWidget);
+    expect(shownIds(), ['bienvenue', 'info']);
+  });
+
+  /// Vidéo moment et INFO moment sont deux cases : les deux s'ouvrent.
+  testWidgets('un moment vidéo et un moment INFO dans la même session', (
+    tester,
+  ) async {
+    usePhone360(tester);
+    loadResult = [
+      forMoment(VideoModalTrigger.kycVerified, id: 'video'),
+      infoMoment(VideoModalTrigger.paymentSucceeded),
+    ];
+    await pumpHost(tester);
+    emit(VideoModalMoment.action(VideoModalTrigger.kycVerified));
+    await settleAfterOpenDelay(tester);
+    await closeModal(tester);
+    emit(VideoModalMoment.action(VideoModalTrigger.paymentSucceeded));
+    await settleAfterOpenDelay(tester);
+    expect(shownIds(), ['video', 'info']);
+    expect(bloc.state.usedSlots, {
+      VideoModalSlot.videoMoment,
+      VideoModalSlot.infoMoment,
+    });
+  });
+
+  /// Deux INFO moment non « à chaque fois » : un seul par lancement.
+  testWidgets('deux moments INFO : un seul par lancement', (tester) async {
+    usePhone360(tester);
+    loadResult = [
+      infoMoment(VideoModalTrigger.kycVerified, id: 'a'),
+      infoMoment(VideoModalTrigger.paymentSucceeded, id: 'b'),
+    ];
+    await pumpHost(tester);
+    emit(VideoModalMoment.action(VideoModalTrigger.kycVerified));
+    await settleAfterOpenDelay(tester);
+    await closeModal(tester);
+    emit(VideoModalMoment.action(VideoModalTrigger.paymentSucceeded));
+    await settleAfterOpenDelay(tester);
+    expect(shownIds(), ['a']);
+  });
+
+  /// Jamais deux modals ensemble : le second moment passe après la fermeture.
+  testWidgets('deux moments prêts : le second attend la fermeture du premier', (
+    tester,
+  ) async {
+    usePhone360(tester);
+    loadResult = [
+      forMoment(VideoModalTrigger.kycVerified, id: 'video'),
+      infoMoment(VideoModalTrigger.paymentSucceeded),
+    ];
+    await pumpHost(tester);
+    emit(VideoModalMoment.action(VideoModalTrigger.kycVerified));
+    emit(VideoModalMoment.action(VideoModalTrigger.paymentSucceeded));
+    await settleAfterOpenDelay(tester);
+    expect(find.text('Bienvenue sur Yadony'), findsOneWidget);
+    expect(find.text('Mon argent'), findsNothing);
+    expect(shownIds(), ['video']);
+    await closeModal(tester);
+    await settleAfterOpenDelay(tester);
+    expect(find.text('Mon argent'), findsOneWidget);
+    expect(shownIds(), ['info']);
+  });
+
+  /// Échec réseau au chargement (liste vide) : rechargée au prochain moment.
+  testWidgets('chargement vide : rechargé au prochain moment', (tester) async {
+    usePhone360(tester);
+    loadResult = [];
+    await pumpHost(tester);
+    loadResult = [infoMoment(VideoModalTrigger.searchNoTripResults)];
+    now = now.add(const Duration(minutes: 2));
+    emit(noTrip);
+    await settleAfterOpenDelay(tester);
+    expect(find.text('Mon argent'), findsOneWidget);
+    verify(
+      () => repo.loadEligible(
+        lang: any(named: 'lang'),
+        realSession: any(named: 'realSession'),
+      ),
+    ).called(2);
+  });
+
+  /// Garde-fou : une liste vide n'est pas rechargée avant une minute.
+  testWidgets('liste vide : pas de rechargement avant une minute', (
+    tester,
+  ) async {
+    usePhone360(tester);
+    loadResult = [];
+    await pumpHost(tester);
+    emit(noTrip);
+    await settleAfterOpenDelay(tester);
+    verify(
+      () => repo.loadEligible(
+        lang: any(named: 'lang'),
+        realSession: any(named: 'realSession'),
+      ),
+    ).called(1);
+  });
+
+  /// Liste de plus de 15 minutes : rechargée, une campagne créée entre-temps
+  /// à l'admin apparaît sans relancer l'app.
+  testWidgets('liste de plus de 15 minutes : rechargée au moment', (
+    tester,
+  ) async {
+    usePhone360(tester);
+    loadResult = [forMoment(VideoModalTrigger.kycVerified, id: 'ancienne')];
+    await pumpHost(tester);
+    loadResult = [
+      forMoment(VideoModalTrigger.kycVerified, id: 'ancienne'),
+      infoMoment(VideoModalTrigger.searchNoTripResults),
+    ];
+    now = now.add(const Duration(minutes: 16));
+    emit(noTrip);
+    await settleAfterOpenDelay(tester);
+    expect(find.text('Mon argent'), findsOneWidget);
+    expect(shownIds(), ['info']);
+  });
+
+  /// Retour au premier plan : rechargement d'une liste périmée.
+  testWidgets('retour au premier plan : liste périmée rechargée', (
+    tester,
+  ) async {
+    usePhone360(tester);
+    loadResult = [forMoment(VideoModalTrigger.kycVerified)];
+    await pumpHost(tester);
+    now = now.add(const Duration(minutes: 20));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await settleTransitions(tester);
+    verify(
+      () => repo.loadEligible(
+        lang: any(named: 'lang'),
+        realSession: any(named: 'realSession'),
+      ),
+    ).called(2);
   });
 }

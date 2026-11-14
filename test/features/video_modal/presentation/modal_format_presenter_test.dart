@@ -170,7 +170,7 @@ void main() {
     expect(find.text('Mon argent'), findsOneWidget);
     expect(find.byKey(const Key('video-modal-banner')), findsNothing);
     expect(events, ['SHOWN']);
-    expect(bloc.state.shownThisSession, isTrue);
+    expect(bloc.state.usedSlots, isNotEmpty);
   });
 
   for (final layout in VideoModalLayout.values) {
@@ -185,7 +185,7 @@ void main() {
       expect(find.text('Mon argent'), findsNothing);
       expect(find.byType(Dialog), findsNothing);
       expect(events, isEmpty);
-      expect(bloc.state.shownThisSession, isFalse);
+      expect(bloc.state.usedSlots, isEmpty);
       // L'appelant poursuit : le formulaire n'est pas bloqué.
       expect(proceed, isTrue);
     });

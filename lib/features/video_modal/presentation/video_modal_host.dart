@@ -22,6 +22,12 @@ const kVideoModalOpenDelay = Duration(seconds: 2);
 const kVideoModalMomentRetry = Duration(seconds: 1);
 const kVideoModalMomentMaxAge = Duration(minutes: 2);
 
+/// Les campagnes se rechargent au retour au premier plan ou au prochain
+/// moment quand le dernier chargement date de plus de [kVideoModalRefresh],
+/// ou de plus de [kVideoModalEmptyRefresh] s'il n'a rien rendu (échec réseau).
+const kVideoModalRefresh = Duration(minutes: 15);
+const kVideoModalEmptyRefresh = Duration(minutes: 1);
+
 /// Ouvre les modals vidéo du shell : `APP_OPEN` au premier écran, puis le
 /// déclencheur de chaque onglet affiché (`SEARCH_TAB` … `PROFILE_TAB`).
 ///
@@ -30,8 +36,8 @@ const kVideoModalMomentMaxAge = Duration(minutes: 2);
 /// pendant qu'une feuille, une boîte de dialogue ou une demande de
 /// permission du système est ouverte attend que l'écran redevienne le premier
 /// plan. Le modal s'ouvre [kVideoModalOpenDelay] après l'arrivée sur l'écran,
-/// une fois revérifié que l'écran est toujours le premier plan. Jamais plus
-/// d'un modal par session.
+/// une fois revérifié que l'écran est toujours le premier plan. Jamais deux
+/// modals en même temps, un seul par case (type × où/moment) et par lancement.
 ///
 /// Écoute aussi les moments d'action (`VideoModalMoments`) : livraison,
 /// paiement, publication, recherche, favori, formulaire quitté… Mêmes règles
@@ -120,6 +126,7 @@ class _VideoModalHostState extends State<VideoModalHost> {
     });
     _lifecycle = AppLifecycleListener(
       onResume: () {
+        _refreshIfStale();
         _schedule();
         _scheduleMoments();
       },
@@ -163,6 +170,7 @@ class _VideoModalHostState extends State<VideoModalHost> {
     _delayTimer?.cancel();
     _momentTimer?.cancel();
     _momentRetryTimer?.cancel();
+    _ambientRetryTimer?.cancel();
     unawaited(_momentSub?.cancel());
     unawaited(_subscription?.cancel());
     _lifecycle?.dispose();
@@ -172,6 +180,40 @@ class _VideoModalHostState extends State<VideoModalHost> {
   void _load() => _bloc?.add(
     VideoModalLoadRequested(lang: _lang, realSession: _realSession),
   );
+
+  /// Campagnes chargées depuis trop longtemps (15 min) ou liste vide depuis
+  /// plus d'une minute (échec réseau probable) : rechargement forcé. Le délai
+  /// court de la liste vide sert de garde-fou anti-boucle. Rend `true` si un
+  /// rechargement est parti.
+  bool _refreshIfStale() {
+    final bloc = _bloc;
+    if (bloc == null || bloc.isClosed) return false;
+    final s = bloc.state;
+    final at = s.loadedAt;
+    if (s.status != VideoModalStatus.ready || at == null) return false;
+    final limit = s.campaigns.isEmpty
+        ? kVideoModalEmptyRefresh
+        : kVideoModalRefresh;
+    if (_now().difference(at) <= limit) return false;
+    bloc.add(
+      VideoModalLoadRequested(
+        lang: _lang,
+        realSession: _realSession,
+        force: true,
+      ),
+    );
+    return true;
+  }
+
+  Timer? _ambientRetryTimer;
+
+  void _retryAmbient() {
+    if (_ambientRetryTimer != null) return;
+    _ambientRetryTimer = Timer(widget.momentRetry, () {
+      _ambientRetryTimer = null;
+      _schedule();
+    });
+  }
 
   void _arm(int tabIndex, {required bool withAppOpen}) {
     // L'écran a changé : le délai repart à zéro sur le nouvel écran.
@@ -197,10 +239,6 @@ class _VideoModalHostState extends State<VideoModalHost> {
     final bloc = _bloc;
     if (!mounted || bloc == null || bloc.isClosed || _pending.isEmpty) return;
     final state = bloc.state;
-    if (state.shownThisSession) {
-      _pending = {};
-      return;
-    }
     if (state.status != VideoModalStatus.ready) return;
     // Campagnes chargées pour un autre type de session (connexion pendant la
     // session) ou une autre langue : on recharge et on attend.
@@ -212,6 +250,11 @@ class _VideoModalHostState extends State<VideoModalHost> {
     final lifecycle = WidgetsBinding.instance.lifecycleState;
     if (lifecycle != null && lifecycle != AppLifecycleState.resumed) return;
     if (!isVideoModalFrontmost(context)) return;
+    if (_refreshIfStale()) return;
+    if (VideoModalPresenter.isPresenting) {
+      _retryAmbient();
+      return;
+    }
     final triggers = _pending;
     _pending = {};
     if (triggers.contains(VideoModalTrigger.appOpen)) {
@@ -235,7 +278,6 @@ class _VideoModalHostState extends State<VideoModalHost> {
     // Autre onglet : `_arm` a déjà repris la main.
     if (widget.tabIndex != tab) return;
     final state = bloc.state;
-    if (state.shownThisSession) return;
     final lifecycle = WidgetsBinding.instance.lifecycleState;
     final sameSession =
         state.status == VideoModalStatus.ready &&
@@ -246,6 +288,11 @@ class _VideoModalHostState extends State<VideoModalHost> {
         !isVideoModalFrontmost(context)) {
       _pending = {..._pending, ...triggers};
       _schedule();
+      return;
+    }
+    if (VideoModalPresenter.isPresenting) {
+      _pending = {..._pending, ...triggers};
+      _retryAmbient();
       return;
     }
     final campaign = state.candidateFor(triggers);
@@ -299,10 +346,6 @@ class _VideoModalHostState extends State<VideoModalHost> {
       (s) => now.difference(s.emittedAt) > widget.momentMaxAge,
     );
     final state = bloc.state;
-    if (state.shownThisSession) {
-      _moments.clear();
-      return;
-    }
     // Campagnes pas encore prêtes : l'état `ready` relancera l'évaluation.
     if (state.status != VideoModalStatus.ready) return;
     if (state.loadedForRealSession != _realSession ||
@@ -310,6 +353,9 @@ class _VideoModalHostState extends State<VideoModalHost> {
       _load();
       return;
     }
+    // Liste périmée ou vide après un échec : on la recharge avant de juger,
+    // les moments attendent (ils sont réévalués au prochain `ready`).
+    if (_refreshIfStale()) return;
     // Aucune campagne pour ce moment (déclencheur, seuil, corridor) : rien
     // n'est à attendre.
     _moments.removeWhere((s) => state.candidateForMoment(s.moment) == null);
@@ -334,10 +380,6 @@ class _VideoModalHostState extends State<VideoModalHost> {
     final bloc = _bloc;
     if (!mounted || bloc == null || bloc.isClosed) return;
     final state = bloc.state;
-    if (state.shownThisSession) {
-      _moments.clear();
-      return;
-    }
     final sameSession =
         state.status == VideoModalStatus.ready &&
         state.loadedForRealSession == _realSession &&
@@ -370,7 +412,9 @@ class _VideoModalHostState extends State<VideoModalHost> {
     );
     // Compteur de consultations remis à zéro une fois le modal affiché.
     final tripId = moment.tripId;
-    if (tripId != null && !bloc.isClosed && bloc.state.shownThisSession) {
+    if (tripId != null &&
+        !bloc.isClosed &&
+        bloc.state.hasShown(pick.campaign, moment: true)) {
       unawaited(service.resetTripViews(tripId));
     }
   }
@@ -391,6 +435,8 @@ class _VideoModalHostState extends State<VideoModalHost> {
       return null;
     }
     if (isVideoModalUserTyping()) return null;
+    // Jamais deux modals en même temps : le moment reste en file, réessayé.
+    if (VideoModalPresenter.isPresenting) return null;
     ({
       VideoModalMomentSignal signal,
       BuildContext context,

@@ -76,8 +76,10 @@ class VideoModalRepository {
     if (realSession) return capped.toList(growable: false);
     final history = await _readHistory();
     final now = _clock();
-    if (history.dailyCapReached(now)) return const [];
+    // Plafond journalier atteint : seules les campagnes « à chaque fois » restent.
+    final dailyCapped = history.dailyCapReached(now);
     return capped
+        .where((c) => !dailyCapped || c.isEveryTime)
         .where((c) => history.isEligible(c, now: now))
         .toList(growable: false);
   }

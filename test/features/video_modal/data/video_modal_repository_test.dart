@@ -30,14 +30,14 @@ void main() {
 
   group('loadEligible', () {
     test(
-      'envoie la langue, caps=layout,targeting,moments et la plateforme, sans report Sentry ni relance',
+      'envoie la langue, caps=layout,targeting,moments,everytime et la plateforme, sans report Sentry ni relance',
       () async {
         api.on('GET', '/video-modals/eligible', [campaignJson()]);
         final list = await repo.loadEligible(lang: 'en', realSession: true);
         expect(list.single.id, 'c1');
         expect(api.last.queryParameters, {
           'lang': 'en',
-          'caps': 'layout,targeting,moments',
+          'caps': 'layout,targeting,moments,everytime',
           'platform': 'android',
         });
         expect(api.last.extra[ApiClient.skipErrorReportKey], isTrue);

@@ -230,6 +230,6 @@ void main() {
     await future;
     expect(done, isTrue);
     expect(find.byKey(const Key('video-modal-primary')), findsNothing);
-    expect(bloc.state.shownThisSession, isFalse);
+    expect(bloc.state.usedSlots, isEmpty);
   });
 }

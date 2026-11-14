@@ -41,7 +41,7 @@ void main() {
       await make().loadEligible(lang: 'fr', realSession: true);
       expect(api.last.queryParameters, {
         'lang': 'fr',
-        'caps': 'layout,targeting,moments',
+        'caps': 'layout,targeting,moments,everytime',
         'appVersion': '1.0.6',
         'platform': 'ios',
       });
@@ -53,7 +53,7 @@ void main() {
       await make().loadEligible(lang: 'fr', realSession: true);
       expect(api.last.queryParameters, {
         'lang': 'fr',
-        'caps': 'layout,targeting,moments',
+        'caps': 'layout,targeting,moments,everytime',
         'platform': 'ios',
       });
     });
@@ -134,6 +134,18 @@ void main() {
   });
 
   group('compte : fréquences sans plafond local', () {
+    test('EVERY_TIME passe même avec displays élevé', () async {
+      api.on('GET', '/video-modals/eligible', [
+        campaignJson(
+          id: 'chaque',
+          displays: 40,
+          extra: {'frequency': 'EVERY_TIME'},
+        ),
+      ]);
+      final list = await make().loadEligible(lang: 'fr', realSession: true);
+      expect(list.map((c) => c.id), ['chaque']);
+    });
+
     test(
       'EVERY_OPEN et EVERY_N_DAYS passent même avec displays élevé',
       () async {
@@ -184,6 +196,32 @@ void main() {
         hasLength(2),
       );
     });
+
+    test(
+      'EVERY_TIME : passe malgré le plafond journalier du visiteur',
+      () async {
+        final repo = make();
+        api.on('GET', '/video-modals/eligible', [
+          campaignJson(id: 'a', extra: every),
+          campaignJson(
+            id: 'chaque',
+            extra: {'frequency': 'EVERY_TIME', 'stopAfterAnswer': false},
+          ),
+        ]);
+        await repo.record(
+          campaign(id: 'a'),
+          VideoModalEventType.shown,
+          realSession: false,
+        );
+        expect(
+          (await repo.loadEligible(
+            lang: 'fr',
+            realSession: false,
+          )).map((c) => c.id),
+          ['chaque'],
+        );
+      },
+    );
 
     test('le plafond journalier ne touche pas un compte', () async {
       final repo = make();

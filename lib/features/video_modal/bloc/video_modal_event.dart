@@ -15,13 +15,18 @@ final class VideoModalLoadRequested extends VideoModalEvent {
   const VideoModalLoadRequested({
     required this.lang,
     required this.realSession,
+    this.force = false,
   });
 
   final String lang;
   final bool realSession;
 
+  /// Recharge même si les campagnes sont déjà chargées (liste périmée ou vide
+  /// après un échec), sans repasser par l'état de chargement.
+  final bool force;
+
   @override
-  List<Object?> get props => [lang, realSession];
+  List<Object?> get props => [lang, realSession, force];
 }
 
 /// Le déclencheur `APP_OPEN` a été évalué : il ne vaut qu'une fois.

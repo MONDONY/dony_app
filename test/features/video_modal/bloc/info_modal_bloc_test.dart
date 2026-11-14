@@ -91,7 +91,7 @@ void main() {
   }
 
   blocTest<VideoModalBloc, VideoModalState>(
-    'un INFO et une vidéo passent dans la même file : un seul modal par session',
+    'un INFO et une vidéo ont chacun leur case : un seul modal par case',
     build: build,
     act: (b) async {
       b.add(const VideoModalLoadRequested(lang: 'fr', realSession: true));
@@ -100,8 +100,18 @@ void main() {
     verify: (b) {
       final first = b.state.candidateFor({VideoModalTrigger.searchTab});
       expect(first!.isInfo, isTrue);
-      final afterShown = b.state.copyWith(shownThisSession: true);
-      expect(afterShown.candidateFor({VideoModalTrigger.searchTab}), isNull);
+      // L'information prend sa case : la vidéo garde la sienne.
+      final afterInfo = b.state.copyWith(
+        usedSlots: {VideoModalSlot.infoAmbient},
+      );
+      expect(
+        afterInfo.candidateFor({VideoModalTrigger.searchTab})!.isInfo,
+        isFalse,
+      );
+      final afterBoth = b.state.copyWith(
+        usedSlots: {VideoModalSlot.infoAmbient, VideoModalSlot.videoAmbient},
+      );
+      expect(afterBoth.candidateFor({VideoModalTrigger.searchTab}), isNull);
     },
   );
 }
