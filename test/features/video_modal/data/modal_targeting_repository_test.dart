@@ -171,73 +171,29 @@ void main() {
   group('visiteur : règles locales', () {
     final every = {'frequency': 'EVERY_OPEN', 'stopAfterAnswer': false};
 
-    test('plafond d\'un modal par jour, tous types confondus', () async {
-      final repo = make();
-      api.on('GET', '/video-modals/eligible', [
-        campaignJson(id: 'a', extra: every),
-        infoJson(id: 'b', extra: every),
-      ]);
-      expect(
-        await repo.loadEligible(lang: 'fr', realSession: false),
-        hasLength(2),
-      );
-      await repo.record(
-        infoCampaign(id: 'b'),
-        VideoModalEventType.shown,
-        realSession: false,
-      );
-      // Même jour : plus rien, ni la campagne affichée ni l'autre.
-      now = DateTime(2026, 11, 10, 23);
-      expect(await repo.loadEligible(lang: 'fr', realSession: false), isEmpty);
-      // Le lendemain : de nouveau un modal.
-      now = DateTime(2026, 11, 11, 8);
-      expect(
-        await repo.loadEligible(lang: 'fr', realSession: false),
-        hasLength(2),
-      );
-    });
-
     test(
-      'EVERY_TIME : passe malgré le plafond journalier du visiteur',
+      'deux modals différents le même jour sont tous deux éligibles',
       () async {
         final repo = make();
         api.on('GET', '/video-modals/eligible', [
           campaignJson(id: 'a', extra: every),
-          campaignJson(
-            id: 'chaque',
-            extra: {'frequency': 'EVERY_TIME', 'stopAfterAnswer': false},
-          ),
+          infoJson(id: 'b', extra: every),
         ]);
         await repo.record(
-          campaign(id: 'a'),
+          infoCampaign(id: 'b'),
           VideoModalEventType.shown,
           realSession: false,
         );
+        now = DateTime(2026, 11, 10, 23);
         expect(
           (await repo.loadEligible(
             lang: 'fr',
             realSession: false,
           )).map((c) => c.id),
-          ['chaque'],
+          unorderedEquals(['a', 'b']),
         );
       },
     );
-
-    test('le plafond journalier ne touche pas un compte', () async {
-      final repo = make();
-      api.on('GET', '/video-modals/eligible', [
-        campaignJson(id: 'a', extra: every),
-      ]);
-      await repo.record(
-        campaign(id: 'a'),
-        VideoModalEventType.shown,
-        realSession: false,
-      );
-      expect(
-        await repo.loadEligible(lang: 'fr', realSession: true),
-        hasLength(1),
-      );
-    });
 
     test('EVERY_N_DAYS : attend la fenêtre', () async {
       final repo = make();
@@ -341,7 +297,7 @@ void main() {
     );
 
     test(
-      'ancien historique stocké (sans jour du dernier modal) : lu',
+      'ancien historique stocké (ancien format, clé inconnue) : lu',
       () async {
         SharedPreferences.setMockInitialValues({
           VideoModalLocalDatasource.historyKey:
@@ -353,7 +309,7 @@ void main() {
       },
     );
 
-    test('historique enregistré : dernier SHOWN par version et jour', () async {
+    test('historique enregistré : dernier SHOWN par version', () async {
       final repo = make();
       await repo.record(
         campaign(),
@@ -362,7 +318,6 @@ void main() {
       );
       final h = await local.readHistory();
       expect(h.recordOf('c1', 2).lastShownAt!.isAtSameMomentAs(now), isTrue);
-      expect(h.lastModalAt!.isAtSameMomentAs(now), isTrue);
     });
   });
 
