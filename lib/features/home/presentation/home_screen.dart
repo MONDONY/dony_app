@@ -24,6 +24,7 @@ import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/data/home_matching_default_store.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/home/presentation/home_sheet_pull_refresh.dart';
 import 'package:dony/features/home/presentation/home_sheet_session.dart';
 import 'package:dony/features/home/presentation/sheet_controller_guard.dart';
 import 'package:dony/features/home/presentation/widgets/boat_search_fields.dart';
@@ -349,6 +350,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
   String? _lastSheetBucket;
   Timer? _sheetSettleTimer;
 
+  /// Liste tirée vers le bas puis relâchée : relance la recherche.
+  final _pullRefresh = HomeSheetPullRefresh();
+
   /// Vrai pendant l'ouverture automatique en liste : distingue ce cran de
   /// celui d'un geste de l'utilisateur.
   bool _autoRaising = false;
@@ -593,6 +597,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final wasHidden = _isMapHidden;
     final wasShown = _isSheetShown;
     _sheetSize = newSize;
+    _pullRefresh.onSizeChanged(
+      newSize,
+      settledOnList: _lastSheetBucket == 'full',
+    );
     _sheetSettleTimer?.cancel();
     _sheetSettleTimer = Timer(
       const Duration(milliseconds: 400),
@@ -613,6 +621,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (!mounted) return;
     final bucket = _sheetBucket;
     final from = _lastSheetBucket;
+    // Tirer pour rafraîchir : la liste revenue sur elle-même relance la
+    // recherche du mode affiché.
+    if (_pullRefresh.onSettled(
+      onList: _sheetSize >= HomeSheetPullRefresh.pulledBelow,
+      wasOnList: from == 'full',
+    )) {
+      _dispatchForMode();
+    }
     if (bucket == from) return;
     _lastSheetBucket = bucket;
     final auto = _autoRaising;

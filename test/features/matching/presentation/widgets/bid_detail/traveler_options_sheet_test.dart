@@ -18,6 +18,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -505,6 +506,55 @@ void main() {
   ) async {
     await _open(tester, _bid(token: 'abc123'));
     expect(find.text('Partager le suivi'), findsNothing);
+  });
+
+  // Recette du 14/11 : en espèces, aucun paiement ne passe par Yadony, aucun
+  // remboursement automatique n'est promis.
+  for (final english in [false, true]) {
+    final lang = english ? 'en' : 'fr';
+    testWidgets('espèces $lang 360 dp : menu sans promesse de remboursement, '
+        'dialogue d\'annulation non plus', (tester) async {
+      if (english) useEnglish();
+      final l = lookupAppLocalizations(english ? AppL10n.en : AppL10n.fr);
+      await _open(
+        tester,
+        _bid(token: null, paymentMethod: BidPaymentMethod.cash),
+        size: const Size(360, 800),
+      );
+
+      expect(
+        find.text(l.bidDetailCancelTransportAcceptedCashSubtitle),
+        findsOneWidget,
+      );
+      expect(find.text(l.bidDetailRefuseParcelCashSubtitle), findsOneWidget);
+      expect(
+        find.text(l.bidDetailCancelTransportAcceptedSubtitle),
+        findsNothing,
+      );
+      expect(find.text(l.bidDetailRefuseParcelSubtitle), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      await tester.ensureVisible(find.text(l.bidDetailCancelTransportLabel));
+      await tester.tap(find.text(l.bidDetailCancelTransportLabel));
+      await tester.pumpAndSettle();
+      expect(find.text(l.bidCancelAcceptedCashSubtitle), findsOneWidget);
+      expect(find.text(l.bidCancelAcceptedSubtitle), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('carte : le remboursement automatique reste annoncé', (
+    tester,
+  ) async {
+    await _open(tester, _bid(token: null));
+    expect(
+      find.text("L'expéditeur sera remboursé automatiquement"),
+      findsOneWidget,
+    );
+    expect(
+      find.text("Refusez-le sans pénalité, l'expéditeur est remboursé"),
+      findsOneWidget,
+    );
   });
 
   testWidgets('tap Annuler ce transport → dialog affiché', (tester) async {

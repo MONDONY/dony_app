@@ -79,4 +79,28 @@ void main() {
       findsOneWidget,
     );
   });
+
+  // Recette du 14/11 : la tuile disait « Fortement recommandé » alors qu'une
+  // photo est exigée pour envoyer la demande (bateau compris).
+  for (final english in [false, true]) {
+    testWidgets('photo obligatoire ${english ? 'en' : 'fr'} 360 dp : jamais '
+        '« recommandé »', (tester) async {
+      if (english) useEnglish();
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(wrap());
+
+      expect(
+        find.text(
+          english
+              ? 'Required, reassures the traveler'
+              : 'Obligatoire, rassure le voyageur',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('ecommand'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

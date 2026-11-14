@@ -12874,6 +12874,24 @@ abstract class AppLocalizations {
   /// **'Demande annulée. L\'expéditeur sera remboursé.'**
   String get bidDetailCancelledSnackbar;
 
+  /// Snackbar de l'expéditeur qui vient d'annuler un colis payé par carte ou mobile money (bid_labels.dart, bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande annulée. Vous serez remboursé.'**
+  String get bidDetailCancelledSenderSnackbar;
+
+  /// Snackbar de l'expéditeur qui vient d'annuler un colis payé en espèces : aucun paiement n'est passé par Yadony (bid_labels.dart, bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande annulée. Paiement en espèces : aucune somme à rembourser par Yadony.'**
+  String get bidDetailCancelledSenderCashSnackbar;
+
+  /// Vue voyageur, variante espèces de bidDetailCancelledSnackbar : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande annulée. Paiement en espèces : l\'expéditeur n\'a rien à payer.'**
+  String get bidDetailCancelledCashSnackbar;
+
   /// Snackbar BidDeleted (bid_detail_screen.dart)
   ///
   /// In fr, this message translates to:
@@ -13024,11 +13042,23 @@ abstract class AppLocalizations {
   /// **'Votre paiement sera remboursé automatiquement'**
   String get bidDetailCancelRefundAutoSubtitle;
 
+  /// Variante espèces de bidDetailCancelRefundAutoSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : rien à rembourser'**
+  String get bidDetailCancelCashSubtitle;
+
   /// Sous-titre annulation après remise, tuile d'options (bid_detail_action_bars.dart)
   ///
   /// In fr, this message translates to:
   /// **'Remboursement intégral · vous récupérez votre colis'**
   String get bidDetailCancelAfterHandoverOptionSubtitle;
+
+  /// Variante espèces de bidDetailCancelAfterHandoverOptionSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur vous rend le colis et l\'argent remis'**
+  String get bidDetailCancelAfterHandoverCashOptionSubtitle;
 
   /// Sous-titre commun des tuiles de suppression (bid_detail_action_bars.dart, traveler_options_sheet.dart)
   ///
@@ -13065,6 +13095,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.'**
   String get bidDetailCancelAfterHandoverBody;
+
+  /// Variante espèces de bidDetailCancelAfterHandoverBody : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis est déjà chez le voyageur. Paiement en espèces : Yadony ne peut rien rembourser, c\'est le voyageur qui vous rend l\'argent remis avec votre colis. Il confirme la restitution en saisissant votre code de retour.'**
+  String get bidDetailCancelAfterHandoverCashBody;
 
   /// Titre de la tuile Plus de détails et de son bottom sheet, vues expéditeur et voyageur (sender_tile_sheets.dart, traveler_tile_sheets.dart)
   ///
@@ -13372,6 +13408,12 @@ abstract class AppLocalizations {
   /// **'L\'expéditeur sera remboursé automatiquement'**
   String get bidDetailCancelTransportAcceptedSubtitle;
 
+  /// Variante espèces de bidDetailCancelTransportAcceptedSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : l\'expéditeur n\'a rien à payer'**
+  String get bidDetailCancelTransportAcceptedCashSubtitle;
+
   /// Tuile d'options voyageur : refuser un colis non conforme (traveler_options_sheet.dart)
   ///
   /// In fr, this message translates to:
@@ -13383,6 +13425,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Refusez-le sans pénalité, l\'expéditeur est remboursé'**
   String get bidDetailRefuseParcelSubtitle;
+
+  /// Variante espèces de bidDetailRefuseParcelSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusez-le sans pénalité, l\'expéditeur ne vous doit rien'**
+  String get bidDetailRefuseParcelCashSubtitle;
 
   /// Titre de la feuille de refus d'un colis non conforme (parcel_refusal_sheet.dart)
   ///
@@ -13407,6 +13455,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Poids : {weight} kg'**
   String parcelRefusalDeclaredWeight(String weight);
+
+  /// Volume déclaré d'un colis au m³ (bateau), à la place du poids ; {volume} est déjà formaté avec son unité et ses dimensions éventuelles (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume : {volume}'**
+  String parcelRefusalDeclaredVolume(String volume);
 
   /// Libellé du choix du motif (parcel_refusal_sheet.dart)
   ///
@@ -14068,6 +14122,12 @@ abstract class AppLocalizations {
   /// **'La date limite de dépôt est passée : demande annulée. Tout paiement vous est remboursé intégralement.'**
   String get ticketHandoverDeadlineExpiredSender;
 
+  /// Variante espèces de ticketHandoverDeadlineExpiredSender (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt est passée : demande annulée. Paiement en espèces : rien à rembourser.'**
+  String get ticketHandoverDeadlineExpiredSenderCash;
+
   /// Message voyageur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)
   ///
   /// In fr, this message translates to:
@@ -14079,6 +14139,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'POIDS'**
   String get ticketMiniStatWeightLabel;
+
+  /// Libellé de la mini-stat volume du talon voyageur, à la place du poids pour un colis au m³ (bateau), casse conservée telle quelle (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'VOLUME'**
+  String get ticketMiniStatVolumeLabel;
 
   /// Libellé de la mini-stat catégorie du talon voyageur, mot identique dans les deux langues, casse conservée telle quelle (billet_talon.dart)
   ///
@@ -15298,6 +15364,12 @@ abstract class AppLocalizations {
   /// **'L\'expéditeur sera remboursé automatiquement.'**
   String get bidCancelAcceptedSubtitle;
 
+  /// Variante espèces de bidCancelAcceptedSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (cancellation_dialog.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : l\'expéditeur n\'a rien à payer.'**
+  String get bidCancelAcceptedCashSubtitle;
+
   /// Message d'avertissement du cas colis déjà remis (cancellation_dialog.dart).
   ///
   /// In fr, this message translates to:
@@ -15309,6 +15381,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l\'expéditeur n\'a rien à payer et les frais de service Yadony sont recrédités au voyageur.'**
   String get bidCancelWarningRefundNote;
+
+  /// Variante espèces de bidCancelWarningRefundNote : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (cancellation_dialog.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. Les frais de service Yadony vous sont recrédités.'**
+  String get bidCancelWarningRefundNoteCash;
 
   /// Hint du champ motif quand il est obligatoire (cancellation_dialog.dart).
   ///
@@ -16281,6 +16359,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Poids'**
   String get paymentSummaryWeightLabel;
+
+  /// Libellé de la ligne volume du récapitulatif de paiement d'un colis au m³ (bateau), à la place du poids (payment_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume'**
+  String get paymentSummaryVolumeLabel;
 
   /// Libellé de la ligne prix au kilo du récapitulatif de paiement (payment_screen.dart _SummaryCard).
   ///
@@ -27097,11 +27181,23 @@ abstract class AppLocalizations {
   /// **'Vous êtes remboursé intégralement et nous vous proposons d\'autres trajets.'**
   String get bidRescheduleWithdrawConfirmMessage;
 
+  /// Variante espèces de bidRescheduleWithdrawConfirmMessage, colis pas encore remis : rien n'est passé par Yadony (trip_reschedule_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : aucune somme à rembourser par Yadony. Nous vous proposons d\'autres trajets.'**
+  String get bidRescheduleWithdrawConfirmCashMessage;
+
   /// Confirmation du retrait, colis déjà remis
   ///
   /// In fr, this message translates to:
   /// **'Vous êtes remboursé intégralement. Le voyageur vous rend le colis contre votre code de retour.'**
   String get bidRescheduleWithdrawConfirmReturnMessage;
+
+  /// Variante espèces de bidRescheduleWithdrawConfirmReturnMessage, colis déjà remis (trip_reschedule_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : Yadony n\'a rien à rembourser, le voyageur vous rend l\'argent remis avec le colis, contre votre code de retour.'**
+  String get bidRescheduleWithdrawConfirmReturnCashMessage;
 
   /// Confirmation après « Garder mon colis »
   ///
@@ -27114,6 +27210,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Envoi annulé. Votre remboursement est en cours.'**
   String get bidRescheduleWithdrawnSnackbar;
+
+  /// Variante espèces de bidRescheduleWithdrawnSnackbar : aucun remboursement n'est promis (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi annulé.'**
+  String get bidRescheduleWithdrawnCashSnackbar;
 
   /// Erreur reschedule-limit-reached
   ///
@@ -28303,11 +28405,23 @@ abstract class AppLocalizations {
   /// **'Au moins une photo : elle protège les deux parties si le colis remis ne correspond pas à la déclaration.'**
   String get bidCreatePhotosRequiredHelp;
 
+  /// Sous-titre de la tuile « Ajouter une photo » de la réservation d'un colis : une photo au moins est obligatoire pour envoyer la demande, bateau compris (create_bid/photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Obligatoire, rassure le voyageur'**
+  String get bidCreateAddPhotoRequiredSubtitle;
+
   /// Mention sous l'avertissement douane (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
   /// **'À la remise, le voyageur vérifie le colis. S\'il ne correspond pas à votre déclaration, il peut le refuser : vous êtes alors remboursé.'**
   String get bidCreateHandoverCheckNotice;
+
+  /// Variante espèces de bidCreateHandoverCheckNotice : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À la remise, le voyageur vérifie le colis. S\'il ne correspond pas à votre déclaration, il peut le refuser : vous ne payez alors rien.'**
+  String get bidCreateHandoverCheckNoticeCash;
 
   /// Statut de l'écran d'appel pendant que le téléphone de l'autre sonne.
   ///
@@ -30306,6 +30420,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Tous les prix du voyage passent en {currency}.'**
   String tripSwitchCurrencyConfirmMessage(String currency);
+
+  /// Message (snackbar) à l'étape Prix d'un trajet bateau vendu au m³ : la devise a changé alors qu'un prix au m³ était saisi, le champ est vidé pour ne jamais garder le nombre dans la nouvelle devise. {currency} : symbole de la nouvelle devise (create_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise changée : saisissez à nouveau le prix au m³ en {currency}.'**
+  String tripPublishPerM3CurrencyReset(String currency);
 
   /// Lecture d'écran de la ligne expéditeur en tête de la fiche publique d'une demande (request_sender_row.dart, FLUTTER-GF).
   ///

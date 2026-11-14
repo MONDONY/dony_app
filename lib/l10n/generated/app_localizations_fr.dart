@@ -7776,6 +7776,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Demande annulée. L\'expéditeur sera remboursé.';
 
   @override
+  String get bidDetailCancelledSenderSnackbar =>
+      'Demande annulée. Vous serez remboursé.';
+
+  @override
+  String get bidDetailCancelledSenderCashSnackbar =>
+      'Demande annulée. Paiement en espèces : aucune somme à rembourser par Yadony.';
+
+  @override
+  String get bidDetailCancelledCashSnackbar =>
+      'Demande annulée. Paiement en espèces : l\'expéditeur n\'a rien à payer.';
+
+  @override
   String get bidDetailDeletedSnackbar => 'Demande supprimée.';
 
   @override
@@ -7862,8 +7874,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre paiement sera remboursé automatiquement';
 
   @override
+  String get bidDetailCancelCashSubtitle =>
+      'Paiement en espèces : rien à rembourser';
+
+  @override
   String get bidDetailCancelAfterHandoverOptionSubtitle =>
       'Remboursement intégral · vous récupérez votre colis';
+
+  @override
+  String get bidDetailCancelAfterHandoverCashOptionSubtitle =>
+      'Le voyageur vous rend le colis et l\'argent remis';
 
   @override
   String get bidDetailRemoveFromHistorySubtitle =>
@@ -7885,6 +7905,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidDetailCancelAfterHandoverBody =>
       'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.';
+
+  @override
+  String get bidDetailCancelAfterHandoverCashBody =>
+      'Le colis est déjà chez le voyageur. Paiement en espèces : Yadony ne peut rien rembourser, c\'est le voyageur qui vous rend l\'argent remis avec votre colis. Il confirme la restitution en saisissant votre code de retour.';
 
   @override
   String get bidDetailMoreDetails => 'Plus de détails';
@@ -8064,11 +8088,19 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'expéditeur sera remboursé automatiquement';
 
   @override
+  String get bidDetailCancelTransportAcceptedCashSubtitle =>
+      'Paiement en espèces : l\'expéditeur n\'a rien à payer';
+
+  @override
   String get bidDetailRefuseParcelLabel => 'Le colis ne correspond pas';
 
   @override
   String get bidDetailRefuseParcelSubtitle =>
       'Refusez-le sans pénalité, l\'expéditeur est remboursé';
+
+  @override
+  String get bidDetailRefuseParcelCashSubtitle =>
+      'Refusez-le sans pénalité, l\'expéditeur ne vous doit rien';
 
   @override
   String get parcelRefusalTitle => 'Refuser le colis';
@@ -8083,6 +8115,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String parcelRefusalDeclaredWeight(String weight) {
     return 'Poids : $weight kg';
+  }
+
+  @override
+  String parcelRefusalDeclaredVolume(String volume) {
+    return 'Volume : $volume';
   }
 
   @override
@@ -8480,11 +8517,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'La date limite de dépôt est passée : demande annulée. Tout paiement vous est remboursé intégralement.';
 
   @override
+  String get ticketHandoverDeadlineExpiredSenderCash =>
+      'La date limite de dépôt est passée : demande annulée. Paiement en espèces : rien à rembourser.';
+
+  @override
   String get ticketHandoverDeadlineExpiredTraveler =>
       'La date limite de dépôt est passée : demande annulée.';
 
   @override
   String get ticketMiniStatWeightLabel => 'POIDS';
+
+  @override
+  String get ticketMiniStatVolumeLabel => 'VOLUME';
 
   @override
   String get ticketMiniStatCategoryLabel => 'TYPE';
@@ -9208,12 +9252,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'expéditeur sera remboursé automatiquement.';
 
   @override
+  String get bidCancelAcceptedCashSubtitle =>
+      'Paiement en espèces : l\'expéditeur n\'a rien à payer.';
+
+  @override
   String get bidCancelWarningMessage =>
       'Le colis a déjà été remis. Vous devrez le restituer à l\'expéditeur sous 3 jours en saisissant le code de retour qu\'il vous communiquera.';
 
   @override
   String get bidCancelWarningRefundNote =>
       'L\'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l\'expéditeur n\'a rien à payer et les frais de service Yadony sont recrédités au voyageur.';
+
+  @override
+  String get bidCancelWarningRefundNoteCash =>
+      'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. Les frais de service Yadony vous sont recrédités.';
 
   @override
   String get bidCancelReasonRequiredHint => 'Motif de l\'annulation *';
@@ -9848,6 +9900,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paymentSummaryWeightLabel => 'Poids';
+
+  @override
+  String get paymentSummaryVolumeLabel => 'Volume';
 
   @override
   String get paymentSummaryPricePerKgLabel => 'Prix/kg';
@@ -16530,8 +16585,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous êtes remboursé intégralement et nous vous proposons d\'autres trajets.';
 
   @override
+  String get bidRescheduleWithdrawConfirmCashMessage =>
+      'Paiement en espèces : aucune somme à rembourser par Yadony. Nous vous proposons d\'autres trajets.';
+
+  @override
   String get bidRescheduleWithdrawConfirmReturnMessage =>
       'Vous êtes remboursé intégralement. Le voyageur vous rend le colis contre votre code de retour.';
+
+  @override
+  String get bidRescheduleWithdrawConfirmReturnCashMessage =>
+      'Paiement en espèces : Yadony n\'a rien à rembourser, le voyageur vous rend l\'argent remis avec le colis, contre votre code de retour.';
 
   @override
   String get bidRescheduleKeptSnackbar =>
@@ -16540,6 +16603,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidRescheduleWithdrawnSnackbar =>
       'Envoi annulé. Votre remboursement est en cours.';
+
+  @override
+  String get bidRescheduleWithdrawnCashSnackbar => 'Envoi annulé.';
 
   @override
   String get errorRescheduleLimitReachedTitle => 'Report impossible';
@@ -17294,8 +17360,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Au moins une photo : elle protège les deux parties si le colis remis ne correspond pas à la déclaration.';
 
   @override
+  String get bidCreateAddPhotoRequiredSubtitle =>
+      'Obligatoire, rassure le voyageur';
+
+  @override
   String get bidCreateHandoverCheckNotice =>
       'À la remise, le voyageur vérifie le colis. S\'il ne correspond pas à votre déclaration, il peut le refuser : vous êtes alors remboursé.';
+
+  @override
+  String get bidCreateHandoverCheckNoticeCash =>
+      'À la remise, le voyageur vérifie le colis. S\'il ne correspond pas à votre déclaration, il peut le refuser : vous ne payez alors rien.';
 
   @override
   String get callStatusRinging => 'Ça sonne…';
@@ -18534,6 +18608,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String tripSwitchCurrencyConfirmMessage(String currency) {
     return 'Tous les prix du voyage passent en $currency.';
+  }
+
+  @override
+  String tripPublishPerM3CurrencyReset(String currency) {
+    return 'Devise changée : saisissez à nouveau le prix au m³ en $currency.';
   }
 
   @override

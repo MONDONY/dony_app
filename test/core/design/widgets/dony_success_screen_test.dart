@@ -8,6 +8,7 @@ import 'package:dony/core/design/widgets/dony_success_screen.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:flutter/material.dart';
@@ -237,6 +238,22 @@ void main() {
       await tester.pump();
     });
   }
+
+  // Recette du 14/11 : la bulle de l'assistant, au milieu du bord droit,
+  // masquait le sous-titre de « Offer sent! ». Masquée sur l'écran de succès,
+  // rendue à sa fermeture.
+  testWidgets('la bulle de l\'assistant est masquée tant que l\'écran est '
+      'affiché', (tester) async {
+    assistantBubbleBlockers.reset();
+    addTearDown(assistantBubbleBlockers.reset);
+    await tester.pumpWidget(host(onCta: () {}));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(assistantBubbleBlockers.active.value, isTrue);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+    expect(assistantBubbleBlockers.active.value, isFalse);
+  });
 
   testWidgets('affiche titre, sous-titre et label du CTA', (tester) async {
     await tester.pumpWidget(host(onCta: () {}));

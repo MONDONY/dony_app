@@ -316,7 +316,10 @@ class _SenderOptionsSheet extends StatelessWidget {
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
                 label: l.bidDetailCancelRequestLabel,
-                subtitle: l.bidDetailCancelRefundAutoSubtitle,
+                // Espèces : rien n'est passé par Yadony, rien à rembourser.
+                subtitle: bid.paymentMethod == BidPaymentMethod.cash
+                    ? l.bidDetailCancelCashSubtitle
+                    : l.bidDetailCancelRefundAutoSubtitle,
                 onTap: () {
                   context.pop();
                   showSenderCancelBidDialog(outerContext, bid);
@@ -349,7 +352,9 @@ class _SenderOptionsSheet extends StatelessWidget {
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
                 label: l.bidDetailCancelRequestLabel,
-                subtitle: l.bidDetailCancelAfterHandoverOptionSubtitle,
+                subtitle: bid.paymentMethod == BidPaymentMethod.cash
+                    ? l.bidDetailCancelAfterHandoverCashOptionSubtitle
+                    : l.bidDetailCancelAfterHandoverOptionSubtitle,
                 onTap: () {
                   context.pop();
                   _showAfterHandoverCancelDialog(outerContext);
@@ -406,7 +411,9 @@ class _SenderOptionsSheet extends StatelessWidget {
           style: tt.headlineMedium,
         ),
         content: Text(
-          l.bidDetailCancelAfterHandoverBody,
+          bid.paymentMethod == BidPaymentMethod.cash
+              ? l.bidDetailCancelAfterHandoverCashBody
+              : l.bidDetailCancelAfterHandoverBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         actions: [

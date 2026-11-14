@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
+import 'package:dony/features/matching/presentation/utils/bid_parcel_size.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -178,10 +178,8 @@ class TripParcelRow extends StatelessWidget {
   final VoidCallback onTap;
   final bool awaitsAction;
 
-  String? _weightLabel(AppLocalizations l) {
-    final w = bid.displayWeightKg;
-    return w == null ? null : formatWeightKg(l, w);
-  }
+  String? _weightLabel(AppLocalizations l) =>
+      bidParcelSizeLabel(l, bid, withItemSize: false);
 
   @override
   Widget build(BuildContext context) {

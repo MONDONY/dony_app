@@ -7728,6 +7728,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Request canceled. The sender will be refunded.';
 
   @override
+  String get bidDetailCancelledSenderSnackbar =>
+      'Request canceled. You will be refunded.';
+
+  @override
+  String get bidDetailCancelledSenderCashSnackbar =>
+      'Request canceled. Cash payment: Yadony has nothing to refund.';
+
+  @override
+  String get bidDetailCancelledCashSnackbar =>
+      'Request canceled. Cash payment: the sender owes nothing.';
+
+  @override
   String get bidDetailDeletedSnackbar => 'Request deleted.';
 
   @override
@@ -7813,8 +7825,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your payment will be refunded automatically';
 
   @override
+  String get bidDetailCancelCashSubtitle => 'Cash payment: nothing to refund';
+
+  @override
   String get bidDetailCancelAfterHandoverOptionSubtitle =>
       'Full refund · you get your parcel back';
+
+  @override
+  String get bidDetailCancelAfterHandoverCashOptionSubtitle =>
+      'The traveler returns your parcel and cash';
 
   @override
   String get bidDetailRemoveFromHistorySubtitle =>
@@ -7836,6 +7855,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidDetailCancelAfterHandoverBody =>
       'The parcel is already with the traveler. You will be fully refunded and get your parcel back: the traveler will confirm the return by entering your return code.';
+
+  @override
+  String get bidDetailCancelAfterHandoverCashBody =>
+      'The parcel is already with the traveler. Cash payment: Yadony can\'t refund anything, the traveler gives your cash back with your parcel. They confirm the return by entering your return code.';
 
   @override
   String get bidDetailMoreDetails => 'More details';
@@ -8015,11 +8038,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'The sender will be refunded automatically';
 
   @override
+  String get bidDetailCancelTransportAcceptedCashSubtitle =>
+      'Cash payment: the sender owes nothing';
+
+  @override
   String get bidDetailRefuseParcelLabel => 'The parcel doesn\'t match';
 
   @override
   String get bidDetailRefuseParcelSubtitle =>
       'Refuse it with no penalty, the sender is refunded';
+
+  @override
+  String get bidDetailRefuseParcelCashSubtitle =>
+      'Refuse it with no penalty, the sender owes you nothing';
 
   @override
   String get parcelRefusalTitle => 'Refuse the parcel';
@@ -8034,6 +8065,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String parcelRefusalDeclaredWeight(String weight) {
     return 'Weight: $weight kg';
+  }
+
+  @override
+  String parcelRefusalDeclaredVolume(String volume) {
+    return 'Volume: $volume';
   }
 
   @override
@@ -8424,11 +8460,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'The drop-off deadline has passed: request cancelled. Any payment is refunded to you in full.';
 
   @override
+  String get ticketHandoverDeadlineExpiredSenderCash =>
+      'The drop-off deadline has passed: request cancelled. Cash payment: nothing to refund.';
+
+  @override
   String get ticketHandoverDeadlineExpiredTraveler =>
       'The drop-off deadline has passed: request cancelled.';
 
   @override
   String get ticketMiniStatWeightLabel => 'WEIGHT';
+
+  @override
+  String get ticketMiniStatVolumeLabel => 'VOLUME';
 
   @override
   String get ticketMiniStatCategoryLabel => 'TYPE';
@@ -9153,12 +9196,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'The sender will be automatically refunded.';
 
   @override
+  String get bidCancelAcceptedCashSubtitle =>
+      'Cash payment: the sender owes nothing.';
+
+  @override
   String get bidCancelWarningMessage =>
       'The parcel has already been handed over. You\'ll need to return it to the sender within 3 days by entering the return code they\'ll give you.';
 
   @override
   String get bidCancelWarningRefundNote =>
       'The sender will be fully refunded. If the payment was in cash, the sender owes nothing and the Yadony service fee is credited back to the traveler.';
+
+  @override
+  String get bidCancelWarningRefundNoteCash =>
+      'Cash payment: give back any money the sender already handed you. The Yadony service fee is credited back to you.';
 
   @override
   String get bidCancelReasonRequiredHint => 'Reason for cancellation *';
@@ -9784,6 +9835,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentSummaryWeightLabel => 'Weight';
+
+  @override
+  String get paymentSummaryVolumeLabel => 'Volume';
 
   @override
   String get paymentSummaryPricePerKgLabel => 'Price/kg';
@@ -16415,8 +16469,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'You get a full refund and we suggest other trips.';
 
   @override
+  String get bidRescheduleWithdrawConfirmCashMessage =>
+      'Cash payment: Yadony has nothing to refund. We suggest other trips.';
+
+  @override
   String get bidRescheduleWithdrawConfirmReturnMessage =>
       'You get a full refund. The traveler returns the parcel against your return code.';
+
+  @override
+  String get bidRescheduleWithdrawConfirmReturnCashMessage =>
+      'Cash payment: Yadony has nothing to refund, the traveler gives your cash back with the parcel, against your return code.';
 
   @override
   String get bidRescheduleKeptSnackbar =>
@@ -16425,6 +16487,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidRescheduleWithdrawnSnackbar =>
       'Shipment canceled. Your refund is on its way.';
+
+  @override
+  String get bidRescheduleWithdrawnCashSnackbar => 'Shipment canceled.';
 
   @override
   String get errorRescheduleLimitReachedTitle => 'Cannot reschedule';
@@ -17180,8 +17245,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'At least one photo: it protects both sides if the parcel handed over doesn\'t match the declaration.';
 
   @override
+  String get bidCreateAddPhotoRequiredSubtitle =>
+      'Required, reassures the traveler';
+
+  @override
   String get bidCreateHandoverCheckNotice =>
       'At handover, the traveler checks the parcel. If it doesn\'t match your declaration, they can refuse it: you are then refunded.';
+
+  @override
+  String get bidCreateHandoverCheckNoticeCash =>
+      'At handover, the traveler checks the parcel. If it doesn\'t match your declaration, they can refuse it: you then pay nothing.';
 
   @override
   String get callStatusRinging => 'Ringing…';
@@ -18404,6 +18477,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String tripSwitchCurrencyConfirmMessage(String currency) {
     return 'All prices on this trip switch to $currency.';
+  }
+
+  @override
+  String tripPublishPerM3CurrencyReset(String currency) {
+    return 'Currency changed: enter the price per m³ again in $currency.';
   }
 
   @override

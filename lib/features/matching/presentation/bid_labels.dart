@@ -207,3 +207,21 @@ const bidContactPendingStatuses = <String>{
   'PAYMENT_ESCROWED',
   'AWAITING_PAYMENT',
 };
+
+/// Confirmation d'un colis tout juste annulé, lue par la personne qui annule.
+/// Espèces : aucun paiement n'est passé par Yadony, rien n'est remboursé ;
+/// carte ou mobile money : l'expéditeur est remboursé, à la deuxième personne
+/// quand c'est lui qui lit.
+String bidCancelledMessage(
+  AppLocalizations l,
+  BidModel bid, {
+  required bool viewerIsSender,
+}) {
+  final cash = bid.paymentMethod == BidPaymentMethod.cash;
+  if (viewerIsSender) {
+    return cash
+        ? l.bidDetailCancelledSenderCashSnackbar
+        : l.bidDetailCancelledSenderSnackbar;
+  }
+  return cash ? l.bidDetailCancelledCashSnackbar : l.bidDetailCancelledSnackbar;
+}

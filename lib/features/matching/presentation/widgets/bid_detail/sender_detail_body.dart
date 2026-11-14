@@ -1,13 +1,12 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_cta_cell.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_procedure_card.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/presentation/utils/bid_parcel_size.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
@@ -221,7 +220,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final summary = SenderHeroCard.statusLine(context, bid);
-    final weight = bid.displayWeightKg;
+    final size = bidParcelSizeLabel(l, bid);
     final recipient = bid.recipientName?.trim();
 
     final (iconName, label, color) = switch (tile) {
@@ -243,18 +242,11 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
             : l.senderTilePrevenirLink,
       SenderTile.suivi || SenderTile.lieux => summary,
       SenderTile.colis =>
-        weight == null
+        size == null
             ? null
             : (recipient == null || recipient.isEmpty)
-            ? parcelWeightWithSize(l, formatWeightKg(l, weight), bid.itemSize)
-            : l.senderTileColisSubtitle(
-                parcelWeightWithSize(
-                  l,
-                  formatWeightKg(l, weight),
-                  bid.itemSize,
-                ),
-                recipient,
-              ),
+            ? size
+            : l.senderTileColisSubtitle(size, recipient),
       SenderTile.details => l.senderTileDetailsSubtitle,
     };
 

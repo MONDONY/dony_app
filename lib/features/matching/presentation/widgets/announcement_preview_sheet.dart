@@ -2,6 +2,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/arrival_range.dart';
 import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -28,6 +29,15 @@ class AnnouncementPreviewSheet extends StatelessWidget {
   /// devise du formulaire. Null : ligne sans lien (devise figée).
   final VoidCallback? onChangeCurrency;
 
+  /// Bateau : arrivée estimée au plus tôt et au plus tard (jours sans heure).
+  /// Null hors bateau ou tant qu'elle n'est pas saisie : pas de ligne.
+  final DateTime? arrivalMin;
+  final DateTime? arrivalMax;
+
+  /// Date limite de dépôt telle qu'elle partira au serveur. Null : non
+  /// saisie, pas de ligne.
+  final DateTime? handoverDeadline;
+
   const AnnouncementPreviewSheet({
     super.key,
     required this.formState,
@@ -37,6 +47,9 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     this.currency,
     this.paymentMethods,
     this.onChangeCurrency,
+    this.arrivalMin,
+    this.arrivalMax,
+    this.handoverDeadline,
   });
 
   static Future<void> show(
@@ -49,6 +62,9 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     SupportedCurrency? currency,
     List<String>? paymentMethods,
     VoidCallback? onChangeCurrency,
+    DateTime? arrivalMin,
+    DateTime? arrivalMax,
+    DateTime? handoverDeadline,
   }) {
     final l = context.l10n;
     return DonyBottomSheet.show<void>(
@@ -80,9 +96,31 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         currency: currency,
         paymentMethods: paymentMethods,
         onChangeCurrency: onChangeCurrency,
+        arrivalMin: arrivalMin,
+        arrivalMax: arrivalMax,
+        handoverDeadline: handoverDeadline,
       ),
     );
   }
+
+  /// Arrivée estimée du bateau (« 28 nov. au 15 déc. », ou un seul jour).
+  static String arrivalLabel(
+    AppLocalizations l,
+    DateTime from,
+    DateTime? to, {
+    DateTime? now,
+  }) {
+    final days = arrivalRangeDays(l, from, to, now: now);
+    final end = days.to;
+    return end == null ? days.from : l.ticketArrivalRangeValue(days.from, end);
+  }
+
+  /// Date limite de dépôt, jour et heure (« 16 nov. à 20:00 »).
+  static String deadlineLabel(AppLocalizations l, DateTime deadline) =>
+      l.commonDateAtTime(
+        DateFormat.MMMd(l.localeName).format(deadline),
+        DateFormat.jm(l.localeName).format(deadline),
+      );
 
   /// Libellé « Paiement » de l'aperçu (FLUTTER-GJ) : calculé depuis la liste
   /// réellement envoyée, donc juste en XOF (pas de carte), carte décochée ou
@@ -177,6 +215,20 @@ class AnnouncementPreviewSheet extends StatelessWidget {
               iconAsset: 'clock',
               label: l.listingPreviewDepartureLabel,
               value: _formatTime(departureTime!),
+            ),
+          if (arrivalMin case final from?)
+            _PreviewRow(
+              key: const Key('preview-arrival-range'),
+              iconAsset: 'calendar',
+              label: l.ticketEstimatedArrivalLabel,
+              value: arrivalLabel(l, from, arrivalMax),
+            ),
+          if (handoverDeadline case final deadline?)
+            _PreviewRow(
+              key: const Key('preview-handover-deadline'),
+              iconAsset: 'clock',
+              label: l.tripPublishHandoverDeadlineLabel,
+              value: deadlineLabel(l, deadline),
             ),
           if (formState.pickupAddress != null)
             _PreviewRow(
@@ -322,6 +374,7 @@ class _PreviewRow extends StatelessWidget {
   final String value;
 
   const _PreviewRow({
+    super.key,
     required this.iconAsset,
     required this.label,
     required this.value,

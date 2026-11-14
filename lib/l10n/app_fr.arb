@@ -7668,6 +7668,18 @@
   "@bidDetailCancelledSnackbar": {
     "description": "Snackbar BidCancelled (bid_detail_screen.dart)"
   },
+  "bidDetailCancelledSenderSnackbar": "Demande annulée. Vous serez remboursé.",
+  "@bidDetailCancelledSenderSnackbar": {
+    "description": "Snackbar de l'expéditeur qui vient d'annuler un colis payé par carte ou mobile money (bid_labels.dart, bid_detail_screen.dart)"
+  },
+  "bidDetailCancelledSenderCashSnackbar": "Demande annulée. Paiement en espèces : aucune somme à rembourser par Yadony.",
+  "@bidDetailCancelledSenderCashSnackbar": {
+    "description": "Snackbar de l'expéditeur qui vient d'annuler un colis payé en espèces : aucun paiement n'est passé par Yadony (bid_labels.dart, bid_detail_screen.dart)"
+  },
+  "bidDetailCancelledCashSnackbar": "Demande annulée. Paiement en espèces : l'expéditeur n'a rien à payer.",
+  "@bidDetailCancelledCashSnackbar": {
+    "description": "Vue voyageur, variante espèces de bidDetailCancelledSnackbar : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_screen.dart)"
+  },
   "bidDetailDeletedSnackbar": "Demande supprimée.",
   "@bidDetailDeletedSnackbar": {
     "description": "Snackbar BidDeleted (bid_detail_screen.dart)"
@@ -7773,9 +7785,17 @@
   "@bidDetailCancelRefundAutoSubtitle": {
     "description": "Sous-titre annulation avant remise (bid_detail_action_bars.dart)"
   },
+  "bidDetailCancelCashSubtitle": "Paiement en espèces : rien à rembourser",
+  "@bidDetailCancelCashSubtitle": {
+    "description": "Variante espèces de bidDetailCancelRefundAutoSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_action_bars.dart)"
+  },
   "bidDetailCancelAfterHandoverOptionSubtitle": "Remboursement intégral · vous récupérez votre colis",
   "@bidDetailCancelAfterHandoverOptionSubtitle": {
     "description": "Sous-titre annulation après remise, tuile d'options (bid_detail_action_bars.dart)"
+  },
+  "bidDetailCancelAfterHandoverCashOptionSubtitle": "Le voyageur vous rend le colis et l'argent remis",
+  "@bidDetailCancelAfterHandoverCashOptionSubtitle": {
+    "description": "Variante espèces de bidDetailCancelAfterHandoverOptionSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_action_bars.dart)"
   },
   "bidDetailRemoveFromHistorySubtitle": "Retirer définitivement de votre historique",
   "@bidDetailRemoveFromHistorySubtitle": {
@@ -7800,6 +7820,10 @@
   "bidDetailCancelAfterHandoverBody": "Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.",
   "@bidDetailCancelAfterHandoverBody": {
     "description": "Corps du dialog d'annulation après remise (bid_detail_action_bars.dart)"
+  },
+  "bidDetailCancelAfterHandoverCashBody": "Le colis est déjà chez le voyageur. Paiement en espèces : Yadony ne peut rien rembourser, c'est le voyageur qui vous rend l'argent remis avec votre colis. Il confirme la restitution en saisissant votre code de retour.",
+  "@bidDetailCancelAfterHandoverCashBody": {
+    "description": "Variante espèces de bidDetailCancelAfterHandoverBody : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (bid_detail_action_bars.dart)"
   },
   "bidDetailMoreDetails": "Plus de détails",
   "@bidDetailMoreDetails": {
@@ -8077,6 +8101,10 @@
   "@bidDetailCancelTransportAcceptedSubtitle": {
     "description": "Sous-titre annuler ce transport, autre statut (traveler_options_sheet.dart)"
   },
+  "bidDetailCancelTransportAcceptedCashSubtitle": "Paiement en espèces : l'expéditeur n'a rien à payer",
+  "@bidDetailCancelTransportAcceptedCashSubtitle": {
+    "description": "Variante espèces de bidDetailCancelTransportAcceptedSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (traveler_options_sheet.dart)"
+  },
   "bidDetailRefuseParcelLabel": "Le colis ne correspond pas",
   "@bidDetailRefuseParcelLabel": {
     "description": "Tuile d'options voyageur : refuser un colis non conforme (traveler_options_sheet.dart)"
@@ -8084,6 +8112,10 @@
   "bidDetailRefuseParcelSubtitle": "Refusez-le sans pénalité, l'expéditeur est remboursé",
   "@bidDetailRefuseParcelSubtitle": {
     "description": "Sous-titre de la tuile refus du colis (traveler_options_sheet.dart)"
+  },
+  "bidDetailRefuseParcelCashSubtitle": "Refusez-le sans pénalité, l'expéditeur ne vous doit rien",
+  "@bidDetailRefuseParcelCashSubtitle": {
+    "description": "Variante espèces de bidDetailRefuseParcelSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (traveler_options_sheet.dart)"
   },
   "parcelRefusalTitle": "Refuser le colis",
   "@parcelRefusalTitle": {
@@ -8102,6 +8134,15 @@
     "description": "Poids déclaré (parcel_refusal_sheet.dart)",
     "placeholders": {
       "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "parcelRefusalDeclaredVolume": "Volume : {volume}",
+  "@parcelRefusalDeclaredVolume": {
+    "description": "Volume déclaré d'un colis au m³ (bateau), à la place du poids ; {volume} est déjà formaté avec son unité et ses dimensions éventuelles (parcel_refusal_sheet.dart)",
+    "placeholders": {
+      "volume": {
         "type": "String"
       }
     }
@@ -8631,6 +8672,10 @@
   "@ticketHandoverDeadlineExpiredSender": {
     "description": "Message expéditeur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)"
   },
+  "ticketHandoverDeadlineExpiredSenderCash": "La date limite de dépôt est passée : demande annulée. Paiement en espèces : rien à rembourser.",
+  "@ticketHandoverDeadlineExpiredSenderCash": {
+    "description": "Variante espèces de ticketHandoverDeadlineExpiredSender (billet_talon.dart)"
+  },
   "ticketHandoverDeadlineExpiredTraveler": "La date limite de dépôt est passée : demande annulée.",
   "@ticketHandoverDeadlineExpiredTraveler": {
     "description": "Message voyageur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)"
@@ -8638,6 +8683,10 @@
   "ticketMiniStatWeightLabel": "POIDS",
   "@ticketMiniStatWeightLabel": {
     "description": "Libellé de la mini-stat poids du talon voyageur, casse conservée telle quelle dans le code source (billet_talon.dart)"
+  },
+  "ticketMiniStatVolumeLabel": "VOLUME",
+  "@ticketMiniStatVolumeLabel": {
+    "description": "Libellé de la mini-stat volume du talon voyageur, à la place du poids pour un colis au m³ (bateau), casse conservée telle quelle (billet_talon.dart)"
   },
   "ticketMiniStatCategoryLabel": "TYPE",
   "@ticketMiniStatCategoryLabel": {
@@ -9578,6 +9627,10 @@
   "@bidCancelAcceptedSubtitle": {
     "description": "Sous-titre du cas colis pas encore remis (cancellation_dialog.dart)."
   },
+  "bidCancelAcceptedCashSubtitle": "Paiement en espèces : l'expéditeur n'a rien à payer.",
+  "@bidCancelAcceptedCashSubtitle": {
+    "description": "Variante espèces de bidCancelAcceptedSubtitle : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (cancellation_dialog.dart)"
+  },
   "bidCancelWarningMessage": "Le colis a déjà été remis. Vous devrez le restituer à l'expéditeur sous 3 jours en saisissant le code de retour qu'il vous communiquera.",
   "@bidCancelWarningMessage": {
     "description": "Message d'avertissement du cas colis déjà remis (cancellation_dialog.dart)."
@@ -9585,6 +9638,10 @@
   "bidCancelWarningRefundNote": "L'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l'expéditeur n'a rien à payer et les frais de service Yadony sont recrédités au voyageur.",
   "@bidCancelWarningRefundNote": {
     "description": "Note de remboursement du cas colis déjà remis (cancellation_dialog.dart)."
+  },
+  "bidCancelWarningRefundNoteCash": "Paiement en espèces : rendez à l'expéditeur l'argent qu'il vous a déjà remis. Les frais de service Yadony vous sont recrédités.",
+  "@bidCancelWarningRefundNoteCash": {
+    "description": "Variante espèces de bidCancelWarningRefundNote : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (cancellation_dialog.dart)"
   },
   "bidCancelReasonRequiredHint": "Motif de l'annulation *",
   "@bidCancelReasonRequiredHint": {
@@ -10280,6 +10337,10 @@
   "paymentSummaryWeightLabel": "Poids",
   "@paymentSummaryWeightLabel": {
     "description": "Libellé de la ligne poids du récapitulatif de paiement (payment_screen.dart _SummaryCard)."
+  },
+  "paymentSummaryVolumeLabel": "Volume",
+  "@paymentSummaryVolumeLabel": {
+    "description": "Libellé de la ligne volume du récapitulatif de paiement d'un colis au m³ (bateau), à la place du poids (payment_screen.dart)"
   },
   "paymentSummaryPricePerKgLabel": "Prix/kg",
   "@paymentSummaryPricePerKgLabel": {
@@ -18625,9 +18686,17 @@
   "@bidRescheduleWithdrawConfirmMessage": {
     "description": "Confirmation du retrait, colis pas encore remis"
   },
+  "bidRescheduleWithdrawConfirmCashMessage": "Paiement en espèces : aucune somme à rembourser par Yadony. Nous vous proposons d'autres trajets.",
+  "@bidRescheduleWithdrawConfirmCashMessage": {
+    "description": "Variante espèces de bidRescheduleWithdrawConfirmMessage, colis pas encore remis : rien n'est passé par Yadony (trip_reschedule_card.dart)"
+  },
   "bidRescheduleWithdrawConfirmReturnMessage": "Vous êtes remboursé intégralement. Le voyageur vous rend le colis contre votre code de retour.",
   "@bidRescheduleWithdrawConfirmReturnMessage": {
     "description": "Confirmation du retrait, colis déjà remis"
+  },
+  "bidRescheduleWithdrawConfirmReturnCashMessage": "Paiement en espèces : Yadony n'a rien à rembourser, le voyageur vous rend l'argent remis avec le colis, contre votre code de retour.",
+  "@bidRescheduleWithdrawConfirmReturnCashMessage": {
+    "description": "Variante espèces de bidRescheduleWithdrawConfirmReturnMessage, colis déjà remis (trip_reschedule_card.dart)"
   },
   "bidRescheduleKeptSnackbar": "C'est noté : votre colis part à la nouvelle date.",
   "@bidRescheduleKeptSnackbar": {
@@ -18636,6 +18705,10 @@
   "bidRescheduleWithdrawnSnackbar": "Envoi annulé. Votre remboursement est en cours.",
   "@bidRescheduleWithdrawnSnackbar": {
     "description": "Confirmation après le retrait"
+  },
+  "bidRescheduleWithdrawnCashSnackbar": "Envoi annulé.",
+  "@bidRescheduleWithdrawnCashSnackbar": {
+    "description": "Variante espèces de bidRescheduleWithdrawnSnackbar : aucun remboursement n'est promis (bid_detail_screen.dart)"
   },
   "errorRescheduleLimitReachedTitle": "Report impossible",
   "@errorRescheduleLimitReachedTitle": {
@@ -19528,9 +19601,17 @@
   "@bidCreatePhotosRequiredHelp": {
     "description": "Aide sous le titre des photos (create_bid_bottom_sheet.dart)"
   },
+  "bidCreateAddPhotoRequiredSubtitle": "Obligatoire, rassure le voyageur",
+  "@bidCreateAddPhotoRequiredSubtitle": {
+    "description": "Sous-titre de la tuile « Ajouter une photo » de la réservation d'un colis : une photo au moins est obligatoire pour envoyer la demande, bateau compris (create_bid/photo_section.dart)"
+  },
   "bidCreateHandoverCheckNotice": "À la remise, le voyageur vérifie le colis. S'il ne correspond pas à votre déclaration, il peut le refuser : vous êtes alors remboursé.",
   "@bidCreateHandoverCheckNotice": {
     "description": "Mention sous l'avertissement douane (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateHandoverCheckNoticeCash": "À la remise, le voyageur vérifie le colis. S'il ne correspond pas à votre déclaration, il peut le refuser : vous ne payez alors rien.",
+  "@bidCreateHandoverCheckNoticeCash": {
+    "description": "Variante espèces de bidCreateHandoverCheckNotice : aucun paiement n'est passé par Yadony, aucun remboursement n'est promis (create_bid_bottom_sheet.dart)"
   },
   "callStatusRinging": "Ça sonne…",
   "@callStatusRinging": {
@@ -20558,6 +20639,15 @@
   "@tripSwitchCurrencyConfirmMessageNoCard": {"description": "Confirmation du changement de devise quand la carte n'existe pas dans la devise cible (FLUTTER-GK).", "placeholders": {"currency": {"type": "String"}}},
   "tripSwitchCurrencyConfirmMessage": "Tous les prix du voyage passent en {currency}.",
   "@tripSwitchCurrencyConfirmMessage": {"description": "Confirmation du changement de devise quand la carte reste possible (FLUTTER-GK).", "placeholders": {"currency": {"type": "String"}}},
+  "tripPublishPerM3CurrencyReset": "Devise changée : saisissez à nouveau le prix au m³ en {currency}.",
+  "@tripPublishPerM3CurrencyReset": {
+    "description": "Message (snackbar) à l'étape Prix d'un trajet bateau vendu au m³ : la devise a changé alors qu'un prix au m³ était saisi, le champ est vidé pour ne jamais garder le nombre dans la nouvelle devise. {currency} : symbole de la nouvelle devise (create_trip_screen.dart)",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
   "requestPublicSenderRowSemantics": "Expéditeur : {name}. Voir son profil",
   "@requestPublicSenderRowSemantics": {"description": "Lecture d'écran de la ligne expéditeur en tête de la fiche publique d'une demande (request_sender_row.dart, FLUTTER-GF).", "placeholders": {"name": {"type": "String"}}},
   "tripParcelsSummaryInTransit": "{count, plural, =1{colis en route} other{colis en route}}",

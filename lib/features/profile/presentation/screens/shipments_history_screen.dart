@@ -10,6 +10,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/utils/bid_parcel_size.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -114,9 +115,10 @@ class _DeliveryCard extends StatelessWidget {
       bid.departureCity,
       bid.arrivalCity,
     ].where((c) => c != null).join(' → ');
-    final weight = (bid.weightKg ?? 0) > 0
-        ? formatWeightKg(l, bid.weightKg!)
-        : null;
+    // Colis au m³ : son volume, jamais « 0 kg ».
+    final weight =
+        bidVolumeLabel(l, bid) ??
+        ((bid.weightKg ?? 0) > 0 ? formatWeightKg(l, bid.weightKg!) : null);
     final description = bid.description;
     // Prix affiché à l'expéditeur = brut (net voyageur + frais de service
     // Yadony), servi par le serveur ; à défaut, recalculé par la façade de

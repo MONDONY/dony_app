@@ -220,9 +220,16 @@ class TripRescheduleDecisionButtons extends StatelessWidget {
     final confirmed = await DonyDialog.show(
       context,
       title: l.bidRescheduleWithdrawConfirmTitle,
-      message: bid.status == 'HANDED_OVER'
-          ? l.bidRescheduleWithdrawConfirmReturnMessage
-          : l.bidRescheduleWithdrawConfirmMessage,
+      // Espèces : rien n'est passé par Yadony, aucun remboursement promis.
+      message: switch ((
+        bid.status == 'HANDED_OVER',
+        bid.paymentMethod == BidPaymentMethod.cash,
+      )) {
+        (true, true) => l.bidRescheduleWithdrawConfirmReturnCashMessage,
+        (true, false) => l.bidRescheduleWithdrawConfirmReturnMessage,
+        (false, true) => l.bidRescheduleWithdrawConfirmCashMessage,
+        (false, false) => l.bidRescheduleWithdrawConfirmMessage,
+      },
       confirmLabel: l.bidRescheduleWithdraw,
       cancelLabel: l.commonCancel,
       variant: DonyDialogVariant.destructive,

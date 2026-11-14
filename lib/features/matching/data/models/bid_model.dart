@@ -393,6 +393,13 @@ class BidModel {
   /// back antérieur.
   final double? volumeM3;
 
+  /// Dimensions du colis en cm (bateau, colis au m³), servies avec
+  /// [volumeM3] quand le back les renvoie. `null` sur un colis au kilo ou un
+  /// back qui ne les sert pas : seul le volume s'affiche alors.
+  final int? lengthCm;
+  final int? widthCm;
+  final int? heightCm;
+
   /// Quand le voyageur est payé : livraison (défaut) ou dépôt (bateau).
   @JsonKey(fromJson: _payoutTriggerFromJson, toJson: _payoutTriggerToJson)
   final PayoutTrigger payoutTrigger;
@@ -499,6 +506,9 @@ class BidModel {
     this.travelerTracking,
     this.arrivalDateMax,
     this.volumeM3,
+    this.lengthCm,
+    this.widthCm,
+    this.heightCm,
     this.payoutTrigger = PayoutTrigger.delivery,
     this.depositedAt,
     this.latestTripDelay,
@@ -584,6 +594,11 @@ class BidModel {
   /// un colis au kilo.
   bool get isPricedPerM3 =>
       transportMode == TransportMode.boat && (volumeM3 ?? 0) > 0;
+
+  /// Le colis porte un volume servi par le serveur (colis d'un trajet vendu
+  /// au m³) : partout où un colis au kilo montre son poids, celui-ci montre
+  /// son volume, jamais « 0 kg » ni un tiret.
+  bool get hasParcelVolume => (volumeM3 ?? 0) > 0;
 
   /// Poids à afficher partout : celui du colis avec les kilos des modifications
   /// acquises ([totalWeightKg]), sinon [weightKg] (back antérieur). Ne sert

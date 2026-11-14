@@ -194,7 +194,9 @@ class _TravelerOptionsSheet extends StatelessWidget {
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
                 label: l.bidDetailRefuseParcelLabel,
-                subtitle: l.bidDetailRefuseParcelSubtitle,
+                subtitle: bid.paymentMethod == BidPaymentMethod.cash
+                    ? l.bidDetailRefuseParcelCashSubtitle
+                    : l.bidDetailRefuseParcelSubtitle,
                 onTap: () {
                   context.pop();
                   openParcelRefusalSheet(outerContext, bid);
@@ -213,6 +215,8 @@ class _TravelerOptionsSheet extends StatelessWidget {
                 label: l.bidDetailCancelTransportLabel,
                 subtitle: bid.status == 'HANDED_OVER'
                     ? l.bidDetailCancelTransportHandedOverSubtitle
+                    : bid.paymentMethod == BidPaymentMethod.cash
+                    ? l.bidDetailCancelTransportAcceptedCashSubtitle
                     : l.bidDetailCancelTransportAcceptedSubtitle,
                 onTap: () {
                   context.pop();
@@ -292,6 +296,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
       kind: afterHandover
           ? CancellationKind.afterHandover
           : CancellationKind.accepted,
+      cash: bid.paymentMethod == BidPaymentMethod.cash,
     );
     if (reason == null || !context.mounted) {
       return;

@@ -7,6 +7,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
+import 'package:dony/features/matching/presentation/utils/bid_parcel_size.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_photo_viewer_modal.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
@@ -42,7 +43,10 @@ class ColisDestinataireCard extends StatelessWidget {
   String _colisLabel(AppLocalizations l) {
     final parts = <String>[];
     final weight = bid.displayWeightKg;
-    if (weight != null) {
+    final volume = bidVolumeLabel(l, bid, withDimensions: true);
+    if (volume != null) {
+      parts.add(volume);
+    } else if (weight != null) {
       final added = bid.acquiredAddedWeightKg;
       final weightText = added > 0
           ? l.bidDetailParcelWeightWithAdded(

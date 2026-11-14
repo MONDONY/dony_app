@@ -1908,10 +1908,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               ),
               const SizedBox(height: DonySpacing.md),
             ],
-            DonyStatusBanner(
-              type: DonyStatusBannerType.info,
-              iconAsset: 'package',
-              message: context.l10n.bidCreateHandoverCheckNotice,
+            // Espèces : l'argent se remet à la remise, un colis refusé n'est
+            // pas payé ; aucun remboursement n'est promis.
+            ValueListenableBuilder<BidPaymentMethod>(
+              valueListenable: _methodNotifier,
+              builder: (context, method, _) => DonyStatusBanner(
+                type: DonyStatusBannerType.info,
+                iconAsset: 'package',
+                message: method == BidPaymentMethod.cash
+                    ? context.l10n.bidCreateHandoverCheckNoticeCash
+                    : context.l10n.bidCreateHandoverCheckNotice,
+              ),
             ),
             const SizedBox(height: DonySpacing.xxl),
 

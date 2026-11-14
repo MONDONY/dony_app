@@ -86,6 +86,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+/// Dates montrées par l'aperçu avant publication, lues dans le formulaire :
+/// arrivée estimée du bateau et date limite de dépôt telle qu'elle partira.
+typedef TripPreviewDates = ({
+  DateTime? arrivalMin,
+  DateTime? arrivalMax,
+  DateTime? handoverDeadline,
+});
+
 class CreateTripArgs {
   final AnnouncementModel? announcement;
   final LockedTripContext? lockContext;
@@ -149,6 +157,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   /// Moyens de paiement tels qu'ils partiront au submit (FLUTTER-GJ) : l'aperçu
   /// les affiche au lieu de les recalculer.
   List<String> Function()? _paymentMethods;
+
+  /// Dates de l'aperçu, lues dans le formulaire (cf. [TripPreviewDates]).
+  TripPreviewDates Function()? _previewDates;
 
   /// Devise de l'annonce. En création, choisie par l'utilisateur (défaut :
   /// devise du portefeuille) ; en édition ou trajet dédié, figée sur la
@@ -642,6 +653,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                           currencyEditableNotifier: _currencyEditableNotifier,
                           onSubmitReady: (fn) => _submit = fn,
                           onPaymentMethodsReady: (fn) => _paymentMethods = fn,
+                          onPreviewDatesReady: (fn) => _previewDates = fn,
                           onDraftHandlersReady: (snapshot, restore) {
                             _draftSnapshot = snapshot;
                             _restoreDraft = restore;
@@ -821,6 +833,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   /// « Passer » de l'étape Conditions. [ctx] doit voir les blocs de l'écran.
   void _openPreview(BuildContext ctx) {
     final isLoading = ctx.read<AnnouncementBloc>().state is AnnouncementLoading;
+    final dates = _previewDates?.call();
     AnnouncementPreviewSheet.show(
       ctx,
       formState: ctx.read<AnnouncementFormBloc>().state,
@@ -838,6 +851,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       departureTime: _departureTimeNotifier.value,
       currency: _currencyNotifier.value,
       paymentMethods: _paymentMethods?.call(),
+      // Bateau : fourchette d'arrivée ; tous modes : date limite de dépôt,
+      // telle qu'elle partira au serveur. Rien tant qu'elles ne sont pas
+      // saisies.
+      arrivalMin: dates?.arrivalMin,
+      arrivalMax: dates?.arrivalMax,
+      handoverDeadline: dates?.handoverDeadline,
       // « Modifier » : en création, ou en modification d'un trajet encore
       // sans demande (FLUTTER-KV).
       onChangeCurrency: _canChangeCurrency
@@ -901,6 +920,7 @@ class _TripFormContent extends StatefulWidget {
   final ValueNotifier<bool?>? currencyEditableNotifier;
   final void Function(void Function({bool saveAsDraft}))? onSubmitReady;
   final void Function(List<String> Function())? onPaymentMethodsReady;
+  final void Function(TripPreviewDates Function())? onPreviewDatesReady;
 
   /// Remet au parent de quoi lire la saisie (brouillon local) et la
   /// recharger (reprise du brouillon).
@@ -934,6 +954,7 @@ class _TripFormContent extends StatefulWidget {
     this.currencyEditableNotifier,
     this.onSubmitReady,
     this.onPaymentMethodsReady,
+    this.onPreviewDatesReady,
     this.onDraftHandlersReady,
   });
 
@@ -1347,6 +1368,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (!_isEdit) _seedAvailableKgToFormBloc();
     widget.onSubmitReady?.call(_submit);
     widget.onPaymentMethodsReady?.call(_paymentMethods);
+    widget.onPreviewDatesReady?.call(_previewDates);
     widget.onDraftHandlersReady?.call(_draftSnapshot, _restoreDraft);
     final initialTemplate = widget.initialTemplate;
     if (initialTemplate != null && widget.announcement == null) {
@@ -1976,7 +1998,39 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (!widget.currencyNotifier.value.isMobileMoneyEligible) {
       _mobileMoneyEnabledNotifier.value = false;
     }
+    _resetPricePerM3OnCurrencyChange();
     _syncPriceToFormBloc();
+  }
+
+  /// Devise posée par un modèle ou un brouillon : son prix au m³ arrive juste
+  /// après, dans la bonne devise, rien à ressaisir.
+  bool _currencyFromSnapshot = false;
+
+  void _setCurrencyFromSnapshot(SupportedCurrency currency) {
+    _currencyFromSnapshot = true;
+    try {
+      widget.currencyNotifier.value = currency;
+    } finally {
+      _currencyFromSnapshot = false;
+    }
+  }
+
+  /// Prix au m³ saisi dans l'ancienne devise : jamais gardé tel quel
+  /// (65 600 F CFA devenaient 65 600 €/m³, recette du 14/11). Le champ est
+  /// vidé et, s'il était affiché, un message demande de le ressaisir dans la
+  /// nouvelle devise.
+  void _resetPricePerM3OnCurrencyChange() {
+    if (_currencyFromSnapshot || _pricePerM3Ctrl.text.trim().isEmpty) return;
+    final visible = _isBoatPerM3;
+    _pricePerM3Ctrl.clear();
+    if (!visible || !mounted) return;
+    DonySnackbar.show(
+      context,
+      message: context.l10n.tripPublishPerM3CurrencyReset(
+        widget.currencyNotifier.value.symbol,
+      ),
+      type: DonySnackbarType.warning,
+    );
   }
 
   void _syncAcceptedTypesToFormBloc() {
@@ -2116,6 +2170,14 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// sélecteur de devise. Le backend la retirerait de toute façon.
   /// La carte est décochable (FLUTTER-FT) : sans elle, les espèces
   /// repartent d'office, comme quand Stripe n'est pas configuré.
+  /// Dates de l'aperçu (cf. [TripPreviewDates]) : la fourchette d'arrivée
+  /// seulement en bateau, la date limite de dépôt dès qu'elle est saisie.
+  TripPreviewDates _previewDates() => (
+    arrivalMin: _isBoat ? _boatArrivalMinNotifier.value : null,
+    arrivalMax: _isBoat ? _boatArrivalMaxNotifier.value : null,
+    handoverDeadline: _resolveHandoverDeadline(),
+  );
+
   List<String> _paymentMethods() {
     final stripeConfigured =
         _isStripeConfigured() && _currency.isStripeEligible;
@@ -3198,7 +3260,7 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// à la soumission (Stripe non configuré), pas dupliquée ici.
   void _applyTemplate(TripTemplate t) {
     final currency = SupportedCurrency.fromCode(t.currency);
-    if (currency != null) widget.currencyNotifier.value = currency;
+    if (currency != null) _setCurrencyFromSnapshot(currency);
 
     // Codes pays AVANT les villes : le listener des villes recopie le code
     // courant dans le form bloc, lu à la soumission. Dans l'ordre inverse,
@@ -3387,7 +3449,7 @@ class _TripFormContentState extends State<_TripFormContent> {
   void _restoreDraft(TripFormDraft d) {
     _restoredFromDraft = true;
     final currency = SupportedCurrency.fromCode(d.currency);
-    if (currency != null) widget.currencyNotifier.value = currency;
+    if (currency != null) _setCurrencyFromSnapshot(currency);
 
     _departureCountryCodeNotifier.value = d.departureCountryCode;
     _arrivalCountryCodeNotifier.value = d.arrivalCountryCode;

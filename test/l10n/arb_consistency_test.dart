@@ -215,6 +215,8 @@ const _sameInBothLanguages = <String>{
   'bidDetailCashBadge', // « CASH » se dit pareil (tâche D2)
   'bidDetailDescriptionLabel', // « Description » se dit pareil (tâche D2, correction R40)
   'ticketMiniStatCategoryLabel', // « TYPE » se dit pareil (tâche D3)
+  'ticketMiniStatVolumeLabel', // « VOLUME » : même mot en français et en anglais
+  'paymentSummaryVolumeLabel', // « Volume » : même mot en français et en anglais
   'shipmentDestinationFallback', // « destination » se dit pareil (tâche D3, clé dédiée : duplique bidDetailFallbackDestination d'un autre préfixe, R40)
   'tripOwnerArrivalFieldLabel', // « Instructions » se dit pareil (tâche D4)
   'activityRevenueMobileMoney', // « Mobile money » se dit pareil (tâche D5)

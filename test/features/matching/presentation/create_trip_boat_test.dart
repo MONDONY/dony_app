@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/transport_modes_flag.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -40,6 +41,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart'
 import 'package:dony/features/matching/data/models/boat_price_unit.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/stops_chips.dart';
@@ -1123,6 +1125,95 @@ void main() {
       expect(find.textContaining('/kg'), findsNothing);
       expectNoPlaneIcon(tester);
     });
+
+    // Recette du 14/11 : l'aperçu ne montrait ni la fourchette d'arrivée ni
+    // la date limite de dépôt d'un trajet bateau.
+    for (final locale in const [AppL10n.fr, AppL10n.en]) {
+      testWidgets('aperçu bateau 360 dp ${locale.languageCode} : fourchette '
+          'd\'arrivée et date limite de dépôt', (tester) async {
+        if (locale == AppL10n.en) enableEnglish();
+        await loadAppFonts();
+        final min = _inDays(50);
+        final max = _inDays(65);
+        await pumpScreen(
+          tester,
+          CreateTripArgs(
+            resumeDraft: _boatDraft(arrivalMin: min, arrivalMax: max),
+          ),
+          locale: locale,
+          size: const Size(360, 800),
+        );
+        await tester.tap(find.byKey(const Key('create-announcement-preview')));
+        await tester.pumpAndSettle();
+
+        final l = lookupAppLocalizations(locale);
+        final arrival = find.byKey(const Key('preview-arrival-range'));
+        final deadline = find.byKey(const Key('preview-handover-deadline'));
+        expect(arrival, findsOneWidget);
+        expect(deadline, findsOneWidget);
+        expect(
+          find.descendant(
+            of: arrival,
+            matching: find.text(
+              AnnouncementPreviewSheet.arrivalLabel(l, min, max),
+            ),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: deadline,
+            matching: find.text(l.tripPublishHandoverDeadlineLabel),
+          ),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    // Recette du 14/11 : 65 600 F CFA devenaient 65 600 €/m³ au changement
+    // de devise, sans alerte.
+    for (final locale in const [AppL10n.fr, AppL10n.en]) {
+      testWidgets('devise changée ${locale.languageCode} : prix au m³ vidé et '
+          'message, jamais le nombre gardé', (tester) async {
+        if (locale == AppL10n.en) enableEnglish();
+        await pumpScreen(
+          tester,
+          CreateTripArgs(resumeDraft: _boatDraft(stepId: TripFormStep.prix)),
+          locale: locale,
+          size: const Size(360, 800),
+        );
+        TextField priceField() => tester.widget<TextField>(
+          find.descendant(
+            of: find.byKey(const Key('trip-price-per-m3')),
+            matching: find.byType(TextField),
+          ),
+        );
+        expect(priceField().controller!.text, '150');
+
+        await tester.ensureVisible(
+          find.byKey(const Key('trip-currency-selector-row')),
+        );
+        await tester.tap(find.byKey(const Key('trip-currency-selector-row')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.textContaining('(USD)'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('currency-selector-confirm')));
+        await tester.pumpAndSettle();
+
+        final l = lookupAppLocalizations(locale);
+        expect(priceField().controller!.text, isEmpty);
+        expect(
+          find.text(
+            l.tripPublishPerM3CurrencyReset(SupportedCurrency.usd.symbol),
+          ),
+          findsOneWidget,
+        );
+        expect(continueButton(tester).onPressed, isNull);
+        expect(tester.takeException(), isNull);
+        await tester.pump(const Duration(seconds: 5));
+      });
+    }
 
     testWidgets('au kilo : kilos et prix au kilo, ni volume ni prix au m³', (
       tester,

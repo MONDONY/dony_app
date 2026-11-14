@@ -312,7 +312,8 @@ void main() {
       (
         'report retiré',
         RescheduleWithdrawn.new,
-        _l.bidRescheduleWithdrawnSnackbar,
+        // Colis en espèces : aucun remboursement promis.
+        _l.bidRescheduleWithdrawnCashSnackbar,
       ),
       (
         'retour confirmé',
@@ -541,7 +542,9 @@ void main() {
       (
         'annulée',
         () => BidCancelled(_bid(status: 'CANCELLED')),
-        _l.bidDetailCancelledSnackbar,
+        // L'expéditeur lit « vous » ; colis en espèces : rien à rembourser
+        // par Yadony (recette du 14/11).
+        _l.bidDetailCancelledSenderCashSnackbar,
       ),
       ('supprimée', BidDeleted.new, _l.bidDetailDeletedSnackbar),
       (
@@ -550,6 +553,22 @@ void main() {
         _l.bidCancelBeforePaymentSuccessSnackbar,
       ),
     ];
+    // Expéditeur d'un colis payé par carte : remboursé, à la 2e personne.
+    testWidgets('annulée, carte, expéditeur : « vous serez remboursé »', (
+      tester,
+    ) async {
+      await pump(tester, _bid(method: BidPaymentMethod.stripe));
+      bidStates.add(
+        BidCancelled(
+          _bid(status: 'CANCELLED', method: BidPaymentMethod.stripe),
+        ),
+      );
+      await settle(tester);
+      expect(find.text(_l.bidDetailCancelledSenderSnackbar), findsOneWidget);
+      expect(find.text(_l.bidDetailCancelledSnackbar), findsNothing);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
     for (final (name, make, message) in exits) {
       testWidgets('$name, fiche poussée : message et retour', (tester) async {
         await pump(tester, _bid());

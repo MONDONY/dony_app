@@ -26,7 +26,11 @@ enum CancellationKind { accepted, afterHandover }
 class CancellationDialog extends StatefulWidget {
   final CancellationKind kind;
 
-  const CancellationDialog({super.key, required this.kind});
+  /// Colis payé en espèces : aucun paiement n'est passé par Yadony, le
+  /// dialogue ne promet aucun remboursement.
+  final bool cash;
+
+  const CancellationDialog({super.key, required this.kind, this.cash = false});
 
   bool get _isAfterHandover => kind == CancellationKind.afterHandover;
 
@@ -35,11 +39,12 @@ class CancellationDialog extends StatefulWidget {
   static Future<String?> show(
     BuildContext context, {
     required CancellationKind kind,
+    bool cash = false,
   }) {
     return showDialog<String>(
       context: context,
       barrierDismissible: kind == CancellationKind.accepted,
-      builder: (_) => CancellationDialog(kind: kind),
+      builder: (_) => CancellationDialog(kind: kind, cash: cash),
     );
   }
 
@@ -111,7 +116,9 @@ class _CancellationDialogState extends State<CancellationDialog> {
                   // ── Sous-titre (cas accepted) ──────────────────────────
                   if (!widget._isAfterHandover) ...[
                     Text(
-                      l.bidCancelAcceptedSubtitle,
+                      widget.cash
+                          ? l.bidCancelAcceptedCashSubtitle
+                          : l.bidCancelAcceptedSubtitle,
                       style: tt.bodyMedium?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
@@ -148,7 +155,9 @@ class _CancellationDialogState extends State<CancellationDialog> {
                                 ),
                                 const SizedBox(height: DonySpacing.sm),
                                 Text(
-                                  l.bidCancelWarningRefundNote,
+                                  widget.cash
+                                      ? l.bidCancelWarningRefundNoteCash
+                                      : l.bidCancelWarningRefundNote,
                                   style: tt.bodySmall?.copyWith(
                                     color: cs.onSurfaceVariant,
                                     height: 1.4,

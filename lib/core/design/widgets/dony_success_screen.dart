@@ -11,6 +11,7 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -260,207 +261,215 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
     final cs = Theme.of(context).colorScheme;
     final closeLabel = context.l10n.commonClose;
 
-    return PopScope(
-      // Seules sorties autorisées : le CTA et le bouton fermer (X). Le retour
-      // arrière système (geste iOS / bouton Android) doit être ignoré pour
-      // éviter d'exposer le formulaire sous-jacent (risque de double soumission).
-      canPop: false,
-      child: Scaffold(
-        appBar: DonyAppBar(
-          title: '',
-          showBackButton: false,
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: DonySpacing.base),
-              child: Tooltip(
-                message: closeLabel,
-                child: Semantics(
-                  button: true,
-                  label: closeLabel,
-                  child: InkWell(
-                    onTap: () => _handleClose(context),
-                    customBorder: const CircleBorder(),
-                    child: Container(
-                      width: DonySpacing.icon,
-                      height: DonySpacing.icon,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: cs.surface,
-                        border: Border.all(color: cs.outline),
-                      ),
-                      child: DonyIcon(
-                        'x',
-                        size: DonySpacing.iconSm,
-                        color: cs.onSurface,
+    // La bulle de l'assistant flotte au milieu du bord droit : sur cet écran
+    // centré, elle masquait le sous-titre (« Offer sent! », recette du
+    // 14/11). Un écran de confirmation n'en a pas besoin : masquée ici.
+    return HideAssistantBubble(
+      child: PopScope(
+        // Seules sorties autorisées : le CTA et le bouton fermer (X). Le retour
+        // arrière système (geste iOS / bouton Android) doit être ignoré pour
+        // éviter d'exposer le formulaire sous-jacent (risque de double soumission).
+        canPop: false,
+        child: Scaffold(
+          appBar: DonyAppBar(
+            title: '',
+            showBackButton: false,
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: DonySpacing.base),
+                child: Tooltip(
+                  message: closeLabel,
+                  child: Semantics(
+                    button: true,
+                    label: closeLabel,
+                    child: InkWell(
+                      onTap: () => _handleClose(context),
+                      customBorder: const CircleBorder(),
+                      child: Container(
+                        width: DonySpacing.icon,
+                        height: DonySpacing.icon,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: cs.surface,
+                          border: Border.all(color: cs.outline),
+                        ),
+                        child: DonyIcon(
+                          'x',
+                          size: DonySpacing.iconSm,
+                          color: cs.onSurface,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-        body: Builder(
-          builder: (context) {
-            final h = DonyLayout.hPadding(context);
-            // Barre de navigation système (3 boutons Android) : les boutons
-            // restent dans une zone fixe en bas, au-dessus d'elle, jamais
-            // dessous (un tap sur leur bas déclenchait la touche Accueil).
-            // `padding` peut être à 0 quand l'app est en bord à bord ou que
-            // le Scaffold a consommé l'inset : on prend le MAX avec
-            // `viewPadding`, qui garde la valeur réelle de la barre.
-            final mq = MediaQuery.of(context);
-            final systemBottom = math.max(
-              mq.padding.bottom,
-              mq.viewPadding.bottom,
-            );
-            Widget fadeScale(Widget w) => w
-                .animate()
-                .fadeIn(duration: 400.ms)
-                .scale(
-                  begin: const Offset(0.92, 0.92),
-                  curve: Curves.easeOutCubic,
-                );
-            return Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      h,
-                      DonySpacing.xxl,
-                      h,
-                      DonySpacing.lg,
-                    ),
-                    child: DonyLayout.constrained(
-                      context,
-                      fadeScale(
-                        Column(
-                          children: [
-                            const SizedBox(height: DonySpacing.xxl),
-                            SizedBox(
-                              width: _confettiAreaSize,
-                              height: _confettiAreaSize,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  if (!_reducedMotion)
-                                    Positioned.fill(
-                                      child: IgnorePointer(
-                                        key: const ValueKey(
-                                          'dony-success-confetti',
-                                        ),
-                                        child: AnimatedBuilder(
-                                          animation: _confettiController,
-                                          builder: (context, _) => CustomPaint(
-                                            painter: _ConfettiPainter(
-                                              progress: Curves.easeOut
-                                                  .transform(
-                                                    _confettiController.value,
+            ],
+          ),
+          body: Builder(
+            builder: (context) {
+              final h = DonyLayout.hPadding(context);
+              // Barre de navigation système (3 boutons Android) : les boutons
+              // restent dans une zone fixe en bas, au-dessus d'elle, jamais
+              // dessous (un tap sur leur bas déclenchait la touche Accueil).
+              // `padding` peut être à 0 quand l'app est en bord à bord ou que
+              // le Scaffold a consommé l'inset : on prend le MAX avec
+              // `viewPadding`, qui garde la valeur réelle de la barre.
+              final mq = MediaQuery.of(context);
+              final systemBottom = math.max(
+                mq.padding.bottom,
+                mq.viewPadding.bottom,
+              );
+              Widget fadeScale(Widget w) => w
+                  .animate()
+                  .fadeIn(duration: 400.ms)
+                  .scale(
+                    begin: const Offset(0.92, 0.92),
+                    curve: Curves.easeOutCubic,
+                  );
+              return Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        h,
+                        DonySpacing.xxl,
+                        h,
+                        DonySpacing.lg,
+                      ),
+                      child: DonyLayout.constrained(
+                        context,
+                        fadeScale(
+                          Column(
+                            children: [
+                              const SizedBox(height: DonySpacing.xxl),
+                              SizedBox(
+                                width: _confettiAreaSize,
+                                height: _confettiAreaSize,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    if (!_reducedMotion)
+                                      Positioned.fill(
+                                        child: IgnorePointer(
+                                          key: const ValueKey(
+                                            'dony-success-confetti',
+                                          ),
+                                          child: AnimatedBuilder(
+                                            animation: _confettiController,
+                                            builder: (context, _) =>
+                                                CustomPaint(
+                                                  painter: _ConfettiPainter(
+                                                    progress: Curves.easeOut
+                                                        .transform(
+                                                          _confettiController
+                                                              .value,
+                                                        ),
+                                                    particles:
+                                                        _confettiParticles,
                                                   ),
-                                              particles: _confettiParticles,
-                                            ),
+                                                ),
                                           ),
                                         ),
                                       ),
+                                    DonyMascotteAnimated(
+                                      type: widget.mascotteType,
+                                      size: DonyMascotteSize.lg,
+                                      withGlow: true,
                                     ),
-                                  DonyMascotteAnimated(
-                                    type: widget.mascotteType,
-                                    size: DonyMascotteSize.lg,
-                                    withGlow: true,
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: DonySpacing.xl),
-                            Text(
-                              widget.title,
-                              style: tt.displayLarge,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: DonySpacing.md),
-                            Text(
-                              widget.subtitle,
-                              textAlign: TextAlign.center,
-                              style: tt.bodyLarge?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                height: 1.5,
-                              ),
-                            ),
-                            if (widget.extra case final extra?) ...[
                               const SizedBox(height: DonySpacing.xl),
-                              extra,
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // Zone des boutons : fixe, bornée en hauteur (défile si
-                // l'écran est minuscule), au-dessus de la barre système.
-                Flexible(
-                  flex: 0,
-                  child: SingleChildScrollView(
-                    key: const Key('success-screen-actions'),
-                    padding: EdgeInsets.fromLTRB(
-                      h,
-                      DonySpacing.sm,
-                      h,
-                      DonySpacing.lg + systemBottom,
-                    ),
-                    child: DonyLayout.constrained(
-                      context,
-                      fadeScale(
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            DonyButton(
-                              label: widget.ctaLabel,
-                              variant: widget.ctaVariant,
-                              onPressed: _handleCtaTap,
-                            ),
-                            if (widget.secondaryLabel != null &&
-                                widget.onSecondary != null) ...[
+                              Text(
+                                widget.title,
+                                style: tt.displayLarge,
+                                textAlign: TextAlign.center,
+                              ),
                               const SizedBox(height: DonySpacing.md),
-                              DonyButton(
-                                label: widget.secondaryLabel!,
-                                variant: DonyButtonVariant.secondary,
-                                iconAsset: widget.secondaryIconAsset,
-                                onPressed: _handleSecondaryTap,
-                              ),
-                            ],
-                            if (widget.tertiaryLabel != null &&
-                                widget.onTertiary != null) ...[
-                              const SizedBox(height: DonySpacing.sm),
-                              DonyButton(
-                                key: const Key('success-screen-tertiary'),
-                                label: widget.tertiaryLabel!,
-                                variant: DonyButtonVariant.ghost,
-                                onPressed: _handleTertiaryTap,
-                              ),
-                            ],
-                            for (final (i, action)
-                                in widget.extraActions.indexed)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  top: DonySpacing.sm,
-                                ),
-                                child: DonyButton(
-                                  key: Key('success-screen-extra-$i'),
-                                  label: action.label,
-                                  variant: DonyButtonVariant.ghost,
-                                  onPressed: () => _handleExtraTap(i),
+                              Text(
+                                widget.subtitle,
+                                textAlign: TextAlign.center,
+                                style: tt.bodyLarge?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                  height: 1.5,
                                 ),
                               ),
-                          ],
+                              if (widget.extra case final extra?) ...[
+                                const SizedBox(height: DonySpacing.xl),
+                                extra,
+                              ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                  // Zone des boutons : fixe, bornée en hauteur (défile si
+                  // l'écran est minuscule), au-dessus de la barre système.
+                  Flexible(
+                    flex: 0,
+                    child: SingleChildScrollView(
+                      key: const Key('success-screen-actions'),
+                      padding: EdgeInsets.fromLTRB(
+                        h,
+                        DonySpacing.sm,
+                        h,
+                        DonySpacing.lg + systemBottom,
+                      ),
+                      child: DonyLayout.constrained(
+                        context,
+                        fadeScale(
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              DonyButton(
+                                label: widget.ctaLabel,
+                                variant: widget.ctaVariant,
+                                onPressed: _handleCtaTap,
+                              ),
+                              if (widget.secondaryLabel != null &&
+                                  widget.onSecondary != null) ...[
+                                const SizedBox(height: DonySpacing.md),
+                                DonyButton(
+                                  label: widget.secondaryLabel!,
+                                  variant: DonyButtonVariant.secondary,
+                                  iconAsset: widget.secondaryIconAsset,
+                                  onPressed: _handleSecondaryTap,
+                                ),
+                              ],
+                              if (widget.tertiaryLabel != null &&
+                                  widget.onTertiary != null) ...[
+                                const SizedBox(height: DonySpacing.sm),
+                                DonyButton(
+                                  key: const Key('success-screen-tertiary'),
+                                  label: widget.tertiaryLabel!,
+                                  variant: DonyButtonVariant.ghost,
+                                  onPressed: _handleTertiaryTap,
+                                ),
+                              ],
+                              for (final (i, action)
+                                  in widget.extraActions.indexed)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: DonySpacing.sm,
+                                  ),
+                                  child: DonyButton(
+                                    key: Key('success-screen-extra-$i'),
+                                    label: action.label,
+                                    variant: DonyButtonVariant.ghost,
+                                    onPressed: () => _handleExtraTap(i),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
