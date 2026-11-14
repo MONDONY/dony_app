@@ -24174,6 +24174,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get inquiryAskUnavailable =>
+      'Les questions ne sont plus possibles sur ce trajet.';
+
+  @override
   String inquiryAskTileBadge(int limit) {
     return '$limit messages';
   }

@@ -11872,6 +11872,10 @@
           }
       }
   },
+  "inquiryAskUnavailable": "Questions are no longer possible on this trip.",
+  "@inquiryAskUnavailable": {
+      "description": "Shown when the backend refuses to open a pre-booking question thread (trip closed or not found)."
+  },
   "inquiryAskTileBadge": "{limit} messages",
   "@inquiryAskTileBadge": {
       "description": "Badge of the question tile; {limit} = message quota before booking.",

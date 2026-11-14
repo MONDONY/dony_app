@@ -23429,6 +23429,10 @@
           }
       }
   },
+  "inquiryAskUnavailable": "Les questions ne sont plus possibles sur ce trajet.",
+  "@inquiryAskUnavailable": {
+      "description": "Message quand le back refuse d'ouvrir une conversation de question (trajet fermé ou introuvable)."
+  },
   "inquiryAskTileBadge": "{limit} messages",
   "@inquiryAskTileBadge": {
       "description": "Pastille de la tuile de question ; {limit} = quota de messages avant réservation.",

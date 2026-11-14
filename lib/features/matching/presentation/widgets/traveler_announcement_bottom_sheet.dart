@@ -42,6 +42,8 @@ import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sh
 import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_routes.dart'
     show canShareTripPoster;
+import 'package:dony/features/messaging/data/models/conversation_model.dart';
+import 'package:dony/features/messaging/presentation/widgets/ask_question_tile.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -470,6 +472,7 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
         announcement: announcement,
         avecFavori: favoris != null && !estProprietaire,
         lecteurId: lecteurId,
+        lecteurKycStatus: authState.currentUser?.kycStatus,
         returnsNavigation: returnsNavigation,
         fromMap: fromMap,
         fromDetail: fromDetail,
@@ -647,6 +650,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
     required this.announcement,
     this.avecFavori = false,
     this.lecteurId,
+    this.lecteurKycStatus,
     this.returnsNavigation = false,
     this.fromMap = false,
     this.fromDetail = false,
@@ -664,6 +668,9 @@ class _TravelerAnnouncementContent extends StatelessWidget {
 
   /// Identifiant du lecteur, pour ne pas lui proposer de se bloquer lui-même.
   final String? lecteurId;
+
+  /// Statut KYC connu du lecteur, pour « Poser une question ».
+  final String? lecteurKycStatus;
 
   /// Le voyageur du trajet, sauf s'il s'agit du lecteur lui-même.
   TravelerProfile? get _voyageurBloquable {
@@ -694,6 +701,35 @@ class _TravelerAnnouncementContent extends StatelessWidget {
     }
     navigator.pop();
     context.push(location, extra: announcement);
+  }
+
+  /// Ferme la feuille puis ouvre la conversation de question, comme
+  /// [_openPoster] : via [TravelerSheetRoute] depuis `/traveler/:id`.
+  void _openChat(BuildContext context, ConversationModel conversation) {
+    final location = '/conversations/${conversation.id}';
+    final navigator = Navigator.of(context, rootNavigator: true);
+    if (returnsNavigation) {
+      navigator.pop(TravelerSheetRoute(location, extra: conversation));
+      return;
+    }
+    navigator.pop();
+    context.push(location, extra: conversation);
+  }
+
+  /// Ferme la feuille puis poursuit en feuilles (connexion, vérification
+  /// d'identité), comme `openCreateBid` du pied collant.
+  void _leaveThen(
+    BuildContext context,
+    Future<void> Function(BuildContext rootContext) run,
+  ) {
+    final navigator = Navigator.of(context, rootNavigator: true);
+    if (returnsNavigation) {
+      navigator.pop(TravelerSheetFollowUp(run));
+      return;
+    }
+    final rootCtx = navigator.context;
+    navigator.pop();
+    unawaited(run(rootCtx));
   }
 
   @override
@@ -754,6 +790,13 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           ),
         const SizedBox(height: DonySpacing.md),
         _TravelerCard(announcement: announcement),
+        AskQuestionTile(
+          announcement: announcement,
+          viewerId: lecteurId,
+          viewerKycStatus: lecteurKycStatus,
+          onOpenChat: (conversation) => _openChat(context, conversation),
+          onFollowUp: (run) => _leaveThen(context, run),
+        ),
         if (announcement.pickupAddress != null ||
             announcement.deliveryAddress != null) ...[
           const SizedBox(height: DonySpacing.md),

@@ -2275,6 +2275,7 @@ void main() {
       expect(find.byKey(const Key('negotiate-price-btn')), findsNothing);
       expect(find.byType(FavoriteHeartButton), findsNothing);
       expect(find.byKey(const Key('own-trip-footer')), findsOneWidget);
+      expect(find.byKey(const Key('ask-question-tile')), findsNothing);
       expect(
         find.text(
           "C'est votre trajet : vous ne pouvez pas vous envoyer de demande.",
@@ -2312,6 +2313,40 @@ void main() {
       expect(find.byType(FavoriteHeartButton), findsOneWidget);
       expect(find.byKey(const Key('own-trip-footer')), findsNothing);
     });
+
+    testWidgets(
+      'tuile « Poser une question » entre la carte voyageur et la suite, '
+      'pied collant inchangé',
+      (tester) async {
+        final a = _buildAnnouncement(
+          negotiable: true,
+          arrivalInstructions: 'Hall des arrivées',
+        );
+        await tester.pumpWidget(_harness(announcement: a, favorites: cubit));
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        final tile = find.byKey(const Key('ask-question-tile'));
+        expect(tile, findsOneWidget);
+        final travelerY = tester
+            .getTopLeft(find.byKey(const Key('traveler-block')))
+            .dy;
+        final tileY = tester.getTopLeft(tile).dy;
+        expect(tileY, greaterThan(travelerY));
+        expect(
+          tileY,
+          lessThan(
+            tester
+                .getTopLeft(find.byKey(const Key('report-announcement-link')))
+                .dy,
+          ),
+        );
+        // Pied collant : toujours les deux mêmes boutons, pas de troisième.
+        expect(find.text('Faire une demande'), findsOneWidget);
+        expect(find.byKey(const Key('negotiate-price-btn')), findsOneWidget);
+        expect(find.text('Poser une question'), findsOneWidget);
+      },
+    );
 
     testWidgets('en anglais', (tester) async {
       useEnglish();

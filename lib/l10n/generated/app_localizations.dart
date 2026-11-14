@@ -38676,6 +38676,12 @@ abstract class AppLocalizations {
   /// **'Écrivez à {name} avant de réserver'**
   String inquiryAskTileSubtitle(String name);
 
+  /// Message quand le back refuse d'ouvrir une conversation de question (trajet fermé ou introuvable).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les questions ne sont plus possibles sur ce trajet.'**
+  String get inquiryAskUnavailable;
+
   /// Pastille de la tuile de question ; {limit} = quota de messages avant réservation.
   ///
   /// In fr, this message translates to:
