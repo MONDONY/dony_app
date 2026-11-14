@@ -1,6 +1,10 @@
 /// Motif d'un report de trajet, valeurs du back (`TripRescheduleReason`).
+///
+/// [flightCancelled] reste le motif envoyé pour un avion (le back prod ne
+/// connaît pas encore [transportCancelled]) ; les deux sont lus.
 enum TripRescheduleReason {
   flightCancelled('FLIGHT_CANCELLED'),
+  transportCancelled('TRANSPORT_CANCELLED'),
   postponed('POSTPONED'),
   other('OTHER');
 

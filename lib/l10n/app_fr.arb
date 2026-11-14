@@ -386,6 +386,14 @@
   "errorValidationMessage": "Vérifiez les informations saisies puis réessayez.",
   "errorInvalidPriceMessage": "Indiquez un prix par kg supérieur à 0, ou choisissez le tarif à la grille.",
   "@errorInvalidPriceMessage": {"description": "Erreur invalid-price du back : un trajet en mode « au kilo » exige un prix par kg supérieur à 0 (error_catalog.dart)."},
+  "errorTransportModeDisabledTitle": "Mode indisponible",
+  "@errorTransportModeDisabledTitle": {"description": "Erreur transport-mode-disabled / invalid-transport-mode du back : le mode de transport demandé n'est pas ouvert (error_catalog.dart)."},
+  "errorTransportModeDisabledMessage": "Ce mode de transport n'est pas encore proposé.",
+  "@errorTransportModeDisabledMessage": {"description": "Erreur transport-mode-disabled / invalid-transport-mode du back : le mode de transport demandé n'est pas ouvert (error_catalog.dart)."},
+  "errorArrivalTooFarTitle": "Arrivée trop lointaine",
+  "@errorArrivalTooFarTitle": {"description": "Erreur arrival-too-far du back : l'arrivée est trop loin après le départ pour ce mode de transport (error_catalog.dart)."},
+  "errorArrivalTooFarMessage": "La date d'arrivée est trop loin après le départ pour ce mode.",
+  "@errorArrivalTooFarMessage": {"description": "Erreur arrival-too-far du back : l'arrivée est trop loin après le départ pour ce mode de transport (error_catalog.dart)."},
   "errorConflictTitle": "Action impossible",
   "errorConflictMessage": "L'état actuel ne permet pas cette action.",
   "errorStorageTitle": "Stockage indisponible",
@@ -1023,7 +1031,11 @@
   "homeComposerTitleParcels": "Filtrer les colis",
   "homeComposerClearAll": "Tout effacer",
   "homeComposerMoreFilters": "Plus de filtres",
-  "homeComposerMoreFiltersHint": "Type de contenu, transport, note, escales, paiement",
+  "homeComposerMoreFiltersHint": "Type de contenu, note, escales, paiement",
+  "homeComposerSectionTransport": "TRANSPORT",
+  "@homeComposerSectionTransport": {
+    "description": "Titre de la section du composeur de recherche de trajets qui filtre par mode de transport (Tous, Avion, Bateau, Route), visible seulement quand plusieurs modes sont ouverts"
+  },
   "homeComposerSectionWhen": "QUAND",
   "homeComposerSectionAroundMe": "AUTOUR DE MOI",
   "homeComposerSearch": "Rechercher",
@@ -1071,6 +1083,14 @@
     }
   },
   "homeModeSelectorParcelsSubtitle": "Colis à transporter",
+  "homeFilterChipsTransport": "Transport",
+  "@homeFilterChipsTransport": {
+    "description": "Puce de filtre de l'accueil en tête de rangée : mode de transport pas encore choisi (une fois choisi, la puce affiche le mode)"
+  },
+  "homeFilterChipsTransportAll": "Tous",
+  "@homeFilterChipsTransportAll": {
+    "description": "Puce du composeur de recherche, section TRANSPORT : tous les modes de transport, aucun filtre"
+  },
   "homeFilterChipsDate": "Date",
   "@homeFilterChipsDate": {
     "description": "Puce de filtre de l'accueil : date personnalisée choisie mais pas encore renseignée"
@@ -1203,9 +1223,11 @@
     "description": "Nom affiché quand le voyageur n'a pas de displayName exploitable"
   },
   "tripTransportPlane": "Avion",
-  "tripTransportCar": "Voiture",
+  "tripTransportRoad": "Route",
+  "@tripTransportRoad": {
+    "description": "Libellé du mode de transport par la route (voiture ou bus) d'un trajet ou d'une demande"
+  },
   "tripTransportTrain": "Train",
-  "tripTransportBus": "Bus",
   "tripTransportBoat": "Bateau",
   "tripTransportOther": "Autre",
   "tripUrgencyVeryUrgent": "< 3j",
@@ -1323,26 +1345,9 @@
   "@tripPublishDraftLimitTitle": {
     "description": "Titre du dialogue quand la limite de brouillons est atteinte"
   },
-  "tripPublishTemplatesLabel": "Mes modèles",
-  "@tripPublishTemplatesLabel": {
-    "description": "Titre de la barre de suggestion des modèles de trajet enregistrés"
-  },
-  "tripPublishTemplatesHint": "Appliquez un modèle pour pré-remplir le trajet",
-  "@tripPublishTemplatesHint": {
-    "description": "Texte d'aide sous le titre de la barre de suggestion des modèles de trajet"
-  },
   "tripPublishTemplateAppliedMessage": "Modèle « {label} » appliqué",
   "@tripPublishTemplateAppliedMessage": {
     "description": "Confirmation après application d'un modèle de trajet, avec son nom",
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "tripPublishTemplateChipGrid": "{label} · par article",
-  "@tripPublishTemplateChipGrid": {
-    "description": "Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom",
     "placeholders": {
       "label": {
         "type": "String"
@@ -1491,7 +1496,7 @@
   "@requestPublishIntroWhyTitle": {
     "description": "Titre de la section « comment ça marche », rôle expéditeur"
   },
-  "requestPublishIntroWhyBulletCarried": "Un voyageur transporte votre colis dans ses bagages.",
+  "requestPublishIntroWhyBulletCarried": "Un voyageur transporte votre colis avec lui.",
   "@requestPublishIntroWhyBulletCarried": {
     "description": "Puce « comment ça marche », rôle expéditeur : transport"
   },
@@ -1622,19 +1627,19 @@
   },
   "tripPublishCashLockedSubtitle": "Toujours accepté sur ce trajet. Frais de service avancés sur votre solde Yadony quand vous acceptez le colis, remboursés par l'expéditeur dans le paiement en espèces",
   "@tripPublishCashLockedSubtitle": {
-    "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+    "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_step.dart, Sentry FLUTTER-8M)."
   },
   "tripPublishCashLockedExplanation": "Sans paiement par carte sur ce trajet, les espèces restent toujours acceptées : c'est le mode qui permet aux expéditeurs de réserver.",
   "@tripPublishCashLockedExplanation": {
-    "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+    "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_step.dart, Sentry FLUTTER-8M)."
   },
   "tripPublishCardActiveExplanation": "Le paiement par carte est activé sur ce trajet : les expéditeurs pourront payer par carte, l'argent est séquestré jusqu'à la livraison.",
   "@tripPublishCardActiveExplanation": {
-    "description": "Message au toucher de la ligne carte quand elle est active (prix_conditions_step.dart, Sentry FLUTTER-CS/D2)."
+    "description": "Message au toucher de la ligne carte quand elle est active (prix_step.dart, Sentry FLUTTER-CS/D2)."
   },
   "tripPublishCardCheckingSubtitle": "Vérification de votre compte de paiement…",
   "@tripPublishCardCheckingSubtitle": {
-    "description": "Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_conditions_step.dart, Sentry FLUTTER-D2)."
+    "description": "Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_step.dart, Sentry FLUTTER-D2)."
   },
   "tripPublishCashSubtitle": "Frais de service avancés sur votre solde Yadony quand vous acceptez le colis, remboursés par l'expéditeur dans le paiement en espèces",
   "@tripPublishCashSubtitle": {
@@ -1666,7 +1671,7 @@
   },
   "tripPublishCashOnlyBannerNoConnectCountry": "Le paiement par carte dépend du pays de résidence indiqué dans votre profil ({country}), et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces, et en mobile money pour les trajets en XOF ou XAF.",
   "@tripPublishCashOnlyBannerNoConnectCountry": {
-    "description": "Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_conditions_step.dart, FLUTTER-EE).",
+    "description": "Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_step.dart, FLUTTER-EE).",
     "placeholders": {
       "country": {
         "type": "String"
@@ -1921,13 +1926,77 @@
   "@tripPublishCurrencyChangeCta": {
     "description": "Bouton « Changer » de la bannière de sélection de devise"
   },
+  "tripPublishStepMode": "Mode",
+  "@tripPublishStepMode": {
+    "description": "Libellé de l'étape Mode dans l'en-tête des étapes de publication d'un trajet"
+  },
+  "tripPublishStepCapacity": "Capacité",
+  "@tripPublishStepCapacity": {
+    "description": "Libellé de l'étape Capacité dans l'en-tête des étapes de publication d'un trajet"
+  },
+  "tripPublishStepPrice": "Prix",
+  "@tripPublishStepPrice": {
+    "description": "Libellé de l'étape Prix dans l'en-tête des étapes de publication d'un trajet"
+  },
+  "tripPublishStepConditions": "Conditions",
+  "@tripPublishStepConditions": {
+    "description": "Libellé de l'étape Conditions dans l'en-tête des étapes de publication d'un trajet"
+  },
   "tripPublishPlacesCapacityStepLabel": "Lieux & capacité",
   "@tripPublishPlacesCapacityStepLabel": {
-    "description": "Libellé d'étape du stepper de publication (étape 1)"
+    "description": "Libellé d'étape du stepper de l'écran des modèles de trajet (étape 1 : lieux de remise et capacité)"
   },
   "tripPublishPriceConditionsStepLabel": "Prix & conditions",
   "@tripPublishPriceConditionsStepLabel": {
-    "description": "Libellé d'étape du stepper de publication (étape 2)"
+    "description": "Libellé d'étape du stepper de l'écran des modèles de trajet (étape 2 : prix et conditions)"
+  },
+  "tripPublishModeQuestion": "Comment voyagez-vous ?",
+  "@tripPublishModeQuestion": {
+    "description": "Titre de l'étape Mode du formulaire de publication d'un trajet"
+  },
+  "tripPublishModeHint": "Le mode adapte la suite : dates, capacité et prix.",
+  "@tripPublishModeHint": {
+    "description": "Sous-titre de l'étape Mode du formulaire de publication d'un trajet"
+  },
+  "tripPublishModeSectionLabel": "Mode de transport",
+  "@tripPublishModeSectionLabel": {
+    "description": "Libellé de la ligne compacte du mode, au-dessus des étapes du formulaire de trajet"
+  },
+  "tripPublishConditionsSkip": "Passer",
+  "@tripPublishConditionsSkip": {
+    "description": "Bouton texte en tête de l'étape Conditions du formulaire de trajet (création) : ouvre l'aperçu sans rien remplir"
+  },
+  "tripPublishModeAirTitle": "Voie aérienne",
+  "@tripPublishModeAirTitle": {
+    "description": "Titre de la carte Avion de l'étape Mode"
+  },
+  "tripPublishModeAirSubtitle": "Avion, vos kilos de valise",
+  "@tripPublishModeAirSubtitle": {
+    "description": "Sous-titre de la carte Avion de l'étape Mode"
+  },
+  "tripPublishModeAirTagDuration": "Quelques jours",
+  "@tripPublishModeAirTagDuration": {
+    "description": "Étiquette de durée de la carte Avion de l'étape Mode"
+  },
+  "tripPublishModeAirTagCapacity": "Valises ou kg",
+  "@tripPublishModeAirTagCapacity": {
+    "description": "Étiquette de capacité de la carte Avion de l'étape Mode"
+  },
+  "tripPublishModeRoadTitle": "Voie terrestre",
+  "@tripPublishModeRoadTitle": {
+    "description": "Titre de la carte Route de l'étape Mode"
+  },
+  "tripPublishModeRoadSubtitle": "Voiture, car ou camion",
+  "@tripPublishModeRoadSubtitle": {
+    "description": "Sous-titre de la carte Route de l'étape Mode"
+  },
+  "tripPublishModeRoadTagScope": "Même pays ou international",
+  "@tripPublishModeRoadTagScope": {
+    "description": "Étiquette de portée de la carte Route de l'étape Mode"
+  },
+  "tripPublishModeRoadTagCapacity": "Kg libre ou exact",
+  "@tripPublishModeRoadTagCapacity": {
+    "description": "Étiquette de capacité de la carte Route de l'étape Mode"
   },
   "tripPublishHandoverLocationsLabel": "Lieux de remise",
   "@tripPublishHandoverLocationsLabel": {
@@ -2790,9 +2859,33 @@
       }
     }
   },
-  "requestCreateAirplaneOnlyMode": "seul mode disponible",
-  "@requestCreateAirplaneOnlyMode": {
-    "description": "Sous-texte du bloc mode de transport verrouillé sur avion (step_1_trajet_colis.dart)"
+  "requestCreateTransportModeLabel": "Mode de transport",
+  "@requestCreateTransportModeLabel": {
+    "description": "Libellé du choix du mode de transport à l'étape 1 de la demande de colis (request_transport_mode_selector.dart)"
+  },
+  "requestCreateTransportAny": "Peu importe",
+  "@requestCreateTransportAny": {
+    "description": "Puce « Peu importe » du mode de transport de la demande, et valeur de la ligne Transport du récapitulatif quand aucun mode n'est imposé"
+  },
+  "requestCreateModeHelpAny": "Tous les voyageurs de ce trajet verront votre demande.",
+  "@requestCreateModeHelpAny": {
+    "description": "Aide sous les puces de mode : « Peu importe » sélectionné"
+  },
+  "requestCreateModeHelpPlane": "Seuls les voyageurs en avion verront votre demande.",
+  "@requestCreateModeHelpPlane": {
+    "description": "Aide sous les puces de mode : avion sélectionné"
+  },
+  "requestCreateModeHelpBoat": "Seuls les bateaux (groupage en conteneur) verront votre demande.",
+  "@requestCreateModeHelpBoat": {
+    "description": "Aide sous les puces de mode : bateau sélectionné"
+  },
+  "requestCreateModeHelpRoad": "Seuls les voyageurs en voiture, car ou camion verront votre demande.",
+  "@requestCreateModeHelpRoad": {
+    "description": "Aide sous les puces de mode : route sélectionnée"
+  },
+  "requestCreateAiAction": "Créer avec l'IA",
+  "@requestCreateAiAction": {
+    "description": "Info-bulle de l'icône IA de la barre de titre de l'étape 1 de la demande de colis"
   },
   "requestCreateTrajetSectionLabel": "TRAJET",
   "@requestCreateTrajetSectionLabel": {
@@ -7056,7 +7149,7 @@
   "@bidDetailSenderTravelerFallback": {
     "description": "Repli quand bid.travelerName est vide (money_breakdown_card.dart, sender_sticky_bar.dart, amendment_request_sheet.dart, amendment_card.dart)"
   },
-  "bidDetailSenderHandedOverSubtitleWithDate": "Embarquement prévu le {date}.",
+  "bidDetailSenderHandedOverSubtitleWithDate": "Départ prévu le {date}.",
   "@bidDetailSenderHandedOverSubtitleWithDate": {
     "description": "HANDED_OVER, sous-titre avec date de depart connue (sender_hero_card.dart)",
     "placeholders": {
@@ -9067,10 +9160,13 @@
   "@tripOwnerShareMyTrip": {
     "description": "Bouton secondaire de partage de l'écran de succès (trip_owner_detail_screen.dart)."
   },
-  "tripOwnerShareMessage": "✈️ Je voyage {dep} → {arr} le {date} avec de la place dans mes bagages !\nRéservez vos kilos sur Yadony 📦\n{url}",
+  "tripOwnerShareMessage": "{emoji} Je voyage {dep} → {arr} le {date} avec de la place pour vos colis !\nRéservez vos kilos sur Yadony 📦\n{url}",
   "@tripOwnerShareMessage": {
-    "description": "Message partagé après publication d'un brouillon (trip_owner_detail_screen.dart). date formatée en DateFormat.MMMMd(locale) ; url = donnée non traduite.",
+    "description": "Message partagé après publication d'un brouillon (trip_owner_detail_screen.dart). emoji = emoji du mode du trajet (TransportModeUI.emoji) ; date formatée en DateFormat.MMMMd(locale) ; url = donnée non traduite.",
     "placeholders": {
+      "emoji": {
+        "type": "String"
+      },
       "dep": {
         "type": "String"
       },
@@ -9216,7 +9312,7 @@
   "@tripOwnerParcelsTile": {
     "description": "Tuile « Colis » (écran du trajet, ex-grille d’actions), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur)."
   },
-  "tripOwnerNoParcelsMessage": "Aucun colis embarqué",
+  "tripOwnerNoParcelsMessage": "Aucun colis confié",
   "@tripOwnerNoParcelsMessage": {
     "description": "Tooltip de la tuile « Colis » désactivée (écran du trajet, ex-grille d’actions) ; réutilisé comme titre de l'état vide du sheet « Colis » de l'activité du trajet (trip_activity_sheets.dart, même préfixe, texte identique)."
   },
@@ -12165,6 +12261,14 @@
   "cancellationReasonFlightCanceled": "Vol annulé",
   "@cancellationReasonFlightCanceled": {
     "description": "Libellé affiché du motif d'annulation 'Vol annulé' (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste envoyée au serveur telle quelle (cancellation_bottom_sheet.dart, _reasons)."
+  },
+  "cancellationReasonTransportCancelled": "Transport annulé",
+  "@cancellationReasonTransportCancelled": {
+    "description": "Libellé affiché du motif d'annulation 'Vol annulé' pour un trajet en bateau, en train ou d'un autre mode (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste 'Vol annulé'."
+  },
+  "cancellationReasonBreakdown": "Panne ou contretemps",
+  "@cancellationReasonBreakdown": {
+    "description": "Libellé affiché du motif d'annulation 'Vol annulé' pour un trajet par la route (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste 'Vol annulé'."
   },
   "cancellationReasonPersonalEmergency": "Urgence personnelle",
   "@cancellationReasonPersonalEmergency": {
@@ -17253,14 +17357,6 @@
   "@addressNotLocatedStatus": {
     "description": "Statut affiché quand l'adresse n'a pas été localisée (address_location_status.dart)."
   },
-  "dsEmojiTakeoff": "Décollage",
-  "@dsEmojiTakeoff": {
-    "description": "Étiquette d'accessibilité par défaut de l'emoji décollage ✈️ (dony_emoji.dart)."
-  },
-  "dsEmojiLanding": "Atterrissage",
-  "@dsEmojiLanding": {
-    "description": "Étiquette d'accessibilité par défaut de l'emoji atterrissage 🛬 (dony_emoji.dart)."
-  },
   "dsEmojiParcel": "Colis",
   "@dsEmojiParcel": {
     "description": "Étiquette d'accessibilité par défaut de l'emoji colis 📦 (dony_emoji.dart)."
@@ -18097,15 +18193,15 @@
   },
   "tripPublishOtherContentPrecisionLabel": "Précisez ce que vous acceptez en « Autre »",
   "@tripPublishOtherContentPrecisionLabel": {
-    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (conditions_step.dart, FLUTTER-4G)"
   },
   "tripPublishOtherContentPrecisionHint": "Ex. pièces auto, petit électroménager",
   "@tripPublishOtherContentPrecisionHint": {
-    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (conditions_step.dart, FLUTTER-4G)"
   },
   "tripPublishOtherContentPrecisionRequired": "Vous avez coché « Autre » : précisez ce que vous acceptez avant de publier.",
   "@tripPublishOtherContentPrecisionRequired": {
-    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (create_trip_screen.dart, FLUTTER-4G)"
   },
   "profilePublicVerificationsSectionLabel": "VÉRIFICATIONS",
   "@profilePublicVerificationsSectionLabel": {
@@ -18193,7 +18289,7 @@
   "@tripRescheduleTitle": {
     "description": "Titre de la feuille de report (trip_reschedule_bottom_sheet.dart)"
   },
-  "tripRescheduleSubtitle": "Vol annulé ou voyage repoussé : choisissez la nouvelle date.",
+  "tripRescheduleSubtitle": "Départ annulé ou voyage repoussé : choisissez la nouvelle date.",
   "@tripRescheduleSubtitle": {
     "description": "Sous-titre de la feuille de report"
   },
@@ -18205,6 +18301,14 @@
   "@tripRescheduleReasonFlightCancelled": {
     "description": "Motif de report"
   },
+  "tripRescheduleReasonTransportCancelled": "Transport annulé",
+  "@tripRescheduleReasonTransportCancelled": {
+    "description": "Motif de report d'un trajet en bateau, en train ou d'un autre mode (valeur TRANSPORT_CANCELLED ; avion : tripRescheduleReasonFlightCancelled). Premier motif de la feuille de report et libellé de la carte « Trajet reporté » (trip_reschedule_labels.dart)."
+  },
+  "tripRescheduleReasonBreakdown": "Panne ou contretemps",
+  "@tripRescheduleReasonBreakdown": {
+    "description": "Motif de report d'un trajet par la route (valeur TRANSPORT_CANCELLED, trip_reschedule_labels.dart)."
+  },
   "tripRescheduleReasonPostponed": "Voyage repoussé",
   "@tripRescheduleReasonPostponed": {
     "description": "Motif de report"
@@ -18213,7 +18317,7 @@
   "@tripRescheduleReasonOther": {
     "description": "Motif de report"
   },
-  "tripRescheduleNoteHint": "Ex. : vol annulé, nouveau vol confirmé le lendemain",
+  "tripRescheduleNoteHint": "Ex. : départ décalé au lendemain",
   "@tripRescheduleNoteHint": {
     "description": "Indice du message aux expéditeurs"
   },
@@ -21665,7 +21769,7 @@
   "@gpProPieceSourceTitle": {"description": "Feuille de choix de la source de l'image (appareil photo ou galerie) d'un justificatif GP Pro."},
   "gpProDocTypeBusinessRegistration": "Registre d'entreprise (Kbis, SIRET, NINEA, RCCM…)",
   "@gpProDocTypeBusinessRegistration": {"description": "Type de justificatif GP Pro : BUSINESS_REGISTRATION."},
-  "gpProDocTypeTravelProof": "Billet ou carte d'embarquement",
+  "gpProDocTypeTravelProof": "Titre de transport",
   "@gpProDocTypeTravelProof": {"description": "Type de justificatif GP Pro : TRAVEL_PROOF."},
   "gpProDocTypeSocialProfile": "Capture d'un réseau social",
   "@gpProDocTypeSocialProfile": {"description": "Type de justificatif GP Pro : SOCIAL_PROFILE."},
@@ -21875,8 +21979,8 @@
   "@aiFormDraftWarningCardCurrency": {"description": "Avertissement : carte demandée dans une devise sans carte (franc CFA)."},
   "aiFormDraftWarningMobileMoney": "Le mobile money n'est proposé qu'en franc CFA : je ne l'ai pas coché.",
   "@aiFormDraftWarningMobileMoney": {"description": "Avertissement : mobile money demandé hors zone CFA."},
-  "aiFormDraftWarningPlaneOnly": "Seul l'avion est proposé pour le moment : le trajet sera publié en avion.",
-  "@aiFormDraftWarningPlaneOnly": {"description": "Avertissement : un autre mode que l'avion a été dit."},
+  "aiFormDraftWarningModeUnavailable": "Ce mode n'est pas encore proposé : le trajet sera publié en avion.",
+  "@aiFormDraftWarningModeUnavailable": {"description": "Avertissement : un mode de transport pas proposé à la publication a été dit, le trajet repasse en avion."},
   "aiFormDraftWarningBudget": "Ce budget sort des montants acceptés : saisissez-le à l'étape 3.",
   "@aiFormDraftWarningBudget": {"description": "Avertissement : budget hors des bornes du formulaire."},
   "aiFormDraftFilledBanner": "Rempli par l'IA. Vérifiez chaque champ avant de publier.",

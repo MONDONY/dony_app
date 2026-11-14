@@ -17,7 +17,9 @@ import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/transport_mode_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -26,6 +28,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/mock_recent_city_store.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
@@ -52,6 +55,10 @@ Widget _buildSubject({
   required MockCitySearchBloc arrivalCityBloc,
   String? departureCity,
   String? arrivalCity,
+  ValueNotifier<TransportMode?>? transportModeNotifier,
+  List<TransportMode>? transportModeRowModes,
+  bool transportModeRowReadOnly = false,
+  bool lockCorridor = false,
 }) {
   final departureCityNotifier = ValueNotifier<String?>(departureCity);
   final arrivalCityNotifier = ValueNotifier<String?>(arrivalCity);
@@ -70,6 +77,10 @@ Widget _buildSubject({
           arrivalTimeNotifier: arrivalTimeNotifier,
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
+          transportModeNotifier: transportModeNotifier,
+          transportModeRowModes: transportModeRowModes,
+          transportModeRowReadOnly: transportModeRowReadOnly,
+          lockCorridor: lockCorridor,
           onSelectDepartureTime: () async {},
           onSelectArrivalTime: () async {},
           onSelectDate: () async {},
@@ -103,6 +114,93 @@ void main() {
     departureCityBloc.close();
     arrivalCityBloc.close();
     unregisterFakeRecentCityStore();
+  });
+
+  group('Tout mode : aucun avion en dur', () {
+    testWidgets('corridor libre : section Trajet en map-pin, sans avion', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(findDonyIcon('map-pin'), findsWidgets);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('corridor verrouillé : pastilles map-pin et flag, sans avion', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          lockCorridor: true,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final departure = find.byKey(const Key('departureCityField'));
+      final arrival = find.byKey(const Key('arrivalCityField'));
+      expect(
+        find.descendant(of: departure, matching: findDonyIcon('map-pin')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: arrival, matching: findDonyIcon('flag')),
+        findsOneWidget,
+      );
+      expectNoPlaneIcon(tester);
+    });
+  });
+
+  group('Aperçu du corridor selon le mode', () {
+    Future<void> pumpCorridor(WidgetTester tester, TransportMode? mode) async {
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          transportModeNotifier: mode == null
+              ? null
+              : ValueNotifier<TransportMode?>(mode),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    testWidgets('route : noms des villes, pas de codes d\'aéroport', (
+      tester,
+    ) async {
+      await pumpCorridor(tester, TransportMode.car);
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+      expect(find.textContaining('CDG'), findsNothing);
+    });
+
+    testWidgets('bateau : noms des villes', (tester) async {
+      await pumpCorridor(tester, TransportMode.boat);
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+    });
+
+    testWidgets('avion : codes d\'aéroport', (tester) async {
+      await pumpCorridor(tester, TransportMode.plane);
+      expect(find.textContaining('CDG'), findsOneWidget);
+      expect(find.text('Paris → Dakar'), findsNothing);
+    });
+
+    testWidgets('mode inconnu (ancien appelant) : codes d\'aéroport', (
+      tester,
+    ) async {
+      await pumpCorridor(tester, null);
+      expect(find.textContaining('CDG'), findsOneWidget);
+    });
   });
 
   group('M4 — Uniformité visuelle champs heure/date', () {
@@ -700,6 +798,48 @@ void main() {
 
       expect(find.text('Trip'), findsOneWidget);
       expect(find.text('Arrival time (optional)'), findsOneWidget);
+    });
+  });
+
+  group('TrajetStep — ligne du mode de transport', () {
+    testWidgets('sans modes : pas de ligne', (tester) async {
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+          transportModeNotifier: ValueNotifier(TransportMode.plane),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(TransportModeRow), findsNothing);
+    });
+
+    testWidgets('avec modes : ligne en tête, lecture seule transmise', (
+      tester,
+    ) async {
+      final mode = ValueNotifier<TransportMode?>(TransportMode.plane);
+      addTearDown(mode.dispose);
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+          transportModeNotifier: mode,
+          transportModeRowModes: const [TransportMode.plane, TransportMode.car],
+          transportModeRowReadOnly: true,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final row = tester.widget<TransportModeRow>(
+        find.byType(TransportModeRow),
+      );
+      expect(row.readOnly, isTrue);
+      expect(row.notifier, same(mode));
+      expect(
+        tester.getTopLeft(find.byType(TransportModeRow)).dy,
+        lessThan(tester.getTopLeft(find.text('Trajet')).dy),
+      );
     });
   });
 }

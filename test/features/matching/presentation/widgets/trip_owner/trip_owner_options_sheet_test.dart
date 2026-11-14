@@ -547,7 +547,7 @@ void main() {
       );
       expect(
         find.text(
-          'Vol annulé ou voyage repoussé : choisissez la nouvelle date.',
+          'Départ annulé ou voyage repoussé : choisissez la nouvelle date.',
         ),
         findsOneWidget,
       );

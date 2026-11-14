@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 PackageRequestSearchItem _item({
   String categoryLabel = 'Vêtements & tissus',
@@ -27,6 +29,7 @@ PackageRequestSearchItem _item({
   DateTime? matchedTripDepartureDate,
   int? uniqueViewerCount,
   bool flexibleDate = false,
+  TransportMode? transportMode = TransportMode.plane,
 }) => PackageRequestSearchItem(
   id: 'pr1',
   departureCity: 'Paris',
@@ -45,6 +48,7 @@ PackageRequestSearchItem _item({
   matchedTripId: matchedTripId,
   matchedTripDepartureDate: matchedTripDepartureDate,
   uniqueViewerCount: uniqueViewerCount,
+  transportMode: transportMode,
   sender: SenderPublicProfile(
     id: 's1',
     displayName: 'Marie Diop',
@@ -481,5 +485,48 @@ void main() {
       find.textContaining('Flexible date', findRichText: true),
       findsWidgets,
     );
+  });
+
+  group('icône du mode de la demande', () {
+    testWidgets('peu importe : icône neutre route, aucun avion', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestListCard(
+            item: _item(transportMode: null),
+            onTap: () {},
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      expect(findDonyIcon('route'), findsWidgets);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('route : icône voiture, aucun avion', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestListCard(
+            item: _item(transportMode: TransportMode.car),
+            onTap: () {},
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      expect(findDonyIcon('car'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('avion : icône avion', (tester) async {
+      await tester.pumpWidget(
+        wrap(PackageRequestListCard(item: _item(), onTap: () {})),
+      );
+
+      await tester.pumpAndSettle();
+      expect(findDonyIcon('plane'), findsOneWidget);
+    });
   });
 }

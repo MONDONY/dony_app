@@ -1,7 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_mode_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -29,7 +31,9 @@ class LinkedTripCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final icon = _iconForMode(trip.transportMode);
+    final iconAsset = requestModeIconAsset(
+      transportModeFromWire(trip.transportMode),
+    );
     final parsed = DateTime.tryParse(trip.departureDate ?? '');
     final weight = parcelWeightKg;
     final meta = [
@@ -59,7 +63,7 @@ class LinkedTripCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Text(icon, style: const TextStyle(fontSize: 18)),
+            DonyIcon(iconAsset, size: 20, color: DonyColors.neutral0),
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: Column(
@@ -97,18 +101,5 @@ class LinkedTripCard extends StatelessWidget {
         ),
       ),
     ).animate().fadeIn(duration: 200.ms);
-  }
-
-  String _iconForMode(String? mode) {
-    switch (mode) {
-      case 'PLANE':
-        return '✈';
-      case 'TRAIN':
-        return '🚄';
-      case 'CAR':
-        return '🚗';
-      default:
-        return '📦';
-    }
   }
 }

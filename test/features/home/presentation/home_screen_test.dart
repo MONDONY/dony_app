@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
@@ -78,6 +79,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 import '../../../helpers/mock_recent_city_store.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 const _emptyHelpConfigJson = '''
 {
@@ -866,7 +868,10 @@ void main() {
     });
   });
 
-  tearDown(getIt.reset);
+  tearDown(() {
+    resetTransportModesForTest();
+    return getIt.reset();
+  });
 
   group("HomeScreen — mode d'ouverture selon l'intention", () {
     late MockActivationCubit activation;
@@ -897,6 +902,22 @@ void main() {
     testWidgets('voyageur : « Je voyage » est actif', (tester) async {
       await pumpAvec(tester, charge(UserIntent.traveler));
       expect(modeAffiche(tester), SearchMode.parcels);
+    });
+
+    // Le mode du trajet n'est pas choisi sur l'accueil : aucun avion en dur,
+    // ni en « Je voyage » ni en « J'envoie un colis ».
+    testWidgets('« Je voyage » : aucun avion sur l\'accueil', (tester) async {
+      await pumpAvec(tester, charge(UserIntent.traveler));
+      expect(modeAffiche(tester), SearchMode.parcels);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('« J\'envoie un colis » : aucun avion sur l\'accueil', (
+      tester,
+    ) async {
+      await pumpAvec(tester, charge(UserIntent.sender));
+      expect(modeAffiche(tester), SearchMode.trips);
+      expectNoPlaneIcon(tester);
     });
 
     for (final etat in <String, ActivationState>{
@@ -2183,6 +2204,88 @@ void main() {
       expect(last.minAvailableKg, 23);
       expect(last.maxAvailableKg, isNull);
       expect(chipLabel(tester), 'Kilos');
+    });
+  });
+
+  group('puce Transport (filtre de la recherche)', () {
+    Future<MockAnnouncementBloc> pumpTrips(WidgetTester tester) async {
+      final bloc = MockAnnouncementBloc();
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        _buildHome(
+          announcementBlocOverride: bloc,
+          user: _makeUser(roles: const ['SENDER', 'TRAVELER']),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+      return bloc;
+    }
+
+    final chipFinder = find.byKey(const Key('home-chip-transport'));
+
+    testWidgets('avion seul : pas de puce Transport', (tester) async {
+      await pumpTrips(tester);
+      expect(chipFinder, findsNothing);
+    });
+
+    testWidgets('modes ouverts : la puce propose avion, bateau et route '
+        '(ni train, ni autre), applique le mode et trace pose puis retrait', (
+      tester,
+    ) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: true),
+      );
+      final bloc = await pumpTrips(tester);
+      expect(chipFinder, findsOneWidget);
+
+      await tester.ensureVisible(chipFinder);
+      await tester.pumpAndSettle();
+      await tester.tap(chipFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mode de transport'), findsOneWidget);
+      expect(find.text('Avion'), findsOneWidget);
+      expect(find.text('Bateau'), findsOneWidget);
+      expect(find.text('Route'), findsOneWidget);
+      expect(find.text('Train'), findsNothing);
+      expect(find.text('Autre'), findsNothing);
+
+      await tester.tap(find.text('Route'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      final searches = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<AnnouncementSearchRequested>().toList();
+      expect(searches.last.transportMode, TransportMode.car);
+      expect(tester.widget<HomeSmallChip>(chipFinder).label, 'Route');
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'transport_mode', 'mode': 'trips'},
+        ),
+      ).called(1);
+
+      // Puce active : un tap retire le filtre.
+      await tester.tap(chipFinder);
+      await tester.pumpAndSettle();
+      expect(tester.widget<HomeSmallChip>(chipFinder).label, 'Transport');
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterCleared,
+          properties: {'filter': 'transport_mode', 'mode': 'trips'},
+        ),
+      ).called(1);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'transport_mode', 'mode': 'parcels'},
+        ),
+      );
     });
   });
 

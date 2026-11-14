@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 LinkedTripSummary _trip({
   String mode = 'PLANE',
@@ -68,51 +69,56 @@ void main() {
       expect(find.text('sam. 15 août'), findsOneWidget);
     });
 
-    testWidgets('displays plane icon for PLANE mode', (tester) async {
-      await tester.pumpWidget(
-        _wrap(LinkedTripCard(trip: _trip(), onTap: () {})),
-      );
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('✈'), findsOneWidget);
-    });
-
-    testWidgets('displays train icon for TRAIN mode', (tester) async {
+    Future<void> pumpMode(WidgetTester tester, String? mode) async {
       await tester.pumpWidget(
         _wrap(
           LinkedTripCard(
-            trip: _trip(mode: 'TRAIN'),
+            trip: LinkedTripSummary(
+              announcementId: 'ann-1',
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+              transportMode: mode,
+              availableKg: 10,
+            ),
             onTap: () {},
           ),
         ),
       );
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('🚄'), findsOneWidget);
+    }
+
+    testWidgets('PLANE : icône avion', (tester) async {
+      await pumpMode(tester, 'PLANE');
+      expect(findDonyIcon('plane'), findsOneWidget);
     });
 
-    testWidgets('displays car icon for CAR mode', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          LinkedTripCard(
-            trip: _trip(mode: 'CAR'),
-            onTap: () {},
-          ),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('🚗'), findsOneWidget);
+    testWidgets('BOAT : icône bateau, plus le colis 📦', (tester) async {
+      await pumpMode(tester, 'BOAT');
+      expect(findDonyIcon('ship'), findsOneWidget);
+      expect(find.text('📦'), findsNothing);
+      expectNoPlaneIcon(tester);
     });
 
-    testWidgets('displays default icon for unknown mode', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          LinkedTripCard(
-            trip: _trip(mode: 'BOAT'),
-            onTap: () {},
-          ),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('📦'), findsOneWidget);
+    testWidgets('CAR : icône voiture', (tester) async {
+      await pumpMode(tester, 'CAR');
+      expect(findDonyIcon('car'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('BUS : icône voiture (le bus est la route)', (tester) async {
+      await pumpMode(tester, 'BUS');
+      expect(findDonyIcon('car'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('TRAIN, mode inconnu ou absent : icône neutre route', (
+      tester,
+    ) async {
+      for (final mode in ['TRAIN', 'ROCKET', null]) {
+        await pumpMode(tester, mode);
+        expect(findDonyIcon('route'), findsOneWidget, reason: '$mode');
+        expectNoPlaneIcon(tester);
+      }
     });
 
     testWidgets('calls onTap when tapped', (tester) async {

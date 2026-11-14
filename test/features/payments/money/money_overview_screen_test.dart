@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/plane_icon_expectations.dart';
 import 'money_fixtures.dart';
 
 class MockMoneyOverviewBloc
@@ -206,6 +207,24 @@ void main() {
     verify(
       () => bloc.add(any(that: isA<MoneyOverviewRefreshRequested>())),
     ).called(1);
+  });
+
+  testWidgets('« Tous mes trajets » : icône neutre route, jamais un avion', (
+    tester,
+  ) async {
+    tall(tester);
+    stub(loaded(richOverview()));
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('money-all-trips')),
+        matching: findDonyIcon('route'),
+      ),
+      findsOneWidget,
+    );
+    expectNoPlaneIcon(tester);
   });
 
   testWidgets('« Tous mes trajets », une ligne colis et le solde Yadony', (

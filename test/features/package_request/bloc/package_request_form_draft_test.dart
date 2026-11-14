@@ -79,6 +79,46 @@ void main() {
       expect(back.arrivalCity, 'Abidjan');
     });
 
+    test('peu importe : écrit ANY et relu en peu importe', () {
+      final json = PackageRequestFormDraft.encode(
+        const PackageRequestFormState(transportModeAny: true),
+      );
+      expect(json['transportMode'], 'ANY');
+      final back = PackageRequestFormDraft.decode(json, now: _now);
+      expect(back.transportMode, isNull);
+      expect(back.transportModeAny, isTrue);
+    });
+
+    test('mode choisi : pas peu importe ; pas encore choisi : ni l\'un ni '
+        'l\'autre', () {
+      final boat = PackageRequestFormDraft.decode(
+        PackageRequestFormDraft.encode(
+          const PackageRequestFormState(transportMode: TransportMode.boat),
+        ),
+        now: _now,
+      );
+      expect(boat.transportMode, TransportMode.boat);
+      expect(boat.transportModeAny, isFalse);
+
+      final none = PackageRequestFormDraft.decode(
+        PackageRequestFormDraft.encode(const PackageRequestFormState()),
+        now: _now,
+      );
+      expect(none.transportMode, isNull);
+      expect(none.transportModeAny, isFalse);
+    });
+
+    test('la saisie de l\'étape priment : ANY posé par stepInput', () {
+      final json = PackageRequestFormDraft.encode(
+        const PackageRequestFormState(transportMode: TransportMode.car),
+        stepInput: {'transportMode': 'ANY'},
+      );
+      expect(
+        PackageRequestFormDraft.decode(json, now: _now).transportModeAny,
+        isTrue,
+      );
+    });
+
     test('formulaire vide : valeurs par défaut', () {
       final back = PackageRequestFormDraft.decode(
         PackageRequestFormDraft.encode(const PackageRequestFormState()),

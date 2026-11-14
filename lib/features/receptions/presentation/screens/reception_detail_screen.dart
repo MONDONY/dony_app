@@ -39,6 +39,7 @@ Future<void> _openTimeline(BuildContext context, Reception reception) =>
       arrivalCity: reception.arrivalCity,
       trackingNumber: reception.trackingNumber,
       arrivalInstructions: reception.arrivalInstructions,
+      transportMode: reception.displayTransportMode,
     );
 
 /// La même feuille que l'expéditeur (luminosité maximale, enregistrer,
@@ -468,6 +469,7 @@ class _PendingContent extends StatelessWidget {
               RouteLabel(
                 from: from,
                 to: to,
+                transportMode: reception.displayTransportMode,
                 style: tt.titleLarge?.copyWith(
                   color: _Hero.white,
                   fontWeight: FontWeight.w700,
@@ -584,13 +586,13 @@ class _ConfirmedContent extends StatelessWidget {
           ),
       if (_formatDate(l, reception.departureDate) case final date?)
         DonyInfoRow(
-          icon: Icons.flight_takeoff_rounded,
+          iconAsset: 'map-pin',
           label: l.receptionDepartureLabel,
           value: date,
         ),
       if (_formatDate(l, reception.arrivalDate) case final date?)
         DonyInfoRow(
-          icon: Icons.flight_land_rounded,
+          iconAsset: 'flag',
           label: l.receptionArrivalLabel,
           value: date,
         ),
@@ -643,6 +645,7 @@ class _ConfirmedContent extends StatelessWidget {
               RouteLabel(
                 from: from,
                 to: to,
+                transportMode: reception.displayTransportMode,
                 style: tt.bodyLarge?.copyWith(
                   color: _Hero.white.withValues(alpha: 0.9),
                   fontWeight: FontWeight.w600,

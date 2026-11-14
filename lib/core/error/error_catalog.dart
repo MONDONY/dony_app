@@ -219,7 +219,7 @@ abstract final class ErrorCatalog {
       title: (l) => l.errorTripNoParcelDepartedTitle,
       message: (l) => l.errorTripNoParcelDepartedMessage,
       severity: ErrorSeverity.warning,
-      icon: Icons.flight_rounded,
+      icon: Icons.route_rounded,
     ),
     // Billets d'avion en affiliation (com.yadony.api.flights).
     'flights-unavailable': _Entry(
@@ -310,7 +310,7 @@ abstract final class ErrorCatalog {
       title: (l) => l.errorParcelRefusalLockedTitle,
       message: (l) => l.errorParcelRefusalLockedMessage,
       severity: ErrorSeverity.warning,
-      icon: Icons.flight_takeoff_rounded,
+      icon: Icons.route_rounded,
     ),
     // ─── Modification d'un colis accepté (`BidAmendmentService`) ────────
     'amendment-disabled': _Entry(
@@ -428,7 +428,7 @@ abstract final class ErrorCatalog {
       title: (l) => l.errorSupplementLockedTitle,
       message: (l) => l.errorSupplementLockedMessage,
       severity: ErrorSeverity.warning,
-      icon: Icons.flight_takeoff_rounded,
+      icon: Icons.route_rounded,
     ),
     'supplement-already-active': _Entry(
       title: (l) => l.errorSupplementAlreadyActiveTitle,
@@ -1604,7 +1604,7 @@ abstract final class ErrorCatalog {
       title: (l) => l.errorRescheduleInTransitTitle,
       message: (l) => l.errorRescheduleInTransitMessage,
       severity: ErrorSeverity.warning,
-      icon: Icons.flight_takeoff_rounded,
+      icon: Icons.route_rounded,
     ),
     'reschedule-invalid-status': _Entry(
       title: (l) => l.errorRescheduleInvalidStatusTitle,
@@ -1976,6 +1976,27 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.rule_rounded,
     ),
+    // Mode de transport refusé ou durée trop longue (422, lot « modes de
+    // transport » du back). Dans `_serverDetailCodes` : le back traduit son
+    // `detail`, le texte du catalogue sert de repli.
+    'transport-mode-disabled': _Entry(
+      title: (l) => l.errorTransportModeDisabledTitle,
+      message: (l) => l.errorTransportModeDisabledMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'invalid-transport-mode': _Entry(
+      title: (l) => l.errorTransportModeDisabledTitle,
+      message: (l) => l.errorTransportModeDisabledMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'arrival-too-far': _Entry(
+      title: (l) => l.errorArrivalTooFarTitle,
+      message: (l) => l.errorArrivalTooFarMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.schedule_rounded,
+    ),
   };
 
   /// Codes dont le `detail` renvoyé par le back est déjà rédigé pour
@@ -1995,6 +2016,11 @@ abstract final class ErrorCatalog {
     // à ajouter au profil après une inscription par e-mail, Google ou Apple).
     // Bien plus précis que le texte fixe, qui reste le repli.
     'sms-otp-disabled',
+    // Mode de transport fermé ou durée trop longue : `detail` traduit par le
+    // back (« Le bateau n'est pas encore ouvert. »), plus précis que le repli.
+    'transport-mode-disabled',
+    'invalid-transport-mode',
+    'arrival-too-far',
     // `commission/confirm-failed` EXCLU (relecture finale du lot K) :
     // `ConfirmAcceptanceResponse.fail(...)` (`CashCommissionService`, back)
     // rédige une phrase ("PaymentIntent status: ...", "Erreur Stripe : ...")

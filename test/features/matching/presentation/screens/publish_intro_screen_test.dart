@@ -14,6 +14,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/screens/publish_intro_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -661,6 +662,18 @@ void main() {
       expect(find.text('Activez les paiements par carte'), findsNothing);
     });
 
+    testWidgets('« Comment ça marche » : transport neutre, sans bagages', (
+      tester,
+    ) async {
+      await _pump(tester, role: PublishIntroRole.parcel, kycStatus: 'VERIFIED');
+
+      expect(
+        find.text('Un voyageur transporte votre colis avec lui.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('bagage'), findsNothing);
+    });
+
     testWidgets('vérifié : case cochée puis Continuer ouvre le wizard', (
       tester,
     ) async {
@@ -729,7 +742,7 @@ void main() {
       expect(visited, ['/trips/create']);
       final args = extras.single! as CreateTripArgs;
       expect(args.resumeDraft?.departureCity, 'Marseille');
-      expect(args.resumeDraft?.step, 1);
+      expect(args.resumeDraft?.stepId, TripFormStep.capacite);
     });
 
     testWidgets('trajet : brouillon serveur ouvre sa fiche', (tester) async {

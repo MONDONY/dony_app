@@ -9,6 +9,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/map_camera_math.dart';
 import 'package:dony/features/matching/presentation/widgets/map_styles.dart';
@@ -124,6 +125,17 @@ class AnnouncementMapView extends StatefulWidget {
 
   @override
   State<AnnouncementMapView> createState() => _AnnouncementMapViewState();
+}
+
+/// Emoji de la pastille d'un groupe de trajets au même endroit : celui du mode
+/// quand tous les trajets du groupe sont du même mode (le bus compte comme la
+/// route, un mode absent comme l'avion), aucun sinon.
+String sameSpotClusterPrefix(Iterable<AnnouncementModel> announcements) {
+  final modes = {
+    for (final a in announcements)
+      transportModeOrPlane(a.transportMode).displayGroup,
+  };
+  return modes.length == 1 ? modes.single.emoji : '';
 }
 
 /// Durée de pause au-delà de laquelle la carte native est recréée.
@@ -549,7 +561,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
           dotColor: urgencyColor,
           isSelected: isSelected,
           brightness: _brightness,
-          prefix: '✈️',
+          prefix: sameSpotClusterPrefix(
+            cluster.items.map((it) => it.announcement),
+          ),
           currencyCode: cheapestItem.announcement.currency,
           gridLabel: context.l10n.listingPriceGridShort,
         );

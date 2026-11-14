@@ -118,7 +118,12 @@ class _ReceptionRow extends StatelessWidget {
               children: [
                 Expanded(
                   child: from != null && to != null
-                      ? RouteLabel(from: from, to: to, style: titleStyle)
+                      ? RouteLabel(
+                          from: from,
+                          to: to,
+                          transportMode: reception.displayTransportMode,
+                          style: titleStyle,
+                        )
                       : Text(
                           reception.trackingNumber ??
                               reception.recipientName ??

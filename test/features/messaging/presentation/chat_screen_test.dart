@@ -18,6 +18,7 @@ import 'package:dony/features/incident_report/data/repositories/incident_report_
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
@@ -42,6 +43,7 @@ import 'package:mocktail/mocktail.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/map_backed_box.dart';
 import '../../../helpers/mock_analytics_backend.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 class MockChatBloc extends MockBloc<ChatEvent, ChatState> implements ChatBloc {}
 
@@ -875,6 +877,65 @@ void main() {
       await _pump(tester, bloc);
 
       expect(find.byType(GpProBadge), findsNothing);
+    });
+  });
+
+  group('bandeau du trajet : icône du mode', () {
+    Future<void> pumpBanner(WidgetTester tester, TransportMode? mode) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      final reveal = _MockContactRevealBloc();
+      when(() => reveal.state).thenReturn(const ContactRevealInitial());
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: MultiBlocProvider(
+            providers: [
+              BlocProvider<ChatBloc>.value(value: bloc),
+              BlocProvider<ContactRevealBloc>.value(value: reveal),
+            ],
+            child: ChatScreen(
+              conversation: ConversationModel(
+                id: 'conv-m',
+                bidId: 'bid-m',
+                firestoreConversationId: 'conv_bid-m',
+                otherParticipant: _participant,
+                tripOrigin: 'Paris',
+                tripDestination: 'Dakar',
+                tripTransportMode: mode,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets('mode absent (back prod) : icône neutre route', (tester) async {
+      await pumpBanner(tester, null);
+
+      expect(find.byKey(const Key('chat-trip-banner')), findsOneWidget);
+      expect(findDonyIcon('route'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('route : icône voiture, pas d\'avion', (tester) async {
+      await pumpBanner(tester, TransportMode.car);
+
+      expect(findDonyIcon('car'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('bateau : icône bateau', (tester) async {
+      await pumpBanner(tester, TransportMode.boat);
+
+      expect(findDonyIcon('ship'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('avion : icône avion', (tester) async {
+      await pumpBanner(tester, TransportMode.plane);
+
+      expect(findDonyIcon('plane'), findsOneWidget);
     });
   });
 

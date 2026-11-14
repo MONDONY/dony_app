@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 class MockRatingBloc extends MockBloc<RatingEvent, RatingState>
     implements RatingBloc {}
@@ -172,6 +173,14 @@ void main() {
       expect(find.text('Note'), findsOneWidget);
       expect(find.text('Trajets'), findsOneWidget);
       expect(find.text('Livraison'), findsOneWidget);
+    });
+
+    testWidgets('la carte Trajets porte l\'icône neutre route, pas un avion', (
+      tester,
+    ) async {
+      await _openSheet(tester, _travelerFull);
+      expect(findDonyIcon('route'), findsOneWidget);
+      expectNoPlaneIcon(tester);
     });
 
     testWidgets('affiche la note du voyageur', (tester) async {

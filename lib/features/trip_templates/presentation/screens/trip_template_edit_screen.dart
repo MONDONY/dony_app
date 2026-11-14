@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -15,10 +16,13 @@ import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/transport_mode_row.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_fields.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
@@ -44,7 +48,22 @@ class TripTemplateEditScreen extends StatefulWidget {
 }
 
 class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
-  static const _totalSteps = 3;
+  /// Les trois étapes du modèle : le modèle n'a ni étape Mode ni étape
+  /// Conditions séparée (les conditions suivent le prix).
+  static const _steps = [
+    TripFormStep.trajet,
+    TripFormStep.capacite,
+    TripFormStep.prix,
+  ];
+
+  /// Libellés d'origine du modèle : ses étapes 1 et 2 regroupent les lieux de
+  /// remise avec la capacité, le prix avec les conditions.
+  static String _stepLabel(TripFormStep step, AppLocalizations l) =>
+      switch (step) {
+        TripFormStep.capacite => l.tripPublishPlacesCapacityStepLabel,
+        TripFormStep.prix => l.tripPublishPriceConditionsStepLabel,
+        _ => l.tripPublishRouteSectionLabel,
+      };
 
   static List<(int?, String)> _handoverChoices(AppLocalizations l) => [
     (null, l.tripTemplateHandoverNone),
@@ -116,7 +135,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 
     // Synchronisations étape 2 → AnnouncementFormBloc, même règles que
     // `_TripFormContentState` (create_trip_screen.dart) : LieuxCapaciteStep
-    // (CapacityControl) et PrixConditionsStep (mode de tarification) lisent
+    // (CapacityControl) et PrixStep (mode de tarification) lisent
     // et écrivent directement dans ce bloc.
     _fields.priceOption.addListener(_syncPriceToFormBloc);
     _fields.customPrice.addListener(_syncPriceToFormBloc);
@@ -182,8 +201,10 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _fields.arrivalCity.value = t.arrivalCity;
     _fields.departureCountryCode.value = t.departureCountryCode;
     _fields.arrivalCountryCode.value = t.arrivalCountryCode;
-    _fields.transportMode.value =
-        transportModeFromWire(t.transportMode) ?? TransportMode.plane;
+    // Mode du modèle gardé tel quel (route, bateau...) : jamais ramené à
+    // l'avion. Un mode illisible reste nul, `_buildPayload` renvoie alors la
+    // valeur d'origine.
+    _fields.transportMode.value = transportModeFromWire(t.transportMode);
     _fields.departureTime.value = _timeOfDay(t.departureTime);
     _fields.arrivalTime.value = _timeOfDay(t.arrivalTime);
     _handoverLeadDays.value = t.handoverLeadDays;
@@ -320,6 +341,16 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     super.dispose();
   }
 
+  /// Mode du modèle tel qu'il sera enregistré : celui du formulaire, sinon la
+  /// valeur d'origine du modèle ouvert (mode illisible), sinon avion.
+  String _modeWire() {
+    final mode = _fields.transportMode.value;
+    if (mode != null) {
+      return transportModeToWire(mode);
+    }
+    return widget.template?.transportMode ?? 'PLANE';
+  }
+
   /// Payload complet envoyé au bloc : les trois étapes (Trajet, Lieux &
   /// capacité, Prix & conditions), sérialisées par `TripTemplate.toJson` —
   /// même mapping adresse/champs que le modèle chargé depuis le repository,
@@ -342,9 +373,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       arrivalLng: widget.template?.arrivalLng,
       departureCountryCode: _fields.departureCountryCode.value,
       arrivalCountryCode: _fields.arrivalCountryCode.value,
-      transportMode: transportModeToWire(
-        _fields.transportMode.value ?? TransportMode.plane,
-      ),
+      transportMode: _modeWire(),
       capacityUnit: formState.capacityUnit.toWire(),
       availableKg: _fields.availableKg.value.round(),
       pricingMode: formState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG',
@@ -485,8 +514,9 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CaStepperHeader(
-                        currentStep: step,
-                        totalSteps: _totalSteps,
+                        steps: _steps,
+                        current: _steps[step],
+                        labelFor: _stepLabel,
                       ),
                       const SizedBox(height: DonySpacing.xxl),
                       ...switch (step) {
@@ -528,9 +558,28 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       // ── TRAJET ──────────────────────────────────────────────────
       _SectionLabel(
         label: l.tripTemplateTripSectionLabel,
-        iconAsset: 'plane-takeoff',
+        iconAsset: kNeutralTripIconAsset,
       ),
       const SizedBox(height: DonySpacing.sm),
+      // Mode du modèle : choisi dès que le voyageur a le choix, ou montré
+      // quand le modèle n'est pas un avion (modèle bateau ou route existant).
+      ValueListenableBuilder<TransportModesAvailability>(
+        valueListenable: transportModesListenable,
+        builder: (context, modes, _) => ValueListenableBuilder<TransportMode?>(
+          valueListenable: _fields.transportMode,
+          builder: (context, mode, _) =>
+              modes.hasTripChoice ||
+                  transportModeOrPlane(mode) != TransportMode.plane
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: DonySpacing.lg),
+                  child: TransportModeRow(
+                    modes: modes.tripCreationModes,
+                    notifier: _fields.transportMode,
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ),
       ListenableBuilder(
         listenable: Listenable.merge([
           _fields.departureCity,
@@ -571,11 +620,6 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       ),
       const SizedBox(height: DonySpacing.xxl),
 
-      // Pas de « Mode de transport » : la création de trajet n'en propose
-      // plus (toujours avion). Le modèle garde la valeur en coulisse (avion
-      // par défaut, celle d'un ancien modèle en édition) parce que l'API et
-      // les récurrences l'exigent.
-
       // ── HORAIRES ─────────────────────────────────────────────────
       _SectionLabel(
         label: l.tripTemplateScheduleSectionLabel,
@@ -583,14 +627,14 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       ),
       const SizedBox(height: DonySpacing.sm),
       _TimeRow(
-        icon: 'plane-takeoff',
+        icon: 'map-pin',
         label: l.tripTemplateDepartureTimeFieldLabel,
         shortLabel: l.tripTemplateDepartureShortLabel,
         time: _fields.departureTime,
       ),
       const SizedBox(height: DonySpacing.sm),
       _TimeRow(
-        icon: 'plane-landing',
+        icon: 'flag',
         label: l.tripTemplateArrivalTimeFieldLabel,
         shortLabel: l.tripTemplateArrivalShortLabel,
         time: _fields.arrivalTime,
@@ -672,34 +716,41 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       builder: (context, mobileMoneyState) =>
           ValueListenableBuilder<SupportedCurrency>(
             valueListenable: _fields.currency,
-            builder: (context, currency, _) => PrixConditionsStep(
-              currency: currency,
-              gridCurrency: ActiveCurrency.current,
-              priceOptionNotifier: _fields.priceOption,
-              customPriceNotifier: _fields.customPrice,
-              availableKgNotifier: _fields.availableKg,
-              cashEnabledNotifier: _fields.cashEnabled,
-              kgPriceEnabledNotifier: _fields.kgPriceEnabled,
-              mobileMoneyEnabledNotifier: _fields.mobileMoneyEnabled,
-              currencyNotifier: _fields.currency,
-              mobileMoneyAccountActive: mobileMoneyAccountActiveFrom(
-                mobileMoneyState,
-              ),
-              mobileMoneyCurrencies: mobileMoneyAccountCurrenciesFrom(
-                mobileMoneyState,
-              ),
-              onMobileMoneySetupReturned: () => context
-                  .read<MobileMoneyAccountBloc>()
-                  .add(const MobileMoneyAccountsRequested()),
-              negotiableNotifier: _fields.negotiable,
-              selectedContentNotifier: _fields.selectedContent,
-              customAcceptedNotifier: _fields.customAccepted,
-              refusedTypesNotifier: _fields.refusedTypes,
-              catalogLabelsNotifier: _fields.catalogLabels,
-              descriptionCtrl: _fields.descriptionCtrl,
-              customAcceptedCtrl: _fields.customAcceptedCtrl,
-              refusedCtrl: _fields.refusedCtrl,
-              customPriceCtrl: _fields.customPriceCtrl,
+            builder: (context, currency, _) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PrixStep(
+                  currency: currency,
+                  gridCurrency: ActiveCurrency.current,
+                  priceOptionNotifier: _fields.priceOption,
+                  customPriceNotifier: _fields.customPrice,
+                  availableKgNotifier: _fields.availableKg,
+                  cashEnabledNotifier: _fields.cashEnabled,
+                  kgPriceEnabledNotifier: _fields.kgPriceEnabled,
+                  mobileMoneyEnabledNotifier: _fields.mobileMoneyEnabled,
+                  currencyNotifier: _fields.currency,
+                  mobileMoneyAccountActive: mobileMoneyAccountActiveFrom(
+                    mobileMoneyState,
+                  ),
+                  mobileMoneyCurrencies: mobileMoneyAccountCurrenciesFrom(
+                    mobileMoneyState,
+                  ),
+                  onMobileMoneySetupReturned: () => context
+                      .read<MobileMoneyAccountBloc>()
+                      .add(const MobileMoneyAccountsRequested()),
+                  negotiableNotifier: _fields.negotiable,
+                  customPriceCtrl: _fields.customPriceCtrl,
+                ),
+                ConditionsStep(
+                  selectedContentNotifier: _fields.selectedContent,
+                  customAcceptedNotifier: _fields.customAccepted,
+                  refusedTypesNotifier: _fields.refusedTypes,
+                  catalogLabelsNotifier: _fields.catalogLabels,
+                  descriptionCtrl: _fields.descriptionCtrl,
+                  customAcceptedCtrl: _fields.customAcceptedCtrl,
+                  refusedCtrl: _fields.refusedCtrl,
+                ),
+              ],
             ),
           ),
     ),

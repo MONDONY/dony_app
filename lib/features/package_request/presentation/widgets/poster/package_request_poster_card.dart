@@ -1,13 +1,13 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/poster/poster_parts.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
-import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/features/matching/presentation/widgets/transport_mode_icon.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_mode_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -180,7 +180,10 @@ class PackageRequestPosterCard extends StatelessWidget {
   Widget _dateBlock(AppLocalizations l) {
     final r = request;
     final desired = r.desiredDate;
-    final kind = [l.requestPosterEyebrow, r.transportMode.label(l)].join(' · ');
+    final kind = [
+      l.requestPosterEyebrow,
+      requestModeLabel(l, r.transportMode),
+    ].join(' · ');
     if (desired == null) {
       return PosterDateBlock(
         color: PosterPalette.ink,
@@ -293,7 +296,7 @@ class PackageRequestPosterCard extends StatelessWidget {
       return _line([
         Text(departure, style: style),
         const SizedBox(width: _corridorGap),
-        _plane(),
+        _modeIcon(),
         const SizedBox(width: _corridorGap),
         Text(arrival, style: style),
       ]);
@@ -303,7 +306,7 @@ class PackageRequestPosterCard extends StatelessWidget {
       children: [
         _line([Text(departure, style: style)]),
         _line([
-          _plane(),
+          _modeIcon(),
           const SizedBox(width: _corridorGap),
           Text(arrival, style: style),
         ]),
@@ -320,13 +323,12 @@ class PackageRequestPosterCard extends StatelessWidget {
     ),
   );
 
-  Widget _plane() => Transform.rotate(
-    angle: math.pi / 2,
-    child: const Icon(
-      Icons.flight_rounded,
-      size: _corridorIconSize,
-      color: PosterPalette.ink,
-    ),
+  /// Icône du mode entre les villes (l'avion seul est tourné dans le sens du
+  /// trajet).
+  Widget _modeIcon() => TransportModeIcon(
+    mode: request.transportMode,
+    size: _corridorIconSize,
+    color: PosterPalette.ink,
   );
 
   static double _textWidth(String value, TextStyle style) {

@@ -5,10 +5,11 @@
 // ContentCategorySelector (même composant que la création de trajet et le
 // wizard colis) : catalogue déroulant issu du repository, tags supprimables,
 // saisie libre par la ligne « Ajouter ». La clé du champ est celle posée par
-// PrixConditionsStep (`keyPrefix: 'accepted-content'`), pas une clé propre à
+// PrixStep (`keyPrefix: 'accepted-content'`), pas une clé propre à
 // l'écran modèle.
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -27,8 +28,10 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/transport_mode_row.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_fields.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
@@ -356,6 +359,18 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(find.byType(CaStepperHeader), findsOneWidget);
+      // Les étapes du modèle regroupent lieux + capacité et prix +
+      // conditions : l'en-tête garde ses libellés d'origine.
+      for (final label in ['Trajet', 'Lieux & capacité', 'Prix & conditions']) {
+        expect(
+          find.descendant(
+            of: find.byType(CaStepperHeader),
+            matching: find.text(label),
+          ),
+          findsOneWidget,
+          reason: label,
+        );
+      }
       expect(find.text('Continuer'), findsOneWidget);
       expect(find.text('Enregistrer le modèle'), findsNothing);
       final button = tester.widget<DonyButton>(
@@ -493,10 +508,8 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
 
         expect(
-          tester
-              .widget<CaStepperHeader>(find.byType(CaStepperHeader))
-              .currentStep,
-          1,
+          tester.widget<CaStepperHeader>(find.byType(CaStepperHeader)).current,
+          TripFormStep.capacite,
         );
 
         // Flèche visible de l'AppBar, pas le geste système (PopScope).
@@ -508,10 +521,8 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(
-          tester
-              .widget<CaStepperHeader>(find.byType(CaStepperHeader))
-              .currentStep,
-          0,
+          tester.widget<CaStepperHeader>(find.byType(CaStepperHeader)).current,
+          TripFormStep.trajet,
         );
         // Toujours sur l'écran du modèle : la flèche a reculé d'une étape,
         // elle n'a pas fait sortir de l'écran (pas de pop du routeur).
@@ -581,43 +592,42 @@ void main() {
       },
     );
 
-    testWidgets(
-      'étape 2 : PrixConditionsStep et bandeau devise, chips CFA en XOF',
-      (tester) async {
-        tester.view.physicalSize = const Size(800, 3000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.reset);
-        await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
-        await tester.pump(const Duration(milliseconds: 600));
+    testWidgets('étape 2 : PrixStep et bandeau devise, chips CFA en XOF', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+      await tester.pump(const Duration(milliseconds: 600));
 
-        await goToStep(tester, 2);
-        final fields =
-            (tester.state<State<TripTemplateEditScreen>>(
-                          find.byType(TripTemplateEditScreen),
-                        )
-                        as dynamic)
-                    .fieldsForTest
-                as TripFormFields;
-        fields.currency.value = SupportedCurrency.xof;
-        // En XOF la carte est indisponible : les espèces passent ON d'office
-        // (post-frame) et leur encart animé entre. Plusieurs passes pour que
-        // le Timer de flutter_animate se termine avant la fin du test.
-        for (var i = 0; i < 6; i++) {
-          await tester.pump(const Duration(milliseconds: 400));
-        }
+      await goToStep(tester, 2);
+      final fields =
+          (tester.state<State<TripTemplateEditScreen>>(
+                        find.byType(TripTemplateEditScreen),
+                      )
+                      as dynamic)
+                  .fieldsForTest
+              as TripFormFields;
+      fields.currency.value = SupportedCurrency.xof;
+      // En XOF la carte est indisponible : les espèces passent ON d'office
+      // (post-frame) et leur encart animé entre. Plusieurs passes pour que
+      // le Timer de flutter_animate se termine avant la fin du test.
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
 
-        expect(find.byType(PrixConditionsStep), findsOneWidget);
-        expect(
-          find.byKey(const Key('trip-currency-selector-row')),
-          findsOneWidget,
-        );
-        expect(
-          find.text(CurrencyFormatter.format(1000, SupportedCurrency.xof)),
-          findsOneWidget,
-        );
-        expect(find.text('Enregistrer le modèle'), findsOneWidget);
-      },
-    );
+      expect(find.byType(PrixStep), findsOneWidget);
+      expect(
+        find.byKey(const Key('trip-currency-selector-row')),
+        findsOneWidget,
+      );
+      expect(
+        find.text(CurrencyFormatter.format(1000, SupportedCurrency.xof)),
+        findsOneWidget,
+      );
+      expect(find.text('Enregistrer le modèle'), findsOneWidget);
+    });
 
     testWidgets('enregistrement : le payload contient tout le formulaire', (
       tester,
@@ -657,10 +667,10 @@ void main() {
       // métier — figer cette valeur cacherait le bug plutôt que de le
       // couvrir.
       BlocProvider.of<AnnouncementFormBloc>(
-        tester.element(find.byType(PrixConditionsStep)),
+        tester.element(find.byType(PrixStep)),
       ).add(const CapacityUnitChanged(CapacityUnit.suitcase23kg));
       // `pumpAndSettle` plutôt qu'un `pump` fixe : le changement de devise
-      // remonte `PrixConditionsStep` (ValueListenableBuilder), qui rejoue les
+      // remonte `PrixStep` (ValueListenableBuilder), qui rejoue les
       // `.animate().fadeIn()` de l'étape — leurs timers de démarrage doivent
       // se vider avant la fin du test (même piège que le retour à l'étape 0,
       // cf. le test « flèche retour » du groupe étape Trajet).
@@ -995,5 +1005,138 @@ void main() {
         expect(find.text('raw technical detail'), findsNothing);
       },
     );
+  });
+  group('mode de transport du modèle', () {
+    tearDown(resetTransportModesForTest);
+
+    TripFormFields fieldsOf(WidgetTester tester) =>
+        (tester.state<State<TripTemplateEditScreen>>(
+                      find.byType(TripTemplateEditScreen),
+                    )
+                    as dynamic)
+                .fieldsForTest
+            as TripFormFields;
+
+    const boatTemplate = TripTemplate(
+      id: 't9',
+      label: 'Dakar-Marseille',
+      departureCity: 'Dakar',
+      arrivalCity: 'Marseille',
+      transportMode: 'BOAT',
+      capacityUnit: 'SUITCASE_23KG',
+      availableKg: 23,
+      pricePerKg: 2000,
+      acceptedCategories: [],
+      currency: 'XOF',
+    );
+
+    testWidgets('modèle bateau rouvert : reste bateau, puce Bateau montrée', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _wrap(const TripTemplateEditScreen(template: boatTemplate), bloc),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(fieldsOf(tester).transportMode.value, TransportMode.boat);
+      expect(find.byType(TransportModeRow), findsOneWidget);
+      expect(find.byKey(const Key('mode-chip-boat')), findsOneWidget);
+    });
+
+    testWidgets('modèle bateau enregistré : le mode part tel quel', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _wrap(const TripTemplateEditScreen(template: boatTemplate), bloc),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await goToStep(tester, 2);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(DonyButton, 'Enregistrer le modèle'),
+      );
+      await tester.pump();
+
+      final updated = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<TripTemplateUpdated>().single;
+      expect(updated.id, 't9');
+      expect(updated.data['transportMode'], 'BOAT');
+    });
+
+    testWidgets('mode illisible : la valeur d\'origine est renvoyée', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      const odd = TripTemplate(
+        id: 't8',
+        label: 'Ancien',
+        departureCity: 'Dakar',
+        arrivalCity: 'Marseille',
+        transportMode: 'HOVERCRAFT',
+        capacityUnit: 'SUITCASE_23KG',
+        availableKg: 23,
+        pricePerKg: 2000,
+        acceptedCategories: [],
+        currency: 'XOF',
+      );
+      await tester.pumpWidget(
+        _wrap(const TripTemplateEditScreen(template: odd), bloc),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await goToStep(tester, 2);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(DonyButton, 'Enregistrer le modèle'),
+      );
+      await tester.pump();
+
+      final updated = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<TripTemplateUpdated>().single;
+      expect(updated.data['transportMode'], 'HOVERCRAFT');
+    });
+
+    testWidgets('nouveau modèle, avion seul : aucune ligne de modes', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.byType(TransportModeRow), findsNothing);
+      expect(fieldsOf(tester).transportMode.value, TransportMode.plane);
+    });
+
+    testWidgets('nouveau modèle, route ouverte : choix du mode en tête', (
+      tester,
+    ) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.byType(TransportModeRow), findsOneWidget);
+      expect(find.byKey(const Key('mode-chip-plane')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('mode-chip-car')));
+      await tester.pump();
+      expect(fieldsOf(tester).transportMode.value, TransportMode.car);
+    });
   });
 }

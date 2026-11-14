@@ -226,7 +226,7 @@ Rayon : `DonyRadius.card` (16). Élévation 0, bordure `DonyColors.grey200`.
 DonyBadge(
   label: 'TRAJET',
   type: DonyBadgeType.info,    // info | success | warning | error
-  icon: Icons.flight,          // optionnel
+  icon: Icons.inventory_2_rounded, // optionnel ; jamais un avion en dur : icône du mode du trajet (TransportModeUI.iconAsset), icône neutre `route` si le mode est inconnu
 )
 ```
 

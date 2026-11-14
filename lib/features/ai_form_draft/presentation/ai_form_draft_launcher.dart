@@ -1,3 +1,4 @@
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/ai_consent_service.dart';
 import 'package:dony/core/widgets/ai_consent_sheet.dart';
@@ -40,6 +41,7 @@ class AiFormDraftLauncher {
         cities: cities,
         priceGrid: getIt<PriceGridRepository>(),
         isCardReady: isCardReady ?? _cardNeverReady,
+        isModeAvailable: transportModes.allowsForTrip,
         fallbackCurrency: defaultCurrency,
       ),
       AiFormKind.packageRequest => PackageRequestAiDraftResolver(

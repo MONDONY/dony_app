@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 final _now = DateTime(2026, 9, 4);
 
@@ -188,5 +189,15 @@ void main() {
     // Catalogue AU CATALOGUE : « Livres » → « Books » (pas juste un mot traduit isolé).
     expect(find.text('Books'), findsOneWidget);
     expect(find.text('Nothing new · 1 parcel in total'), findsOneWidget);
+  });
+
+  testWidgets('alerte « trajets » : icône neutre route, aucun avion', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_pump(_alert(), _Calls()));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(findDonyIcon('route'), findsOneWidget);
+    expectNoPlaneIcon(tester);
   });
 }

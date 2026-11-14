@@ -10,6 +10,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 class _MockUserReviewsCubit extends Mock implements UserReviewsCubit {}
 
@@ -187,6 +188,30 @@ void main() {
     expect(find.text('14 mars 2026'), findsOneWidget);
     expect(find.textContaining('Paris'), findsWidgets);
     expect(find.textContaining('Dakar'), findsWidgets);
+  });
+
+  testWidgets('corridor d\'un avis : icône neutre route, jamais d\'avion', (
+    tester,
+  ) async {
+    final items = [
+      _item(
+        comment: 'Parfait',
+        authorName: 'Awa Diop',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+      ),
+    ];
+    stubState(
+      UserReviewsLoaded(
+        summary: _summary(ratings: items),
+        allRatings: items,
+      ),
+    );
+
+    await openSheet(tester);
+
+    expect(findDonyIcon('route'), findsOneWidget);
+    expectNoPlaneIcon(tester);
   });
 
   testWidgets('auteur anonyme : repli « Utilisateur » sans planter', (

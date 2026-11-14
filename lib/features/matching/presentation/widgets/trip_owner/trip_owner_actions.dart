@@ -125,6 +125,7 @@ Future<void> openTripCancellation(
   context,
   announcementId: trip.id,
   handedOverParcels: tripHandedOverParcelCount(bids),
+  transportMode: trip.transportMode,
 );
 
 /// Attente bornée des étapes du voyage avant la question des étapes

@@ -16,6 +16,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/plane_icon_expectations.dart';
+
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _MockVideoModalBloc extends MockBloc<VideoModalEvent, VideoModalState>
@@ -148,6 +150,28 @@ void main() {
     expect(find.text('Send a parcel'), findsOneWidget);
     expect(find.text('Publish a trip'), findsOneWidget);
     handle.dispose();
+  });
+
+  testWidgets('la feuille : colis et route, jamais un avion', (tester) async {
+    await tester.pumpWidget(_app(role: ActiveRole.traveler));
+    await tester.pumpAndSettle();
+    await openSheet(tester);
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('home-publish-choice-parcel')),
+        matching: findDonyIcon('package'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('home-publish-choice-trip')),
+        matching: findDonyIcon('route'),
+      ),
+      findsOneWidget,
+    );
+    expectNoPlaneIcon(tester);
   });
 
   testWidgets('ouvre une feuille aux deux choix et trace son ouverture', (

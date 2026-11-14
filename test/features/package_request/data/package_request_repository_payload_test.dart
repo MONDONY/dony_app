@@ -126,6 +126,59 @@ void main() {
     });
   });
 
+  group('mode de transport « peu importe »', () {
+    Future<Map<String, dynamic>> sentByCreate(TransportMode? mode) async {
+      api.on('POST', '/package-requests', _prJson);
+      await repo.create(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: null,
+        dateToleranceDays: null,
+        weightKg: 5,
+        parcelSize: ParcelSize.small,
+        transportMode: mode,
+        categories: const ['DOCS'],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
+      );
+      return api.last.data as Map<String, dynamic>;
+    }
+
+    Future<Map<String, dynamic>> sentByUpdate(TransportMode? mode) async {
+      api.on('PUT', '/package-requests/pr-1', _prJson);
+      await repo.update(
+        'pr-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: null,
+        dateToleranceDays: null,
+        weightKg: 5,
+        parcelSize: ParcelSize.small,
+        transportMode: mode,
+        categories: const ['DOCS'],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
+      );
+      return api.last.data as Map<String, dynamic>;
+    }
+
+    test('create peu importe envoie ANY', () async {
+      expect((await sentByCreate(null))['transportMode'], 'ANY');
+    });
+
+    test('update peu importe envoie ANY (jamais omis : le back garderait '
+        'l\'ancien mode)', () async {
+      final body = await sentByUpdate(null);
+      expect(body.containsKey('transportMode'), isTrue);
+      expect(body['transportMode'], 'ANY');
+    });
+
+    test('create et update envoient le mode choisi', () async {
+      expect((await sentByCreate(TransportMode.boat))['transportMode'], 'BOAT');
+      expect((await sentByUpdate(TransportMode.car))['transportMode'], 'CAR');
+    });
+  });
+
   group('date facultative (« Date flexible »)', () {
     test(
       'create avec date : format yyyy-MM-dd et souplesse inchangés',

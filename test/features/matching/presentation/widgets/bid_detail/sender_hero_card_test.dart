@@ -437,7 +437,7 @@ void main() {
 
   // ── Test 7: HANDED_OVER ──────────────────────────────────────────────────────
 
-  testWidgets('7 · HANDED_OVER avant le départ → "Embarquement prévu"', (
+  testWidgets('7 · HANDED_OVER avant le départ → "Départ prévu"', (
     tester,
   ) async {
     final bid = _bid(
@@ -447,12 +447,12 @@ void main() {
     );
     final line = await _statusLine(tester, bid);
 
-    expect(line, contains('Embarquement prévu'));
+    expect(line, contains('Départ prévu'));
   });
 
   testWidgets(
     '7b · HANDED_OVER après le départ, sans scan Transit → en route, plus '
-    '« Embarquement prévu »',
+    '« Départ prévu »',
     (tester) async {
       final bid = _bid(
         status: 'HANDED_OVER',
@@ -463,7 +463,7 @@ void main() {
       final line = await _statusLine(tester, bid);
 
       expect(line, contains('En route vers Dakar'));
-      expect(line, isNot(contains('Embarquement prévu')));
+      expect(line, isNot(contains('Départ prévu')));
     },
   );
 

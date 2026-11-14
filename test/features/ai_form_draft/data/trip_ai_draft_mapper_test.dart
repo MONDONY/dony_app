@@ -1,6 +1,7 @@
 import 'package:dony/features/ai_form_draft/data/trip_ai_draft_mapper.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -32,7 +33,7 @@ void main() {
       'negotiable': true,
       'description': 'Pas de liquides',
     });
-    expect(d.step, 0);
+    expect(d.stepId, TripFormStep.trajet);
     expect(d.departureCity, 'Paris');
     expect(d.departureCountryCode, 'FR');
     expect(d.arrivalCity, 'Abidjan');
@@ -85,7 +86,7 @@ void main() {
 
   test('valeurs nulles : la saisie courante est gardée', () {
     const base = TripFormDraft(
-      step: 2,
+      stepId: TripFormStep.prix,
       currency: 'EUR',
       departureCity: 'Lyon',
       departureCountryCode: 'FR',
@@ -101,7 +102,7 @@ void main() {
       'cashEnabled': null,
       'direct': false,
     }, base: base);
-    expect(d.step, 0);
+    expect(d.stepId, TripFormStep.trajet);
     expect(d.departureCity, 'Lyon');
     expect(d.departureCountryCode, 'FR');
     expect(d.description, 'déjà saisi');

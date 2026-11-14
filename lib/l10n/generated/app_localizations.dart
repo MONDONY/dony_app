@@ -1970,6 +1970,30 @@ abstract class AppLocalizations {
   /// **'Indiquez un prix par kg supérieur à 0, ou choisissez le tarif à la grille.'**
   String get errorInvalidPriceMessage;
 
+  /// Erreur transport-mode-disabled / invalid-transport-mode du back : le mode de transport demandé n'est pas ouvert (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode indisponible'**
+  String get errorTransportModeDisabledTitle;
+
+  /// Erreur transport-mode-disabled / invalid-transport-mode du back : le mode de transport demandé n'est pas ouvert (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce mode de transport n\'est pas encore proposé.'**
+  String get errorTransportModeDisabledMessage;
+
+  /// Erreur arrival-too-far du back : l'arrivée est trop loin après le départ pour ce mode de transport (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée trop lointaine'**
+  String get errorArrivalTooFarTitle;
+
+  /// Erreur arrival-too-far du back : l'arrivée est trop loin après le départ pour ce mode de transport (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La date d\'arrivée est trop loin après le départ pour ce mode.'**
+  String get errorArrivalTooFarMessage;
+
   /// No description provided for @errorConflictTitle.
   ///
   /// In fr, this message translates to:
@@ -3923,8 +3947,14 @@ abstract class AppLocalizations {
   /// No description provided for @homeComposerMoreFiltersHint.
   ///
   /// In fr, this message translates to:
-  /// **'Type de contenu, transport, note, escales, paiement'**
+  /// **'Type de contenu, note, escales, paiement'**
   String get homeComposerMoreFiltersHint;
+
+  /// Titre de la section du composeur de recherche de trajets qui filtre par mode de transport (Tous, Avion, Bateau, Route), visible seulement quand plusieurs modes sont ouverts
+  ///
+  /// In fr, this message translates to:
+  /// **'TRANSPORT'**
+  String get homeComposerSectionTransport;
 
   /// No description provided for @homeComposerSectionWhen.
   ///
@@ -4081,6 +4111,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Colis à transporter'**
   String get homeModeSelectorParcelsSubtitle;
+
+  /// Puce de filtre de l'accueil en tête de rangée : mode de transport pas encore choisi (une fois choisi, la puce affiche le mode)
+  ///
+  /// In fr, this message translates to:
+  /// **'Transport'**
+  String get homeFilterChipsTransport;
+
+  /// Puce du composeur de recherche, section TRANSPORT : tous les modes de transport, aucun filtre
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous'**
+  String get homeFilterChipsTransportAll;
 
   /// Puce de filtre de l'accueil : date personnalisée choisie mais pas encore renseignée
   ///
@@ -4382,23 +4424,17 @@ abstract class AppLocalizations {
   /// **'Avion'**
   String get tripTransportPlane;
 
-  /// No description provided for @tripTransportCar.
+  /// Libellé du mode de transport par la route (voiture ou bus) d'un trajet ou d'une demande
   ///
   /// In fr, this message translates to:
-  /// **'Voiture'**
-  String get tripTransportCar;
+  /// **'Route'**
+  String get tripTransportRoad;
 
   /// No description provided for @tripTransportTrain.
   ///
   /// In fr, this message translates to:
   /// **'Train'**
   String get tripTransportTrain;
-
-  /// No description provided for @tripTransportBus.
-  ///
-  /// In fr, this message translates to:
-  /// **'Bus'**
-  String get tripTransportBus;
 
   /// No description provided for @tripTransportBoat.
   ///
@@ -4604,29 +4640,11 @@ abstract class AppLocalizations {
   /// **'Limite de brouillons atteinte'**
   String get tripPublishDraftLimitTitle;
 
-  /// Titre de la barre de suggestion des modèles de trajet enregistrés
-  ///
-  /// In fr, this message translates to:
-  /// **'Mes modèles'**
-  String get tripPublishTemplatesLabel;
-
-  /// Texte d'aide sous le titre de la barre de suggestion des modèles de trajet
-  ///
-  /// In fr, this message translates to:
-  /// **'Appliquez un modèle pour pré-remplir le trajet'**
-  String get tripPublishTemplatesHint;
-
   /// Confirmation après application d'un modèle de trajet, avec son nom
   ///
   /// In fr, this message translates to:
   /// **'Modèle « {label} » appliqué'**
   String tripPublishTemplateAppliedMessage(String label);
-
-  /// Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom
-  ///
-  /// In fr, this message translates to:
-  /// **'{label} · par article'**
-  String tripPublishTemplateChipGrid(String label);
 
   /// Titre de section (étape Trajet) pour la date limite de dépôt des colis
   ///
@@ -4877,7 +4895,7 @@ abstract class AppLocalizations {
   /// Puce « comment ça marche », rôle expéditeur : transport
   ///
   /// In fr, this message translates to:
-  /// **'Un voyageur transporte votre colis dans ses bagages.'**
+  /// **'Un voyageur transporte votre colis avec lui.'**
   String get requestPublishIntroWhyBulletCarried;
 
   /// Puce « comment ça marche », rôle expéditeur : paiement séquestré
@@ -5036,25 +5054,25 @@ abstract class AppLocalizations {
   /// **'Espèces'**
   String get tripPublishCashLabel;
 
-  /// Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M).
+  /// Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_step.dart, Sentry FLUTTER-8M).
   ///
   /// In fr, this message translates to:
   /// **'Toujours accepté sur ce trajet. Frais de service avancés sur votre solde Yadony quand vous acceptez le colis, remboursés par l\'expéditeur dans le paiement en espèces'**
   String get tripPublishCashLockedSubtitle;
 
-  /// Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M).
+  /// Message au toucher de l'interrupteur espèces verrouillé (prix_step.dart, Sentry FLUTTER-8M).
   ///
   /// In fr, this message translates to:
   /// **'Sans paiement par carte sur ce trajet, les espèces restent toujours acceptées : c\'est le mode qui permet aux expéditeurs de réserver.'**
   String get tripPublishCashLockedExplanation;
 
-  /// Message au toucher de la ligne carte quand elle est active (prix_conditions_step.dart, Sentry FLUTTER-CS/D2).
+  /// Message au toucher de la ligne carte quand elle est active (prix_step.dart, Sentry FLUTTER-CS/D2).
   ///
   /// In fr, this message translates to:
   /// **'Le paiement par carte est activé sur ce trajet : les expéditeurs pourront payer par carte, l\'argent est séquestré jusqu\'à la livraison.'**
   String get tripPublishCardActiveExplanation;
 
-  /// Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_conditions_step.dart, Sentry FLUTTER-D2).
+  /// Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_step.dart, Sentry FLUTTER-D2).
   ///
   /// In fr, this message translates to:
   /// **'Vérification de votre compte de paiement…'**
@@ -5102,7 +5120,7 @@ abstract class AppLocalizations {
   /// **'Le paiement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces, et en mobile money pour les trajets en XOF ou XAF.'**
   String get tripPublishCashOnlyBannerNoConnect;
 
-  /// Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_conditions_step.dart, FLUTTER-EE).
+  /// Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_step.dart, FLUTTER-EE).
   ///
   /// In fr, this message translates to:
   /// **'Le paiement par carte dépend du pays de résidence indiqué dans votre profil ({country}), et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces, et en mobile money pour les trajets en XOF ou XAF.'**
@@ -5405,17 +5423,113 @@ abstract class AppLocalizations {
   /// **'Changer'**
   String get tripPublishCurrencyChangeCta;
 
-  /// Libellé d'étape du stepper de publication (étape 1)
+  /// Libellé de l'étape Mode dans l'en-tête des étapes de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode'**
+  String get tripPublishStepMode;
+
+  /// Libellé de l'étape Capacité dans l'en-tête des étapes de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité'**
+  String get tripPublishStepCapacity;
+
+  /// Libellé de l'étape Prix dans l'en-tête des étapes de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix'**
+  String get tripPublishStepPrice;
+
+  /// Libellé de l'étape Conditions dans l'en-tête des étapes de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Conditions'**
+  String get tripPublishStepConditions;
+
+  /// Libellé d'étape du stepper de l'écran des modèles de trajet (étape 1 : lieux de remise et capacité)
   ///
   /// In fr, this message translates to:
   /// **'Lieux & capacité'**
   String get tripPublishPlacesCapacityStepLabel;
 
-  /// Libellé d'étape du stepper de publication (étape 2)
+  /// Libellé d'étape du stepper de l'écran des modèles de trajet (étape 2 : prix et conditions)
   ///
   /// In fr, this message translates to:
   /// **'Prix & conditions'**
   String get tripPublishPriceConditionsStepLabel;
+
+  /// Titre de l'étape Mode du formulaire de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment voyagez-vous ?'**
+  String get tripPublishModeQuestion;
+
+  /// Sous-titre de l'étape Mode du formulaire de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Le mode adapte la suite : dates, capacité et prix.'**
+  String get tripPublishModeHint;
+
+  /// Libellé de la ligne compacte du mode, au-dessus des étapes du formulaire de trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode de transport'**
+  String get tripPublishModeSectionLabel;
+
+  /// Bouton texte en tête de l'étape Conditions du formulaire de trajet (création) : ouvre l'aperçu sans rien remplir
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer'**
+  String get tripPublishConditionsSkip;
+
+  /// Titre de la carte Avion de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Voie aérienne'**
+  String get tripPublishModeAirTitle;
+
+  /// Sous-titre de la carte Avion de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Avion, vos kilos de valise'**
+  String get tripPublishModeAirSubtitle;
+
+  /// Étiquette de durée de la carte Avion de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Quelques jours'**
+  String get tripPublishModeAirTagDuration;
+
+  /// Étiquette de capacité de la carte Avion de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Valises ou kg'**
+  String get tripPublishModeAirTagCapacity;
+
+  /// Titre de la carte Route de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Voie terrestre'**
+  String get tripPublishModeRoadTitle;
+
+  /// Sous-titre de la carte Route de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Voiture, car ou camion'**
+  String get tripPublishModeRoadSubtitle;
+
+  /// Étiquette de portée de la carte Route de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Même pays ou international'**
+  String get tripPublishModeRoadTagScope;
+
+  /// Étiquette de capacité de la carte Route de l'étape Mode
+  ///
+  /// In fr, this message translates to:
+  /// **'Kg libre ou exact'**
+  String get tripPublishModeRoadTagCapacity;
 
   /// Titre de la section lieux de remise et de récupération
   ///
@@ -6509,11 +6623,47 @@ abstract class AppLocalizations {
   /// **'Les voyageurs partant du {from} au {to} pourront répondre.'**
   String requestCreateToleranceRangeHint(String from, String to);
 
-  /// Sous-texte du bloc mode de transport verrouillé sur avion (step_1_trajet_colis.dart)
+  /// Libellé du choix du mode de transport à l'étape 1 de la demande de colis (request_transport_mode_selector.dart)
   ///
   /// In fr, this message translates to:
-  /// **'seul mode disponible'**
-  String get requestCreateAirplaneOnlyMode;
+  /// **'Mode de transport'**
+  String get requestCreateTransportModeLabel;
+
+  /// Puce « Peu importe » du mode de transport de la demande, et valeur de la ligne Transport du récapitulatif quand aucun mode n'est imposé
+  ///
+  /// In fr, this message translates to:
+  /// **'Peu importe'**
+  String get requestCreateTransportAny;
+
+  /// Aide sous les puces de mode : « Peu importe » sélectionné
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les voyageurs de ce trajet verront votre demande.'**
+  String get requestCreateModeHelpAny;
+
+  /// Aide sous les puces de mode : avion sélectionné
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls les voyageurs en avion verront votre demande.'**
+  String get requestCreateModeHelpPlane;
+
+  /// Aide sous les puces de mode : bateau sélectionné
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls les bateaux (groupage en conteneur) verront votre demande.'**
+  String get requestCreateModeHelpBoat;
+
+  /// Aide sous les puces de mode : route sélectionnée
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls les voyageurs en voiture, car ou camion verront votre demande.'**
+  String get requestCreateModeHelpRoad;
+
+  /// Info-bulle de l'icône IA de la barre de titre de l'étape 1 de la demande de colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer avec l\'IA'**
+  String get requestCreateAiAction;
 
   /// Libellé de section en tête de l'étape 1 (step_1_trajet_colis.dart)
   ///
@@ -11887,7 +12037,7 @@ abstract class AppLocalizations {
   /// HANDED_OVER, sous-titre avec date de depart connue (sender_hero_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Embarquement prévu le {date}.'**
+  /// **'Départ prévu le {date}.'**
   String bidDetailSenderHandedOverSubtitleWithDate(String date);
 
   /// HANDED_OVER, sous-titre sans date de depart (sender_hero_card.dart)
@@ -14410,11 +14560,17 @@ abstract class AppLocalizations {
   /// **'Partager mon trajet'**
   String get tripOwnerShareMyTrip;
 
-  /// Message partagé après publication d'un brouillon (trip_owner_detail_screen.dart). date formatée en DateFormat.MMMMd(locale) ; url = donnée non traduite.
+  /// Message partagé après publication d'un brouillon (trip_owner_detail_screen.dart). emoji = emoji du mode du trajet (TransportModeUI.emoji) ; date formatée en DateFormat.MMMMd(locale) ; url = donnée non traduite.
   ///
   /// In fr, this message translates to:
-  /// **'✈️ Je voyage {dep} → {arr} le {date} avec de la place dans mes bagages !\nRéservez vos kilos sur Yadony 📦\n{url}'**
-  String tripOwnerShareMessage(String dep, String arr, String date, String url);
+  /// **'{emoji} Je voyage {dep} → {arr} le {date} avec de la place pour vos colis !\nRéservez vos kilos sur Yadony 📦\n{url}'**
+  String tripOwnerShareMessage(
+    String emoji,
+    String dep,
+    String arr,
+    String date,
+    String url,
+  );
 
   /// Titre du bandeau brouillon (trip_owner_detail_screen.dart).
   ///
@@ -14593,7 +14749,7 @@ abstract class AppLocalizations {
   /// Tooltip de la tuile « Colis » désactivée (écran du trajet, ex-grille d’actions) ; réutilisé comme titre de l'état vide du sheet « Colis » de l'activité du trajet (trip_activity_sheets.dart, même préfixe, texte identique).
   ///
   /// In fr, this message translates to:
-  /// **'Aucun colis embarqué'**
+  /// **'Aucun colis confié'**
   String get tripOwnerNoParcelsMessage;
 
   /// Titre du dialogue de suppression du trajet (écran du trajet, ex-grille d’actions).
@@ -18396,6 +18552,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vol annulé'**
   String get cancellationReasonFlightCanceled;
+
+  /// Libellé affiché du motif d'annulation 'Vol annulé' pour un trajet en bateau, en train ou d'un autre mode (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste 'Vol annulé'.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transport annulé'**
+  String get cancellationReasonTransportCancelled;
+
+  /// Libellé affiché du motif d'annulation 'Vol annulé' pour un trajet par la route (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste 'Vol annulé'.
+  ///
+  /// In fr, this message translates to:
+  /// **'Panne ou contretemps'**
+  String get cancellationReasonBreakdown;
 
   /// Libellé affiché du motif d'annulation 'Urgence personnelle' (cancellation_labels.dart, cancellationReasonLabel).
   ///
@@ -25303,18 +25471,6 @@ abstract class AppLocalizations {
   /// **'Adresse non localisée, vous pouvez la saisir à la main'**
   String get addressNotLocatedStatus;
 
-  /// Étiquette d'accessibilité par défaut de l'emoji décollage ✈️ (dony_emoji.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Décollage'**
-  String get dsEmojiTakeoff;
-
-  /// Étiquette d'accessibilité par défaut de l'emoji atterrissage 🛬 (dony_emoji.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Atterrissage'**
-  String get dsEmojiLanding;
-
   /// Étiquette d'accessibilité par défaut de l'emoji colis 📦 (dony_emoji.dart).
   ///
   /// In fr, this message translates to:
@@ -26263,19 +26419,19 @@ abstract class AppLocalizations {
   /// **'Vous pourrez contacter le voyageur dès que votre paiement sera confirmé.'**
   String get bidDetailContactTravelerAfterPaymentHint;
 
-  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)
+  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (conditions_step.dart, FLUTTER-4G)
   ///
   /// In fr, this message translates to:
   /// **'Précisez ce que vous acceptez en « Autre »'**
   String get tripPublishOtherContentPrecisionLabel;
 
-  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)
+  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (conditions_step.dart, FLUTTER-4G)
   ///
   /// In fr, this message translates to:
   /// **'Ex. pièces auto, petit électroménager'**
   String get tripPublishOtherContentPrecisionHint;
 
-  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)
+  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (create_trip_screen.dart, FLUTTER-4G)
   ///
   /// In fr, this message translates to:
   /// **'Vous avez coché « Autre » : précisez ce que vous acceptez avant de publier.'**
@@ -26374,7 +26530,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la feuille de report
   ///
   /// In fr, this message translates to:
-  /// **'Vol annulé ou voyage repoussé : choisissez la nouvelle date.'**
+  /// **'Départ annulé ou voyage repoussé : choisissez la nouvelle date.'**
   String get tripRescheduleSubtitle;
 
   /// Libellé des puces de motif
@@ -26388,6 +26544,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vol annulé'**
   String get tripRescheduleReasonFlightCancelled;
+
+  /// Motif de report d'un trajet en bateau, en train ou d'un autre mode (valeur TRANSPORT_CANCELLED ; avion : tripRescheduleReasonFlightCancelled). Premier motif de la feuille de report et libellé de la carte « Trajet reporté » (trip_reschedule_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Transport annulé'**
+  String get tripRescheduleReasonTransportCancelled;
+
+  /// Motif de report d'un trajet par la route (valeur TRANSPORT_CANCELLED, trip_reschedule_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Panne ou contretemps'**
+  String get tripRescheduleReasonBreakdown;
 
   /// Motif de report
   ///
@@ -26404,7 +26572,7 @@ abstract class AppLocalizations {
   /// Indice du message aux expéditeurs
   ///
   /// In fr, this message translates to:
-  /// **'Ex. : vol annulé, nouveau vol confirmé le lendemain'**
+  /// **'Ex. : départ décalé au lendemain'**
   String get tripRescheduleNoteHint;
 
   /// Feuille de report : même horaire que l'actuel
@@ -33579,7 +33747,7 @@ abstract class AppLocalizations {
   /// Type de justificatif GP Pro : TRAVEL_PROOF.
   ///
   /// In fr, this message translates to:
-  /// **'Billet ou carte d\'embarquement'**
+  /// **'Titre de transport'**
   String get gpProDocTypeTravelProof;
 
   /// Type de justificatif GP Pro : SOCIAL_PROFILE.
@@ -34206,11 +34374,11 @@ abstract class AppLocalizations {
   /// **'Le mobile money n\'est proposé qu\'en franc CFA : je ne l\'ai pas coché.'**
   String get aiFormDraftWarningMobileMoney;
 
-  /// Avertissement : un autre mode que l'avion a été dit.
+  /// Avertissement : un mode de transport pas proposé à la publication a été dit, le trajet repasse en avion.
   ///
   /// In fr, this message translates to:
-  /// **'Seul l\'avion est proposé pour le moment : le trajet sera publié en avion.'**
-  String get aiFormDraftWarningPlaneOnly;
+  /// **'Ce mode n\'est pas encore proposé : le trajet sera publié en avion.'**
+  String get aiFormDraftWarningModeUnavailable;
 
   /// Avertissement : budget hors des bornes du formulaire.
   ///

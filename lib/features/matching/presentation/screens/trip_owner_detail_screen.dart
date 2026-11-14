@@ -25,6 +25,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
@@ -47,7 +48,6 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Écran plein écran « Trajet » côté propriétaire (voyageur).
@@ -476,10 +476,9 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
           secondaryLabel: l.tripOwnerShareMyTrip,
           onSecondary: () => unawaited(
             Share.share(
-              l.tripOwnerShareMessage(
-                published.departureCity,
-                published.arrivalCity,
-                DateFormat.MMMMd(l.localeName).format(published.departureDate),
+              tripShareMessage(
+                l,
+                published,
                 '$posterShareBaseUrl/annonce/${published.id}',
               ),
               sharePositionOrigin: sharePositionOriginFor(routeContext),
@@ -569,6 +568,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
         context,
         announcementId: announcementId,
         handedOverParcels: _handedOverParcels(context),
+        transportMode: _known()?.transportMode,
       );
     }
   }

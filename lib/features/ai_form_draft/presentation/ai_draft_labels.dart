@@ -128,7 +128,7 @@ String aiWarningText(
   AiDraftWarning.cardNotConfigured => l.aiFormDraftWarningCardNotConfigured,
   AiDraftWarning.cardUnavailableInCurrency => l.aiFormDraftWarningCardCurrency,
   AiDraftWarning.mobileMoneyUnavailable => l.aiFormDraftWarningMobileMoney,
-  AiDraftWarning.planeOnly => l.aiFormDraftWarningPlaneOnly,
+  AiDraftWarning.modeUnavailable => l.aiFormDraftWarningModeUnavailable,
   AiDraftWarning.budgetOutOfRange => l.aiFormDraftWarningBudget,
 };
 

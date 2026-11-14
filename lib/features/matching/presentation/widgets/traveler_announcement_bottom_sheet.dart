@@ -29,6 +29,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/mobile_money_network.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/existing_trip_request.dart';
@@ -227,6 +228,7 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
       builder: (innerCtx) {
         if (estProprietaire) {
           return _OwnTripFooter(
+            mode: transportModeOrPlane(announcement.transportMode),
             onManage: () {
               final navigator = Navigator.of(innerCtx, rootNavigator: true);
               final location = '/announcements/${announcement.id}/trip';
@@ -601,9 +603,12 @@ class _HandoverClosedFooter extends StatelessWidget {
 /// Pied de la feuille quand le lecteur est le voyageur du trajet : il ne peut
 /// pas s'envoyer de demande, on l'oriente vers l'écran de gestion du trajet.
 class _OwnTripFooter extends StatelessWidget {
-  const _OwnTripFooter({required this.onManage});
+  const _OwnTripFooter({required this.onManage, required this.mode});
 
   final VoidCallback onManage;
+
+  /// Mode du trajet : l'icône du bouton le reprend.
+  final TransportMode mode;
 
   @override
   Widget build(BuildContext context) {
@@ -634,7 +639,7 @@ class _OwnTripFooter extends StatelessWidget {
         DonyButton(
           key: const Key('manage-own-trip-btn'),
           label: l.listingOwnTripManageButton,
-          iconAsset: 'plane',
+          iconAsset: mode.iconAsset,
           onPressed: onManage,
         ),
       ],

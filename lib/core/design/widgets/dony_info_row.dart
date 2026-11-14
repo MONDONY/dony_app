@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Ligne d'info label/valeur — récapitulatifs, détails de trajet, factures.
@@ -17,14 +18,20 @@ class DonyInfoRow extends StatelessWidget {
     required this.label,
     required this.value,
     this.icon,
+    this.iconAsset,
     this.valueStyle = DonyInfoRowValueStyle.normal,
     this.valueWidget,
-  }) : _isDivider = false;
+  }) : assert(
+         icon == null || iconAsset == null,
+         'icon et iconAsset sont exclusifs',
+       ),
+       _isDivider = false;
 
   const DonyInfoRow.divider({super.key})
     : label = '',
       value = '',
       icon = null,
+      iconAsset = null,
       valueStyle = DonyInfoRowValueStyle.normal,
       valueWidget = null,
       _isDivider = true;
@@ -32,6 +39,9 @@ class DonyInfoRow extends StatelessWidget {
   final String label;
   final String value;
   final IconData? icon;
+
+  /// Nom d'une icône SVG (`DonyIcon`), à la place d'une icône Material.
+  final String? iconAsset;
   final DonyInfoRowValueStyle valueStyle;
   final Widget? valueWidget;
   final bool _isDivider;
@@ -72,6 +82,9 @@ class DonyInfoRow extends StatelessWidget {
         children: [
           if (icon != null) ...[
             Icon(icon, size: 14, color: cs.onSurfaceVariant),
+            const SizedBox(width: DonySpacing.xs),
+          ] else if (iconAsset != null) ...[
+            DonyIcon(iconAsset!, size: 14, color: cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.xs),
           ],
           Expanded(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
@@ -814,11 +815,13 @@ class _NotificationIcon extends StatelessWidget {
       'NEW_MESSAGE' => (cs.primary, 'message-circle'),
       // Même icône que la ligne épinglée « Support Yadony » des conversations.
       'SUPPORT_MESSAGE' => (cs.primary, 'circle-help'),
-      'TRIP_IN_PROGRESS' => (cs.primary, 'plane-takeoff'),
-      'TRIP_DEPARTURE_PROMPT' => (cs.primary, 'plane-takeoff'),
-      'TRIP_ARRIVAL_PROMPT' => (cs.primary, 'plane-landing'),
-      'RECIPIENT_PARCEL_DEPARTED' => (cs.primary, 'plane-takeoff'),
-      'RECIPIENT_PARCEL_ARRIVED' => (cs.primary, 'plane-landing'),
+      // Une notification ne porte que son type, pas le mode du trajet :
+      // icônes neutres (route / drapeau), jamais un avion.
+      'TRIP_IN_PROGRESS' => (cs.primary, kNeutralTripIconAsset),
+      'TRIP_DEPARTURE_PROMPT' => (cs.primary, kNeutralTripIconAsset),
+      'TRIP_ARRIVAL_PROMPT' => (cs.primary, 'flag'),
+      'RECIPIENT_PARCEL_DEPARTED' => (cs.primary, kNeutralTripIconAsset),
+      'RECIPIENT_PARCEL_ARRIVED' => (cs.primary, 'flag'),
       'RECIPIENT_PICKUP_UPDATED' => (cs.primary, 'map-pin'),
       'RECIPIENT_PARCEL_ANNOUNCED' => (cs.primary, 'inbox'),
       'negotiation_started' => (cs.info, 'arrow-left-right'),
@@ -826,10 +829,10 @@ class _NotificationIcon extends StatelessWidget {
       'negotiation' => (cs.info, 'arrow-left-right'),
       'TRAVELER_INVITE' => (cs.info, 'handshake'),
       'SENDER_INVITE' => (cs.info, 'package'),
-      'CORRIDOR_ALERT' => (cs.info, 'plane'),
+      'CORRIDOR_ALERT' => (cs.info, kNeutralTripIconAsset),
       'TRIP_SPACE_FREED' => (cs.info, 'bell'),
       'SEARCH_SUGGESTION' => (cs.info, 'search'),
-      'TRAVELER_NEW_ANNOUNCEMENT' => (cs.info, 'plane'),
+      'TRAVELER_NEW_ANNOUNCEMENT' => (cs.info, kNeutralTripIconAsset),
       'automation_capacity_free' => (cs.info, 'zap'),
       'automation_last_minute' => (cs.info, 'zap'),
       'automation_loyal_sender' => (cs.info, 'zap'),

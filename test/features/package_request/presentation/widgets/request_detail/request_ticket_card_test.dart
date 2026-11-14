@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 PackageRequest _req({
   List<String> photos = const [],
@@ -17,6 +18,7 @@ PackageRequest _req({
   bool negotiable = true,
   List<String> categories = const ['Cosmétiques & parfums'],
   bool flexibleDate = false,
+  TransportMode? transportMode = TransportMode.plane,
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 's',
@@ -26,7 +28,7 @@ PackageRequest _req({
   dateToleranceDays: flexibleDate ? 0 : 2,
   weightKg: 2,
   parcelSize: ParcelSize.small,
-  transportMode: TransportMode.plane,
+  transportMode: transportMode,
   categories: categories,
   description: description,
   targetPriceEur: 29,
@@ -206,5 +208,29 @@ void main() {
     );
     expect(find.text('Sep 27 ± 2 d'), findsOneWidget);
     expect(find.textContaining('± 2 j'), findsNothing);
+  });
+
+  group('icône du mode au centre du billet', () {
+    for (final (mode, asset) in [
+      (TransportMode.plane, 'plane'),
+      (TransportMode.boat, 'ship'),
+      (TransportMode.car, 'car'),
+      (null, 'route'),
+    ]) {
+      testWidgets('$mode : DonyIcon($asset)', (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            RequestTicketCard(
+              request: _req(transportMode: mode),
+              statusPill: const Text('En ligne'),
+              metaLabel: '',
+            ),
+          ),
+        );
+
+        expect(findDonyIcon(asset), findsOneWidget);
+        if (mode != TransportMode.plane) expectNoPlaneIcon(tester);
+      });
+    }
   });
 }

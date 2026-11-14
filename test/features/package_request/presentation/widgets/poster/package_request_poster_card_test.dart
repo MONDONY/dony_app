@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 PackageRequest request({
   String departureCity = 'Lyon',
@@ -28,6 +29,7 @@ PackageRequest request({
   String? delivery = 'Cocody',
   String currency = 'EUR',
   bool flexibleDate = false,
+  TransportMode? transportMode = TransportMode.plane,
 }) => PackageRequest(
   id: 'r1',
   senderId: 's1',
@@ -37,7 +39,7 @@ PackageRequest request({
   dateToleranceDays: tolerance,
   weightKg: weightKg,
   parcelSize: ParcelSize.medium,
-  transportMode: TransportMode.plane,
+  transportMode: transportMode,
   categories: categories,
   grossPriceEur: gross,
   targetPriceEur: target,
@@ -296,5 +298,41 @@ void main() {
       PackageRequestPosterCard.placeLabel('Dakar', 'Plateau'),
       'Dakar, Plateau',
     );
+  });
+
+  group('mode de la demande sur l\'affiche', () {
+    testWidgets('route : « Colis à transporter · Route », aucun avion', (
+      tester,
+    ) async {
+      await _pump(tester, request(transportMode: TransportMode.car));
+
+      expect(find.text('Colis à transporter · Route'), findsOneWidget);
+      expect(findDonyIcon('car'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('bateau : icône bateau entre les villes', (tester) async {
+      await _pump(tester, request(transportMode: TransportMode.boat));
+
+      expect(find.text('Colis à transporter · Bateau'), findsOneWidget);
+      expect(findDonyIcon('ship'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('peu importe : « Peu importe » et icône neutre', (
+      tester,
+    ) async {
+      await _pump(tester, request(transportMode: null));
+
+      expect(find.text('Colis à transporter · Peu importe'), findsOneWidget);
+      expect(findDonyIcon('route'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('avion : icône avion', (tester) async {
+      await _pump(tester, request());
+
+      expect(findDonyIcon('plane'), findsOneWidget);
+    });
   });
 }

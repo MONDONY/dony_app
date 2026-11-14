@@ -4,6 +4,7 @@ import 'package:dony/core/design/widgets/gp_pro_badge.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
@@ -14,6 +15,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 AnnouncementModel _makeAnn({
   String departureCity = 'Paris',
@@ -32,6 +34,7 @@ AnnouncementModel _makeAnn({
   int? uniqueViewerCount,
   String status = 'ACTIVE',
   TripStops? stops,
+  TransportMode? transportMode,
   double? pricePerKgDisplay,
   String capacityUnit = 'CUSTOM',
   double availableKg = 8,
@@ -58,6 +61,7 @@ AnnouncementModel _makeAnn({
   uniqueViewerCount: uniqueViewerCount,
   status: status,
   stops: stops,
+  transportMode: transportMode,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
   acceptedContentTypes: acceptedContentTypes,
@@ -130,6 +134,80 @@ void main() {
       expect(find.byKey(const Key('route-stop-markers')), findsNothing);
       // Plus de pastille d'escales parmi les badges.
       expect(find.byKey(const Key('trip-stops-badge')), findsNothing);
+    });
+
+    group('icône du connecteur selon le mode', () {
+      Future<void> pumpMode(
+        WidgetTester tester,
+        TransportMode? mode, {
+        TripStops? stops,
+      }) async {
+        await tester.pumpWidget(
+          _wrap(
+            TravelerCard(
+              announcement: _makeAnn(transportMode: mode, stops: stops),
+              index: 0,
+              isOwnAnnouncement: false,
+              onTap: () {},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('route : icône car, aucun avion, ni escales', (tester) async {
+        await pumpMode(tester, TransportMode.car, stops: TripStops.one);
+        expect(findDonyIcon('car'), findsOneWidget);
+        expectNoPlaneIcon(tester);
+        expect(find.byKey(const Key('route-stop-markers')), findsNothing);
+        expect(find.text('1 escale'), findsNothing);
+        expect(find.byKey(const Key('trip-stops-badge')), findsNothing);
+      });
+
+      testWidgets('bateau : icône ship, non tournée, aucun avion', (
+        tester,
+      ) async {
+        await pumpMode(tester, TransportMode.boat, stops: TripStops.direct);
+        expect(findDonyIcon('ship'), findsOneWidget);
+        expect(
+          find.ancestor(
+            of: findDonyIcon('ship'),
+            matching: find.byType(RotatedBox),
+          ),
+          findsNothing,
+        );
+        expect(find.text('Vol direct'), findsNothing);
+        expectNoPlaneIcon(tester);
+      });
+
+      testWidgets('avion : icône plane tournée, escales gardées', (
+        tester,
+      ) async {
+        await pumpMode(tester, TransportMode.plane, stops: TripStops.direct);
+        expect(findDonyIcon('plane'), findsOneWidget);
+        expect(
+          find.ancestor(
+            of: findDonyIcon('plane'),
+            matching: find.byType(RotatedBox),
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Vol direct'), findsOneWidget);
+      });
+
+      testWidgets('avion avec une escale : cercle d\'escale, libellé gardé', (
+        tester,
+      ) async {
+        await pumpMode(tester, TransportMode.plane, stops: TripStops.one);
+        expect(find.byKey(const Key('route-stop-markers')), findsOneWidget);
+        expect(find.text('1 escale'), findsOneWidget);
+      });
+
+      testWidgets('ancien trajet sans mode : avion', (tester) async {
+        await pumpMode(tester, null, stops: TripStops.direct);
+        expect(findDonyIcon('plane'), findsOneWidget);
+        expect(find.text('Vol direct'), findsOneWidget);
+      });
     });
 
     // Le corridor va du drapeau de départ au drapeau d'arrivée, sans vide à

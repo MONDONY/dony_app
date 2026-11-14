@@ -69,6 +69,14 @@ void main() {
       );
       expect(TripRescheduleReason.fromWire('NOPE'), isNull);
       expect(TripRescheduleReason.flightCancelled.wire, 'FLIGHT_CANCELLED');
+      expect(
+        TripRescheduleReason.fromWire('TRANSPORT_CANCELLED'),
+        TripRescheduleReason.transportCancelled,
+      );
+      expect(
+        TripRescheduleReason.transportCancelled.wire,
+        'TRANSPORT_CANCELLED',
+      );
     });
   });
 }

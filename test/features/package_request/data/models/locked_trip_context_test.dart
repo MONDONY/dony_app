@@ -60,6 +60,26 @@ void main() {
       expect(base, equals(copy));
     });
 
+    test(
+      'mode null (demande peu importe) : accepté et compté dans l\'égalité',
+      () {
+        LockedTripContext make(TransportMode? mode) => LockedTripContext(
+          threadId: 't-1',
+          packageRequestId: 'pr-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 8, 15),
+          dateToleranceDays: 3,
+          weightKg: 10.0,
+          transportMode: mode,
+          agreedPriceEur: 120.0,
+        );
+        expect(make(null).transportMode, isNull);
+        expect(make(null), equals(make(null)));
+        expect(make(null), isNot(equals(make(TransportMode.boat))));
+      },
+    );
+
     test('Equatable: not equal when threadId differs', () {
       final other = LockedTripContext(
         threadId: 't-X',

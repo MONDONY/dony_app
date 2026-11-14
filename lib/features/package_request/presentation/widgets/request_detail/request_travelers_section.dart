@@ -1,7 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/compatible_traveler_card.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_mode_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -134,10 +136,14 @@ class RequestNoTravelersEmpty extends StatelessWidget {
     required this.corridor,
     required this.onCreateAlert,
     required this.onWidenDates,
+    this.transportMode,
     super.key,
   });
 
   final String corridor;
+
+  /// Mode de la demande : choisit l'icône de l'état vide (`null` = neutre).
+  final TransportMode? transportMode;
   final VoidCallback onCreateAlert;
   final VoidCallback onWidenDates;
 
@@ -195,7 +201,11 @@ class RequestNoTravelersEmpty extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
             ),
             child: Center(
-              child: DonyIcon('plane', size: 22, color: cs.primary),
+              child: DonyIcon(
+                requestModeIconAsset(transportMode),
+                size: 22,
+                color: cs.primary,
+              ),
             ),
           ),
           const SizedBox(height: DonySpacing.sm),

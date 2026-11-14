@@ -11,6 +11,7 @@ import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/currency/active_rates.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
@@ -246,6 +247,19 @@ Future<void> _bootstrap() async {
   // valeur connue pour les annonces de moyens ; la feuille de paiement les
   // relit elle-même à chaque ouverture. Repli sûr : tout éteint.
   unawaited(_loadPaymentMethods());
+
+  // Modes de transport ouverts (réglages plateforme transport_*_enabled) :
+  // décident si le choix du mode (avion, route, bateau) est proposé. Repli
+  // sûr : avion seul tant que le flag n'est pas chargé ou en cas d'erreur.
+  unawaited(_loadTransportModes());
+}
+
+Future<void> _loadTransportModes() async {
+  try {
+    setTransportModes(await getIt<IConfigRepository>().getTransportModes());
+  } catch (_) {
+    // Repli sur avion seul conservé — non bloquant.
+  }
 }
 
 Future<void> _loadPaymentMethods() async {

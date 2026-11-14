@@ -124,7 +124,7 @@ class DonyTextField extends StatelessWidget {
   final IconData? prefixIcon;
 
   /// Widget de préfixe arbitraire (ex : [DonyEmoji], [DonyIcon]). Prioritaire
-  /// sur [prefixIcon] s'il est fourni — permet un emoji 🛫/🛬 ou un SVG Lucide
+  /// sur [prefixIcon] s'il est fourni — permet un emoji (🇫🇷, 📦) ou un SVG Lucide
   /// à la place d'une icône Material.
   final Widget? prefixWidget;
 

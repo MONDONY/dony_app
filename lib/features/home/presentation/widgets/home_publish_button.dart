@@ -9,6 +9,7 @@ import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -171,7 +172,7 @@ class _HomePublishSheetContent extends StatelessWidget {
         for (final (i, choice) in choices.indexed)
           switch (choice) {
             // Couleurs et icônes des tuiles du hub Activités : terracotta et
-            // colis pour l'envoi, bleu et avion pour le trajet.
+            // colis pour l'envoi, bleu et route pour le trajet.
             HomePublishChoice.parcel => _ChoiceTile(
               itemKey: const Key('home-publish-choice-parcel'),
               iconAsset: 'package',
@@ -183,7 +184,7 @@ class _HomePublishSheetContent extends StatelessWidget {
             ),
             HomePublishChoice.trip => _ChoiceTile(
               itemKey: const Key('home-publish-choice-trip'),
-              iconAsset: 'plane',
+              iconAsset: kNeutralTripIconAsset,
               color: cs.primary,
               label: l.homePublishTrip,
               subtitle: l.homePublishTripSubtitle,

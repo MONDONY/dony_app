@@ -384,6 +384,25 @@ class HomeSearchFilters {
     return (from: from, to: to);
   }
 
+  /// Retire un filtre Transport que la recherche ne propose plus : train ou
+  /// autre (jamais proposés), bateau quand il est éteint, ou tout mode quand
+  /// un seul mode est ouvert (aucun choix à faire, la puce n'existe pas et ne
+  /// pourrait pas le retirer). Le bus se range avec la route
+  /// ([TransportMode.displayGroup]), comme la puce l'affiche.
+  ///
+  /// Sans filtre Transport : la même instance.
+  HomeSearchFilters withTransportLimitedTo(List<TransportMode> offered) {
+    final current = transportMode;
+    if (current == null) {
+      return this;
+    }
+    final group = current.displayGroup;
+    if (offered.length < 2 || !offered.contains(group)) {
+      return copyWith(clearTransportMode: true);
+    }
+    return group == current ? this : copyWith(transportMode: group);
+  }
+
   /// Clés des filtres actifs, énumération fermée et sans valeur : sert au
   /// tracking `search_filter_applied` / `search_filter_cleared`, qui compare
   /// deux jeux de filtres pour savoir lequel vient d'être posé ou retiré. Ne

@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_step.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _pickup = AddressData(label: 'Gare de Lyon', lat: 48.84, lng: 2.37);
@@ -23,7 +24,7 @@ final _leg = TripLegDraft(
 );
 
 TripFormDraft _full({DateTime? handoverDeadline}) => TripFormDraft(
-  step: 2,
+  stepId: TripFormStep.prix,
   currency: 'EUR',
   departureCity: 'Paris',
   departureCountryCode: 'FR',
@@ -72,7 +73,7 @@ void main() {
 
   test('brouillon vide : défauts du formulaire vierge', () {
     final back = TripFormDraft.fromJson(const {}, now: now);
-    expect(back.step, 0);
+    expect(back.stepId, TripFormStep.trajet);
     expect(back.priceOption, -1);
     expect(back.kgPriceEnabled, isTrue);
     expect(back.cardEnabled, isTrue);
@@ -88,7 +89,7 @@ void main() {
     expect(back.departureDate, isNull);
     expect(back.handoverDeadline, isNull);
     expect(back.legs, isEmpty);
-    expect(back.step, 0);
+    expect(back.stepId, TripFormStep.trajet);
     expect(back.departureCity, 'Paris');
   });
 
@@ -105,7 +106,7 @@ void main() {
       ],
       'acceptedContent': ['A', 2],
     }, now: now);
-    expect(back.step, 0);
+    expect(back.stepId, TripFormStep.trajet);
     expect(back.departureTime, isNull);
     expect(back.arrivalDayOffset, 2);
     expect(back.pickupAddress, isNull);
@@ -126,6 +127,81 @@ void main() {
     final json = _viaJson(_full())..['handoverDeadline'] = '2026-11-01';
     final back = TripFormDraft.fromJson(json, now: now);
     expect(back.handoverDeadline, DateTime(2026, 11));
+  });
+
+  group('étape atteinte', () {
+    test('stepId écrit avec l\'index legacy dans step', () {
+      final expected = {
+        TripFormStep.mode: 0,
+        TripFormStep.trajet: 0,
+        TripFormStep.capacite: 1,
+        TripFormStep.prix: 2,
+        TripFormStep.conditions: 2,
+      };
+      for (final entry in expected.entries) {
+        final json = TripFormDraft(stepId: entry.key).toJson();
+        expect(json['stepId'], entry.key.wire);
+        expect(json['step'], entry.value);
+      }
+    });
+
+    test('aller-retour de chaque étape', () {
+      for (final s in TripFormStep.values) {
+        final back = TripFormDraft.fromJson(
+          _viaJson(TripFormDraft(stepId: s)),
+          now: now,
+        );
+        expect(back.stepId, s);
+      }
+    });
+
+    test('brouillon de la version actuelle (step 2) rouvre à Prix', () {
+      expect(
+        TripFormDraft.fromJson(const {'step': 2}).stepId,
+        TripFormStep.prix,
+      );
+    });
+
+    test('step legacy 0 et 1 : trajet et capacité', () {
+      expect(
+        TripFormDraft.fromJson(const {'step': 0}).stepId,
+        TripFormStep.trajet,
+      );
+      expect(
+        TripFormDraft.fromJson(const {'step': 1}).stepId,
+        TripFormStep.capacite,
+      );
+    });
+
+    test('stepId prime sur step', () {
+      expect(
+        TripFormDraft.fromJson(const {
+          'step': 0,
+          'stepId': 'conditions',
+        }).stepId,
+        TripFormStep.conditions,
+      );
+    });
+
+    test('stepId inconnu : retombe sur step', () {
+      expect(
+        TripFormDraft.fromJson(const {'step': 1, 'stepId': 'bateau'}).stepId,
+        TripFormStep.capacite,
+      );
+    });
+
+    test('départ passé : retour à Trajet même depuis stepId', () {
+      final back = TripFormDraft.fromJson(
+        _viaJson(
+          TripFormDraft(
+            stepId: TripFormStep.conditions,
+            departureDate: DateTime(2026, 11, 2),
+          ),
+        ),
+        now: DateTime(2026, 12),
+      );
+      expect(back.stepId, TripFormStep.trajet);
+    });
   });
 
   test('étape sans moyens de paiement mémorisés : null conservé', () {

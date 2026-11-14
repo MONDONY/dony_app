@@ -4,6 +4,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
@@ -601,6 +602,53 @@ void main() {
           deliveryAddress: const {'label': 'Dakar'},
           paymentMethod: PaymentMethod.cash,
           useCardForCommission: true,
+        ),
+      ).called(1),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'threads the traveler\'s transportMode through to the repository call',
+      build: () {
+        when(
+          () => repo.createDedicatedTrip(
+            any(),
+            departureDate: any(named: 'departureDate'),
+            departureTime: any(named: 'departureTime'),
+            arrivalTime: any(named: 'arrivalTime'),
+            pickupAddress: any(named: 'pickupAddress'),
+            deliveryAddress: any(named: 'deliveryAddress'),
+            description: any(named: 'description'),
+            acceptedContentTypes: any(named: 'acceptedContentTypes'),
+            refusedTypes: any(named: 'refusedTypes'),
+            paymentMethod: any(named: 'paymentMethod'),
+            useCardForCommission: any(named: 'useCardForCommission'),
+            transportMode: any(named: 'transportMode'),
+          ),
+        ).thenAnswer(
+          (_) async =>
+              _fakeThread(status: NegotiationThreadStatus.awaitingPayment),
+        );
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(
+        NegotiationCreateDedicatedTripRequested(
+          threadId: 't-1',
+          departureDate: DateTime(2026, 7),
+          pickupAddress: const {'label': 'Paris'},
+          deliveryAddress: const {'label': 'Dakar'},
+          paymentMethod: PaymentMethod.stripe,
+          transportMode: TransportMode.boat,
+        ),
+      ),
+      expect: () => [isA<NegotiationLoading>(), isA<NegotiationLoaded>()],
+      verify: (_) => verify(
+        () => repo.createDedicatedTrip(
+          't-1',
+          departureDate: DateTime(2026, 7),
+          pickupAddress: const {'label': 'Paris'},
+          deliveryAddress: const {'label': 'Dakar'},
+          paymentMethod: PaymentMethod.stripe,
+          transportMode: TransportMode.boat,
         ),
       ).called(1),
     );

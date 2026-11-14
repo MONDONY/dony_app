@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/home/bloc/search_composer_event.dart';
@@ -26,7 +27,16 @@ class SearchComposerBloc
     required SearchMode mode,
     required HomeSearchFilters initialFilters,
   }) : _mode = mode,
-       super(SearchComposerState(filters: initialFilters)) {
+       // Un filtre Transport que la recherche ne propose pas (train, bateau
+       // éteint) est retiré dès l'ouverture : un filtre invisible ne se
+       // décocherait pas.
+       super(
+         SearchComposerState(
+           filters: initialFilters.withTransportLimitedTo(
+             transportModes.searchModes,
+           ),
+         ),
+       ) {
     on<SearchComposerStarted>(_onStarted);
     on<SearchComposerCleared>(_onCleared);
 

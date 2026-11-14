@@ -11,8 +11,7 @@ class DonyIcons {
   DonyIcons._();
 
   // Trajet
-  static const IconData departureCity = Icons.flight_takeoff_rounded;
-  static const IconData arrivalCity = Icons.flight_land_rounded;
+  static const IconData arrivalCity = Icons.flag_rounded;
   static const IconData time = Icons.access_time_rounded;
   static const IconData date = Icons.calendar_today_rounded;
 
@@ -46,7 +45,6 @@ class DonyIcons {
   static const IconData swapVertical = Icons.swap_vert_rounded;
 
   // Modes de transport
-  static const IconData transportPlane = Icons.flight_rounded;
   static const IconData transportCar = Icons.directions_car_rounded;
   static const IconData transportTrain = Icons.train_rounded;
   static const IconData transportBus = Icons.directions_bus_rounded;

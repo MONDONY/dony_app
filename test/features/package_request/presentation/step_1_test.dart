@@ -1,7 +1,8 @@
-// Step 1 widget test — avion verrouillé, trajet (villes + date + tolérance).
+// Step 1 widget test — trajet (villes + date + tolérance), sans bloc mode
+// quand seul l'avion est ouvert.
 //
 // Le poids du colis a été retiré de l'étape 1 : il est saisi à l'étape 2
-// (FormStep2Submitted). L'étape 1 ne traite que le trajet + le mode (avion).
+// (FormStep2Submitted). L'étape 1 ne traite que le trajet + le mode.
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -56,7 +57,7 @@ void main() {
     ),
   );
 
-  group('Step1TrajetColis — avion lock + trajet (poids retiré)', () {
+  group('Step1TrajetColis — avion seul + trajet (poids retiré)', () {
     // 1. Weight input field is NO LONGER in step 1 (moved to step 2)
     testWidgets('weight input is removed from step 1', (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
@@ -87,14 +88,18 @@ void main() {
       expect(find.text('L'), findsNothing);
     });
 
-    // 5. Airplane lock indicator is visible
-    testWidgets('airplane lock indicator is visible', (tester) async {
+    // 5. Avion seul (réglage serveur par défaut) : plus de bloc « avion
+    // verrouillé », ni cadenas ni mention « seul mode disponible ».
+    testWidgets('plane-only: no locked airplane block', (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
       expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plane'),
-        findsOneWidget,
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && (w.name == 'plane' || w.name == 'lock'),
+        ),
+        findsNothing,
       );
-      expect(find.text('Avion'), findsOneWidget);
+      expect(find.text('Avion'), findsNothing);
+      expect(find.textContaining('seul mode'), findsNothing);
     });
 
     // 6. Section label and title are still present

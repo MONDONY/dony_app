@@ -1,7 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_summary_card.dart';
@@ -368,7 +368,8 @@ class _CorridorChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const DonyEmoji.planeTakeoff(size: 12),
+          // Le mode du trajet n'est pas connu ici : icône neutre.
+          DonyIcon(kNeutralTripIconAsset, size: 12, color: cs.primary),
           const SizedBox(width: DonySpacing.xs),
           Flexible(
             child: Text(

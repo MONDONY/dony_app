@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 LinkedTripSummary _trip({
   String? date,
@@ -150,32 +151,38 @@ void main() {
       expect(find.text('Refuser ce trajet'), findsNothing);
     });
 
-    testWidgets('shows train icon for TRAIN mode', (tester) async {
-      await tester.pumpWidget(_buildApp(_trip(mode: 'TRAIN')));
+    Future<void> openWithMode(WidgetTester tester, String mode) async {
+      await tester.pumpWidget(_buildApp(_trip(mode: mode)));
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
-      expect(find.text('🚄'), findsOneWidget);
+    }
+
+    testWidgets('PLANE : icône avion', (tester) async {
+      await openWithMode(tester, 'PLANE');
+      expect(findDonyIcon('plane'), findsOneWidget);
     });
 
-    testWidgets('shows car icon for CAR mode', (tester) async {
-      await tester.pumpWidget(_buildApp(_trip(mode: 'CAR')));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('🚗'), findsOneWidget);
+    testWidgets('BOAT : icône bateau, plus le colis 📦', (tester) async {
+      await openWithMode(tester, 'BOAT');
+      expect(findDonyIcon('ship'), findsOneWidget);
+      expectNoPlaneIcon(tester);
     });
 
-    testWidgets('shows plane icon for PLANE mode', (tester) async {
-      await tester.pumpWidget(_buildApp(_trip(mode: 'PLANE')));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('✈️'), findsOneWidget);
+    testWidgets('CAR : icône voiture', (tester) async {
+      await openWithMode(tester, 'CAR');
+      expect(findDonyIcon('car'), findsOneWidget);
+      expectNoPlaneIcon(tester);
     });
 
-    testWidgets('shows default icon for unknown mode', (tester) async {
-      await tester.pumpWidget(_buildApp(_trip(mode: 'BOAT')));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('📦'), findsOneWidget);
+    testWidgets('BUS : icône voiture', (tester) async {
+      await openWithMode(tester, 'BUS');
+      expect(findDonyIcon('car'), findsOneWidget);
+    });
+
+    testWidgets('TRAIN ou mode inconnu : icône neutre route', (tester) async {
+      await openWithMode(tester, 'TRAIN');
+      expect(findDonyIcon('route'), findsOneWidget);
+      expectNoPlaneIcon(tester);
     });
 
     testWidgets('tapping Refuser opens confirmation sheet', (tester) async {

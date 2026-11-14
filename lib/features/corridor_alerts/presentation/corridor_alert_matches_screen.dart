@@ -12,6 +12,7 @@ import 'package:dony/features/corridor_alerts/presentation/corridor_alert_labels
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_card.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/trip_match_card.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/matching_request.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -253,7 +254,7 @@ class _AlertSummaryBanner extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final isTrips = alert.direction == AlertDirection.senderWantsTrips;
     final (iconAsset, iconBg, iconFg) = isTrips
-        ? ('plane', cs.primaryContainer, cs.primary)
+        ? (kNeutralTripIconAsset, cs.primaryContainer, cs.primary)
         : ('package', cs.secondaryContainer, cs.secondary);
     final l = context.l10n;
     final (title, subtitle) = !alert.active

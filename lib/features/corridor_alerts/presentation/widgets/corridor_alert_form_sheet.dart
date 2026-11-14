@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
@@ -12,6 +13,7 @@ import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/corridor_alert_labels.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/zone_picker_field.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -351,7 +353,7 @@ class _DirectionSegment extends StatelessWidget {
           Expanded(
             child: _Pill(
               label: l.corridorAlertSegmentPackages,
-              emoji: '📦',
+              iconAsset: 'package',
               isActive: direction == AlertDirection.travelerWantsPackages,
               onTap: () => onChanged(AlertDirection.travelerWantsPackages),
             ),
@@ -359,7 +361,7 @@ class _DirectionSegment extends StatelessWidget {
           Expanded(
             child: _Pill(
               label: l.corridorAlertSegmentTrips,
-              emoji: '✈️',
+              iconAsset: kNeutralTripIconAsset,
               isActive: direction == AlertDirection.senderWantsTrips,
               onTap: () => onChanged(AlertDirection.senderWantsTrips),
             ),
@@ -373,13 +375,13 @@ class _DirectionSegment extends StatelessWidget {
 class _Pill extends StatelessWidget {
   const _Pill({
     required this.label,
-    required this.emoji,
+    required this.iconAsset,
     required this.isActive,
     required this.onTap,
   });
 
   final String label;
-  final String emoji;
+  final String iconAsset;
   final bool isActive;
   final VoidCallback onTap;
 
@@ -402,7 +404,11 @@ class _Pill extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 12)),
+            DonyIcon(
+              iconAsset,
+              size: 14,
+              color: isActive ? cs.onPrimary : cs.onSurfaceVariant,
+            ),
             const SizedBox(width: DonySpacing.xs),
             Text(
               label,

@@ -3,17 +3,13 @@
 // Note : la ligne 7 (DonyIcons._()) est le constructeur privé ; ce n'est pas
 // testable via des tests unitaires Dart (intentionnel — classe non instantiable).
 import 'package:dony/core/design/dony_icons.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('DonyIcons — constantes statiques', () {
-    test('departureCity est un IconData valide', () {
-      expect(DonyIcons.departureCity, isA<IconData>());
-    });
-
-    test('arrivalCity est un IconData valide', () {
-      expect(DonyIcons.arrivalCity, isA<IconData>());
+    test('arrivalCity est un drapeau (jamais un avion)', () {
+      expect(DonyIcons.arrivalCity, Icons.flag_rounded);
     });
 
     test('date est un IconData valide', () {
@@ -54,10 +50,6 @@ void main() {
 
     test('arrowRight est un IconData valide', () {
       expect(DonyIcons.arrowRight, isA<IconData>());
-    });
-
-    test('transportPlane est un IconData valide', () {
-      expect(DonyIcons.transportPlane, isA<IconData>());
     });
 
     test('confirmed est un IconData valide', () {

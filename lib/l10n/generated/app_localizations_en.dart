@@ -1106,6 +1106,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a price per kg above 0, or choose the price grid.';
 
   @override
+  String get errorTransportModeDisabledTitle => 'Mode unavailable';
+
+  @override
+  String get errorTransportModeDisabledMessage =>
+      'This transport mode isn\'t available yet.';
+
+  @override
+  String get errorArrivalTooFarTitle => 'Arrival too far';
+
+  @override
+  String get errorArrivalTooFarMessage =>
+      'The arrival date is too far after departure for this mode.';
+
+  @override
   String get errorConflictTitle => 'Can\'t do this';
 
   @override
@@ -2319,7 +2333,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeComposerMoreFiltersHint =>
-      'Content type, transport, rating, stops, payment';
+      'Content type, rating, stops, payment';
+
+  @override
+  String get homeComposerSectionTransport => 'TRANSPORT';
 
   @override
   String get homeComposerSectionWhen => 'WHEN';
@@ -2417,6 +2434,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeModeSelectorParcelsSubtitle => 'Parcels to carry';
+
+  @override
+  String get homeFilterChipsTransport => 'Transport';
+
+  @override
+  String get homeFilterChipsTransportAll => 'All';
 
   @override
   String get homeFilterChipsDate => 'Date';
@@ -2580,13 +2603,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripTransportPlane => 'Plane';
 
   @override
-  String get tripTransportCar => 'Car';
+  String get tripTransportRoad => 'Road';
 
   @override
   String get tripTransportTrain => 'Train';
-
-  @override
-  String get tripTransportBus => 'Bus';
 
   @override
   String get tripTransportBoat => 'Boat';
@@ -2698,20 +2718,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishDraftLimitTitle => 'Draft limit reached';
 
   @override
-  String get tripPublishTemplatesLabel => 'My templates';
-
-  @override
-  String get tripPublishTemplatesHint =>
-      'Apply a template to pre-fill the trip';
-
-  @override
   String tripPublishTemplateAppliedMessage(String label) {
     return 'Template “$label” applied';
-  }
-
-  @override
-  String tripPublishTemplateChipGrid(String label) {
-    return '$label · per item';
   }
 
   @override
@@ -2865,7 +2873,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestPublishIntroWhyBulletCarried =>
-      'A traveler carries your parcel in their luggage.';
+      'A traveler carries your parcel with them.';
 
   @override
   String get requestPublishIntroWhyBulletPayment =>
@@ -3198,10 +3206,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishCurrencyChangeCta => 'Change';
 
   @override
+  String get tripPublishStepMode => 'Mode';
+
+  @override
+  String get tripPublishStepCapacity => 'Capacity';
+
+  @override
+  String get tripPublishStepPrice => 'Price';
+
+  @override
+  String get tripPublishStepConditions => 'Terms';
+
+  @override
   String get tripPublishPlacesCapacityStepLabel => 'Locations & capacity';
 
   @override
   String get tripPublishPriceConditionsStepLabel => 'Price & conditions';
+
+  @override
+  String get tripPublishModeQuestion => 'How are you traveling?';
+
+  @override
+  String get tripPublishModeHint =>
+      'The mode shapes the next steps: dates, capacity and price.';
+
+  @override
+  String get tripPublishModeSectionLabel => 'Transport mode';
+
+  @override
+  String get tripPublishConditionsSkip => 'Skip';
+
+  @override
+  String get tripPublishModeAirTitle => 'By air';
+
+  @override
+  String get tripPublishModeAirSubtitle => 'Plane, your spare luggage kilos';
+
+  @override
+  String get tripPublishModeAirTagDuration => 'A few days';
+
+  @override
+  String get tripPublishModeAirTagCapacity => 'Suitcases or kg';
+
+  @override
+  String get tripPublishModeRoadTitle => 'By road';
+
+  @override
+  String get tripPublishModeRoadSubtitle => 'Car, bus or truck';
+
+  @override
+  String get tripPublishModeRoadTagScope => 'Domestic or international';
+
+  @override
+  String get tripPublishModeRoadTagCapacity => 'Free or exact kg';
 
   @override
   String get tripPublishHandoverLocationsLabel => 'Drop-off locations';
@@ -3858,7 +3915,29 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get requestCreateAirplaneOnlyMode => 'only mode available';
+  String get requestCreateTransportModeLabel => 'Transport mode';
+
+  @override
+  String get requestCreateTransportAny => 'Any';
+
+  @override
+  String get requestCreateModeHelpAny =>
+      'All travelers on this route will see your request.';
+
+  @override
+  String get requestCreateModeHelpPlane =>
+      'Only travelers flying will see your request.';
+
+  @override
+  String get requestCreateModeHelpBoat =>
+      'Only ships (shared containers) will see your request.';
+
+  @override
+  String get requestCreateModeHelpRoad =>
+      'Only travelers by car, bus or truck will see your request.';
+
+  @override
+  String get requestCreateAiAction => 'Create with AI';
 
   @override
   String get requestCreateTrajetSectionLabel => 'TRIP';
@@ -7143,7 +7222,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String bidDetailSenderHandedOverSubtitleWithDate(String date) {
-    return 'Boarding scheduled for $date.';
+    return 'Departure scheduled for $date.';
   }
 
   @override
@@ -8637,12 +8716,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tripOwnerShareMessage(
+    String emoji,
     String dep,
     String arr,
     String date,
     String url,
   ) {
-    return '✈️ I\'m traveling $dep → $arr on $date with room in my luggage!\nBook your kilos on Yadony 📦\n$url';
+    return '$emoji I\'m traveling $dep → $arr on $date with room for your parcels!\nBook your kilos on Yadony 📦\n$url';
   }
 
   @override
@@ -8757,7 +8837,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripOwnerParcelsTile => 'Parcels';
 
   @override
-  String get tripOwnerNoParcelsMessage => 'No parcels on board';
+  String get tripOwnerNoParcelsMessage => 'No parcels yet';
 
   @override
   String get tripOwnerDeleteDialogTitle => 'Delete this trip?';
@@ -11160,6 +11240,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancellationReasonFlightCanceled => 'Flight canceled';
+
+  @override
+  String get cancellationReasonTransportCancelled => 'Transport canceled';
+
+  @override
+  String get cancellationReasonBreakdown => 'Breakdown or setback';
 
   @override
   String get cancellationReasonPersonalEmergency => 'Personal emergency';
@@ -15247,12 +15333,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Address not located, you can type it in manually';
 
   @override
-  String get dsEmojiTakeoff => 'Takeoff';
-
-  @override
-  String get dsEmojiLanding => 'Landing';
-
-  @override
   String get dsEmojiParcel => 'Parcel';
 
   @override
@@ -15988,7 +16068,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripRescheduleSubtitle =>
-      'Flight canceled or trip postponed: pick the new date.';
+      'Departure canceled or trip postponed: pick the new date.';
 
   @override
   String get tripRescheduleReasonLabel => 'Reason';
@@ -15997,14 +16077,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripRescheduleReasonFlightCancelled => 'Flight canceled';
 
   @override
+  String get tripRescheduleReasonTransportCancelled => 'Transport canceled';
+
+  @override
+  String get tripRescheduleReasonBreakdown => 'Breakdown or setback';
+
+  @override
   String get tripRescheduleReasonPostponed => 'Trip postponed';
 
   @override
   String get tripRescheduleReasonOther => 'Other reason';
 
   @override
-  String get tripRescheduleNoteHint =>
-      'E.g. flight canceled, new flight confirmed the next day';
+  String get tripRescheduleNoteHint => 'E.g. departure moved to the next day';
 
   @override
   String get tripRescheduleSameDateHint =>
@@ -20679,7 +20764,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Business registration (Kbis, SIRET, NINEA, RCCM…)';
 
   @override
-  String get gpProDocTypeTravelProof => 'Ticket or boarding pass';
+  String get gpProDocTypeTravelProof => 'Travel ticket';
 
   @override
   String get gpProDocTypeSocialProfile => 'Social media screenshot';
@@ -21044,8 +21129,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Mobile money is only available in CFA francs: I did not select it.';
 
   @override
-  String get aiFormDraftWarningPlaneOnly =>
-      'Only plane trips are available for now: the trip will be published as a plane trip.';
+  String get aiFormDraftWarningModeUnavailable =>
+      'This mode isn\'t available yet: the trip will be published as a flight.';
 
   @override
   String get aiFormDraftWarningBudget =>

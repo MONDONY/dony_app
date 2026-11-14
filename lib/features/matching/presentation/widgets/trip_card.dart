@@ -5,8 +5,11 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/features/matching/presentation/widgets/transport_mode_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -413,9 +416,15 @@ class _ActiveCardContent extends StatelessWidget {
           ),
 
           // ── Escales (FLUTTER-GE), seulement si renseignées ──
-          if (announcement.stops != null) ...[
+          if (announcement.stops != null &&
+              supportsStops(
+                transportModeOrPlane(announcement.transportMode),
+              )) ...[
             const SizedBox(height: DonySpacing.xs),
-            TripStopsBadge(stops: announcement.stops),
+            TripStopsBadge(
+              stops: announcement.stops,
+              transportMode: announcement.transportMode,
+            ),
           ],
 
           // ── Demandes stats row (acceptées / en attente) ──
@@ -425,8 +434,12 @@ class _ActiveCardContent extends StatelessWidget {
 
           const SizedBox(height: DonySpacing.md),
 
-          // ── Flight timeline ──
-          _FlightTimeline(depFlag: depFlag, arrFlag: arrFlag),
+          // ── Route timeline (icône du mode) ──
+          _RouteTimeline(
+            depFlag: depFlag,
+            arrFlag: arrFlag,
+            mode: transportModeOrPlane(announcement.transportMode),
+          ),
 
           const SizedBox(height: DonySpacing.md),
 
@@ -773,14 +786,21 @@ class _BidStatChip extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
-// _FlightTimeline — flag → dashed line with plane → flag
+// _RouteTimeline — flag → dashed line with the mode icon → flag
 // ─────────────────────────────────────────────────────────────
 
-class _FlightTimeline extends StatelessWidget {
-  const _FlightTimeline({required this.depFlag, required this.arrFlag});
+class _RouteTimeline extends StatelessWidget {
+  const _RouteTimeline({
+    required this.depFlag,
+    required this.arrFlag,
+    required this.mode,
+  });
 
   final String? depFlag;
   final String? arrFlag;
+
+  /// Mode du trajet : son icône pose le trait, l'avion seul est tourné.
+  final TransportMode mode;
 
   @override
   Widget build(BuildContext context) {
@@ -798,11 +818,7 @@ class _FlightTimeline extends StatelessWidget {
                 size: Size(double.infinity, 2),
                 painter: _DashedLinePainter(color: DonyColors.blue200),
               ),
-              // Plane icon rotated to point right (Lucide 'plane' points up-left by default)
-              RotatedBox(
-                quarterTurns: 1,
-                child: DonyIcon('plane', size: 16, color: cs.primary),
-              ),
+              TransportModeIcon(mode: mode, size: 16, color: cs.primary),
             ],
           ),
         ),

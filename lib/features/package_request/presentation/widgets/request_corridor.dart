@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/features/matching/presentation/widgets/transport_mode_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -14,12 +16,17 @@ class RequestCorridor extends StatelessWidget {
   const RequestCorridor({
     required this.departureCity,
     required this.arrivalCity,
+    this.transportMode,
     this.compact = false,
     super.key,
   });
 
   final String departureCity;
   final String arrivalCity;
+
+  /// Mode de la demande : choisit l'icône de la flèche. `null` (peu importe)
+  /// donne l'icône neutre.
+  final TransportMode? transportMode;
 
   /// Variante resserrée : villes plus petites, flèche plus courte. Pour les
   /// lignes d'un résumé où la place manque.
@@ -64,7 +71,7 @@ class RequestCorridor extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-          child: _CorridorArrow(compact: compact),
+          child: _CorridorArrow(compact: compact, transportMode: transportMode),
         ),
         Expanded(
           child: Column(
@@ -92,11 +99,18 @@ class RequestCorridor extends StatelessWidget {
   }
 }
 
-/// Flèche du corridor : ligne pointillée qui part d'un point (départ), avion
-/// dans une pastille au milieu, pointe de flèche à l'arrivée. Couleurs unies.
+/// Flèche du corridor : ligne pointillée qui part d'un point (départ), icône
+/// du mode dans une pastille au milieu, pointe de flèche à l'arrivée. Couleurs unies.
 class _CorridorArrow extends StatelessWidget {
-  const _CorridorArrow({required this.compact});
+  const _CorridorArrow({required this.compact, required this.transportMode});
   final bool compact;
+  final TransportMode? transportMode;
+
+  Widget _modeIcon(ColorScheme cs) => TransportModeIcon(
+    mode: transportMode,
+    size: compact ? 12 : 14,
+    color: cs.primary,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -121,14 +135,7 @@ class _CorridorArrow extends StatelessWidget {
                 color: cs.primaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: RotatedBox(
-                quarterTurns: 1,
-                child: Icon(
-                  Icons.flight_rounded,
-                  size: compact ? 12 : 14,
-                  color: cs.primary,
-                ),
-              ),
+              child: _modeIcon(cs),
             ),
           ),
         ),

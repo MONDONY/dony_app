@@ -1114,6 +1114,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Indiquez un prix par kg supérieur à 0, ou choisissez le tarif à la grille.';
 
   @override
+  String get errorTransportModeDisabledTitle => 'Mode indisponible';
+
+  @override
+  String get errorTransportModeDisabledMessage =>
+      'Ce mode de transport n\'est pas encore proposé.';
+
+  @override
+  String get errorArrivalTooFarTitle => 'Arrivée trop lointaine';
+
+  @override
+  String get errorArrivalTooFarMessage =>
+      'La date d\'arrivée est trop loin après le départ pour ce mode.';
+
+  @override
   String get errorConflictTitle => 'Action impossible';
 
   @override
@@ -2330,7 +2344,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeComposerMoreFiltersHint =>
-      'Type de contenu, transport, note, escales, paiement';
+      'Type de contenu, note, escales, paiement';
+
+  @override
+  String get homeComposerSectionTransport => 'TRANSPORT';
 
   @override
   String get homeComposerSectionWhen => 'QUAND';
@@ -2423,6 +2440,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeModeSelectorParcelsSubtitle => 'Colis à transporter';
+
+  @override
+  String get homeFilterChipsTransport => 'Transport';
+
+  @override
+  String get homeFilterChipsTransportAll => 'Tous';
 
   @override
   String get homeFilterChipsDate => 'Date';
@@ -2587,13 +2610,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripTransportPlane => 'Avion';
 
   @override
-  String get tripTransportCar => 'Voiture';
+  String get tripTransportRoad => 'Route';
 
   @override
   String get tripTransportTrain => 'Train';
-
-  @override
-  String get tripTransportBus => 'Bus';
 
   @override
   String get tripTransportBoat => 'Bateau';
@@ -2712,20 +2732,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishDraftLimitTitle => 'Limite de brouillons atteinte';
 
   @override
-  String get tripPublishTemplatesLabel => 'Mes modèles';
-
-  @override
-  String get tripPublishTemplatesHint =>
-      'Appliquez un modèle pour pré-remplir le trajet';
-
-  @override
   String tripPublishTemplateAppliedMessage(String label) {
     return 'Modèle « $label » appliqué';
-  }
-
-  @override
-  String tripPublishTemplateChipGrid(String label) {
-    return '$label · par article';
   }
 
   @override
@@ -2879,7 +2887,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestPublishIntroWhyBulletCarried =>
-      'Un voyageur transporte votre colis dans ses bagages.';
+      'Un voyageur transporte votre colis avec lui.';
 
   @override
   String get requestPublishIntroWhyBulletPayment =>
@@ -3217,10 +3225,59 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishCurrencyChangeCta => 'Changer';
 
   @override
+  String get tripPublishStepMode => 'Mode';
+
+  @override
+  String get tripPublishStepCapacity => 'Capacité';
+
+  @override
+  String get tripPublishStepPrice => 'Prix';
+
+  @override
+  String get tripPublishStepConditions => 'Conditions';
+
+  @override
   String get tripPublishPlacesCapacityStepLabel => 'Lieux & capacité';
 
   @override
   String get tripPublishPriceConditionsStepLabel => 'Prix & conditions';
+
+  @override
+  String get tripPublishModeQuestion => 'Comment voyagez-vous ?';
+
+  @override
+  String get tripPublishModeHint =>
+      'Le mode adapte la suite : dates, capacité et prix.';
+
+  @override
+  String get tripPublishModeSectionLabel => 'Mode de transport';
+
+  @override
+  String get tripPublishConditionsSkip => 'Passer';
+
+  @override
+  String get tripPublishModeAirTitle => 'Voie aérienne';
+
+  @override
+  String get tripPublishModeAirSubtitle => 'Avion, vos kilos de valise';
+
+  @override
+  String get tripPublishModeAirTagDuration => 'Quelques jours';
+
+  @override
+  String get tripPublishModeAirTagCapacity => 'Valises ou kg';
+
+  @override
+  String get tripPublishModeRoadTitle => 'Voie terrestre';
+
+  @override
+  String get tripPublishModeRoadSubtitle => 'Voiture, car ou camion';
+
+  @override
+  String get tripPublishModeRoadTagScope => 'Même pays ou international';
+
+  @override
+  String get tripPublishModeRoadTagCapacity => 'Kg libre ou exact';
 
   @override
   String get tripPublishHandoverLocationsLabel => 'Lieux de remise';
@@ -3878,7 +3935,29 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get requestCreateAirplaneOnlyMode => 'seul mode disponible';
+  String get requestCreateTransportModeLabel => 'Mode de transport';
+
+  @override
+  String get requestCreateTransportAny => 'Peu importe';
+
+  @override
+  String get requestCreateModeHelpAny =>
+      'Tous les voyageurs de ce trajet verront votre demande.';
+
+  @override
+  String get requestCreateModeHelpPlane =>
+      'Seuls les voyageurs en avion verront votre demande.';
+
+  @override
+  String get requestCreateModeHelpBoat =>
+      'Seuls les bateaux (groupage en conteneur) verront votre demande.';
+
+  @override
+  String get requestCreateModeHelpRoad =>
+      'Seuls les voyageurs en voiture, car ou camion verront votre demande.';
+
+  @override
+  String get requestCreateAiAction => 'Créer avec l\'IA';
 
   @override
   String get requestCreateTrajetSectionLabel => 'TRAJET';
@@ -7185,7 +7264,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String bidDetailSenderHandedOverSubtitleWithDate(String date) {
-    return 'Embarquement prévu le $date.';
+    return 'Départ prévu le $date.';
   }
 
   @override
@@ -8690,12 +8769,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String tripOwnerShareMessage(
+    String emoji,
     String dep,
     String arr,
     String date,
     String url,
   ) {
-    return '✈️ Je voyage $dep → $arr le $date avec de la place dans mes bagages !\nRéservez vos kilos sur Yadony 📦\n$url';
+    return '$emoji Je voyage $dep → $arr le $date avec de la place pour vos colis !\nRéservez vos kilos sur Yadony 📦\n$url';
   }
 
   @override
@@ -8810,7 +8890,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripOwnerParcelsTile => 'Colis';
 
   @override
-  String get tripOwnerNoParcelsMessage => 'Aucun colis embarqué';
+  String get tripOwnerNoParcelsMessage => 'Aucun colis confié';
 
   @override
   String get tripOwnerDeleteDialogTitle => 'Supprimer ce trajet ?';
@@ -11225,6 +11305,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cancellationReasonFlightCanceled => 'Vol annulé';
+
+  @override
+  String get cancellationReasonTransportCancelled => 'Transport annulé';
+
+  @override
+  String get cancellationReasonBreakdown => 'Panne ou contretemps';
 
   @override
   String get cancellationReasonPersonalEmergency => 'Urgence personnelle';
@@ -15355,12 +15441,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Adresse non localisée, vous pouvez la saisir à la main';
 
   @override
-  String get dsEmojiTakeoff => 'Décollage';
-
-  @override
-  String get dsEmojiLanding => 'Atterrissage';
-
-  @override
   String get dsEmojiParcel => 'Colis';
 
   @override
@@ -16100,7 +16180,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripRescheduleSubtitle =>
-      'Vol annulé ou voyage repoussé : choisissez la nouvelle date.';
+      'Départ annulé ou voyage repoussé : choisissez la nouvelle date.';
 
   @override
   String get tripRescheduleReasonLabel => 'Motif';
@@ -16109,14 +16189,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripRescheduleReasonFlightCancelled => 'Vol annulé';
 
   @override
+  String get tripRescheduleReasonTransportCancelled => 'Transport annulé';
+
+  @override
+  String get tripRescheduleReasonBreakdown => 'Panne ou contretemps';
+
+  @override
   String get tripRescheduleReasonPostponed => 'Voyage repoussé';
 
   @override
   String get tripRescheduleReasonOther => 'Autre raison';
 
   @override
-  String get tripRescheduleNoteHint =>
-      'Ex. : vol annulé, nouveau vol confirmé le lendemain';
+  String get tripRescheduleNoteHint => 'Ex. : départ décalé au lendemain';
 
   @override
   String get tripRescheduleSameDateHint =>
@@ -20819,7 +20904,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Registre d\'entreprise (Kbis, SIRET, NINEA, RCCM…)';
 
   @override
-  String get gpProDocTypeTravelProof => 'Billet ou carte d\'embarquement';
+  String get gpProDocTypeTravelProof => 'Titre de transport';
 
   @override
   String get gpProDocTypeSocialProfile => 'Capture d\'un réseau social';
@@ -21185,8 +21270,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le mobile money n\'est proposé qu\'en franc CFA : je ne l\'ai pas coché.';
 
   @override
-  String get aiFormDraftWarningPlaneOnly =>
-      'Seul l\'avion est proposé pour le moment : le trajet sera publié en avion.';
+  String get aiFormDraftWarningModeUnavailable =>
+      'Ce mode n\'est pas encore proposé : le trajet sera publié en avion.';
 
   @override
   String get aiFormDraftWarningBudget =>

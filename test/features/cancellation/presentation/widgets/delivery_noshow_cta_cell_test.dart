@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 class _MockBloc extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
@@ -78,6 +79,19 @@ void main() {
       ),
     );
     expect(find.text("Signaler l'absence du destinataire"), findsOneWidget);
+  });
+
+  testWidgets('expéditeur : icône colis, jamais un avion (mode multiple)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _harness(
+        DeliveryNoShowCtaCell(bid: _inTransitBid(), isSender: true),
+        bloc,
+      ),
+    );
+    expect(findDonyIcon('package'), findsOneWidget);
+    expectNoPlaneIcon(tester);
   });
 
   testWidgets('expéditeur : cellule visible avec le libellé symétrique', (

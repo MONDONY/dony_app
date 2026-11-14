@@ -6,6 +6,7 @@
 import 'dart:io';
 
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -226,14 +227,45 @@ void main() {
       );
     });
 
-    test('une icône par type, présente dans les assets', () {
-      for (final kind in TripTodoKind.values) {
-        final icon = tripTodoIcon(kind);
-        expect(
-          File('assets/icons/$icon.svg').existsSync(),
-          isTrue,
-          reason: '${kind.name} : $icon',
-        );
+    test('une icône par type et par mode, présente dans les assets', () {
+      for (final mode in TransportMode.values) {
+        for (final kind in TripTodoKind.values) {
+          final icon = tripTodoIcon(kind, mode);
+          expect(
+            File('assets/icons/$icon.svg').existsSync(),
+            isTrue,
+            reason: '${kind.name} ${mode.name} : $icon',
+          );
+        }
+      }
+    });
+
+    test('« Je pars » prend l\'icône du mode, « Arrivé » le drapeau', () {
+      expect(tripTodoIcon(TripTodoKind.depart, TransportMode.plane), 'plane');
+      expect(tripTodoIcon(TripTodoKind.depart, TransportMode.car), 'car');
+      expect(tripTodoIcon(TripTodoKind.depart, TransportMode.bus), 'car');
+      expect(tripTodoIcon(TripTodoKind.depart, TransportMode.boat), 'ship');
+      expect(
+        tripTodoIcon(TripTodoKind.depart, TransportMode.train),
+        kNeutralTripIconAsset,
+      );
+      for (final mode in TransportMode.values) {
+        expect(tripTodoIcon(TripTodoKind.arrive, mode), 'flag');
+      }
+    });
+
+    test('aucun type n\'a d\'icône avion hors départ d\'un trajet avion', () {
+      for (final mode in TransportMode.values) {
+        for (final kind in TripTodoKind.values) {
+          if (kind == TripTodoKind.depart && mode == TransportMode.plane) {
+            continue;
+          }
+          expect(
+            tripTodoIcon(kind, mode),
+            isNot(startsWith('plane')),
+            reason: '${kind.name} ${mode.name}',
+          );
+        }
       }
     });
 

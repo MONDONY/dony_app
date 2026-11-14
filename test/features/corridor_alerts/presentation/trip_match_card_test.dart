@@ -7,21 +7,26 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../helpers/commission_grid_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
-TripMatchModel _trip({double availableKg = 12.0, String? status}) =>
-    TripMatchModel(
-      announcementId: 'ann-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 7, 10),
-      travelerId: 't-1',
-      travelerName: 'Awa S.',
-      travelerInitials: 'AS',
-      travelerRating: 4.7,
-      availableKg: availableKg,
-      pricePerKg: 9.5,
-      status: status,
-    );
+TripMatchModel _trip({
+  double availableKg = 12.0,
+  String? status,
+  String? transportMode,
+}) => TripMatchModel(
+  announcementId: 'ann-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 7, 10),
+  travelerId: 't-1',
+  travelerName: 'Awa S.',
+  travelerInitials: 'AS',
+  travelerRating: 4.7,
+  availableKg: availableKg,
+  pricePerKg: 9.5,
+  status: status,
+  transportMode: transportMode,
+);
 
 Future<void> _pump(
   WidgetTester tester,
@@ -338,5 +343,33 @@ void main() {
     await _pump(tester, _trip());
 
     expect(find.byKey(const Key('trip-match-fee-suffix')), findsNothing);
+  });
+
+  group('icône du mode du trajet', () {
+    testWidgets('route : voiture partout, aucun avion', (tester) async {
+      await _pump(tester, _trip(transportMode: 'CAR'));
+
+      expect(findDonyIcon('car'), findsNWidgets(2));
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('bateau : icône bateau, aucun avion', (tester) async {
+      await _pump(tester, _trip(transportMode: 'BOAT'));
+
+      expect(findDonyIcon('ship'), findsNWidgets(2));
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('avion : icône avion', (tester) async {
+      await _pump(tester, _trip(transportMode: 'PLANE'));
+
+      expect(findDonyIcon('plane'), findsNWidgets(2));
+    });
+
+    testWidgets('mode absent (anciennes données) : avion', (tester) async {
+      await _pump(tester, _trip());
+
+      expect(findDonyIcon('plane'), findsNWidgets(2));
+    });
   });
 }

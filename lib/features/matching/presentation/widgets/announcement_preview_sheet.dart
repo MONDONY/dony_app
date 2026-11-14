@@ -5,6 +5,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -136,7 +137,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
             const SizedBox(height: DonySpacing.sm),
           ],
           _PreviewRow(
-            iconAsset: 'plane-takeoff',
+            iconAsset: transportModeOrPlane(formState.transportMode).iconAsset,
             label: l.listingHeroTripLabel,
             value:
                 '${formState.departureCity ?? '-'} → ${formState.arrivalCity ?? '-'}',

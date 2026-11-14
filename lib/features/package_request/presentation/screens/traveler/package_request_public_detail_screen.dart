@@ -1341,6 +1341,7 @@ class _HeroCard extends StatelessWidget {
             key: const Key('request-public-corridor'),
             departureCity: r.departureCity,
             arrivalCity: r.arrivalCity,
+            transportMode: r.transportMode,
           ),
           const SizedBox(height: DonySpacing.md),
           Divider(height: 1, color: cs.outline),

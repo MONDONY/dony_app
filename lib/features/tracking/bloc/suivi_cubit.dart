@@ -763,6 +763,9 @@ class SuiviCubit extends Cubit<SuiviState> {
             bidId: result.bidId,
             departureCity: result.departureCity,
             arrivalCity: result.arrivalCity,
+            // Le back ne sert pas le mode du colis d'un tiers : icône neutre
+            // explicite, jamais un avion supposé.
+            transportMode: TransportMode.other,
             arrivalInstructions: result.arrivalInstructions,
             trackingNumber: result.trackingNumber,
             source: 'number',
@@ -805,7 +808,7 @@ class SuiviCubit extends Cubit<SuiviState> {
         bidId: bidId,
         departureCity: hasRoute ? from : null,
         arrivalCity: hasRoute ? to : null,
-        transportMode: trip?.transportMode,
+        transportMode: known?.transportMode ?? trip?.transportMode,
         arrivalInstructions:
             known?.arrivalInstructions ?? trip?.arrivalInstructions,
         trackingNumber: known?.trackingNumber,

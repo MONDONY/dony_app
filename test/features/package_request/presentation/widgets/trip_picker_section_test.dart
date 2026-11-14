@@ -10,6 +10,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 class MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
@@ -462,4 +463,34 @@ void main() {
       expect(find.byKey(const Key('trip-tile-2')), findsNothing);
     },
   );
+
+  testWidgets('état vide : icône neutre route, jamais un avion', (
+    tester,
+  ) async {
+    when(() => announcementRepo.getMyAnnouncements()).thenAnswer(
+      (_) async => (announcements: <AnnouncementModel>[], totalElements: 0),
+    );
+
+    await tester.pumpWidget(
+      _harness(
+        TripPickerSection(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 9),
+          dateToleranceDays: 3,
+          weightKg: 10,
+          onSelected: (_) {},
+          onCreateDedicated: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Créez un trajet correspondant à cette demande'),
+      findsOneWidget,
+    );
+    expect(findDonyIcon('route'), findsOneWidget);
+    expectNoPlaneIcon(tester);
+  });
 }

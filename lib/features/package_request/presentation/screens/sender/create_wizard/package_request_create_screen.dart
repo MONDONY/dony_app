@@ -16,7 +16,6 @@ import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
 import 'package:dony/features/ai_form_draft/data/package_request_ai_draft_mapper.dart';
 import 'package:dony/features/ai_form_draft/presentation/ai_form_draft_launcher.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_entry_card.dart';
-import 'package:dony/features/ai_form_draft/presentation/widgets/ai_filled_banner.dart';
 import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
@@ -253,6 +252,7 @@ class _PackageRequestCreateScreenState
     s.desiredDate,
     s.dateToleranceDays,
     s.transportMode,
+    s.transportModeAny,
     s.weightKg,
     s.parcelSize,
     (s.categories.toList()..sort()).join(','),
@@ -713,6 +713,16 @@ class _PackageRequestCreateScreenState
                 ),
               ),
             ),
+            if (_aiAvailability case final ai? when state.currentStep == 0)
+              AiEntryGate(
+                availability: ai,
+                child: IconButton(
+                  key: const Key('request-ai-action'),
+                  tooltip: l10n.requestCreateAiAction,
+                  onPressed: () => unawaited(_openAiDraft(context)),
+                  icon: DonyIcon('sparkles', color: cs.primary, size: 22),
+                ),
+              ),
             if (_draftsEnabled)
               IconButton(
                 key: const Key('request-save-draft'),
@@ -746,44 +756,12 @@ class _PackageRequestCreateScreenState
           children: [
             Expanded(
               child: switch (state.currentStep) {
-                // Rien n'est épinglé au-dessus de l'étape : la carte de
-                // tutoriel et la bannière de devise vivaient hors du
-                // `SingleChildScrollView` et mangeaient de la hauteur pendant
-                // toute la saisie, clavier déployé. Elles passent en tête du
-                // contenu défilant.
+                // Rien n'est épinglé au-dessus de l'étape : de la hauteur
+                // perdue pendant toute la saisie, clavier déployé. L'entrée
+                // « Créer avec l'IA » est l'icône de la barre de titre.
                 0 => Step1TrajetColis(
                   key: _step1Key,
                   canContinueNotifier: _canContinueNotifier,
-                  header: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (_aiAvailability case final availability?)
-                        BlocBuilder<AiFilledFieldsCubit, Set<String>>(
-                          bloc: _aiFilled,
-                          builder: (_, fields) => fields.isNotEmpty
-                              ? Padding(
-                                  padding: const EdgeInsets.only(
-                                    bottom: DonySpacing.base,
-                                  ),
-                                  child: AiFilledBanner(
-                                    onTalkAgain: () =>
-                                        unawaited(_openAiDraft(context)),
-                                  ),
-                                )
-                              : AiEntryGate(
-                                  availability: availability,
-                                  padding: const EdgeInsets.only(
-                                    bottom: DonySpacing.base,
-                                  ),
-                                  child: AiEntryCard(
-                                    kind: AiFormKind.packageRequest,
-                                    onPressed: () =>
-                                        unawaited(_openAiDraft(context)),
-                                  ),
-                                ),
-                        ),
-                    ],
-                  ),
                 ),
                 1 => Step2Details(
                   key: _step2Key,

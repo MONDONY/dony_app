@@ -152,7 +152,7 @@ enum AiDraftWarning {
   cardNotConfigured,
   cardUnavailableInCurrency,
   mobileMoneyUnavailable,
-  planeOnly,
+  modeUnavailable,
   budgetOutOfRange,
 }
 

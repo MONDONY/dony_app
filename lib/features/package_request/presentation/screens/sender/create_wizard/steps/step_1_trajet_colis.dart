@@ -1,14 +1,16 @@
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
-import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/request_transport_mode_selector.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,15 +18,10 @@ import 'package:intl/intl.dart';
 
 /// Étape 1 / 3 — Trajet & colis (Proposal B — Sahel Warmth).
 class Step1TrajetColis extends StatefulWidget {
-  const Step1TrajetColis({super.key, this.canContinueNotifier, this.header});
+  const Step1TrajetColis({super.key, this.canContinueNotifier});
 
   /// Piloté par l'étape, lu par le bouton « Continuer » de la coque.
   final ValueNotifier<bool>? canContinueNotifier;
-
-  /// Contenu posé en tête de la zone défilante (bannière de devise). Porté par
-  /// l'étape plutôt que par la coque : au-dessus du `SingleChildScrollView`, il
-  /// restait figé et mangeait de la hauteur pendant toute la saisie.
-  final Widget? header;
 
   @override
   State<Step1TrajetColis> createState() => Step1TrajetColisState();
@@ -36,7 +33,6 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
   String? _arrivalCity;
   DateTime? _date;
   int _tolerance = 2;
-  final TransportMode _transportMode = TransportMode.plane;
 
   /// Les messages rouges n'apparaissent qu'après une première interaction :
   /// un formulaire vierge ne doit pas accueillir l'utilisateur par des
@@ -96,6 +92,19 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
         (_date != null && _tolerance != (s.dateToleranceDays ?? 2));
   }
 
+  /// Mode envoyé avec l'étape. Un mode déjà posé dans l'état du bloc (édition,
+  /// duplication, brouillon, ou choix à l'écran) est renvoyé tel quel, « peu
+  /// importe » compris (`null`) : le masquer ne doit jamais le changer. Sans
+  /// mode posé (demande vierge), « peu importe » quand le choix est visible,
+  /// l'avion quand le serveur n'ouvre que lui et que rien n'est proposé.
+  TransportMode? get _transportMode {
+    final state = context.read<PackageRequestFormBloc>().state;
+    if (state.transportMode != null || state.transportModeAny) {
+      return state.transportMode;
+    }
+    return transportModes.hasRequestChoice ? null : TransportMode.plane;
+  }
+
   /// Saisie de l'étape au format du brouillon local
   /// (`PackageRequestFormDraft`), validée ou non.
   Map<String, dynamic> get draftInput => {
@@ -103,7 +112,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
     'arrivalCity': _arrivalCity,
     'desiredDate': PackageRequestFormDraft.encodeDate(_date),
     'dateToleranceDays': _date == null ? null : _tolerance,
-    'transportMode': transportModeToWire(_transportMode),
+    'transportMode': transportModeToRequestWire(_transportMode),
   };
 
   /// Formule la tolérance en dates concrètes plutôt qu'en nombre de jours.
@@ -180,11 +189,6 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (widget.header != null) ...[
-              widget.header!,
-              const SizedBox(height: DonySpacing.base),
-            ],
-
             // ── Section label ──────────────────────────────────────────────
             Text(
               l10n.requestCreateTrajetSectionLabel,
@@ -303,60 +307,31 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
             ),
             const SizedBox(height: DonySpacing.base),
 
-            // ── Mode de transport — Avion verrouillé ───────────────────────
-            const _LockedAirplaneBlock(),
+            // ── Mode de transport ──────────────────────────────────────────
+            // Masqué tant que le serveur n'ouvre que l'avion : la demande part
+            // alors en avion, sans rien demander.
+            ValueListenableBuilder<TransportModesAvailability>(
+              valueListenable: transportModesListenable,
+              builder: (context, modes, _) => modes.hasRequestChoice
+                  ? BlocBuilder<
+                      PackageRequestFormBloc,
+                      PackageRequestFormState
+                    >(
+                      buildWhen: (a, b) =>
+                          a.transportMode != b.transportMode ||
+                          a.transportModeAny != b.transportModeAny,
+                      builder: (context, state) => RequestTransportModeSelector(
+                        modes: modes.requestModes,
+                        selected: state.transportMode,
+                        onChanged: (mode) => context
+                            .read<PackageRequestFormBloc>()
+                            .add(FormTransportModeChanged(mode)),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ─── Locked Airplane Block ────────────────────────────────────────────────────
-
-class _LockedAirplaneBlock extends StatelessWidget {
-  const _LockedAirplaneBlock();
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final l10n = context.l10n;
-    return Container(
-      constraints: const BoxConstraints(minHeight: 56),
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.base,
-        vertical: DonySpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Row(
-        children: [
-          DonyIcon('plane', size: 22, color: cs.onSurfaceVariant),
-          const SizedBox(width: DonySpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  TransportMode.plane.label(l10n),
-                  style: tt.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
-                  ),
-                ),
-                Text(
-                  l10n.requestCreateAirplaneOnlyMode,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-          DonyIcon('lock', size: 16, color: cs.onSurfaceVariant),
-        ],
       ),
     );
   }

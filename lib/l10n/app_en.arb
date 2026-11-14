@@ -361,6 +361,14 @@
   "errorValidationMessage": "Check the information you entered and try again.",
   "errorInvalidPriceMessage": "Enter a price per kg above 0, or choose the price grid.",
   "@errorInvalidPriceMessage": {"description": "Erreur invalid-price du back : un trajet en mode « au kilo » exige un prix par kg supérieur à 0 (error_catalog.dart)."},
+  "errorTransportModeDisabledTitle": "Mode unavailable",
+  "@errorTransportModeDisabledTitle": {"description": "Erreur transport-mode-disabled / invalid-transport-mode du back : le mode de transport demandé n'est pas ouvert (error_catalog.dart)."},
+  "errorTransportModeDisabledMessage": "This transport mode isn't available yet.",
+  "@errorTransportModeDisabledMessage": {"description": "Erreur transport-mode-disabled / invalid-transport-mode du back : le mode de transport demandé n'est pas ouvert (error_catalog.dart)."},
+  "errorArrivalTooFarTitle": "Arrival too far",
+  "@errorArrivalTooFarTitle": {"description": "Erreur arrival-too-far du back : l'arrivée est trop loin après le départ pour ce mode de transport (error_catalog.dart)."},
+  "errorArrivalTooFarMessage": "The arrival date is too far after departure for this mode.",
+  "@errorArrivalTooFarMessage": {"description": "Erreur arrival-too-far du back : l'arrivée est trop loin après le départ pour ce mode de transport (error_catalog.dart)."},
   "errorConflictTitle": "Can't do this",
   "errorConflictMessage": "The current status doesn't allow this.",
   "errorStorageTitle": "Storage unavailable",
@@ -702,7 +710,11 @@
   "homeComposerTitleParcels": "Filter parcels",
   "homeComposerClearAll": "Clear all",
   "homeComposerMoreFilters": "More filters",
-  "homeComposerMoreFiltersHint": "Content type, transport, rating, stops, payment",
+  "homeComposerMoreFiltersHint": "Content type, rating, stops, payment",
+  "homeComposerSectionTransport": "TRANSPORT",
+  "@homeComposerSectionTransport": {
+    "description": "Section title in the trip search composer that filters by transport mode (All, Plane, Boat, Road), shown only when several modes are open"
+  },
   "homeComposerSectionWhen": "WHEN",
   "homeComposerSectionAroundMe": "AROUND ME",
   "homeComposerSearch": "Search",
@@ -729,6 +741,14 @@
   "homeModeSelectorTravelersSubtitle": "Travelers available",
   "homeModeSelectorParcelsToCarry": "{count, plural, =1{{count} parcel to carry} other{{count} parcels to carry}}",
   "homeModeSelectorParcelsSubtitle": "Parcels to carry",
+  "homeFilterChipsTransport": "Transport",
+  "@homeFilterChipsTransport": {
+    "description": "Home filter chip at the start of the row: transport mode not chosen yet (once chosen, the chip shows the mode)"
+  },
+  "homeFilterChipsTransportAll": "All",
+  "@homeFilterChipsTransportAll": {
+    "description": "Search composer chip in the TRANSPORT section: all transport modes, no filter"
+  },
   "homeFilterChipsDate": "Date",
   "homeFilterChipsAnyDate": "Any date",
   "homeFilterChipsRating": "Rating",
@@ -779,9 +799,11 @@
   "tripFixedPrice": "Fixed price",
   "tripTravelerFallbackName": "Traveler",
   "tripTransportPlane": "Plane",
-  "tripTransportCar": "Car",
+  "tripTransportRoad": "Road",
+  "@tripTransportRoad": {
+    "description": "Libellé du mode de transport par la route (voiture ou bus) d'un trajet ou d'une demande"
+  },
   "tripTransportTrain": "Train",
-  "tripTransportBus": "Bus",
   "tripTransportBoat": "Boat",
   "tripTransportOther": "Other",
   "tripUrgencyVeryUrgent": "< 3d",
@@ -816,10 +838,7 @@
   "tripPublishSuccessShareCta": "Share my poster",
   "tripPublishMonthlyLimitTitle": "Monthly limit reached",
   "tripPublishDraftLimitTitle": "Draft limit reached",
-  "tripPublishTemplatesLabel": "My templates",
-  "tripPublishTemplatesHint": "Apply a template to pre-fill the trip",
   "tripPublishTemplateAppliedMessage": "Template “{label}” applied",
-  "tripPublishTemplateChipGrid": "{label} · per item",
   "tripPublishDropoffSectionLabel": "PARCEL DROP-OFF",
   "tripPublishHandoverDeadlineLabel": "Drop-off deadline",
   "tripPublishHandoverDeadlineSubtitle": "Latest date senders can hand you their parcels",
@@ -861,7 +880,7 @@
   "requestPublishIntroRulePackaging": "**Packing it carefully** and describing the contents precisely.",
   "requestPublishIntroRuleHandover": "Being present at the **drop-off** and stating the right recipient.",
   "requestPublishIntroWhyTitle": "How it works",
-  "requestPublishIntroWhyBulletCarried": "A traveler carries your parcel in their luggage.",
+  "requestPublishIntroWhyBulletCarried": "A traveler carries your parcel with them.",
   "requestPublishIntroWhyBulletPayment": "Secure payment, released once delivery is confirmed.",
   "requestPublishIntroWhyBulletTracking": "QR tracking from drop-off to receipt.",
   "tripPublishIntroVerifyCallout": "Before you post, your **{identity}**. Go to {path} to verify it (2 min).",
@@ -890,11 +909,11 @@
   "tripPublishCashLabel": "Cash",
   "tripPublishCashLockedSubtitle": "Always accepted on this trip. Service fee advanced from your Yadony balance when you accept the parcel, paid back by the sender in the cash payment",
   "@tripPublishCashLockedSubtitle": {
-    "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+    "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_step.dart, Sentry FLUTTER-8M)."
   },
   "tripPublishCashLockedExplanation": "Without card payment on this trip, cash always stays accepted: it is how senders can book.",
   "@tripPublishCashLockedExplanation": {
-    "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+    "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_step.dart, Sentry FLUTTER-8M)."
   },
   "tripPublishCardActiveExplanation": "Card payment is on for this trip: senders can pay by card, and the money is held until delivery.",
   "@tripPublishCardActiveExplanation": {
@@ -913,7 +932,7 @@
   "tripPublishCashOnlyBannerNoConnect": "Card payment depends on the country of residence in your profile, not on the country you're in. Stripe doesn't cover it yet: your trips are posted in cash, and in mobile money for trips in XOF or XAF.",
   "tripPublishCashOnlyBannerNoConnectCountry": "Card payment depends on the country of residence in your profile ({country}), not on the country you're in. Stripe doesn't cover it yet: your trips are posted in cash, and in mobile money for trips in XOF or XAF.",
   "@tripPublishCashOnlyBannerNoConnectCountry": {
-    "description": "Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_conditions_step.dart, FLUTTER-EE).",
+    "description": "Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_step.dart, FLUTTER-EE).",
     "placeholders": {
       "country": {
         "type": "String"
@@ -968,8 +987,24 @@
   "tripPublishCurrencyBannerTitle": "Posted in {currencyName} ({currencyCode})",
   "tripPublishCurrencyBannerSubtitle": "Users in another currency see a converted price. Payment stays in this currency.",
   "tripPublishCurrencyChangeCta": "Change",
+  "tripPublishStepMode": "Mode",
+  "tripPublishStepCapacity": "Capacity",
+  "tripPublishStepPrice": "Price",
+  "tripPublishStepConditions": "Terms",
   "tripPublishPlacesCapacityStepLabel": "Locations & capacity",
   "tripPublishPriceConditionsStepLabel": "Price & conditions",
+  "tripPublishModeQuestion": "How are you traveling?",
+  "tripPublishModeHint": "The mode shapes the next steps: dates, capacity and price.",
+  "tripPublishModeSectionLabel": "Transport mode",
+  "tripPublishConditionsSkip": "Skip",
+  "tripPublishModeAirTitle": "By air",
+  "tripPublishModeAirSubtitle": "Plane, your spare luggage kilos",
+  "tripPublishModeAirTagDuration": "A few days",
+  "tripPublishModeAirTagCapacity": "Suitcases or kg",
+  "tripPublishModeRoadTitle": "By road",
+  "tripPublishModeRoadSubtitle": "Car, bus or truck",
+  "tripPublishModeRoadTagScope": "Domestic or international",
+  "tripPublishModeRoadTagCapacity": "Free or exact kg",
   "tripPublishHandoverLocationsLabel": "Drop-off locations",
   "tripPublishHandoverLocationsSubtitle": "Specify the exact drop-off and pickup location",
   "tripPublishLockedCapacityNote": "Capacity set by the request",
@@ -1152,7 +1187,13 @@
   "requestDateFlexible": "Flexible date",
   "requestCreateToleranceExactHint": "Only travelers leaving on that exact day will be able to respond.",
   "requestCreateToleranceRangeHint": "Travelers leaving between {from} and {to} will be able to respond.",
-  "requestCreateAirplaneOnlyMode": "only mode available",
+  "requestCreateTransportModeLabel": "Transport mode",
+  "requestCreateTransportAny": "Any",
+  "requestCreateModeHelpAny": "All travelers on this route will see your request.",
+  "requestCreateModeHelpPlane": "Only travelers flying will see your request.",
+  "requestCreateModeHelpBoat": "Only ships (shared containers) will see your request.",
+  "requestCreateModeHelpRoad": "Only travelers by car, bus or truck will see your request.",
+  "requestCreateAiAction": "Create with AI",
   "requestCreateTrajetSectionLabel": "TRIP",
   "requestCreateTrajetQuestion": "Where from, where to?",
   "requestCreateDateFieldLabel": "Date",
@@ -3492,7 +3533,7 @@
   "@bidDetailSenderTravelerFallback": {
     "description": "Repli quand bid.travelerName est vide (money_breakdown_card.dart, sender_sticky_bar.dart, amendment_request_sheet.dart, amendment_card.dart)"
   },
-  "bidDetailSenderHandedOverSubtitleWithDate": "Boarding scheduled for {date}.",
+  "bidDetailSenderHandedOverSubtitleWithDate": "Departure scheduled for {date}.",
   "@bidDetailSenderHandedOverSubtitleWithDate": {
     "description": "HANDED_OVER, sous-titre avec date de depart connue (sender_hero_card.dart)",
     "placeholders": {
@@ -4355,7 +4396,7 @@
   "tripOwnerPublishedTitle": "Trip posted!",
   "tripOwnerPublishedSubtitle": "Your trip {dep} → {arr} is live.",
   "tripOwnerShareMyTrip": "Share my trip",
-  "tripOwnerShareMessage": "✈️ I'm traveling {dep} → {arr} on {date} with room in my luggage!\nBook your kilos on Yadony 📦\n{url}",
+  "tripOwnerShareMessage": "{emoji} I'm traveling {dep} → {arr} on {date} with room for your parcels!\nBook your kilos on Yadony 📦\n{url}",
   "tripOwnerDraftBannerTitle": "This trip is a draft",
   "tripAudienceViewers": "{count, plural, =0{No one has seen your trip yet} =1{{count} person has seen your trip} other{{count} people have seen your trip}}",
   "tripAudiencePosterViews": "{count, plural, =1{{count} view of your shared poster} other{{count} views of your shared poster}}",
@@ -4385,7 +4426,7 @@
   "tripOwnerUnpublishDialogTitle": "Unpublish this trip?",
   "tripOwnerUnpublishDialogMessage": "The trip will no longer be visible and will stay in your drafts.",
   "tripOwnerParcelsTile": "Parcels",
-  "tripOwnerNoParcelsMessage": "No parcels on board",
+  "tripOwnerNoParcelsMessage": "No parcels yet",
   "tripOwnerDeleteDialogTitle": "Delete this trip?",
   "tripOwnerDeleteCancelledMessage": "This action is irreversible. The canceled trip and all associated requests will be permanently removed from the platform.",
   "tripOwnerDeleteActiveMessage": "This action is irreversible. The trip will no longer be visible to senders.",
@@ -6628,6 +6669,14 @@
   "@cancellationReasonFlightCanceled": {
     "description": "Libellé affiché du motif d'annulation 'Vol annulé' (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste envoyée au serveur telle quelle (cancellation_bottom_sheet.dart, _reasons)."
   },
+  "cancellationReasonTransportCancelled": "Transport canceled",
+  "@cancellationReasonTransportCancelled": {
+    "description": "Libellé affiché du motif d'annulation 'Vol annulé' pour un trajet en bateau, en train ou d'un autre mode (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste 'Vol annulé'."
+  },
+  "cancellationReasonBreakdown": "Breakdown or setback",
+  "@cancellationReasonBreakdown": {
+    "description": "Libellé affiché du motif d'annulation 'Vol annulé' pour un trajet par la route (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste 'Vol annulé'."
+  },
   "cancellationReasonPersonalEmergency": "Personal emergency",
   "@cancellationReasonPersonalEmergency": {
     "description": "Libellé affiché du motif d'annulation 'Urgence personnelle' (cancellation_labels.dart, cancellationReasonLabel)."
@@ -8065,8 +8114,6 @@
   "addressDefaultLabel": "Default address",
   "addressLocatedStatus": "Address located",
   "addressNotLocatedStatus": "Address not located, you can type it in manually",
-  "dsEmojiTakeoff": "Takeoff",
-  "dsEmojiLanding": "Landing",
   "dsEmojiParcel": "Parcel",
   "appUpdatePromptTitle": "An update is available",
   "appUpdatePromptMessage": "This version of Yadony brings more stability and new features. Update to enjoy them.",
@@ -8807,15 +8854,15 @@
   },
   "tripPublishOtherContentPrecisionLabel": "Specify what you accept under “Other”",
   "@tripPublishOtherContentPrecisionLabel": {
-    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (conditions_step.dart, FLUTTER-4G)"
   },
   "tripPublishOtherContentPrecisionHint": "E.g. car parts, small appliances",
   "@tripPublishOtherContentPrecisionHint": {
-    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (conditions_step.dart, FLUTTER-4G)"
   },
   "tripPublishOtherContentPrecisionRequired": "You ticked “Other”: specify what you accept before publishing.",
   "@tripPublishOtherContentPrecisionRequired": {
-    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (create_trip_screen.dart, FLUTTER-4G)"
   },
   "profilePublicVerificationsSectionLabel": "VERIFICATIONS",
   "@profilePublicVerificationsSectionLabel": {
@@ -8897,12 +8944,14 @@
   },
   "tripRescheduleTile": "Reschedule",
   "tripRescheduleTitle": "Reschedule the trip",
-  "tripRescheduleSubtitle": "Flight canceled or trip postponed: pick the new date.",
+  "tripRescheduleSubtitle": "Departure canceled or trip postponed: pick the new date.",
   "tripRescheduleReasonLabel": "Reason",
   "tripRescheduleReasonFlightCancelled": "Flight canceled",
+  "tripRescheduleReasonTransportCancelled": "Transport canceled",
+  "tripRescheduleReasonBreakdown": "Breakdown or setback",
   "tripRescheduleReasonPostponed": "Trip postponed",
   "tripRescheduleReasonOther": "Other reason",
-  "tripRescheduleNoteHint": "E.g. flight canceled, new flight confirmed the next day",
+  "tripRescheduleNoteHint": "E.g. departure moved to the next day",
   "tripRescheduleSameDateHint": "Pick a different date or time from the current one.",
   "tripRescheduleConsequences": "Senders whose parcel is accepted can keep it or cancel at no cost, and each cancellation counts against your reliability. A trip can be rescheduled twice at most.",
   "tripRescheduleSubmit": "Reschedule trip",
@@ -10635,7 +10684,7 @@
   "gpProPieceTypeTitle": "Which document?",
   "gpProPieceSourceTitle": "Add an image",
   "gpProDocTypeBusinessRegistration": "Business registration (Kbis, SIRET, NINEA, RCCM…)",
-  "gpProDocTypeTravelProof": "Ticket or boarding pass",
+  "gpProDocTypeTravelProof": "Travel ticket",
   "gpProDocTypeSocialProfile": "Social media screenshot",
   "gpProDocTypeOther": "Other document",
   "gpProPieceUploading": "Uploading…",
@@ -10740,7 +10789,7 @@
   "aiFormDraftWarningCardNotConfigured": "To get paid by card, finish setting up your payments. I will remind you at the Price step.",
   "aiFormDraftWarningCardCurrency": "Card is not available in this currency: choose another payment method.",
   "aiFormDraftWarningMobileMoney": "Mobile money is only available in CFA francs: I did not select it.",
-  "aiFormDraftWarningPlaneOnly": "Only plane trips are available for now: the trip will be published as a plane trip.",
+  "aiFormDraftWarningModeUnavailable": "This mode isn't available yet: the trip will be published as a flight.",
   "aiFormDraftWarningBudget": "This budget is outside the accepted amounts: enter it in step 3.",
   "aiFormDraftFilledBanner": "Filled in by AI. Check each field before publishing.",
   "aiFormDraftTalkAgain": "Talk again",

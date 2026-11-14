@@ -4,6 +4,7 @@ import 'package:dony/features/content_categories/presentation/content_category_l
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/corridor_alert_labels.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -45,7 +46,7 @@ class CorridorAlertCard extends StatelessWidget {
     final expired = !paused && alert.isExpiredAt(now ?? DateTime.now());
 
     final (iconAsset, iconBg, iconFg) = isTrips
-        ? ('plane', cs.primaryContainer, cs.primary)
+        ? (kNeutralTripIconAsset, cs.primaryContainer, cs.primary)
         : ('package', cs.secondaryContainer, cs.secondary);
 
     final card = DonyCard(

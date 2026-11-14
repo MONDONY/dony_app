@@ -100,12 +100,13 @@ TripTemplate _template({
   required double? pricePerKg,
   bool cashAccepted = false,
   String? currency,
+  String transportMode = 'PLANE',
 }) => TripTemplate(
   id: 't1',
   label: 'Paris → Dakar',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  transportMode: 'PLANE',
+  transportMode: transportMode,
   capacityUnit: 'SUITCASE_23KG',
   availableKg: 23,
   pricePerKg: pricePerKg,
@@ -341,6 +342,25 @@ void main() {
       expect(data.containsKey('cardAccepted'), isFalse);
       expect(data['cashAccepted'], isTrue);
     });
+
+    for (final wire in ['BOAT', 'CAR', 'BUS', 'TRAIN']) {
+      testWidgets('modèle $wire : le mode part tel quel dans la série', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _wrapWithStripe(
+            TripRecurrenceEditScreen(
+              template: _template(pricePerKg: 8.0, transportMode: wire),
+            ),
+            bloc,
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final data = await _fillAndSubmit(tester, bloc);
+        expect(data['transportMode'], wire);
+      });
+    }
 
     testWidgets('modèle XAF en minuscules : code normalisé', (tester) async {
       await tester.pumpWidget(

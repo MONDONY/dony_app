@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/city/data/city_model.dart';
@@ -335,19 +336,23 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                     ),
                   ),
                 ),
-                const SizedBox(width: DonySpacing.md),
-                Expanded(
-                  child: TransportModeField(
-                    mode: _transportModeNotifier.value,
-                    onTap: () => unawaited(
-                      showTransportPicker(
-                        context,
-                        mode: _transportModeNotifier.value,
-                        onApply: (v) => _transportModeNotifier.value = v,
+                // Avion seul proposé : rien à choisir, pas de champ (C13).
+                if (transportModes.hasRequestChoice) ...[
+                  const SizedBox(width: DonySpacing.md),
+                  Expanded(
+                    child: TransportModeField(
+                      mode: _transportModeNotifier.value,
+                      onTap: () => unawaited(
+                        showTransportPicker(
+                          context,
+                          mode: _transportModeNotifier.value,
+                          modes: transportModes.searchModes,
+                          onApply: (v) => _transportModeNotifier.value = v,
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ],
             ).animate().fadeIn(delay: 60.ms),
             const SizedBox(height: DonySpacing.xl),

@@ -26,6 +26,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 class _FakeAnnouncementDeleteRequested extends Fake
     implements AnnouncementDeleteRequested {}
@@ -435,6 +436,13 @@ void main() {
         // With the new unified list, empty state shows a relevant message.
         // We just verify empty state widget appears (DonyEmptyState or similar).
         expect(find.byType(CircularProgressIndicator), findsNothing);
+        // État vide : icône neutre « trajet », jamais un avion (la mascotte
+        // est dessinée, l'icône reste la valeur de repli du widget).
+        expect(
+          tester.widget<DonyEmptyState>(find.byType(DonyEmptyState)).iconAsset,
+          'route',
+        );
+        expectNoPlaneIcon(tester);
       },
     );
 

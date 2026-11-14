@@ -660,7 +660,7 @@ class _EmptyView extends StatelessWidget {
       mascotte: DonyMascotteType.assis,
       title: _title(l),
       description: _description(l),
-      iconAsset: 'plane-takeoff',
+      iconAsset: kNeutralTripIconAsset,
     );
   }
 }

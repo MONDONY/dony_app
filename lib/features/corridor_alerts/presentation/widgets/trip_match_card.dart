@@ -4,6 +4,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/data/models/trip_match_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:dony/l10n/rich_text.dart';
 import 'package:flutter/material.dart';
@@ -44,6 +45,10 @@ class TripMatchCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
     final isFull = match.isFull;
+    // Mode du trajet : une donnée sans mode (ancien back) reste un avion.
+    final mode = transportModeOrPlane(
+      transportModeFromWire(match.transportMode),
+    );
     // Un trajet complet perd la couleur d'identité « trajet » : la bande et
     // le micro-label passent au gris, rien n'invite plus à toucher.
     final accent = isFull ? cs.onSurfaceVariant : cs.primary;
@@ -76,7 +81,7 @@ class TripMatchCard extends StatelessWidget {
                         // ── Micro-label Trajet ─────────────────────────────
                         Row(
                           children: [
-                            DonyIcon('plane', size: 13, color: accent),
+                            DonyIcon(mode.iconAsset, size: 13, color: accent),
                             const SizedBox(width: DonySpacing.xxs),
                             Expanded(
                               child: Text(
@@ -119,8 +124,8 @@ class TripMatchCard extends StatelessWidget {
                                   const SizedBox(height: DonySpacing.xs),
                                   Row(
                                     children: [
-                                      Icon(
-                                        Icons.flight_rounded,
+                                      DonyIcon(
+                                        mode.iconAsset,
                                         size: 13,
                                         color: cs.onSurfaceVariant,
                                       ),
@@ -313,6 +318,11 @@ class _TripThumbnail extends StatelessWidget {
 
   Widget _placeholder(ColorScheme cs) => Container(
     color: cs.primaryContainer.withValues(alpha: 0.45),
-    child: const Center(child: Text('✈️', style: TextStyle(fontSize: 30))),
+    child: Center(
+      child: Text(
+        transportModeOrPlane(transportModeFromWire(match.transportMode)).emoji,
+        style: const TextStyle(fontSize: 30),
+      ),
+    ),
   );
 }

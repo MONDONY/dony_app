@@ -16,13 +16,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-// Icônes uniquement : le libellé se calcule via trackingStepLabel.
-const _etapeIcons = <String, (String?, String?)>{
-  'DEPART': (null, 'plane-takeoff'),
-  'TRANSIT': ('arrow-left-right', null),
-  'ARRIVEE': (null, 'plane-landing'),
-};
-
 /// Photo prise en mode « retour de résultat » ([ScanPhotoScreen.returnResult]).
 class ScanPhotoResult {
   const ScanPhotoResult({required this.photoPath, this.position});
@@ -197,7 +190,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final etapeIcons = _etapeIcons[widget.etape];
+    final etapeIcon = kTrackingStepIcons[widget.etape];
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
@@ -291,7 +284,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                           ),
                           const SizedBox(height: DonySpacing.xs),
                           // Étape + badge photo
-                          if (etapeIcons != null)
+                          if (etapeIcon != null)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -309,18 +302,11 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      if (etapeIcons.$2 != null)
-                                        DonyIcon(
-                                          etapeIcons.$2!,
-                                          color: DonyColors.neutral0,
-                                          size: 12,
-                                        )
-                                      else
-                                        DonyIcon(
-                                          etapeIcons.$1!,
-                                          color: DonyColors.neutral0,
-                                          size: 12,
-                                        ),
+                                      DonyIcon(
+                                        etapeIcon,
+                                        color: DonyColors.neutral0,
+                                        size: 12,
+                                      ),
                                       const SizedBox(width: DonySpacing.xs),
                                       Text(
                                         l.scanStepLabel(

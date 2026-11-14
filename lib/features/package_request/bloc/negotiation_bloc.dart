@@ -9,6 +9,7 @@ import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
 import 'package:dony/features/matching/data/models/commission_funding_detail.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
@@ -106,6 +107,7 @@ class DedicatedTripPayload extends Equatable {
     this.acceptedContentTypes,
     this.refusedTypes,
     this.useCardForCommission = false,
+    this.transportMode,
   });
 
   final DateTime departureDate;
@@ -122,6 +124,11 @@ class DedicatedTripPayload extends Equatable {
   /// the wallet is short (charged at finalize, wallet-first then card).
   final bool useCardForCommission;
 
+  /// Mode choisi par le voyageur quand la demande est « peu importe ». Null :
+  /// non envoyé, le back prend le mode de la demande, puis de l'offre, puis
+  /// l'avion.
+  final TransportMode? transportMode;
+
   Map<String, dynamic> toJson() => {
     'departureDate': departureDate.toIso8601String().substring(0, 10),
     if (departureTime != null) 'departureTime': departureTime,
@@ -134,6 +141,8 @@ class DedicatedTripPayload extends Equatable {
       'acceptedContentTypes': acceptedContentTypes,
     if (refusedTypes != null) 'refusedTypes': refusedTypes,
     'useCardForCommission': useCardForCommission,
+    if (transportMode != null)
+      'transportMode': transportModeToWire(transportMode!),
   };
 
   @override
@@ -148,6 +157,7 @@ class DedicatedTripPayload extends Equatable {
     acceptedContentTypes,
     refusedTypes,
     useCardForCommission,
+    transportMode,
   ];
 }
 
@@ -271,6 +281,7 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
     this.refusedTypes,
     required this.paymentMethod,
     this.useCardForCommission = false,
+    this.transportMode,
   });
   final String threadId;
   final DateTime departureDate;
@@ -289,6 +300,10 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
   /// [NegotiationSubmitTripRequested.useCardForCommission].
   final bool useCardForCommission;
 
+  /// Mode choisi par le voyageur quand la demande est « peu importe » ; null
+  /// sinon (le back reprend le mode de la demande).
+  final TransportMode? transportMode;
+
   @override
   List<Object?> get props => [
     threadId,
@@ -303,6 +318,7 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
     refusedTypes,
     paymentMethod,
     useCardForCommission,
+    transportMode,
   ];
 }
 
@@ -953,6 +969,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         refusedTypes: e.refusedTypes,
         paymentMethod: e.paymentMethod,
         useCardForCommission: e.useCardForCommission,
+        transportMode: e.transportMode,
       );
       emit(NegotiationLoaded(thread));
       _logTripLinked(thread, 'dedicated', e.paymentMethod);

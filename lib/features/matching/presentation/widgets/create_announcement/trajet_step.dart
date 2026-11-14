@@ -1,10 +1,8 @@
-// Étape 0 du formulaire "Publier un trajet" : corridor, dates et horaires.
-// Extrait de create_announcement_bottom_sheet.dart — refactor pur, aucun changement
-// de comportement.
+// Étape Trajet du formulaire « Publier un trajet » : ligne du mode (modification
+// et trajet dédié), corridor, dates et horaires.
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
-import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -15,16 +13,18 @@ import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/stops_chips.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/transport_mode_row.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 
-/// Corps de l'étape 0 (corridor, dates, horaires) du formulaire de création
-/// d'annonce.
+/// Corps de l'étape Trajet (ligne du mode, corridor, dates, horaires) du
+/// formulaire « Publier un trajet ».
 ///
-/// Tous les notifiers restent dans [_CreateAnnouncementContentState] (parent) ;
-/// ce widget reçoit ses dépendances via des paramètres (option a).
+/// Tous les notifiers restent dans le formulaire parent
+/// (`create_trip_screen.dart`) ; ce widget reçoit ses dépendances en
+/// paramètres.
 ///
 /// [departureCityBloc] et [arrivalCityBloc] sont optionnels — ils permettent
 /// l'injection en test. En production, le widget crée ses propres instances
@@ -50,6 +50,14 @@ class TrajetStep extends StatelessWidget {
   /// [transportModeNotifier] vaut l'avion. Null : le choix n'est pas proposé.
   final ValueNotifier<TripStops?>? stopsNotifier;
   final ValueNotifier<TransportMode?>? transportModeNotifier;
+
+  /// Modes de la ligne « Mode de transport » posée en tête de l'étape
+  /// (modification d'un trajet, trajet dédié : pas d'étape Mode). Null : pas
+  /// de ligne, le mode se choisit ailleurs (étape Mode) ou n'a pas de choix.
+  final List<TransportMode>? transportModeRowModes;
+
+  /// Ligne du mode figée (trajet dédié : le mode vient de la demande).
+  final bool transportModeRowReadOnly;
 
   /// Callbacks vers les méthodes du state parent.
   final Future<void> Function() onSelectDepartureTime;
@@ -93,6 +101,8 @@ class TrajetStep extends StatelessWidget {
     this.arrivalDayOffsetNotifier,
     this.stopsNotifier,
     this.transportModeNotifier,
+    this.transportModeRowModes,
+    this.transportModeRowReadOnly = false,
     required this.onSelectDepartureTime,
     required this.onSelectArrivalTime,
     required this.onSelectDate,
@@ -163,7 +173,17 @@ class TrajetStep extends StatelessWidget {
     ColorScheme cs,
     AppLocalizations l,
   ) {
+    final rowModes = transportModeRowModes;
+    final modeNotifier = transportModeNotifier;
     return [
+      if (rowModes != null && modeNotifier != null) ...[
+        TransportModeRow(
+          modes: rowModes,
+          notifier: modeNotifier,
+          readOnly: transportModeRowReadOnly,
+        ),
+        const SizedBox(height: DonySpacing.lg),
+      ],
       // ── Corridor preview ──────────────────────────────────────────────────
       ListenableBuilder(
         listenable: Listenable.merge([
@@ -173,6 +193,7 @@ class TrajetStep extends StatelessWidget {
           departureTimeNotifier,
           arrivalTimeNotifier,
           ?arrivalDayOffsetNotifier,
+          ?transportModeNotifier,
         ]),
         builder: (context, _) {
           final dep = departureCityNotifier.value;
@@ -180,8 +201,16 @@ class TrajetStep extends StatelessWidget {
           if (dep == null || arr == null) {
             return const SizedBox.shrink();
           }
-          final depCode = cityAirportCode(dep, departure: true);
-          final arrCode = cityAirportCode(arr, departure: false);
+          // Codes d'aéroport seulement en avion (ou mode inconnu, ancien
+          // comportement) ; route et bateau affichent le nom des villes.
+          final mode = transportModeNotifier?.value;
+          final useAirportCodes = mode == null || mode.usesAirportCodes;
+          final depCode = useAirportCodes
+              ? cityAirportCode(dep, departure: true)
+              : dep;
+          final arrCode = useAirportCodes
+              ? cityAirportCode(arr, departure: false)
+              : arr;
           final dateStr = _formatCorridorDateTime(l.localeName);
           return Column(
             children: [
@@ -243,7 +272,7 @@ class TrajetStep extends StatelessWidget {
       // ── TRAJET ────────────────────────────────────────────────────────────
       CaSectionLabel(
         label: l.tripPublishRouteSectionLabel,
-        iconAsset: 'plane-takeoff',
+        iconAsset: 'map-pin',
       ),
       const SizedBox(height: DonySpacing.sm),
       ListenableBuilder(
@@ -269,7 +298,11 @@ class TrajetStep extends StatelessWidget {
                   key: const Key('departureCityField'),
                   label: l.tripPublishDepartureCityLabel,
                   value: departureCityNotifier.value,
-                  prefixWidget: const DonyEmoji.planeTakeoff(size: 20),
+                  prefixWidget: DonyIcon(
+                    'map-pin',
+                    size: 20,
+                    color: cs.primary,
+                  ),
                   trailing: DonyIcon(
                     'lock',
                     size: 16,
@@ -285,7 +318,7 @@ class TrajetStep extends StatelessWidget {
                   key: const Key('arrivalCityField'),
                   label: l.tripPublishArrivalCityLabel,
                   value: arrivalCityNotifier.value,
-                  prefixWidget: const DonyEmoji.planeLanding(size: 20),
+                  prefixWidget: DonyIcon('flag', size: 20, color: cs.primary),
                   trailing: DonyIcon(
                     'lock',
                     size: 16,
@@ -455,12 +488,6 @@ class TrajetStep extends StatelessWidget {
                 ).animate().fadeIn(delay: 80.ms)
               : const SizedBox.shrink(),
         ),
-      // Le sélecteur « Mode de transport » a été retiré de l'écran : seul
-      // l'avion était réellement proposé (les autres modes affichaient
-      // « Bientôt disponible »), la question n'apportait donc rien au voyageur
-      // et éloignait les sections utiles. Le mode reste porté par
-      // `transportModeNotifier`, positionné sur `plane` par défaut à la
-      // création, et continue d'être envoyé au backend qui l'exige.
       const SizedBox(height: DonySpacing.lg),
     ];
   }

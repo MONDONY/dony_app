@@ -1,15 +1,21 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../../helpers/plane_icon_expectations.dart';
+
 /// Carte la plus chargée possible : tout ce qu'elle sait afficher, en même
 /// temps, avec des noms longs.
-AnnouncementModel _loaded({String travelerId = 't1'}) => AnnouncementModel(
+AnnouncementModel _loaded({
+  String travelerId = 't1',
+  TransportMode? transportMode,
+}) => AnnouncementModel(
   id: 'a1',
   travelerId: travelerId,
   departureCity: 'Ouagadougou',
@@ -22,6 +28,7 @@ AnnouncementModel _loaded({String travelerId = 't1'}) => AnnouncementModel(
   urgent: true,
   uniqueViewerCount: 12,
   stops: TripStops.twoOrMore,
+  transportMode: transportMode,
   status: 'ACTIVE',
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
@@ -76,6 +83,20 @@ void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
   group('TravelerCard compact', () {
+    testWidgets('trajet en route à 320 dp, texte x2 : rien ne déborde, aucun '
+        'avion', (tester) async {
+      await tester.pumpWidget(
+        _wrapAt(
+          320,
+          2,
+          _card(announcement: _loaded(transportMode: TransportMode.car)),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expectNoPlaneIcon(tester);
+    });
+
     // Les cas qui cassaient les cartes : écran étroit (320 dp) et texte
     // agrandi à 200 %. Rien ne doit déborder, et chaque pastille doit rester
     // entièrement dans la carte.

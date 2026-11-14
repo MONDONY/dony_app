@@ -14,6 +14,7 @@ import 'package:dony/core/utils/trip_local_time.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/poster/poster_viewer.dart';
 import 'package:dony/features/matching/presentation/widgets/poster/trip_poster_card.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
@@ -199,7 +200,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     final payment = TripPosterCard.paymentLabel(l, a);
 
     return <String>[
-      '✈️ ${l.tripPosterCaptionCorridor(a.departureCity, a.arrivalCity)}',
+      '${transportModeOrPlane(a.transportMode).emoji} ${l.tripPosterCaptionCorridor(a.departureCity, a.arrivalCity)}',
       '📅 ${l.tripPosterCaptionDeparture(TripPosterCard.dayFormat(locale).format(a.departureDate))}',
       if (deadline != null)
         '⏰ ${l.tripPosterCaptionDeadline(TripPosterCard.deadlineLabel(l, locale, deadline))}',

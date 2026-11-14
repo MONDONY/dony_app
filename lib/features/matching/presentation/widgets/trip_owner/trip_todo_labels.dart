@@ -1,6 +1,7 @@
 import 'package:dony/core/utils/trip_local_time.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:intl/intl.dart';
@@ -15,8 +16,9 @@ import 'package:intl/intl.dart';
 /// en heure (« Avant 19:00 », « Avant le 14 nov. à 14:00 »).
 const kTripTodoRelativeDueWindow = Duration(hours: 6);
 
-/// Icône de l'action [kind] (`assets/icons/<nom>.svg`).
-String tripTodoIcon(TripTodoKind kind) => switch (kind) {
+/// Icône de l'action [kind] (`assets/icons/<nom>.svg`) d'un trajet du [mode] :
+/// « Je pars » prend l'icône du mode, « Arrivé » le drapeau.
+String tripTodoIcon(TripTodoKind kind, TransportMode mode) => switch (kind) {
   TripTodoKind.requests => 'inbox',
   TripTodoKind.presence => 'circle-check',
   TripTodoKind.scan => 'scan-line',
@@ -25,8 +27,8 @@ String tripTodoIcon(TripTodoKind kind) => switch (kind) {
   TripTodoKind.senderAbsence => 'user-x',
   TripTodoKind.deliveryNoShowContest => 'triangle-alert',
   TripTodoKind.returnParcel => 'refresh-cw',
-  TripTodoKind.depart => 'plane',
-  TripTodoKind.arrive => 'plane-landing',
+  TripTodoKind.depart => mode.iconAsset,
+  TripTodoKind.arrive => 'flag',
   TripTodoKind.pickupCodeRenewal => 'key-round',
   TripTodoKind.deliver => 'package',
   TripTodoKind.notify => 'message-circle',

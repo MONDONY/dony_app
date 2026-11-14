@@ -23,6 +23,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 import '../../../helpers/mock_recent_city_store.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 import 'trip_fixtures.dart';
 
 class _MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
@@ -112,6 +113,17 @@ void main() {
         find.byKey(const Key('trip-legs-add')),
       );
       expect(button.onPressed, isNull);
+    });
+
+    testWidgets('la feuille d\'étape : drapeau d\'arrivée, aucun avion', (
+      t,
+    ) async {
+      await t.pumpWidget(section(_legsCubit(), origin: _origin));
+      await t.tap(find.byKey(const Key('trip-legs-add')));
+      await t.pumpAndSettle();
+
+      expect(find.byIcon(Icons.flag_rounded), findsOneWidget);
+      expectNoPlaneIcon(t);
     });
 
     testWidgets('ajoute une étape via la feuille', (t) async {

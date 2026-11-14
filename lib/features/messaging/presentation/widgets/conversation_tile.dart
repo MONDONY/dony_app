@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/parcel_status_pill.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
@@ -171,7 +172,10 @@ class ConversationTile extends StatelessWidget {
                                   iconAsset:
                                       conversation.isRecipientConversation
                                       ? 'package'
-                                      : 'plane',
+                                      : (conversation
+                                                .tripTransportMode
+                                                ?.iconAsset ??
+                                            kNeutralTripIconAsset),
                                   cs: cs,
                                   tt: tt,
                                 ),

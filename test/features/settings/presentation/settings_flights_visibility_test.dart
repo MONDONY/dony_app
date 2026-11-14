@@ -8,6 +8,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/flights/bloc/flight_alert_updates.dart';
 import 'package:dony/features/flights/data/models/flight_alert.dart';
 import 'package:dony/features/flights/data/repositories/flights_repository.dart';
@@ -98,6 +99,26 @@ void main() {
 
     expect(find.byKey(tile), findsNothing);
     expect(find.text('Afficher les billets d\'avion'), findsNothing);
+  });
+
+  // Non-régression « tout mode » : la fonction Billets d'avion est un service
+  // à part, qui garde son avion (ce n'est pas un mode de trajet Yadony).
+  testWidgets('flag allumé : la tuile Billets garde son icône avion', (
+    tester,
+  ) async {
+    setFlightsEnabled(true);
+    await tester.pumpWidget(_wrap());
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byKey(tile),
+        matching: find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name == 'plane',
+        ),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('flag allumé : interrupteur activé dans Apparence', (

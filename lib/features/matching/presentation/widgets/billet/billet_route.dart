@@ -1,13 +1,15 @@
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/billet_perforation.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 /// Partie « trajet » d'un billet Yadony : corridor départ → arrivée (codes en
-/// grand, villes en clair), dates de départ et d'arrivée, puis la ligne de
+/// grand et villes en clair pour un avion, nom de la ville en grand sinon),
+/// dates de départ et d'arrivée, puis la ligne de
 /// perforation.
 ///
 /// Partagée par le billet du détail de colis (`ColisBillet`) et la fiche
@@ -24,10 +26,15 @@ class BilletRoute extends StatelessWidget {
     this.arrivalTime,
     this.showWeekday = false,
     this.notchColor,
+    this.transportMode,
   });
 
   final String departureCity;
   final String arrivalCity;
+
+  /// Mode du trajet : avion (ou `null`, ancien trajet) = codes IATA et icône
+  /// avion ; tout autre mode = nom de la ville en grand et icône du mode.
+  final TransportMode? transportMode;
   final DateTime? departureDate;
 
   /// Heure au format `HH:mm` ou `HH:mm:ss` (tronquée à `HH:mm`).
@@ -50,7 +57,11 @@ class BilletRoute extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        BilletCorridor(departureCity: departureCity, arrivalCity: arrivalCity),
+        BilletCorridor(
+          departureCity: departureCity,
+          arrivalCity: arrivalCity,
+          transportMode: transportMode,
+        ),
         BilletDates(
           departureDate: departureDate,
           departureTime: departureTime,
@@ -66,25 +77,24 @@ class BilletRoute extends StatelessWidget {
 
 // ── Corridor départ → arrivée ──────────────────────────────────────────────────
 
-/// Codes de ville en grand, nom complet dessous. Un nom long passe à la ligne,
-/// jamais tronqué (Sentry FLUTTER-EY : « Fontenay-le-… »). Lu « départ →
+/// Avion : codes IATA en grand, nom complet dessous. Autre mode (route,
+/// bateau...) : le nom de la ville en grand, sans code ni ligne secondaire
+/// (les codes d'aéroport n'ont de sens qu'en avion). Un nom long passe à la
+/// ligne, jamais tronqué (Sentry FLUTTER-EY : « Fontenay-le-… »). Lu « départ →
 /// arrivée » d'un seul tenant par le lecteur d'écran.
 class BilletCorridor extends StatelessWidget {
   const BilletCorridor({
     super.key,
     required this.departureCity,
     required this.arrivalCity,
-    this.departureCode,
-    this.arrivalCode,
+    this.transportMode,
   });
 
   final String departureCity;
   final String arrivalCity;
 
-  /// Code affiché en grand quand l'appelant le connaît déjà (code IATA d'un
-  /// vol) ; `null` : déduit du nom de la ville ([cityAirportCode]).
-  final String? departureCode;
-  final String? arrivalCode;
+  /// Mode du trajet, avion si `null`.
+  final TransportMode? transportMode;
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +112,55 @@ class BilletCorridor extends StatelessWidget {
       color: cs.onSurfaceVariant,
       height: 1.25,
     );
+    // Hors avion, la ville prend la place du code : même poids, taille
+    // adaptée à un nom qui passe à la ligne.
+    final bigCityStyle = tt.titleLarge?.copyWith(
+      fontWeight: FontWeight.w800,
+      fontSize: 22,
+      letterSpacing: -0.3,
+      height: 1.15,
+      color: cs.onSurface,
+    );
+    final mode = transportModeOrPlane(transportMode);
+    final withCodes = mode.usesAirportCodes;
+
+    Widget end({required String city, required bool departure}) {
+      final cityKey = Key(
+        departure ? 'billet_departure_city' : 'billet_arrival_city',
+      );
+      final align = departure ? TextAlign.start : TextAlign.end;
+      return Expanded(
+        child: Column(
+          crossAxisAlignment: departure
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.end,
+          children: [
+            if (withCodes) ...[
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: departure
+                    ? Alignment.centerLeft
+                    : Alignment.centerRight,
+                child: Text(
+                  cityAirportCode(city, departure: departure),
+                  maxLines: 1,
+                  style: codeStyle,
+                  textAlign: align,
+                ),
+              ),
+              Text(city, key: cityKey, softWrap: true, style: cityStyle),
+            ] else
+              Text(
+                city,
+                key: cityKey,
+                softWrap: true,
+                style: bigCityStyle,
+                textAlign: align,
+              ),
+          ],
+        ),
+      );
+    }
 
     return Semantics(
       label: '$departureCity → $arrivalCity',
@@ -111,30 +170,8 @@ class BilletCorridor extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      departureCode ??
-                          cityAirportCode(departureCity, departure: true),
-                      maxLines: 1,
-                      style: codeStyle,
-                    ),
-                  ),
-                  Text(
-                    departureCity,
-                    key: const Key('billet_departure_city'),
-                    softWrap: true,
-                    style: cityStyle,
-                  ),
-                ],
-              ),
-            ),
-            // Ligne + avion, centrés sur les codes.
+            end(city: departureCity, departure: true),
+            // Ligne + icône du mode, centrées sur les codes.
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 DonySpacing.sm,
@@ -146,37 +183,17 @@ class BilletCorridor extends StatelessWidget {
                 children: [
                   _DashedLine(color: cs.outline),
                   const SizedBox(width: DonySpacing.xs),
-                  DonyIcon('plane', size: 20, color: cs.onSurfaceVariant),
+                  DonyIcon(
+                    mode.iconAsset,
+                    size: 20,
+                    color: cs.onSurfaceVariant,
+                  ),
                   const SizedBox(width: DonySpacing.xs),
                   _DashedLine(color: cs.outline),
                 ],
               ),
             ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      arrivalCode ??
-                          cityAirportCode(arrivalCity, departure: false),
-                      maxLines: 1,
-                      style: codeStyle,
-                      textAlign: TextAlign.end,
-                    ),
-                  ),
-                  Text(
-                    arrivalCity,
-                    key: const Key('billet_arrival_city'),
-                    softWrap: true,
-                    style: cityStyle,
-                    textAlign: TextAlign.end,
-                  ),
-                ],
-              ),
-            ),
+            end(city: arrivalCity, departure: false),
           ],
         ),
       ),

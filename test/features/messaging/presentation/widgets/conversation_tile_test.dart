@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:dony/features/messaging/presentation/widgets/conversation_tile.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 ConversationModel _conversation({
   String participantName = '',
@@ -16,6 +18,8 @@ ConversationModel _conversation({
   bool returnPending = false,
   String? tripOrigin,
   String? tripDestination,
+  TransportMode? tripTransportMode,
+  String kind = ConversationModel.kindSenderTraveler,
 }) => ConversationModel(
   id: 'conv-1',
   bidId: 'bid-1',
@@ -27,6 +31,8 @@ ConversationModel _conversation({
   returnPending: returnPending,
   tripOrigin: tripOrigin,
   tripDestination: tripDestination,
+  tripTransportMode: tripTransportMode,
+  kind: kind,
 );
 
 Widget _wrap(ConversationModel conversation) => MaterialApp(
@@ -36,6 +42,92 @@ Widget _wrap(ConversationModel conversation) => MaterialApp(
 const _parcelPill = Key('conversation-tile-parcel-status');
 
 void main() {
+  group('icône du mode du trajet', () {
+    testWidgets(
+      'mode absent (back prod) : icône neutre route, jamais un avion',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            _conversation(
+              participantName: 'Awa',
+              tripOrigin: 'Paris',
+              tripDestination: 'Dakar',
+            ),
+          ),
+        );
+
+        expect(findDonyIcon('route'), findsOneWidget);
+        expectNoPlaneIcon(tester);
+      },
+    );
+
+    testWidgets('route : icône voiture', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          _conversation(
+            participantName: 'Awa',
+            tripOrigin: 'Paris',
+            tripDestination: 'Bamako',
+            tripTransportMode: TransportMode.car,
+          ),
+        ),
+      );
+
+      expect(findDonyIcon('car'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('bateau : icône bateau', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          _conversation(
+            participantName: 'Awa',
+            tripOrigin: 'Marseille',
+            tripDestination: 'Dakar',
+            tripTransportMode: TransportMode.boat,
+          ),
+        ),
+      );
+
+      expect(findDonyIcon('ship'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('avion : icône avion', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          _conversation(
+            participantName: 'Awa',
+            tripOrigin: 'Paris',
+            tripDestination: 'Dakar',
+            tripTransportMode: TransportMode.plane,
+          ),
+        ),
+      );
+
+      expect(findDonyIcon('plane'), findsOneWidget);
+    });
+
+    testWidgets('conversation destinataire : icône colis conservée', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          _conversation(
+            participantName: 'Awa',
+            tripOrigin: 'Paris',
+            tripDestination: 'Dakar',
+            tripTransportMode: TransportMode.boat,
+            kind: ConversationModel.kindRecipientTraveler,
+          ),
+        ),
+      );
+
+      expect(findDonyIcon('package'), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+  });
+
   group('état du colis (FLUTTER-EZ)', () {
     testWidgets('statut servi : badge à côté du trajet', (tester) async {
       await tester.pumpWidget(

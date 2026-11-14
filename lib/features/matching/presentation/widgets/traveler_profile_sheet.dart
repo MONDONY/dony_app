@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
@@ -164,7 +165,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                       child: _StatCard(
                         value: tripsValue,
                         label: context.l10n.travelerProfileTripsLabel,
-                        iconAsset: 'plane-takeoff',
+                        iconAsset: kNeutralTripIconAsset,
                         iconColor: cs.primary,
                       ),
                     ),

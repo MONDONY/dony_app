@@ -31,6 +31,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_recent_city_store.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 class MockMatchesCubit extends MockCubit<CorridorAlertMatchesState>
     implements CorridorAlertMatchesCubit {}
@@ -245,6 +246,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.byKey(const Key('alert-summary-banner')), findsOneWidget);
+    // Une alerte porte sur un corridor, tous modes : icône neutre.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('alert-summary-banner')),
+        matching: findDonyIcon('route'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Alerte active'), findsOneWidget);
     expect(find.text('Nouveaux · 1 trajet'), findsOneWidget);
     expect(find.text('Déjà vus · 1 trajet'), findsOneWidget);

@@ -21,6 +21,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_recent_city_store.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 class MockFormCubit extends MockCubit<CorridorAlertFormState>
     implements CorridorAlertFormCubit {}
@@ -526,6 +527,28 @@ void main() {
   testWidgets('both roles → direction segment visible', (tester) async {
     await _pumpSheet(tester, isTraveler: true, isSender: true);
     expect(find.byKey(const Key('alert-direction-segment')), findsOneWidget);
+  });
+
+  testWidgets('segment de direction : icônes neutres, aucun avion', (
+    tester,
+  ) async {
+    await _pumpSheet(tester, isTraveler: true, isSender: true);
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('alert-direction-segment')),
+        matching: findDonyIcon('route'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('alert-direction-segment')),
+        matching: findDonyIcon('package'),
+      ),
+      findsOneWidget,
+    );
+    expectNoPlaneIcon(tester);
   });
 
   testWidgets('sender only → no segment, direction forced senderWantsTrips', (

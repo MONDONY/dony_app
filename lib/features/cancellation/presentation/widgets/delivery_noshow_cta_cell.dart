@@ -39,7 +39,9 @@ class DeliveryNoShowCtaCell extends StatelessWidget {
     return DonyCard(
       padding: EdgeInsets.zero,
       child: DonyListTile(
-        icon: isSender ? Icons.flight_rounded : Icons.person_off_rounded,
+        // Le mode du trajet n'est pas en cause : un colis non livré, pas un vol.
+        iconAsset: isSender ? 'package' : null,
+        icon: isSender ? null : Icons.person_off_rounded,
         label: title,
         subtitle: subtitle,
         destructive: true,

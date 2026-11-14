@@ -336,6 +336,100 @@ void main() {
     });
   });
 
+  group('ErrorCatalog — mode de transport et durée (422)', () {
+    final fr = lookupAppLocalizations(AppL10n.fr);
+    final en = lookupAppLocalizations(AppL10n.en);
+
+    test('transport-mode-disabled : affiche le detail traduit du serveur', () {
+      const error = ValidationException(
+        "Le bateau n'est pas encore ouvert.",
+        code: 'transport-mode-disabled',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.message, "Le bateau n'est pas encore ouvert.");
+      expect(p.title, 'Mode indisponible');
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('transport-mode-disabled : detail vide → texte de repli', () {
+      const error = ValidationException('', code: 'transport-mode-disabled');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.message, "Ce mode de transport n'est pas encore proposé.");
+      expect(p.title, 'Mode indisponible');
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('arrival-too-far : affiche le detail traduit du serveur', () {
+      const error = ValidationException(
+        "L'arrivée doit avoir lieu au plus 3 jours après le départ.",
+        code: 'arrival-too-far',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(
+        p.message,
+        "L'arrivée doit avoir lieu au plus 3 jours après le départ.",
+      );
+      expect(p.title, 'Arrivée trop lointaine');
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('arrival-too-far : detail vide → texte de repli', () {
+      const error = ValidationException('', code: 'arrival-too-far');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(
+        p.message,
+        "La date d'arrivée est trop loin après le départ pour ce mode.",
+      );
+      expect(p.title, 'Arrivée trop lointaine');
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test(
+      'invalid-transport-mode : detail serveur, repli « Mode indisponible »',
+      () {
+        const withDetail = ValidationException(
+          'Mode de transport inconnu.',
+          code: 'invalid-transport-mode',
+        );
+        const empty = ValidationException('', code: 'invalid-transport-mode');
+
+        final detailed = ErrorCatalog.lookup(withDetail);
+        final fallback = ErrorCatalog.lookup(empty);
+
+        expect(detailed.message, 'Mode de transport inconnu.');
+        expect(detailed.title, 'Mode indisponible');
+        expect(detailed.severity, ErrorSeverity.warning);
+        expect(
+          fallback.message,
+          "Ce mode de transport n'est pas encore proposé.",
+        );
+        expect(fallback.title, 'Mode indisponible');
+      },
+    );
+
+    test('textes de repli en anglais', () {
+      expect(en.errorTransportModeDisabledTitle, 'Mode unavailable');
+      expect(
+        en.errorTransportModeDisabledMessage,
+        "This transport mode isn't available yet.",
+      );
+      expect(en.errorArrivalTooFarTitle, 'Arrival too far');
+      expect(
+        en.errorArrivalTooFarMessage,
+        'The arrival date is too far after departure for this mode.',
+      );
+      expect(fr.errorArrivalTooFarTitle, 'Arrivée trop lointaine');
+    });
+  });
+
   group('ErrorCatalog — sms-otp-disabled', () {
     // Le backend renvoie 503 quand app.sms.enabled=false en prod alors que
     // l'écran de connexion par téléphone reste accessible (build client

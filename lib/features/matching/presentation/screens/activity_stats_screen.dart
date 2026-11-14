@@ -10,6 +10,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/presentation/activity_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/kg_sold_sheet.dart';
@@ -195,7 +196,7 @@ class _StatsGrid extends StatelessWidget {
         // (tiret court, jamais de tiret cadratin), comme les tuiles dont le
         // compteur est indisponible.
         final trips = StatTile(
-          iconName: 'plane',
+          iconName: kNeutralTripIconAsset,
           label: l.activityStatTripsLabel,
           value: summary?.tripsPublished == null
               ? '-'

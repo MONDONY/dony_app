@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 class MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
@@ -106,6 +107,15 @@ void main() {
     await tester.pump();
     expect(find.text('Récupération'), findsOneWidget);
   });
+
+  for (final (etape, icon) in [('DEPART', 'package'), ('ARRIVEE', 'flag')]) {
+    testWidgets('badge $etape : DonyIcon $icon, sans avion', (tester) async {
+      await tester.pumpWidget(MaterialApp.router(routerConfig: _router(etape)));
+      await tester.pump();
+      expect(findDonyIcon(icon), findsOneWidget);
+      expectNoPlaneIcon(tester);
+    });
+  }
 
   testWidgets('pas de badge étape quand etape=null', (tester) async {
     await tester.pumpWidget(MaterialApp.router(routerConfig: _router(null)));
@@ -305,6 +315,11 @@ void main() {
     expect(find.text('Récupération'), findsOneWidget);
     expect(find.text('Transit'), findsOneWidget);
     expect(find.text('Arrivée'), findsOneWidget);
+    // Le mode du trajet est inconnu à ce stade : icônes neutres, sans avion.
+    expect(findDonyIcon('package'), findsOneWidget);
+    expect(findDonyIcon('arrow-left-right'), findsOneWidget);
+    expect(findDonyIcon('flag'), findsOneWidget);
+    expectNoPlaneIcon(tester);
   });
 
   // ─── _EtapePickerSheet — tap étape → navigue vers photo ──────────────────

@@ -9,10 +9,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 AnnouncementModel _trip({
   Set<BidPaymentMethod> payments = const {BidPaymentMethod.stripe},
   String? capacityUnit,
+  TransportMode? transportMode = TransportMode.plane,
 }) {
   return AnnouncementModel(
     id: 'ann-1',
@@ -24,7 +26,7 @@ AnnouncementModel _trip({
     totalKg: 23,
     pricePerKg: 7,
     status: 'ACTIVE',
-    transportMode: TransportMode.plane,
+    transportMode: transportMode,
     capacityUnit: capacityUnit,
     pickupAddress: const AddressData(label: 'Paris', lat: 48.86, lng: 2.35),
     deliveryAddress: const AddressData(label: 'Dakar', lat: 14.74, lng: -17.49),
@@ -199,5 +201,32 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.textContaining('Flexible kg'), findsOneWidget);
+  });
+
+  group('icône du mode du trajet', () {
+    for (final (mode, asset) in [
+      (TransportMode.plane, 'plane'),
+      (TransportMode.boat, 'ship'),
+      (TransportMode.car, 'car'),
+    ]) {
+      testWidgets('$mode : pastille du trajet', (tester) async {
+        await tester.pumpWidget(
+          _harness(
+            TripTile(
+              announcement: _trip(transportMode: mode),
+              index: 0,
+              isSelected: false,
+              onTap: () {},
+              onModify: () {},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(findDonyIcon(asset), findsOneWidget);
+        expect(find.text('🛫'), findsNothing);
+        if (mode != TransportMode.plane) expectNoPlaneIcon(tester);
+      });
+    }
   });
 }

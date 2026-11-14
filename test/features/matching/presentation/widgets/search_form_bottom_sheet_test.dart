@@ -5,11 +5,13 @@
 // à sélection UNIQUE (SearchParams.contentType est un String?, pas une
 // liste) — décision documentée dans le rapport de tâche.
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -74,6 +76,7 @@ void main() {
   });
 
   tearDown(() {
+    resetTransportModesForTest();
     if (getIt.isRegistered<CitySearchBloc>()) {
       getIt.unregister<CitySearchBloc>();
     }
@@ -81,6 +84,24 @@ void main() {
       getIt.unregister<IContentCategoryRepository>();
     }
     unregisterFakeRecentCityStore();
+  });
+
+  testWidgets('avion seul : pas de champ Transport (rien à choisir)', (
+    tester,
+  ) async {
+    await _openSheet(tester, ValueNotifier<SearchParams?>(null));
+
+    expect(find.byType(TransportModeField), findsNothing);
+    expect(find.byType(PriceField), findsOneWidget);
+  });
+
+  testWidgets('route ouverte : le champ Transport est affiché', (tester) async {
+    setTransportModes(
+      const TransportModesAvailability(road: true, boat: false),
+    );
+    await _openSheet(tester, ValueNotifier<SearchParams?>(null));
+
+    expect(find.byType(TransportModeField), findsOneWidget);
   });
 
   testWidgets(

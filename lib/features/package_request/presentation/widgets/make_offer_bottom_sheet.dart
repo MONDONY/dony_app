@@ -46,7 +46,7 @@ class MakeOfferBottomSheet {
     required String arrivalCity,
     required DateTime? desiredDate,
     required int dateToleranceDays,
-    required TransportMode transportMode,
+    required TransportMode? transportMode,
     DateTime? initialDate,
     bool isFirmPrice = false,
     String currency = 'EUR',
@@ -297,7 +297,9 @@ class _MakeOfferContent extends StatefulWidget {
   /// Null : demande « Date flexible », la date de voyage est libre.
   final DateTime? requestDesiredDate;
   final int requestDateToleranceDays;
-  final TransportMode transportMode;
+
+  /// Null : demande « peu importe ».
+  final TransportMode? transportMode;
   final PriceEstimate? estimate;
   final GoRouter rootRouter;
   final _OfferFlow flow;
@@ -755,6 +757,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
               RequestCorridor(
                 departureCity: widget.departureCity,
                 arrivalCity: widget.arrivalCity,
+                transportMode: widget.transportMode,
               ),
               const SizedBox(height: DonySpacing.md),
               Divider(height: 1, color: Theme.of(context).colorScheme.outline),
@@ -1037,6 +1040,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                 compact: true,
                 departureCity: widget.departureCity,
                 arrivalCity: widget.arrivalCity,
+                transportMode: widget.transportMode,
               ),
               const SizedBox(height: DonySpacing.sm),
               Divider(height: 1, color: cs.outline),

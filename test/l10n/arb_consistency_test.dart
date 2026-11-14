@@ -104,6 +104,7 @@ int _matchingBrace(String text, int openIndex) {
 /// Clés dont l'anglais est volontairement identique au français.
 /// Toute nouvelle entrée doit être justifiée en commentaire.
 const _sameInBothLanguages = <String>{
+  'tripPublishStepMode', // « Mode » : même mot en français et en anglais
   'profileSectionGpPro', // « GP PRO » : nom du statut, même mot
   'travelerStatusOptionGpPro', // « GP Pro » : nom du statut, même mot
   'profileTravelerStatusGpPro', // « GP Pro » : nom du statut, même mot
@@ -167,9 +168,10 @@ const _sameInBothLanguages = <String>{
   'homeFilterChipsDate', // « Date » se dit pareil
   'homeFilterChipsUrgent', // « 🔥 Urgent » se dit pareil
   'homeFilterFieldsTransport', // « TRANSPORT » se dit pareil
+  'homeComposerSectionTransport', // « TRANSPORT » se dit pareil
+  'homeFilterChipsTransport', // « Transport » se dit pareil
   'homeFilterFieldsDate', // « DATE » se dit pareil
   'tripTransportTrain', // « Train » se dit pareil
-  'tripTransportBus', // « Bus » se dit pareil
   'tripTileConditions', // « Conditions » se dit pareil (tuile « Votre trajet »)
   'paymentMethodMobileMoney', // « Mobile money » se dit pareil
   'requestCreateDateFieldLabel', // « Date » se dit pareil

@@ -4,6 +4,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/presentation/cancellation_labels.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,10 +30,16 @@ class CancellationBottomSheet extends StatefulWidget {
     super.key,
     required this.announcementId,
     this.handedOverParcels = 0,
+    this.transportMode,
     this.onSubmitReady,
   });
 
   final String announcementId;
+
+  /// Mode du trajet : le premier motif se lit « Vol annulé », « Panne ou
+  /// contretemps » ou « Transport annulé » (la valeur envoyée ne change pas).
+  /// Absent : avion.
+  final TransportMode? transportMode;
 
   /// Colis déjà remis au voyageur (HANDED_OVER, IN_TRANSIT, ARRIVED) : leur
   /// retour s'ouvre à l'annulation, la feuille et la confirmation le disent.
@@ -43,6 +50,7 @@ class CancellationBottomSheet extends StatefulWidget {
     BuildContext context, {
     required String announcementId,
     int handedOverParcels = 0,
+    TransportMode? transportMode,
   }) {
     final cancellationBloc = context.read<CancellationBloc>();
     final l = context.l10n;
@@ -66,6 +74,7 @@ class CancellationBottomSheet extends StatefulWidget {
       child: CancellationBottomSheet(
         announcementId: announcementId,
         handedOverParcels: handedOverParcels,
+        transportMode: transportMode,
         onSubmitReady: (fn) => submit = fn,
       ),
     );
@@ -214,7 +223,11 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
               .map(
                 (r) => DonyRadioOption(
                   value: r,
-                  label: cancellationReasonLabel(l, r),
+                  label: cancellationReasonLabel(
+                    l,
+                    r,
+                    mode: widget.transportMode,
+                  ),
                 ),
               )
               .toList(),

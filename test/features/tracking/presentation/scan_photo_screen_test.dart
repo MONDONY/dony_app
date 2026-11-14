@@ -16,6 +16,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 /// Extras reçus par la confirmation au dernier passage.
 Map<String, dynamic>? _confirmExtra;
@@ -79,6 +80,23 @@ GoRouter _resultRouter(
 
 void main() {
   // ─── Bouton Passer (optionnel) ─────────────────────────────────────────────
+  for (final (etape, icon) in [('DEPART', 'package'), ('ARRIVEE', 'flag')]) {
+    testWidgets('$etape — pastille d\'étape en DonyIcon $icon, sans avion', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: _router(etape),
+        ),
+      );
+      await tester.pump();
+      // La pastille porte l'icône d'étape (l'écran peut en montrer d'autres).
+      expect(findDonyIcon(icon), findsWidgets);
+      expectNoPlaneIcon(tester);
+    });
+  }
+
   testWidgets('DEPART — pas de bouton Passer', (tester) async {
     await tester.pumpWidget(
       MaterialApp.router(

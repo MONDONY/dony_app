@@ -62,6 +62,7 @@ class ColisBillet extends StatelessWidget {
                     bid.departureCity ?? 'Paris', // i18n-ignore: nom propre
                 arrivalCity:
                     bid.arrivalCity ?? 'Dakar', // i18n-ignore: nom propre
+                transportMode: bid.transportMode,
                 departureDate: bid.departureDate,
                 departureTime: bid.departureTime,
                 arrivalDate: bid.arrivalDate,

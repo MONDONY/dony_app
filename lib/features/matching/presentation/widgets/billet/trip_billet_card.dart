@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/utils/trip_capacity.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_route.dart';
@@ -44,6 +46,8 @@ class TripBilletCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
     final transportLabel = announcement.transportMode?.label(l);
+    final mode = transportModeOrPlane(announcement.transportMode);
+    final stops = announcement.stops;
     final trailing = this.trailing;
     final notch = notchColor ?? cs.surface;
     final capacity = TripCapacity.fromAnnouncement(announcement);
@@ -81,7 +85,11 @@ class TripBilletCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                DonyIcon('plane', size: 16, color: cs.onPrimaryContainer),
+                DonyIcon(
+                  mode.iconAsset,
+                  size: 16,
+                  color: cs.onPrimaryContainer,
+                ),
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   // Toujours sur une ligne : jamais coupé au milieu du mot
@@ -114,6 +122,7 @@ class TripBilletCard extends StatelessWidget {
             arrivalTime: announcement.arrivalTime,
             showWeekday: true,
             notchColor: notch,
+            transportMode: announcement.transportMode,
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -127,10 +136,10 @@ class TripBilletCard extends StatelessWidget {
               runSpacing: DonySpacing.xs,
               children: [
                 if (transportLabel != null) _BilletChip(label: transportLabel),
-                if (announcement.stops != null)
+                if (stops != null && supportsStops(mode))
                   _BilletChip(
                     key: const Key('detail-stops-chip'),
-                    label: tripStopsBadgeLabel(l, announcement.stops!),
+                    label: tripStopsBadgeLabel(l, stops),
                   ),
                 if (showKg)
                   _BilletChip(

@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/format_weight.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
@@ -95,12 +97,16 @@ class WizardSummaryCard extends StatelessWidget {
           _line(context, l.requestCreateRecapTrip, _corridorText(state)),
           _divider(cs),
           _line(context, l.requestCreateDateFieldLabel, _dateText(l, state)),
-          if (state.transportMode != null) ...[
+          // « Peu importe » est un choix : la ligne reste, avec l'icône neutre.
+          // Un mode jamais choisi (ni l'un ni l'autre) n'en a pas.
+          if (state.transportMode != null || state.transportModeAny) ...[
             _divider(cs),
             _line(
               context,
               l.requestCreateRecapTransport,
-              state.transportMode!.label(l),
+              state.transportMode?.label(l) ?? l.requestCreateTransportAny,
+              iconAsset:
+                  state.transportMode?.iconAsset ?? kNeutralTripIconAsset,
             ),
           ],
           _divider(cs),
@@ -121,7 +127,12 @@ class WizardSummaryCard extends StatelessWidget {
   Widget _divider(ColorScheme cs) =>
       Divider(height: 12, thickness: 1, color: cs.outlineVariant);
 
-  Widget _line(BuildContext context, String label, String value) {
+  Widget _line(
+    BuildContext context,
+    String label,
+    String value, {
+    String? iconAsset,
+  }) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Row(
@@ -138,14 +149,25 @@ class WizardSummaryCard extends StatelessWidget {
           ),
         ),
         Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: tt.bodyMedium?.copyWith(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: cs.onSurface,
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (iconAsset != null) ...[
+                DonyIcon(iconAsset, size: 14, color: cs.onSurface),
+                const SizedBox(width: DonySpacing.xs + 2),
+              ],
+              Flexible(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.right,
+                  style: tt.bodyMedium?.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],

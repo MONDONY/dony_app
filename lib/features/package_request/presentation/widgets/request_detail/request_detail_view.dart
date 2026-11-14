@@ -228,6 +228,7 @@ class RequestDetailView extends StatelessWidget {
         return [
           RequestNoTravelersEmpty(
             corridor: '${r.departureCity} → ${r.arrivalCity}',
+            transportMode: r.transportMode,
             onCreateAlert: callbacks.onCreateAlert,
             onWidenDates: callbacks.onWidenDates,
           ),

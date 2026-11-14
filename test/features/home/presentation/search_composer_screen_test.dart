@@ -12,6 +12,7 @@
 
 import 'dart:io';
 
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -23,6 +24,7 @@ import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/screens/search_composer_screen.dart';
+import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +41,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_recent_city_store.dart';
+import '../../../helpers/plane_icon_expectations.dart';
 
 class _MockAnnouncementRepo extends Mock implements AnnouncementRepository {}
 
@@ -216,6 +219,7 @@ void main() {
   });
 
   tearDown(() {
+    resetTransportModesForTest();
     if (getIt.isRegistered<CitySearchBloc>()) {
       getIt.unregister<CitySearchBloc>();
     }
@@ -446,6 +450,66 @@ void main() {
     ).captured;
     expect(captured.every((v) => v == null), isTrue);
     expect(find.text('Tous'), findsWidgets);
+  });
+
+  // Les escales sont une notion d'avion : leur puce ne dessine un avion que
+  // si le filtre de mode vaut avion.
+  for (final (mode, planeShown) in <(TransportMode?, bool)>[
+    (null, false),
+    (TransportMode.car, false),
+    (TransportMode.plane, true),
+  ]) {
+    testWidgets('puces Escales, filtre mode $mode : avion $planeShown', (
+      tester,
+    ) async {
+      // Route allumée : sans choix de mode, le filtre de mode est écarté.
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: false),
+      );
+      addTearDown(resetTransportModesForTest);
+      _vueHaute(tester);
+      await tester.pumpWidget(
+        _Harness(initialFilters: HomeSearchFilters(transportMode: mode)),
+      );
+      await tester.pumpAndSettle();
+
+      await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+      await tester.tap(find.byKey(const Key('composer-more-filters')));
+      await tester.pumpAndSettle();
+      await _scrollTo(tester, find.text('ESCALES'));
+
+      final chip = find.byKey(const Key('chip-stops-directOnly'));
+      expect(chip, findsOneWidget);
+      expect(
+        find.descendant(of: chip, matching: findDonyIcon('plane')),
+        planeShown ? findsOneWidget : findsNothing,
+      );
+      if (!planeShown) {
+        expect(
+          find.descendant(of: chip, matching: findDonyIcon('route')),
+          findsOneWidget,
+        );
+      }
+    });
+  }
+
+  testWidgets('puces Escales, avion seul proposé : l\'avion reste dessiné', (
+    tester,
+  ) async {
+    _vueHaute(tester);
+    await tester.pumpWidget(const _Harness());
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+    await tester.tap(find.byKey(const Key('composer-more-filters')));
+    await tester.pumpAndSettle();
+    await _scrollTo(tester, find.text('ESCALES'));
+
+    final chip = find.byKey(const Key('chip-stops-directOnly'));
+    expect(
+      find.descendant(of: chip, matching: findDonyIcon('plane')),
+      findsOneWidget,
+    );
   });
 
   // FLUTTER-GD / FLUTTER-G0 : les deux filtres partent au serveur.
@@ -898,6 +962,194 @@ void main() {
       expect(find.text('IN ONE SENTENCE'), findsNothing);
     });
   });
+
+  group('section TRANSPORT', () {
+    const roadOn = TransportModesAvailability(road: true, boat: false);
+    const allOn = TransportModesAvailability(road: true, boat: true);
+
+    Finder transportChip(String mode) =>
+        find.byKey(Key('composer-transport-$mode'));
+
+    bool isActive(WidgetTester tester, String mode) =>
+        tester.widget<QuickChip>(transportChip(mode)).active;
+
+    Future<void> openMoreFilters(WidgetTester tester) async {
+      await _scrollTo(tester, find.byKey(const Key('composer-more-filters')));
+      await tester.tap(find.byKey(const Key('composer-more-filters')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('avion seul : ni section ni champ Transport', (tester) async {
+      _vueHaute(tester);
+      await tester.pumpWidget(const _Harness());
+      await tester.pumpAndSettle();
+
+      expect(find.text('TRANSPORT'), findsNothing);
+      expect(transportChip('all'), findsNothing);
+
+      await openMoreFilters(tester);
+      expect(find.text('TRANSPORT'), findsNothing);
+    });
+
+    testWidgets('route allumée : section TRANSPORT visible hors de « Plus de '
+        'filtres », Tous / Avion / Route', (tester) async {
+      setTransportModes(roadOn);
+      _vueHaute(tester);
+      await tester.pumpWidget(const _Harness());
+      await tester.pumpAndSettle();
+
+      // Visible sans déplier « Plus de filtres », avant QUAND.
+      expect(find.text('TRANSPORT'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('TRANSPORT')).dy,
+        lessThan(tester.getTopLeft(find.text('QUAND')).dy),
+      );
+      for (final (key, label) in const [
+        ('all', 'Tous'),
+        ('plane', 'Avion'),
+        ('car', 'Route'),
+      ]) {
+        expect(
+          find.descendant(of: transportChip(key), matching: find.text(label)),
+          findsOneWidget,
+        );
+      }
+      expect(transportChip('boat'), findsNothing);
+      expect(isActive(tester, 'all'), isTrue);
+
+      // Et le champ a quitté « Plus de filtres » : un seul « TRANSPORT ».
+      await openMoreFilters(tester);
+      expect(find.text('TRANSPORT'), findsOneWidget);
+    });
+
+    testWidgets('bateau et route allumés : Tous / Avion / Bateau / Route', (
+      tester,
+    ) async {
+      setTransportModes(allOn);
+      _vueHaute(tester);
+      await tester.pumpWidget(const _Harness());
+      await tester.pumpAndSettle();
+
+      for (final key in const ['all', 'plane', 'boat', 'car']) {
+        expect(transportChip(key), findsOneWidget);
+      }
+    });
+
+    testWidgets('Route applique le mode car, Tous le retire', (tester) async {
+      setTransportModes(roadOn);
+      _vueHaute(tester);
+      final repo = _MockAnnouncementRepo();
+      await tester.pumpWidget(_Harness(announcementRepo: repo));
+      await tester.pumpAndSettle();
+
+      Future<void> verifyCount(TransportMode? mode) async {
+        await _settleFilterChange(tester);
+        verify(
+          () => repo.countAnnouncements(
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            departureDateFrom: any(named: 'departureDateFrom'),
+            departureDateTo: any(named: 'departureDateTo'),
+            minAvailableKg: any(named: 'minAvailableKg'),
+            maxAvailableKg: any(named: 'maxAvailableKg'),
+            maxPricePerKg: any(named: 'maxPricePerKg'),
+            gpProOnly: any(named: 'gpProOnly'),
+            minRating: any(named: 'minRating'),
+            weekendOnly: any(named: 'weekendOnly'),
+            transportMode: mode,
+            kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+            contentType: any(named: 'contentType'),
+            userLat: any(named: 'userLat'),
+            userLng: any(named: 'userLng'),
+            radiusKm: any(named: 'radiusKm'),
+            urgent: any(named: 'urgent'),
+            maxStops: any(named: 'maxStops'),
+            paymentMethods: any(named: 'paymentMethods'),
+          ),
+        ).called(greaterThanOrEqualTo(1));
+      }
+
+      await tester.tap(transportChip('car'));
+      await tester.pump();
+      expect(isActive(tester, 'car'), isTrue);
+      expect(isActive(tester, 'all'), isFalse);
+      await verifyCount(TransportMode.car);
+
+      await tester.tap(transportChip('all'));
+      await tester.pump();
+      expect(isActive(tester, 'car'), isFalse);
+      expect(isActive(tester, 'all'), isTrue);
+      await verifyCount(null);
+    });
+
+    testWidgets('filtre BUS persistant : « Route » est actif', (tester) async {
+      setTransportModes(roadOn);
+      _vueHaute(tester);
+      await tester.pumpWidget(
+        const _Harness(
+          initialFilters: HomeSearchFilters(transportMode: TransportMode.bus),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(isActive(tester, 'car'), isTrue);
+      expect(isActive(tester, 'all'), isFalse);
+    });
+
+    testWidgets("filtre d'un mode non proposé (train, bateau éteint) retiré "
+        'au chargement', (tester) async {
+      setTransportModes(roadOn);
+      _vueHaute(tester);
+      for (final mode in [TransportMode.train, TransportMode.boat]) {
+        await tester.pumpWidget(
+          _Harness(
+            key: ValueKey(mode),
+            initialFilters: HomeSearchFilters(transportMode: mode),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(isActive(tester, 'all'), isTrue, reason: '$mode retiré');
+        expect(isActive(tester, 'car'), isFalse);
+        expect(isActive(tester, 'plane'), isFalse);
+      }
+    });
+
+    testWidgets('mode Colis (Je voyage) : pas de section Transport', (
+      tester,
+    ) async {
+      setTransportModes(roadOn);
+      _vueHaute(tester);
+      await tester.pumpWidget(const _Harness(mode: SearchMode.parcels));
+      await tester.pumpAndSettle();
+
+      expect(find.text('TRANSPORT'), findsNothing);
+    });
+
+    for (final locale in ['fr', 'en']) {
+      testWidgets('360 dp $locale : section sans débordement', (tester) async {
+        if (locale == 'en') useEnglish();
+        setTransportModes(allOn);
+        tester.view.physicalSize = const Size(360, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(const _Harness());
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(transportChip('boat'), findsOneWidget);
+        final heights = {
+          for (final k in const ['all', 'plane', 'boat', 'car'])
+            tester.getSize(transportChip(k)).height,
+        };
+        expect(heights.length, 1, reason: 'puces de même hauteur');
+        expect(
+          tester.getRect(transportChip('car')).right,
+          lessThanOrEqualTo(360),
+        );
+      });
+    }
+  });
 }
 
 /// Monte `SearchComposerScreen` sur une route fille d'un `GoRouter` minimal —
@@ -907,6 +1159,7 @@ void main() {
 /// [initialFilters] part de filtres déjà posés (ex. un filtre rare actif).
 class _Harness extends StatelessWidget {
   const _Harness({
+    super.key,
     this.mode = SearchMode.trips,
     this.count,
     this.announcementRepo,

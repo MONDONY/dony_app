@@ -7,6 +7,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -39,6 +40,7 @@ AnnouncementModel todoTrip({
   TripParcelsSummary? summary,
   String? instructions,
   String? timezone,
+  TransportMode? transportMode,
 }) => AnnouncementModel(
   id: 'trip-1',
   travelerId: 'trav-1',
@@ -56,6 +58,7 @@ AnnouncementModel todoTrip({
   parcelsSummary: summary,
   arrivalInstructions: instructions,
   departureTimezone: timezone,
+  transportMode: transportMode,
 );
 
 BidModel todoBid(
@@ -120,6 +123,17 @@ TodoScenario _s(
   List<BidModel> bids, {
   StripeAccountState stripe = const StripeAccountInitial(),
 }) => (trip: trip, bids: bids, stripe: stripe, departed: false);
+
+/// « Je pars » en tête, pour un trajet du [transportMode] donné (avion par
+/// défaut, mode absent compris).
+TodoScenario todoDepartScenario({TransportMode? transportMode}) => _s(
+  todoTrip(
+    trackingActive: true,
+    summary: kTodoSummary,
+    transportMode: transportMode,
+  ),
+  [todoBid('b1', 'HANDED_OVER')],
+);
 
 /// Une situation dont l'action en tête est [kind] (à [kTodoNow]).
 TodoScenario todoScenarioFor(TripTodoKind kind) {
@@ -209,10 +223,7 @@ TodoScenario todoScenarioFor(TripTodoKind kind) {
         returnDeadline: now.add(const Duration(days: 2)),
       ),
     ]),
-    TripTodoKind.depart => _s(
-      todoTrip(trackingActive: true, summary: kTodoSummary),
-      [todoBid('b1', 'HANDED_OVER')],
-    ),
+    TripTodoKind.depart => todoDepartScenario(),
     TripTodoKind.arrive => _s(todoTrip(status: 'IN_PROGRESS'), [
       todoBid('b1', 'IN_TRANSIT'),
     ]),

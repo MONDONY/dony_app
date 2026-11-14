@@ -17,6 +17,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 class _MockTrackingBloc extends Mock implements TrackingBloc {}
 
@@ -335,10 +336,11 @@ void main() {
     expect(
       find.descendant(
         of: find.byKey(const Key('tracking-route')),
-        matching: find.byIcon(Icons.directions_car_rounded),
+        matching: findDonyIcon('car'),
       ),
       findsOneWidget,
     );
+    expectNoPlaneIcon(tester);
   });
 
   testWidgets('sans partage : pas de bouton', (tester) async {

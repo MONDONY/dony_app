@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/config/payment_methods_flag.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
@@ -24,6 +25,80 @@ void main() {
     when(() => mockApiClient.dio).thenReturn(mockDio);
     datasource = ConfigDatasource(mockApiClient);
     repository = ConfigRepository(datasource);
+  });
+
+  group('ConfigRepository — getTransportModes', () {
+    Response<dynamic> ok(Map<String, dynamic> data) => Response(
+      data: data,
+      statusCode: 200,
+      requestOptions: RequestOptions(path: '/config/transport-modes'),
+    );
+
+    DioException dioError(int status) => DioException(
+      requestOptions: RequestOptions(path: '/config/transport-modes'),
+      response: Response(
+        statusCode: status,
+        requestOptions: RequestOptions(path: '/config/transport-modes'),
+      ),
+      type: DioExceptionType.badResponse,
+    );
+
+    test('lit road et boat', () async {
+      when(
+        () => mockDio.get('/config/transport-modes'),
+      ).thenAnswer((_) async => ok({'road': true, 'boat': false}));
+
+      expect(
+        await repository.getTransportModes(),
+        const TransportModesAvailability(road: true, boat: false),
+      );
+    });
+
+    test('champ absent : faux', () async {
+      when(
+        () => mockDio.get('/config/transport-modes'),
+      ).thenAnswer((_) async => ok({'boat': true}));
+
+      expect(
+        await repository.getTransportModes(),
+        const TransportModesAvailability(road: false, boat: true),
+      );
+    });
+
+    test('404 (back sans la route) : avion seul', () async {
+      when(
+        () => mockDio.get('/config/transport-modes'),
+      ).thenThrow(dioError(404));
+
+      expect(
+        await repository.getTransportModes(),
+        TransportModesAvailability.planeOnly,
+      );
+    });
+
+    test(
+      'toute autre erreur (500, réseau) : avion seul, jamais d\'exception',
+      () async {
+        when(
+          () => mockDio.get('/config/transport-modes'),
+        ).thenThrow(dioError(500));
+        expect(
+          await repository.getTransportModes(),
+          TransportModesAvailability.planeOnly,
+        );
+
+        when(() => mockDio.get('/config/transport-modes')).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/config/transport-modes'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
+        expect(
+          await repository.getTransportModes(),
+          TransportModesAvailability.planeOnly,
+        );
+      },
+    );
   });
 
   group('ConfigDatasource — getPaymentMethods (YADONY-FLUTTER-PROD-11)', () {
