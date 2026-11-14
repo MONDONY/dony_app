@@ -97,15 +97,75 @@ void main() {
       expect(repository.openInquiry('a1'), throwsA(isA<DioException>()));
     });
 
-    test('404 : InquiryUnavailableException', () async {
+    test('404 announcement-not-found : InquiryUnavailableException', () async {
       adapter
         ..status = 404
         ..body = {'code': 'announcement-not-found'};
 
-      expect(
+      await expectLater(
         repository.openInquiry('a1'),
-        throwsA(isA<InquiryUnavailableException>()),
+        throwsA(
+          isA<InquiryUnavailableException>().having(
+            (e) => e.code,
+            'code',
+            'announcement-not-found',
+          ),
+        ),
       );
+      expect(repository.inquiryUnsupported, isFalse);
+    });
+
+    test('405 (back sans la route) : non pris en charge, mémorisé', () async {
+      adapter
+        ..status = 405
+        ..body = {'title': 'Method Not Allowed'};
+
+      expect(repository.inquiryUnsupported, isFalse);
+      await expectLater(
+        repository.openInquiry('a1'),
+        throwsA(isA<InquiryUnsupportedException>()),
+      );
+      expect(repository.inquiryUnsupported, isTrue);
+    });
+
+    test('404 sans code : non pris en charge, mémorisé', () async {
+      adapter
+        ..status = 404
+        ..body = {'title': 'Not Found'};
+
+      await expectLater(
+        repository.openInquiry('a1'),
+        throwsA(isA<InquiryUnsupportedException>()),
+      );
+      expect(repository.inquiryUnsupported, isTrue);
+    });
+
+    test('404 d\'un autre code : non pris en charge', () async {
+      adapter
+        ..status = 404
+        ..body = {'code': 'conversation-not-found'};
+
+      await expectLater(
+        repository.openInquiry('a1'),
+        throwsA(isA<InquiryUnsupportedException>()),
+      );
+    });
+
+    test('après un refus 405 : plus aucun appel réseau', () async {
+      adapter.status = 405;
+      await expectLater(
+        repository.openInquiry('a1'),
+        throwsA(isA<InquiryUnsupportedException>()),
+      );
+      adapter
+        ..status = 200
+        ..body = _inquiryJson;
+
+      await expectLater(
+        repository.openInquiry('a2'),
+        throwsA(isA<InquiryUnsupportedException>()),
+      );
+      expect(adapter.requests, hasLength(1));
     });
 
     test(
@@ -115,10 +175,17 @@ void main() {
           ..status = 422
           ..body = {'code': 'inquiry-announcement-closed'};
 
-        expect(
+        await expectLater(
           repository.openInquiry('a1'),
-          throwsA(isA<InquiryUnavailableException>()),
+          throwsA(
+            isA<InquiryUnavailableException>().having(
+              (e) => e.code,
+              'code',
+              'inquiry-announcement-closed',
+            ),
+          ),
         );
+        expect(repository.inquiryUnsupported, isFalse);
       },
     );
 

@@ -71,6 +71,16 @@ final class AskQuestionUnavailable extends AskQuestionState {
   bool get hidden => true;
 }
 
+/// Le back ne connaît pas encore les questions (pas encore déployé) : message
+/// neutre au premier appui, puis tuile retirée ; les ouvertures suivantes de
+/// la feuille partent directement de [AskQuestionHidden].
+final class AskQuestionUnsupported extends AskQuestionState {
+  const AskQuestionUnsupported();
+
+  @override
+  bool get hidden => true;
+}
+
 /// Échec inattendu (réseau, 5xx, sourdine…) : l'écran le présente, la tuile
 /// reste pour un nouvel essai.
 final class AskQuestionFailed extends AskQuestionState {
@@ -83,15 +93,19 @@ final class AskQuestionFailed extends AskQuestionState {
 /// (`POST /conversations/inquiry`).
 ///
 /// Mesure : `inquiry_opened` au succès, `inquiry_open_failed` avec
-/// `error_code` sur tout autre chemin (visiteur, identité, trajet fermé,
-/// erreur serveur). Jamais d'identifiant ni de texte.
+/// `error_code` sur tout autre chemin (visiteur, identité, trajet fermé, back
+/// sans les questions, erreur serveur). Jamais d'identifiant ni de texte.
 class AskQuestionCubit extends Cubit<AskQuestionState> {
   AskQuestionCubit(
     this._repository,
     this._analytics, {
     required bool Function() hasRealSession,
   }) : _hasRealSession = hasRealSession,
-       super(const AskQuestionIdle());
+       super(
+         _repository.inquiryUnsupported
+             ? const AskQuestionHidden()
+             : const AskQuestionIdle(),
+       );
 
   final ConversationRepository _repository;
   final AnalyticsService _analytics;
@@ -135,6 +149,11 @@ class AskQuestionCubit extends Cubit<AskQuestionState> {
       _failed(e.code);
       if (isClosed) return;
       emit(const AskQuestionUnavailable());
+      emit(const AskQuestionHidden());
+    } on InquiryUnsupportedException {
+      _failed(InquiryUnsupportedException.code);
+      if (isClosed) return;
+      emit(const AskQuestionUnsupported());
       emit(const AskQuestionHidden());
     } catch (e) {
       _failed(unwrapDioError(e).code ?? 'unknown');

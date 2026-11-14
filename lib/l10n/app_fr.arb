@@ -23433,6 +23433,10 @@
   "@inquiryAskUnavailable": {
       "description": "Message quand le back refuse d'ouvrir une conversation de question (trajet fermé ou introuvable)."
   },
+  "inquiryAskNotYetAvailable": "Poser une question n'est pas encore disponible.",
+  "@inquiryAskNotYetAvailable": {
+      "description": "Message neutre au premier appui sur « Poser une question » quand le back ne connaît pas encore les questions (405, ou 404 sans code) ; la tuile se retire ensuite."
+  },
   "inquiryAskTileBadge": "{limit} messages",
   "@inquiryAskTileBadge": {
       "description": "Pastille de la tuile de question ; {limit} = quota de messages avant réservation.",

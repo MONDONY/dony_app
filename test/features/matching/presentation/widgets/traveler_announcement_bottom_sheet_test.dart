@@ -73,9 +73,11 @@ class _MockConversationRepository extends Mock
 /// Tuile « Poser une question » : la feuille ne l'affiche que si son cubit
 /// est injecté (garde des points d'ouverture sans DI complète).
 void _registerAskQuestion() {
+  final repository = _MockConversationRepository();
+  when(() => repository.inquiryUnsupported).thenReturn(false);
   getIt.registerFactory<AskQuestionCubit>(
     () => AskQuestionCubit(
-      _MockConversationRepository(),
+      repository,
       makeDisabledAnalytics(MockAnalyticsBackend()),
       hasRealSession: () => true,
     ),

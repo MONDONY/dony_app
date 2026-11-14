@@ -38682,6 +38682,12 @@ abstract class AppLocalizations {
   /// **'Les questions ne sont plus possibles sur ce trajet.'**
   String get inquiryAskUnavailable;
 
+  /// Message neutre au premier appui sur « Poser une question » quand le back ne connaît pas encore les questions (405, ou 404 sans code) ; la tuile se retire ensuite.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poser une question n\'est pas encore disponible.'**
+  String get inquiryAskNotYetAvailable;
+
   /// Pastille de la tuile de question ; {limit} = quota de messages avant réservation.
   ///
   /// In fr, this message translates to:

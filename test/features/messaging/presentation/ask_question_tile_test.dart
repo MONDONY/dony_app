@@ -76,6 +76,7 @@ void main() {
   setUp(() {
     DonySnackbar.clearDedup();
     repo = _MockRepo();
+    when(() => repo.inquiryUnsupported).thenReturn(false);
     kyc = _MockKycBloc();
     when(() => kyc.state).thenReturn(const KycInitial());
     when(() => kyc.stream).thenAnswer((_) => const Stream.empty());
@@ -244,5 +245,50 @@ void main() {
     await pump(t);
     expect(find.text('Poser une question'), findsOneWidget);
     expect(pushed, isNull);
+  });
+
+  group('back sans les questions (I1)', () {
+    const neutral = "Poser une question n'est pas encore disponible.";
+    const closed = 'Les questions ne sont plus possibles sur ce trajet.';
+
+    testWidgets('405 : message neutre, tuile retirée, puis masquée sans '
+        'message à la réouverture', (t) async {
+      var unsupported = false;
+      when(() => repo.inquiryUnsupported).thenAnswer((_) => unsupported);
+      when(() => repo.openInquiry('a1')).thenAnswer((_) async {
+        unsupported = true;
+        throw const InquiryUnsupportedException();
+      });
+      await t.pumpWidget(harness());
+      await pump(t);
+      await t.tap(find.text('Poser une question'));
+      await pump(t);
+      expect(find.text(neutral), findsOneWidget);
+      expect(find.text(closed), findsNothing);
+      expect(find.text('Poser une question'), findsNothing);
+
+      // Nouvelle ouverture de la feuille : nouvelle tuile, même dépôt.
+      await t.pumpWidget(const SizedBox.shrink());
+      await t.pump(const Duration(seconds: 5));
+      DonySnackbar.clearDedup();
+      await t.pumpWidget(harness());
+      await pump(t);
+      expect(find.text('Poser une question'), findsNothing);
+      expect(find.text(neutral), findsNothing);
+      verify(() => repo.openInquiry('a1')).called(1);
+    });
+
+    testWidgets('404 announcement-not-found : message du trajet', (t) async {
+      when(() => repo.openInquiry('a1')).thenAnswer(
+        (_) async =>
+            throw const InquiryUnavailableException(kAnnouncementNotFound),
+      );
+      await t.pumpWidget(harness());
+      await pump(t);
+      await t.tap(find.text('Poser une question'));
+      await pump(t);
+      expect(find.text(closed), findsOneWidget);
+      expect(find.text(neutral), findsNothing);
+    });
   });
 }

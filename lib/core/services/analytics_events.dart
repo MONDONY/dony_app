@@ -458,8 +458,9 @@ abstract final class AnalyticsEvents {
 
   /// Ouverture d'une question impossible (`AskQuestionCubit`). Propriété
   /// `error_code` : `auth-required` (visiteur), `kyc-required`,
-  /// `announcement-not-found`, `inquiry-announcement-closed`, code métier du
-  /// back, ou `unknown`.
+  /// `announcement-not-found`, `inquiry-announcement-closed`,
+  /// `inquiry-unsupported` (back pas encore déployé : 405, ou 404 sans code),
+  /// code métier du back, ou `unknown`.
   static const inquiryOpenFailed = 'inquiry_open_failed';
   static const conversationCallInitiated = 'conversation_call_initiated';
   // Appels audio Yadony (Stream Video).

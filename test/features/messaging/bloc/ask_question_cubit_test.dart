@@ -29,6 +29,7 @@ void main() {
 
   setUp(() {
     repo = _MockRepo();
+    when(() => repo.inquiryUnsupported).thenReturn(false);
     backend = MockAnalyticsBackend();
     session = true;
   });
@@ -44,6 +45,32 @@ void main() {
       'error_code': code,
     }),
   ).called(1);
+
+  group('back sans les questions (I1)', () {
+    test('déjà constaté : tuile masquée d\'emblée, sans message', () async {
+      when(() => repo.inquiryUnsupported).thenReturn(true);
+      final cubit = build();
+      expect(cubit.state, isA<AskQuestionHidden>());
+      await cubit.ask('a1', knownKycStatus: 'VERIFIED');
+      verifyNever(() => repo.openInquiry(any()));
+      await cubit.close();
+    });
+
+    blocTest<AskQuestionCubit, AskQuestionState>(
+      'premier appui : message neutre puis tuile retirée',
+      setUp: () => when(
+        () => repo.openInquiry('a1'),
+      ).thenAnswer((_) async => throw const InquiryUnsupportedException()),
+      build: build,
+      act: (c) => c.ask('a1'),
+      expect: () => [
+        isA<AskQuestionLoading>(),
+        isA<AskQuestionUnsupported>(),
+        isA<AskQuestionHidden>(),
+      ],
+      verify: (_) => expectFailed('inquiry-unsupported'),
+    );
+  });
 
   group('ask', () {
     blocTest<AskQuestionCubit, AskQuestionState>(

@@ -101,6 +101,11 @@ class AskQuestionTile extends StatelessWidget {
           message: context.l10n.inquiryAskUnavailable,
           type: DonySnackbarType.warning,
         );
+      case AskQuestionUnsupported():
+        DonySnackbar.show(
+          context,
+          message: context.l10n.inquiryAskNotYetAvailable,
+        );
       case AskQuestionFailed(:final error):
         unawaited(ErrorPresenter.show(context, error));
       case AskQuestionIdle() || AskQuestionLoading() || AskQuestionHidden():

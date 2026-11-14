@@ -24004,6 +24004,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Questions are no longer possible on this trip.';
 
   @override
+  String get inquiryAskNotYetAvailable =>
+      'Asking a question isn\'t available yet.';
+
+  @override
   String inquiryAskTileBadge(int limit) {
     return '$limit messages';
   }

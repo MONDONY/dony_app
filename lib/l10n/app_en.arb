@@ -11876,6 +11876,10 @@
   "@inquiryAskUnavailable": {
       "description": "Shown when the backend refuses to open a pre-booking question thread (trip closed or not found)."
   },
+  "inquiryAskNotYetAvailable": "Asking a question isn't available yet.",
+  "@inquiryAskNotYetAvailable": {
+      "description": "Neutral message on the first tap of \"Ask a question\" when the backend does not support questions yet (405, or 404 without code); the tile then disappears."
+  },
   "inquiryAskTileBadge": "{limit} messages",
   "@inquiryAskTileBadge": {
       "description": "Badge of the question tile; {limit} = message quota before booking.",
