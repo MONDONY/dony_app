@@ -474,6 +474,7 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
         avecFavori: favoris != null && !estProprietaire,
         lecteurId: lecteurId,
         lecteurKycStatus: authState.currentUser?.kycStatus,
+        hasActiveBid: hasActiveBid,
         returnsNavigation: returnsNavigation,
         fromMap: fromMap,
         fromDetail: fromDetail,
@@ -652,6 +653,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
     this.avecFavori = false,
     this.lecteurId,
     this.lecteurKycStatus,
+    this.hasActiveBid = false,
     this.returnsNavigation = false,
     this.fromMap = false,
     this.fromDetail = false,
@@ -672,6 +674,10 @@ class _TravelerAnnouncementContent extends StatelessWidget {
 
   /// Statut KYC connu du lecteur, pour « Poser une question ».
   final String? lecteurKycStatus;
+
+  /// Le lecteur a déjà un colis en cours sur ce trajet : pas de question
+  /// avant réservation (le pied collant l'oriente vers son colis).
+  final bool hasActiveBid;
 
   /// Le voyageur du trajet, sauf s'il s'agit du lecteur lui-même.
   TravelerProfile? get _voyageurBloquable {
@@ -798,6 +804,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
             announcement: announcement,
             viewerId: lecteurId,
             viewerKycStatus: lecteurKycStatus,
+            hasActiveBid: hasActiveBid,
             onOpenChat: (conversation) => _openChat(context, conversation),
             onFollowUp: (run) => _leaveThen(context, run),
           ),

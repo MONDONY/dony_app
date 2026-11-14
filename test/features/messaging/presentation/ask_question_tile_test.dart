@@ -99,6 +99,7 @@ void main() {
     AnnouncementModel? announcement,
     String? viewerId = 'u1',
     String? kycStatus = 'VERIFIED',
+    bool hasActiveBid = false,
   }) {
     pushed = null;
     final router = GoRouter(
@@ -110,6 +111,7 @@ void main() {
               announcement: announcement ?? _announcement(),
               viewerId: viewerId,
               viewerKycStatus: kycStatus,
+              hasActiveBid: hasActiveBid,
               cubit: AskQuestionCubit(
                 repo,
                 makeDisabledAnalytics(MockAnalyticsBackend()),
@@ -146,6 +148,41 @@ void main() {
     expect(find.text('Poser une question'), findsOneWidget);
     expect(find.text('Écrivez à Ibrahima avant de réserver'), findsOneWidget);
     expect(find.text('10 messages'), findsOneWidget);
+  });
+
+  testWidgets('masquée si une demande est déjà en cours sur ce trajet (I2)', (
+    t,
+  ) async {
+    await t.pumpWidget(harness(hasActiveBid: true));
+    await pump(t);
+    expect(find.text('Poser une question'), findsNothing);
+    expect(
+      AskQuestionTile.isAvailable(_announcement(), 'u1', hasActiveBid: true),
+      isFalse,
+    );
+  });
+
+  testWidgets('fil supprimé de mon côté : restauré avant d\'ouvrir (I3)', (
+    t,
+  ) async {
+    const deleted = ConversationModel(
+      id: 'conv-q',
+      firestoreConversationId: 'conv_q',
+      otherParticipant: ParticipantModel(id: 't1', name: 'Ibrahima Diallo'),
+      kind: ConversationModel.kindInquiry,
+      announcementId: 'a1',
+      deletedBySelf: true,
+    );
+    when(() => repo.openInquiry('a1')).thenAnswer((_) async => deleted);
+    when(
+      () => repo.restoreConversation('conv-q'),
+    ).thenAnswer((_) async => _conv);
+    await t.pumpWidget(harness());
+    await pump(t);
+    await t.tap(find.text('Poser une question'));
+    await pump(t);
+    verify(() => repo.restoreConversation('conv-q')).called(1);
+    expect(pushed, '/conversations/conv-q');
   });
 
   testWidgets('masquée sur son propre trajet', (t) async {

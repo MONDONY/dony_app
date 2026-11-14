@@ -32,8 +32,14 @@ class AskQuestionTile extends StatelessWidget {
     required this.onOpenChat,
     required this.onFollowUp,
     this.viewerKycStatus,
+    this.hasActiveBid = false,
     this.cubit,
   });
+
+  /// Le lecteur a déjà une demande en cours sur ce trajet (de la demande à
+  /// la livraison) : il en parle dans sa conversation de réservation, et le
+  /// back ouvrirait un second fil de questions, plafonné pour toujours.
+  final bool hasActiveBid;
 
   final AnnouncementModel announcement;
   final String? viewerId;
@@ -52,13 +58,20 @@ class AskQuestionTile extends StatelessWidget {
   @visibleForTesting
   final AskQuestionCubit? cubit;
 
-  /// Un trajet n'accepte des questions que s'il est ouvert, et pas le sien.
-  static bool isAvailable(AnnouncementModel a, String? viewerId) =>
-      a.status == 'ACTIVE' && (viewerId == null || viewerId != a.travelerId);
+  /// Un trajet n'accepte des questions que s'il est ouvert, pas le sien, et
+  /// sans demande du lecteur déjà en cours dessus.
+  static bool isAvailable(
+    AnnouncementModel a,
+    String? viewerId, {
+    bool hasActiveBid = false,
+  }) =>
+      !hasActiveBid &&
+      a.status == 'ACTIVE' &&
+      (viewerId == null || viewerId != a.travelerId);
 
   @override
   Widget build(BuildContext context) {
-    if (!isAvailable(announcement, viewerId)) {
+    if (!isAvailable(announcement, viewerId, hasActiveBid: hasActiveBid)) {
       return const SizedBox.shrink();
     }
     return BlocProvider<AskQuestionCubit>(

@@ -129,6 +129,88 @@ void main() {
     );
 
     blocTest<AskQuestionCubit, AskQuestionState>(
+      'fil supprimé de mon côté : restauré, le chat s\'ouvre en écriture (I3)',
+      setUp: () {
+        when(() => repo.openInquiry('a1')).thenAnswer(
+          (_) async => const ConversationModel(
+            id: 'conv-q',
+            firestoreConversationId: 'conv_q',
+            otherParticipant: ParticipantModel(id: 't1', name: 'Ibrahima'),
+            kind: ConversationModel.kindInquiry,
+            announcementId: 'a1',
+            deletedBySelf: true,
+          ),
+        );
+        when(
+          () => repo.restoreConversation('conv-q'),
+        ).thenAnswer((_) async => _conv);
+      },
+      build: build,
+      act: (c) => c.ask('a1'),
+      expect: () => [
+        isA<AskQuestionLoading>(),
+        isA<AskQuestionChatReady>().having(
+          (s) => s.conversation.deletedBySelf,
+          'deletedBySelf',
+          isFalse,
+        ),
+        isA<AskQuestionIdle>(),
+      ],
+      verify: (_) {
+        verify(() => repo.restoreConversation('conv-q')).called(1);
+        verify(
+          () => backend.capture(AnalyticsEvents.inquiryOpened, {
+            'restored': true,
+          }),
+        ).called(1);
+      },
+    );
+
+    blocTest<AskQuestionCubit, AskQuestionState>(
+      'fil actif : aucune restauration, restored faux',
+      setUp: () =>
+          when(() => repo.openInquiry('a1')).thenAnswer((_) async => _conv),
+      build: build,
+      act: (c) => c.ask('a1'),
+      verify: (_) {
+        verifyNever(() => repo.restoreConversation(any()));
+        verify(
+          () => backend.capture(AnalyticsEvents.inquiryOpened, {
+            'restored': false,
+          }),
+        ).called(1);
+      },
+    );
+
+    blocTest<AskQuestionCubit, AskQuestionState>(
+      'restauration en échec : présentée, tuile gardée',
+      setUp: () {
+        when(() => repo.openInquiry('a1')).thenAnswer(
+          (_) async => const ConversationModel(
+            id: 'conv-q',
+            firestoreConversationId: 'conv_q',
+            otherParticipant: ParticipantModel(id: 't1', name: 'Ibrahima'),
+            kind: ConversationModel.kindInquiry,
+            deletedBySelf: true,
+          ),
+        );
+        when(
+          () => repo.restoreConversation('conv-q'),
+        ).thenAnswer((_) async => throw const ServerException('boom'));
+      },
+      build: build,
+      act: (c) => c.ask('a1'),
+      expect: () => [
+        isA<AskQuestionLoading>(),
+        isA<AskQuestionFailed>(),
+        isA<AskQuestionIdle>(),
+      ],
+      verify: (_) => verifyNever(
+        () => backend.capture(AnalyticsEvents.inquiryOpened, any()),
+      ),
+    );
+
+    blocTest<AskQuestionCubit, AskQuestionState>(
       'statut inconnu : le serveur tranche (403 kyc-required)',
       setUp: () => when(
         () => repo.openInquiry('a1'),

@@ -137,8 +137,21 @@ class AskQuestionCubit extends Cubit<AskQuestionState> {
     }
     emit(const AskQuestionLoading());
     try {
-      final conversation = await _repository.openInquiry(announcementId);
-      unawaited(_analytics.logEvent(AnalyticsEvents.inquiryOpened));
+      var conversation = await _repository.openInquiry(announcementId);
+      // Fil que l'utilisateur avait supprimé de son côté : le back le rend
+      // tel quel, et le parent Firestore porte `deletedAt`. Ouvert ainsi, le
+      // chat passerait en lecture seule (`_DeletedByOtherParty`) : il est
+      // restauré d'abord, comme `ConversationOpenBloc._open`.
+      final restored = conversation.deletedBySelf;
+      if (restored) {
+        conversation = await _repository.restoreConversation(conversation.id);
+      }
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.inquiryOpened,
+          properties: {'restored': restored},
+        ),
+      );
       if (isClosed) return;
       _settle(AskQuestionChatReady(conversation));
     } on InquiryKycRequiredException {

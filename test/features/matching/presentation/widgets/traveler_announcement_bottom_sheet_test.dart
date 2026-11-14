@@ -831,6 +831,40 @@ void main() {
       expect(find.text('Faire une demande'), findsNothing);
     });
 
+    testWidgets('demande en cours sur ce trajet : pas de « Poser une '
+        'question » (I2)', (tester) async {
+      _registerAskQuestion();
+      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          bidState: BidListLoaded([bidOn('a1', 'PENDING')]),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('see-my-parcel-btn')), findsOneWidget);
+      expect(find.byKey(const Key('ask-question-tile')), findsNothing);
+    });
+
+    testWidgets('colis terminé hors suivi (refusé) : la tuile revient', (
+      tester,
+    ) async {
+      _registerAskQuestion();
+      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          bidState: BidListLoaded([bidOn('a1', 'REJECTED')]),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('ask-question-tile')), findsOneWidget);
+    });
+
     testWidgets(
       'colis EN ROUTE (IN_TRANSIT) sur ce trajet → grisé + « Voir mon colis »',
       (tester) async {
