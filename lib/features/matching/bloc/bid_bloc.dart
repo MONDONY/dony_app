@@ -302,6 +302,12 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bid = await _repository.confirmPresence(event.bidId);
       emit(BidPresenceConfirmed(bid));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.bidPresenceConfirmed,
+          properties: {'transport_mode': bid.transportMode?.name ?? 'unknown'},
+        ),
+      );
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
     }

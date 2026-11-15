@@ -40546,6 +40546,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Pour valider le dépôt, scannez le QR code de l\'expéditeur : un numéro saisi ne suffit pas.'**
   String get errorBoatDepositQrRequiredMessage;
+
+  /// Titre de la feuille de confirmation de présence du voyageur (presence_confirm_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer votre présence ?'**
+  String get bidPresenceSheetTitle;
+
+  /// Engagement rappelé dans la feuille de confirmation de présence, sans date limite connue. Neutre selon le mode de transport (presence_confirm_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous vous engagez à être présent pour récupérer ce colis auprès de l\'expéditeur.'**
+  String get bidPresenceSheetBody;
+
+  /// Engagement rappelé dans la feuille de confirmation de présence, avec la date limite de remise. Neutre selon le mode de transport (presence_confirm_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous vous engagez à être présent pour récupérer ce colis auprès de l\'expéditeur, au plus tard le {date} à {time}.'**
+  String bidPresenceSheetBodyUntil(String date, String time);
+
+  /// Note de la feuille de confirmation de présence : la confirmation est définitive (presence_confirm_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une fois confirmée, votre présence ne peut plus être annulée depuis l\'app.'**
+  String get bidPresenceSheetFinalNote;
 }
 
 class _AppLocalizationsDelegate

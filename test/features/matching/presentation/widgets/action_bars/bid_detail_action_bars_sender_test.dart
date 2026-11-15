@@ -12,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -134,15 +135,68 @@ void main() {
   }
 
   group('ConfirmPresenceBar', () {
-    testWidgets('tap dispatch BidConfirmPresenceRequested', (tester) async {
+    Future<void> openSheet(WidgetTester tester, {BidModel? bid}) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
       await tester.pumpWidget(
-        wrap((_) => ConfirmPresenceBar(bid: _bid(), isLoading: false)),
+        wrap((_) => ConfirmPresenceBar(bid: bid ?? _bid(), isLoading: false)),
       );
       await tester.pumpAndSettle();
-
       expect(find.text(_l.bidDetailConfirmPresence), findsOneWidget);
       await tester.tap(find.byType(DonyButton));
-      await tester.pump();
+      await tester.pumpAndSettle();
+    }
+
+    // Recette bateau : « Confirmer ma présence » validait sans rien demander.
+    testWidgets('le tap ouvre une confirmation, sans appeler le serveur', (
+      tester,
+    ) async {
+      await openSheet(tester);
+
+      expect(find.text(_l.bidPresenceSheetTitle), findsOneWidget);
+      expect(find.text(_l.bidPresenceSheetBody), findsOneWidget);
+      expect(find.text(_l.bidPresenceSheetFinalNote), findsOneWidget);
+      expect(find.byKey(const Key('presence-confirm-yes')), findsOneWidget);
+      expect(find.byKey(const Key('presence-confirm-no')), findsOneWidget);
+      verifyNever(() => bidBloc.add(any()));
+    });
+
+    testWidgets('la confirmation rappelle la date limite de remise', (
+      tester,
+    ) async {
+      final bid = BidModel(
+        id: 'bid-42',
+        announcementId: 'ann-1',
+        senderId: 'sender-1',
+        status: 'ACCEPTED',
+        handoverDeadline: DateTime(2026, 11, 20, 18),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      );
+      await openSheet(tester, bid: bid);
+
+      expect(
+        find.textContaining(RegExp('Vous vous engagez.*18:00')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Annuler referme la feuille sans rien envoyer', (tester) async {
+      await openSheet(tester);
+      await tester.tap(find.byKey(const Key('presence-confirm-no')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(_l.bidPresenceSheetTitle), findsNothing);
+      verifyNever(() => bidBloc.add(any()));
+    });
+
+    testWidgets('Confirmer dispatch BidConfirmPresenceRequested', (
+      tester,
+    ) async {
+      await openSheet(tester);
+      await tester.tap(find.byKey(const Key('presence-confirm-yes')));
+      await tester.pumpAndSettle();
 
       verify(
         () => bidBloc.add(
@@ -156,6 +210,30 @@ void main() {
         ),
       ).called(1);
     });
+
+    for (final mode in TransportMode.values) {
+      testWidgets('textes neutres quel que soit le mode (${mode.name})', (
+        tester,
+      ) async {
+        final bid = BidModel(
+          id: 'bid-42',
+          announcementId: 'ann-1',
+          senderId: 'sender-1',
+          status: 'ACCEPTED',
+          transportMode: mode,
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+        );
+        await openSheet(tester, bid: bid);
+        expect(find.text(_l.bidPresenceSheetBody), findsOneWidget);
+        expect(
+          find.textContaining(
+            RegExp('vol|avion|aéroport|port', caseSensitive: false),
+          ),
+          findsNothing,
+        );
+      });
+    }
 
     testWidgets('chargement : aucun événement au tap', (tester) async {
       await tester.pumpWidget(

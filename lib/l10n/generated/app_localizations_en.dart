@@ -25195,4 +25195,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorBoatDepositQrRequiredMessage =>
       'To confirm the deposit, scan the sender\'s QR code: a typed number is not enough.';
+
+  @override
+  String get bidPresenceSheetTitle => 'Confirm you\'ll be there?';
+
+  @override
+  String get bidPresenceSheetBody =>
+      'You commit to being there to collect this parcel from the sender.';
+
+  @override
+  String bidPresenceSheetBodyUntil(String date, String time) {
+    return 'You commit to being there to collect this parcel from the sender, by $date at $time at the latest.';
+  }
+
+  @override
+  String get bidPresenceSheetFinalNote =>
+      'Once confirmed, your presence can no longer be withdrawn in the app.';
 }

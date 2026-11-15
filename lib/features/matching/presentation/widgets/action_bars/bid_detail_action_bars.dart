@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
@@ -13,6 +16,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/confirm_delete_bid.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/presence_confirm_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/commission_allocation_sheet.dart';
@@ -188,14 +192,27 @@ class ConfirmPresenceBar extends StatelessWidget {
       child: DonyButton(
         label: context.l10n.bidDetailConfirmPresence,
         iconAsset: 'map-pin',
-        onPressed: isLoading
-            ? null
-            : () => context.read<BidBloc>().add(
-                BidConfirmPresenceRequested(bid.id),
-              ),
+        onPressed: isLoading ? null : () => _confirm(context),
         isLoading: isLoading,
       ),
     );
+  }
+
+  /// La présence ne se « dé-confirme » pas : on rappelle l'engagement avant
+  /// d'appeler le serveur.
+  Future<void> _confirm(BuildContext context) async {
+    final confirmed = await PresenceConfirmSheet.show(context, bid: bid);
+    unawaited(
+      getItSafe<AnalyticsService>()?.logEvent(
+        AnalyticsEvents.bidPresenceConfirmPrompted,
+        properties: {
+          'outcome': confirmed ? 'confirmed' : 'dismissed',
+          'transport_mode': bid.transportMode?.name ?? 'unknown',
+        },
+      ),
+    );
+    if (!confirmed || !context.mounted) return;
+    context.read<BidBloc>().add(BidConfirmPresenceRequested(bid.id));
   }
 }
 

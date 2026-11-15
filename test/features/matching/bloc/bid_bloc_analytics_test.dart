@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -22,7 +23,9 @@ BidModel _buildBid({
   String announcementId = 'ann1',
   double? weightKg = 5.0,
   double? pricePerKg = 12.0,
+  TransportMode? transportMode,
 }) => BidModel(
+  transportMode: transportMode,
   id: id,
   announcementId: announcementId,
   senderId: 'sender1',
@@ -329,6 +332,23 @@ void main() {
       () => backend.capture(AnalyticsEvents.bidCancelledBeforePayment, {
         'payment_method': 'stripe',
         'fallback': true,
+      }),
+    ).called(1);
+  });
+
+  test('bid_presence_confirmed fires with the transport mode', () async {
+    when(
+      () => repo.confirmPresence('bid1'),
+    ).thenAnswer((_) async => _buildBid(transportMode: TransportMode.boat));
+
+    final bloc = makeBloc();
+    bloc.add(BidConfirmPresenceRequested('bid1'));
+    await bloc.stream.firstWhere((s) => s is BidPresenceConfirmed);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(
+      () => backend.capture(AnalyticsEvents.bidPresenceConfirmed, {
+        'transport_mode': 'boat',
       }),
     ).called(1);
   });

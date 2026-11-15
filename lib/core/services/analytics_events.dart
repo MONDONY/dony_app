@@ -548,6 +548,14 @@ abstract final class AnalyticsEvents {
   static const bidCancelled = 'bid_cancelled';
   static const bidCancelledBeforePayment = 'bid_cancelled_before_payment';
 
+  /// Feuille « Confirmer ma présence » refermée par le voyageur. Propriétés
+  /// `outcome` (`confirmed`/`dismissed`) et `transport_mode`.
+  static const bidPresenceConfirmPrompted = 'bid_presence_confirm_prompted';
+
+  /// Présence du voyageur confirmée par le serveur
+  /// (`POST /bids/{id}/presence`). Propriété `transport_mode`.
+  static const bidPresenceConfirmed = 'bid_presence_confirmed';
+
   /// Colis non conforme refusé par le voyageur à la remise
   /// (`POST /bids/{id}/refuse-parcel`), confirmé par le serveur. Propriétés
   /// `reason` (code fermé de [ParcelRefusalReason]), `status` (statut avant

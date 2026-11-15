@@ -25375,4 +25375,20 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorBoatDepositQrRequiredMessage =>
       'Pour valider le dépôt, scannez le QR code de l\'expéditeur : un numéro saisi ne suffit pas.';
+
+  @override
+  String get bidPresenceSheetTitle => 'Confirmer votre présence ?';
+
+  @override
+  String get bidPresenceSheetBody =>
+      'Vous vous engagez à être présent pour récupérer ce colis auprès de l\'expéditeur.';
+
+  @override
+  String bidPresenceSheetBodyUntil(String date, String time) {
+    return 'Vous vous engagez à être présent pour récupérer ce colis auprès de l\'expéditeur, au plus tard le $date à $time.';
+  }
+
+  @override
+  String get bidPresenceSheetFinalNote =>
+      'Une fois confirmée, votre présence ne peut plus être annulée depuis l\'app.';
 }
