@@ -22561,6 +22561,72 @@ abstract class AppLocalizations {
   /// **'Contacter le support'**
   String get supportContactCta;
 
+  /// Titre de la carte WhatsApp en tête de l'écran Support (support_whatsapp_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une question ? Écrivez-nous'**
+  String get supportWhatsappTitle;
+
+  /// Titre de la carte WhatsApp en tête du Centre d'aide (support_whatsapp_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Besoin d\'un humain ?'**
+  String get supportWhatsappFaqTitle;
+
+  /// Sous-titre de la carte WhatsApp du support.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse rapide de l\'équipe Yadony sur WhatsApp'**
+  String get supportWhatsappSubtitle;
+
+  /// Bouton de la carte WhatsApp : ouvre la conversation avec l'équipe Yadony. Doit tenir sur une ligne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Écrire sur WhatsApp'**
+  String get supportWhatsappCta;
+
+  /// Message pré-rempli dans WhatsApp ou le SMS vers l'équipe Yadony. Sans donnée personnelle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonjour Yadony, j\'ai besoin d\'aide.'**
+  String get supportWhatsappMessage;
+
+  /// Titre de la feuille de repli quand WhatsApp ne s'ouvre pas.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter Yadony'**
+  String get supportContactSheetTitle;
+
+  /// Texte de la feuille de repli du contact support.
+  ///
+  /// In fr, this message translates to:
+  /// **'WhatsApp n\'est pas disponible sur ce téléphone. Appelez ou écrivez directement au numéro.'**
+  String get supportContactSheetBody;
+
+  /// Bouton de la feuille de repli : ouvre le composeur téléphonique.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler'**
+  String get supportContactCall;
+
+  /// Bouton de la feuille de repli : ouvre la messagerie SMS.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer un SMS'**
+  String get supportContactSms;
+
+  /// Confirmation après la copie du numéro du support.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro copié'**
+  String get supportContactCopied;
+
+  /// Erreur quand le composeur ou les SMS ne s'ouvrent pas depuis la feuille de repli.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'ouvrir l\'application. Copiez le numéro pour le saisir vous-même.'**
+  String get supportContactOpenError;
+
   /// Bouton fixé en bas de l'écran support quand l'utilisateur a déjà des conversations : ouvre la sheet de création d'un nouveau ticket (support_home_screen.dart).
   ///
   /// In fr, this message translates to:

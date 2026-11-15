@@ -733,6 +733,9 @@ abstract final class AnalyticsEvents {
   /// (`team_cancelled_parcel`, `phone_already_used`, `email_change`). Jamais
   /// le sujet ni le message.
   static const supportDraftOpened = 'support_draft_opened';
+  static const supportWhatsappCardShown = 'support_whatsapp_card_shown';
+  static const supportWhatsappOpened = 'support_whatsapp_opened';
+  static const supportContactFallbackAction = 'support_contact_fallback_action';
 
   /// Message utilisateur envoyé dans un ticket support existant. Aucune
   /// propriété : le contenu ne part jamais dans l'analytics.

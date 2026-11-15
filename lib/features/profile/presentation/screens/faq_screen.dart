@@ -6,6 +6,7 @@ import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/support/presentation/widgets/support_whatsapp_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -226,6 +227,7 @@ class _FaqScreenState extends State<FaqScreen> {
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SupportWhatsAppCard(source: 'faq', faqVariant: true),
                 Text(
                   l.faqFindAnswerTitle,
                   style: tt.titleLarge?.copyWith(

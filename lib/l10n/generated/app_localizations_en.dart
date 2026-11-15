@@ -13566,6 +13566,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportContactCta => 'Contact support';
 
   @override
+  String get supportWhatsappTitle => 'Got a question? Write to us';
+
+  @override
+  String get supportWhatsappFaqTitle => 'Need a human?';
+
+  @override
+  String get supportWhatsappSubtitle =>
+      'Quick answers from the Yadony team on WhatsApp';
+
+  @override
+  String get supportWhatsappCta => 'Write on WhatsApp';
+
+  @override
+  String get supportWhatsappMessage => 'Hello Yadony, I need help.';
+
+  @override
+  String get supportContactSheetTitle => 'Contact Yadony';
+
+  @override
+  String get supportContactSheetBody =>
+      'WhatsApp isn\'t available on this phone. Call or text the number directly.';
+
+  @override
+  String get supportContactCall => 'Call';
+
+  @override
+  String get supportContactSms => 'Send an SMS';
+
+  @override
+  String get supportContactCopied => 'Number copied';
+
+  @override
+  String get supportContactOpenError =>
+      'Couldn\'t open the app. Copy the number and dial it yourself.';
+
+  @override
   String get supportNewRequestCta => 'New request';
 
   @override

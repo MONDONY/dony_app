@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/support_contact_test_helpers.dart';
 
 class _MockSupportBloc extends MockBloc<SupportEvent, SupportState>
     implements SupportBloc {}
@@ -31,6 +32,7 @@ void main() {
   late StreamController<SupportState> states;
 
   setUp(() {
+    registerSupportContactCubit();
     useEnglish();
     DonySnackbar.clearDedup();
     bloc = _MockSupportBloc();
