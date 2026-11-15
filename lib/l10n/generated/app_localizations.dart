@@ -40600,6 +40600,90 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Envoi…'**
   String get suiviSendingButton;
+
+  /// Titre du bloc des points à connaître avant un envoi par bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Avant d\'envoyer par bateau'**
+  String get boatWarningsTitle;
+
+  /// Résumé du bloc replié des points à connaître avant un envoi par bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Objets interdits, douane, délais et frais à l\'arrivée : quelques points à connaître.'**
+  String get boatWarningsSummary;
+
+  /// Bouton qui ouvre le détail des points à connaître avant un envoi par bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les points à connaître'**
+  String get boatWarningsShow;
+
+  /// Bouton qui replie le détail des points à connaître avant un envoi par bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Masquer le détail'**
+  String get boatWarningsHide;
+
+  /// Sous-titre : objets interdits en bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Interdits en bateau'**
+  String get boatWarningsForbiddenTitle;
+
+  /// Liste des objets interdits en bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Produits inflammables et aérosols, batteries lithium seules, médicaments, devises et espèces, armes même factices, denrées périssables, contrefaçons, produits animaux ou végétaux réglementés.'**
+  String get boatWarningsForbiddenBody;
+
+  /// Sous-titre : douane à l'arrivée d'un envoi par bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Douane'**
+  String get boatWarningsCustomsTitle;
+
+  /// Avertissement douane d'un envoi par bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les objets neufs et les quantités commerciales peuvent être taxés à l\'arrivée. La douane peut ouvrir les colis : gardez une preuve de la valeur et photographiez le contenu.'**
+  String get boatWarningsCustomsBody;
+
+  /// Sous-titre : délai d'un envoi par bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Délai'**
+  String get boatWarningsDelayTitle;
+
+  /// Avertissement délai d'un envoi par bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le départ peut être retardé si le conteneur n\'est pas plein. Comptez en général 4 à 8 semaines.'**
+  String get boatWarningsDelayBody;
+
+  /// Sous-titre : frais possibles à l'arrivée d'un envoi par bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais à l\'arrivée'**
+  String get boatWarningsFeesTitle;
+
+  /// Avertissement frais à l'arrivée d'un envoi par bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Des frais de manutention ou de stockage peuvent être demandés à l\'arrivée, selon le transporteur.'**
+  String get boatWarningsFeesBody;
+
+  /// Sous-titre : emballage d'un envoi par bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Emballage'**
+  String get boatWarningsPackingTitle;
+
+  /// Conseil d'emballage d'un envoi par bateau (boat_shipping_warnings.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Protégez le colis de l\'humidité. Les objets fragiles sont déconseillés.'**
+  String get boatWarningsPackingBody;
 }
 
 class _AppLocalizationsDelegate

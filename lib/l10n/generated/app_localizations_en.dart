@@ -25234,4 +25234,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suiviSendingButton => 'Sending…';
+
+  @override
+  String get boatWarningsTitle => 'Before shipping by boat';
+
+  @override
+  String get boatWarningsSummary =>
+      'Prohibited items, customs, delays and fees on arrival: a few things to know.';
+
+  @override
+  String get boatWarningsShow => 'See what to know';
+
+  @override
+  String get boatWarningsHide => 'Hide details';
+
+  @override
+  String get boatWarningsForbiddenTitle => 'Not allowed by boat';
+
+  @override
+  String get boatWarningsForbiddenBody =>
+      'Flammable products and aerosols, standalone lithium batteries, medicines, currency and cash, weapons (even replicas), perishable food, counterfeit goods, regulated animal or plant products.';
+
+  @override
+  String get boatWarningsCustomsTitle => 'Customs';
+
+  @override
+  String get boatWarningsCustomsBody =>
+      'New items and commercial quantities may be taxed on arrival. Customs may open parcels: keep proof of value and take photos of the contents.';
+
+  @override
+  String get boatWarningsDelayTitle => 'Timing';
+
+  @override
+  String get boatWarningsDelayBody =>
+      'Departure may be delayed if the container isn\'t full. Expect 4 to 8 weeks in general.';
+
+  @override
+  String get boatWarningsFeesTitle => 'Fees on arrival';
+
+  @override
+  String get boatWarningsFeesBody =>
+      'Handling or storage fees may be charged on arrival, depending on the carrier.';
+
+  @override
+  String get boatWarningsPackingTitle => 'Packing';
+
+  @override
+  String get boatWarningsPackingBody =>
+      'Protect the parcel from moisture. Fragile items are not recommended.';
 }

@@ -845,6 +845,46 @@ void main() {
     });
   });
 
+  group('points à connaître avant d\'envoyer par bateau', () {
+    final warnings = find.byKey(
+      const Key('boat-shipping-warnings'),
+      skipOffstage: false,
+    );
+
+    testWidgets('trajet bateau : bloc affiché, replié, détail à l\'ouverture', (
+      tester,
+    ) async {
+      await openSheet(tester, _boatM3());
+      expect(warnings, findsOneWidget);
+      expect(find.text("Avant d'envoyer par bateau"), findsOneWidget);
+      expect(find.text('Interdits en bateau'), findsNothing);
+
+      final toggle = find.byKey(const Key('boat-shipping-warnings-toggle'));
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(find.text('Interdits en bateau'), findsOneWidget);
+      expect(find.text('Masquer le détail'), findsOneWidget);
+      // Rien de plus à cocher : une seule case, celle de l'accord.
+      expect(find.byType(Checkbox), findsOneWidget);
+    });
+
+    testWidgets('trajet bateau au kilo, en anglais : bloc affiché', (
+      tester,
+    ) async {
+      await openSheet(tester, _kgTrip(TransportMode.boat), locale: AppL10n.en);
+      expect(warnings, findsOneWidget);
+      expect(find.text('Before shipping by boat'), findsOneWidget);
+    });
+
+    for (final mode in [TransportMode.plane, TransportMode.car]) {
+      testWidgets('${mode.name} : aucun bloc', (tester) async {
+        await openSheet(tester, _kgTrip(mode));
+        expect(warnings, findsNothing);
+      });
+    }
+  });
+
   group('boutons sur une ligne à 360 dp', () {
     setUpAll(loadAppFonts);
 

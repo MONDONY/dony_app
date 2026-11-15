@@ -18,6 +18,7 @@ import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/payout_wording.dart';
+import 'package:dony/features/matching/presentation/widgets/boat_shipping_warnings.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -850,6 +851,15 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                     color: p.n600,
                     height: 1.4,
                   ),
+                ),
+              ),
+
+            // ── Bateau : points à connaître avant d'envoyer ────────────────
+            if (isBoat)
+              const Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: BoatShippingWarnings(
+                  source: BoatWarningsSource.requestCreate,
                 ),
               ),
 

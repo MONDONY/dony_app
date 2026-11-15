@@ -25414,4 +25414,52 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get suiviSendingButton => 'Envoi…';
+
+  @override
+  String get boatWarningsTitle => 'Avant d\'envoyer par bateau';
+
+  @override
+  String get boatWarningsSummary =>
+      'Objets interdits, douane, délais et frais à l\'arrivée : quelques points à connaître.';
+
+  @override
+  String get boatWarningsShow => 'Voir les points à connaître';
+
+  @override
+  String get boatWarningsHide => 'Masquer le détail';
+
+  @override
+  String get boatWarningsForbiddenTitle => 'Interdits en bateau';
+
+  @override
+  String get boatWarningsForbiddenBody =>
+      'Produits inflammables et aérosols, batteries lithium seules, médicaments, devises et espèces, armes même factices, denrées périssables, contrefaçons, produits animaux ou végétaux réglementés.';
+
+  @override
+  String get boatWarningsCustomsTitle => 'Douane';
+
+  @override
+  String get boatWarningsCustomsBody =>
+      'Les objets neufs et les quantités commerciales peuvent être taxés à l\'arrivée. La douane peut ouvrir les colis : gardez une preuve de la valeur et photographiez le contenu.';
+
+  @override
+  String get boatWarningsDelayTitle => 'Délai';
+
+  @override
+  String get boatWarningsDelayBody =>
+      'Le départ peut être retardé si le conteneur n\'est pas plein. Comptez en général 4 à 8 semaines.';
+
+  @override
+  String get boatWarningsFeesTitle => 'Frais à l\'arrivée';
+
+  @override
+  String get boatWarningsFeesBody =>
+      'Des frais de manutention ou de stockage peuvent être demandés à l\'arrivée, selon le transporteur.';
+
+  @override
+  String get boatWarningsPackingTitle => 'Emballage';
+
+  @override
+  String get boatWarningsPackingBody =>
+      'Protégez le colis de l\'humidité. Les objets fragiles sont déconseillés.';
 }

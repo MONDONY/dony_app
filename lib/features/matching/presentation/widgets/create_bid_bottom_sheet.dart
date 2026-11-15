@@ -37,6 +37,7 @@ import 'package:dony/features/matching/data/models/bid_volume_input.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/payout_wording.dart';
+import 'package:dony/features/matching/presentation/widgets/boat_shipping_warnings.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/bid_item_size_block.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/bid_volume_section.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/photo_section.dart';
@@ -1889,6 +1890,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               ],
             ),
             const SizedBox(height: DonySpacing.xxl),
+
+            // ── Bateau : points à connaître avant de réserver ─────────────
+            // Information seule, rien de plus à cocher.
+            if (widget.announcement.transportMode == TransportMode.boat) ...[
+              const BoatShippingWarnings(source: BoatWarningsSource.bidCreate),
+              const SizedBox(height: DonySpacing.md),
+            ],
 
             // ── Disclaimer ────────────────────────────────────────────────
             _DisclaimerCard(

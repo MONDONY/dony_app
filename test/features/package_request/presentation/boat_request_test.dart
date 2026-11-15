@@ -587,6 +587,10 @@ void main() {
         // Pas de segment « Prix au m³ » hors bateau.
         expect(perM3, findsNothing);
         expect(
+          find.byKey(const Key('boat-shipping-warnings'), skipOffstage: false),
+          findsNothing,
+        );
+        expect(
           find.byKey(const Key('request-boat-deposit-notice')),
           findsNothing,
         );
@@ -598,9 +602,27 @@ void main() {
     ) async {
       await pump(tester, _seed(mode: TransportMode.car, weight: 5));
       expect(perM3, findsNothing);
+      expect(
+        find.byKey(const Key('boat-shipping-warnings'), skipOffstage: false),
+        findsNothing,
+      );
       await total(tester, '5000');
       expect(canContinue.value, isTrue);
       expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('bateau : points à connaître avant d\'envoyer affichés', (
+      tester,
+    ) async {
+      await pump(tester, _seed(l: 50, w: 40, h: 50));
+      expect(
+        find.byKey(const Key('boat-shipping-warnings'), skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(
+        find.text("Avant d'envoyer par bateau", skipOffstage: false),
+        findsOneWidget,
+      );
     });
 
     testWidgets('boat_depositNoticeShown : délai et versement au dépôt', (

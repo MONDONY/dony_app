@@ -1394,6 +1394,15 @@ abstract final class AnalyticsEvents {
   /// du formulaire de trajet, voyageur non vérifié) touché. Aucune propriété.
   static const tripBoatBadgeRequestTapped = 'trip_boat_badge_request_tapped';
 
+  /// Points à connaître avant d'envoyer par bateau affichés à l'expéditeur
+  /// (réservation d'un trajet bateau, demande d'envoi par bateau). Propriété
+  /// `source` : `bid_create` / `request_create`. Aucune donnée du colis.
+  static const boatWarningsViewed = 'boat_warnings_viewed';
+
+  /// Détail de ces points ouvert (une fois par affichage). Propriété `source`
+  /// comme [boatWarningsViewed].
+  static const boatWarningsExpanded = 'boat_warnings_expanded';
+
   // ── Suivi approximatif du voyageur ─────────────────────────────────────
   /// « Je pars » confirmé depuis l'écran du trajet (propriété `has_position`).
   /// Jamais de coordonnées.
