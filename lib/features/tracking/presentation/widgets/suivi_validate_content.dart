@@ -463,7 +463,7 @@ class _ParcelList extends StatelessWidget {
                 for (var i = 0; i < bids.length; i++) ...[
                   if (i > 0)
                     Divider(height: 1, color: cs.outline.withValues(alpha: .6)),
-                  _ParcelRow(
+                  SuiviParcelRow(
                     bid: bids[i],
                     lastScan: _lastScanOf(bids[i]),
                     onValidate: onValidateParcel,
@@ -492,16 +492,29 @@ class _ParcelList extends StatelessWidget {
   }
 }
 
-class _ParcelRow extends StatelessWidget {
-  const _ParcelRow({
+/// Ligne d'un colis dans « Colis du trajet » : libellé, progression et
+/// bouton de l'étape suivante.
+///
+/// Le bouton garde son libellé sur une ligne : quand il ne tient pas à côté
+/// des informations (écran étroit, texte agrandi), il passe dessous au lieu
+/// de se couper sur plusieurs lignes.
+class SuiviParcelRow extends StatelessWidget {
+  const SuiviParcelRow({
     required this.bid,
     required this.lastScan,
     required this.onValidate,
+    super.key,
   });
 
   final BidModel bid;
   final TripScanHistoryEntryModel? lastScan;
   final void Function(BidModel bid, String step) onValidate;
+
+  static const double _avatarRadius = 18;
+
+  /// Part maximale de la ligne que le bouton peut occuper à côté des
+  /// informations du colis.
+  static const double _inlineButtonMaxShare = 0.4;
 
   @override
   Widget build(BuildContext context) {
@@ -527,6 +540,36 @@ class _ParcelRow extends StatelessWidget {
       subtitle = null;
     }
 
+    final avatar = ExcludeSemantics(
+      child: CircleAvatar(
+        radius: _avatarRadius,
+        backgroundColor: cs.surfaceWarm,
+        child: Text(
+          label.characters.first.toUpperCase(),
+          style: tt.labelLarge?.copyWith(color: DonyColors.terra800),
+        ),
+      ),
+    );
+
+    final info = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+        const SizedBox(height: DonySpacing.xs),
+        _StepSegments(progress: progress),
+        if (subtitle != null) ...[
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            subtitle,
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontFeatures: _tabular,
+            ),
+          ),
+        ],
+      ],
+    );
+
     return InkWell(
       key: Key('suivi-parcel-${bid.id}'),
       onTap: () => context.push('/bids/${bid.id}'),
@@ -535,79 +578,115 @@ class _ParcelRow extends StatelessWidget {
           horizontal: DonySpacing.md,
           vertical: DonySpacing.md,
         ),
-        child: Row(
-          children: [
-            ExcludeSemantics(
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: cs.surfaceWarm,
-                child: Text(
-                  label.characters.first.toUpperCase(),
-                  style: tt.labelLarge?.copyWith(color: DonyColors.terra800),
-                ),
-              ),
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: next == null
+            ? Row(
                 children: [
-                  Text(
-                    label,
-                    style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: DonySpacing.xs),
-                  _StepSegments(progress: progress),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: DonySpacing.xs),
-                    Text(
-                      subtitle,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontFeatures: _tabular,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: DonySpacing.sm),
-            // Flexible : à 200 % de texte, le libellé passe à la ligne au
-            // lieu de pousser la ligne hors de l'écran.
-            Flexible(
-              flex: 2,
-              child: next != null
-                  ? TextButton(
-                      key: Key('suivi-validate-${bid.id}'),
-                      onPressed: () => onValidate(bid, next),
-                      style: TextButton.styleFrom(
-                        backgroundColor: cs.primary.withValues(alpha: 0.10),
-                        foregroundColor: cs.primary,
-                        minimumSize: const Size(44, 44),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.md,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(DonyRadius.md),
-                        ),
-                      ),
-                      child: Text(
-                        l.suiviValidateStep(next),
-                        textAlign: TextAlign.center,
-                        style: tt.labelLarge,
-                      ),
-                    )
-                  : Text(
+                  avatar,
+                  const SizedBox(width: DonySpacing.md),
+                  Expanded(flex: 3, child: info),
+                  const SizedBox(width: DonySpacing.sm),
+                  Flexible(
+                    flex: 2,
+                    child: Text(
                       l.suiviAllValidated,
                       textAlign: TextAlign.end,
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
-            ),
-          ],
-        ),
+                  ),
+                ],
+              )
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  final buttonLabel = l.suiviValidateStep(next);
+                  final buttonWidth =
+                      _labelWidth(context, buttonLabel, tt.labelLarge) +
+                      2 * DonySpacing.md;
+                  final inline =
+                      buttonWidth <=
+                      constraints.maxWidth * _inlineButtonMaxShare;
+                  if (inline) {
+                    return Row(
+                      children: [
+                        avatar,
+                        const SizedBox(width: DonySpacing.md),
+                        Expanded(child: info),
+                        const SizedBox(width: DonySpacing.sm),
+                        _validateButton(context, next, buttonLabel, 1),
+                      ],
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          avatar,
+                          const SizedBox(width: DonySpacing.md),
+                          Expanded(child: info),
+                        ],
+                      ),
+                      const SizedBox(height: DonySpacing.sm),
+                      // Aligné sur le texte du colis, sous l'avatar.
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(
+                          start: 2 * _avatarRadius + DonySpacing.md,
+                        ),
+                        child: _validateButton(context, next, buttonLabel, 2),
+                      ),
+                    ],
+                  );
+                },
+              ),
       ),
     );
+  }
+
+  Widget _validateButton(
+    BuildContext context,
+    String next,
+    String buttonLabel,
+    int maxLines,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return TextButton(
+      key: Key('suivi-validate-${bid.id}'),
+      onPressed: () => onValidate(bid, next),
+      style: TextButton.styleFrom(
+        backgroundColor: cs.primary.withValues(alpha: 0.10),
+        foregroundColor: cs.primary,
+        minimumSize: const Size(44, 44),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+        ),
+      ),
+      child: Text(
+        buttonLabel,
+        key: Key('suivi-validate-label-${bid.id}'),
+        textAlign: TextAlign.center,
+        maxLines: maxLines,
+        overflow: TextOverflow.ellipsis,
+        style: tt.labelLarge,
+      ),
+    );
+  }
+
+  /// Largeur du libellé sur une ligne, à la taille de texte de l'appareil.
+  static double _labelWidth(
+    BuildContext context,
+    String text,
+    TextStyle? style,
+  ) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    return width;
   }
 }
 
