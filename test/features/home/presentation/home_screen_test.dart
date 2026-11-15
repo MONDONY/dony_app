@@ -26,6 +26,7 @@ import 'package:dony/features/content_categories/data/content_category_model.dar
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
+import 'package:dony/features/home/bloc/home_search_session_cubit.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/data/home_matching_default_store.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
@@ -780,6 +781,79 @@ Widget _buildHomeStubRoutes({
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
+
+Widget _buildHomeInShell({required MockAnnouncementBloc announcementBloc}) {
+  final authBloc = MockAuthBloc();
+  final roleCubit = MockActiveRoleCubit();
+  final notifBloc = MockNotificationBloc();
+  final bidBloc = MockBidBloc();
+  when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+  when(() => announcementBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => authBloc.state).thenReturn(
+    AuthAuthenticated(_makeUser(roles: const ['SENDER', 'TRAVELER'])),
+  );
+  when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => roleCubit.state).thenReturn(ActiveRole.sender);
+  when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
+  when(() => notifBloc.state).thenReturn(const NotificationInitial());
+  when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => bidBloc.state).thenReturn(BidInitial());
+  when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+
+  Widget stub(String label) => Scaffold(
+    body: Builder(
+      builder: (ctx) =>
+          TextButton(onPressed: () => ctx.pop(), child: Text(label)),
+    ),
+  );
+
+  final router = GoRouter(
+    initialLocation: '/home',
+    routes: [
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, shell) => Scaffold(body: shell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/other', builder: (_, _) => stub('OTHER'))],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/announcements/:id/trip',
+        builder: (_, _) => stub('STUB_TRIP'),
+      ),
+      _composerRoute(),
+    ],
+  );
+
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
+      BlocProvider<AuthBloc>.value(value: authBloc),
+      BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+      BlocProvider<NotificationBloc>.value(value: notifBloc),
+      BlocProvider<BidBloc>.value(value: bidBloc),
+      BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
+      _helpCenterProvider(),
+    ],
+    child: MaterialApp.router(
+      routerConfig: router,
+      theme: AppTheme.light(),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('fr'), Locale('en')],
+      locale: const Locale('fr'),
+    ),
+  );
+}
 
 void main() {
   late MockAnalyticsService analytics;
@@ -2206,6 +2280,78 @@ void main() {
       expect(last.minAvailableKg, 23);
       expect(last.maxAvailableKg, isNull);
       expect(chipLabel(tester), 'Kilos');
+    });
+  });
+
+  // Recette bateau (Redmi) : le filtre Bateau disparaissait au retour sur
+  // l'onglet. Une navigation par `go()` hors du shell détruit l'écran
+  // Rechercher ; recréé, il repartait de filtres vides.
+  group('filtre Transport conservé quand l\'écran est recréé', () {
+    Future<MockAnnouncementBloc> pickBoatThenLeaveShell(
+      WidgetTester tester,
+    ) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: true),
+      );
+      final bloc = MockAnnouncementBloc();
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_buildHomeInShell(announcementBloc: bloc));
+      await tester.pump(const Duration(milliseconds: 1000));
+      final chip = find.byKey(const Key('home-chip-transport'));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bateau'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<HomeSmallChip>(chip).label, 'Bateau');
+
+      // Ouverture d'un trajet hors du shell puis retour sur l'onglet.
+      GoRouter.of(tester.element(chip)).go('/announcements/a1/trip');
+      await tester.pumpAndSettle();
+      GoRouter.of(tester.element(find.text('STUB_TRIP'))).go('/home');
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 1000));
+      return bloc;
+    }
+
+    testWidgets('le filtre Bateau et la recherche bateau reviennent', (
+      tester,
+    ) async {
+      getIt.registerSingleton<HomeSearchSessionCubit>(HomeSearchSessionCubit());
+      final bloc = await pickBoatThenLeaveShell(tester);
+
+      final chip = find.byKey(const Key('home-chip-transport'));
+      expect(tester.widget<HomeSmallChip>(chip).label, 'Bateau');
+      final searches = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<AnnouncementSearchRequested>().toList();
+      expect(searches.last.transportMode, TransportMode.boat);
+    });
+
+    testWidgets('après déconnexion, la recherche repart de zéro', (
+      tester,
+    ) async {
+      final session = HomeSearchSessionCubit();
+      getIt.registerSingleton<HomeSearchSessionCubit>(session);
+      await pickBoatThenLeaveShell(tester);
+      session.reset();
+
+      final router = GoRouter.of(
+        tester.element(find.byKey(const Key('home-chip-transport'))),
+      );
+      router.go('/announcements/a2/trip');
+      await tester.pumpAndSettle();
+      router.go('/home');
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      final chip = find.byKey(const Key('home-chip-transport'));
+      expect(tester.widget<HomeSmallChip>(chip).label, isNot('Bateau'));
     });
   });
 

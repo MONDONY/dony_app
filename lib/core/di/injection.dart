@@ -123,6 +123,7 @@ import 'package:dony/features/flights/data/repositories/flights_repository.dart'
 import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
 import 'package:dony/features/gp_pro/data/datasources/gp_pro_remote_datasource.dart';
 import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
+import 'package:dony/features/home/bloc/home_search_session_cubit.dart';
 import 'package:dony/features/home/data/home_matching_default_store.dart';
 import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
 import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
@@ -540,6 +541,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<PendingSearchNotifier>(
     () => PendingSearchNotifier(),
+  );
+  getIt.registerLazySingleton<HomeSearchSessionCubit>(
+    HomeSearchSessionCubit.new,
   );
   getIt.registerLazySingleton<HomeMatchingDefaultStore>(
     () => HomeMatchingDefaultStore(getIt<HiveService>().userPrefs),

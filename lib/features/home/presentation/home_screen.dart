@@ -21,6 +21,7 @@ import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/home/bloc/home_search_session_cubit.dart';
 import 'package:dony/features/home/data/home_matching_default_store.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
@@ -400,7 +401,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Mode de recherche courant. Deux valeurs exclusives : il n'existe plus de
   /// vue mixte. Le mode pilote la liste, les marqueurs de carte, les chips
   /// spécifiques et la feuille de filtres.
-  late SearchMode _mode;
+  late SearchMode _modeValue;
+  SearchMode get _mode => _modeValue;
+  set _mode(SearchMode value) {
+    _modeValue = value;
+    _rememberSearch();
+  }
 
   /// Mode dicté par la dernière intention connue : sert à ne réagir qu'à un
   /// vrai changement d'intention, pas à un rechargement qui rend la même.
@@ -409,7 +415,20 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Filtres de recherche, communs et spécifiques réunis. Un seul porteur pour
   /// les deux modes : c'est ce qui fait survivre le corridor et la date à la
   /// bascule, là où deux jeux de champs parallèles les perdaient.
-  HomeSearchFilters _filters = const HomeSearchFilters();
+  HomeSearchFilters _filtersValue = const HomeSearchFilters();
+  HomeSearchFilters get _filters => _filtersValue;
+  set _filters(HomeSearchFilters value) {
+    _filtersValue = value;
+    _rememberSearch();
+  }
+
+  /// Dernière recherche de la session : survit à la destruction de l'écran
+  /// (voir [HomeSearchSessionCubit]). `null` hors DI complète.
+  final HomeSearchSessionCubit? _searchSession =
+      getItSafe<HomeSearchSessionCubit>();
+
+  void _rememberSearch() =>
+      _searchSession?.remember(filters: _filtersValue, mode: _modeValue);
 
   /// Nombre de résultats de l'autre mode, pour le compteur du segment inactif.
   /// Null tant qu'aucun filtre commun n'est posé, le total serait alors un
@@ -444,7 +463,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
           ? activationState.status.intent
           : null,
     );
-    _mode = _intentMode;
+    _modeValue = _intentMode;
+    // Écran recréé dans la même session (shell détruit par un `go()` hors de
+    // ses onglets) : la recherche reprend où la personne l'avait laissée, filtre
+    // Transport compris.
+    final saved = _searchSession?.state;
+    if (saved?.mode case final mode?) _modeValue = mode;
+    if (saved?.filters case final filters?) {
+      _filtersValue = filters.withTransportLimitedTo(
+        transportModes.searchModes,
+      );
+    }
     if (HomeSheetSession.takeFullOpening()) {
       _sheetStartsFull = true;
       _sheetSize = 1.0;
