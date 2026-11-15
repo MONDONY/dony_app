@@ -1,8 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/utils/bid_parcel_size.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
@@ -177,11 +177,8 @@ class _NumberRecap extends StatelessWidget {
       if (progress.depart) trackingStepLabel(l, 'DEPART'),
       if (progress.transit) trackingStepLabel(l, 'TRANSIT'),
     ];
-    final weight = bid.displayWeightKg;
-    final details = [
-      if (weight != null) formatWeightKg(l, weight),
-      ?bid.trackingNumber,
-    ].join(' · ');
+    final size = bidParcelSizeLabel(l, bid, withItemSize: false);
+    final details = [?size, ?bid.trackingNumber].join(' · ');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

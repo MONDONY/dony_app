@@ -10,8 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-/// Section optionnelle « Photos du colis » du formulaire de création de bid.
-/// Lit [BidPhotosCubit] depuis le provider ambiant. Max 4 photos.
+/// Section « Photos du colis » du formulaire de création de bid. Une photo
+/// au moins est obligatoire pour envoyer la demande (tous modes, bateau
+/// compris) : la tuile d'ajout le dit, jamais « recommandé ». Lit
+/// [BidPhotosCubit] depuis le provider ambiant. Max 4 photos.
 class PhotoSection extends StatelessWidget {
   const PhotoSection({super.key});
 
@@ -195,7 +197,7 @@ class _AddPhotoCta extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                context.l10n.requestCreateAddPhotoSubtitle,
+                context.l10n.bidCreateAddPhotoRequiredSubtitle,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],

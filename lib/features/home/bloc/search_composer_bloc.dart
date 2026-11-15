@@ -121,6 +121,9 @@ class SearchComposerBloc
         clearTransportMode: true,
         clearMinItemSize: true,
         clearViaCity: true,
+        clearMinVolumeM3: true,
+        clearMaxPricePerM3: true,
+        clearArrivalWeeks: true,
         kycVerifiedOnly: false,
         clearContentType: true,
         clearUrgencyFilter: true,
@@ -169,6 +172,9 @@ class SearchComposerBloc
           paymentMethods: q.paymentMethods,
           minItemSize: q.minItemSize,
           viaCity: q.viaCity,
+          minVolumeM3: q.minVolumeM3,
+          maxPricePerM3: q.maxPricePerM3,
+          arrivalBefore: q.arrivalBefore,
         );
       } else {
         final q = filters.toPackageRequestQuery();

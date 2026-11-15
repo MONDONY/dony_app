@@ -55,3 +55,11 @@ bool tripRecipientsToNotifyDue(String tripStatus, List<BidModel> bids) =>
 /// Colis pas encore chargés ([bids] `null`) : 0.
 int tripHandedOverParcelCount(List<BidModel>? bids) =>
     bids?.where((b) => _handedOverStatuses.contains(b.status)).length ?? 0;
+
+/// Expéditeurs distincts des colis remis, en transit ou arrivés : ceux que le
+/// serveur prévient d'un retard annoncé. Colis pas encore chargés ([bids]
+/// `null`) : 0.
+int tripDelaySenderCount(List<BidModel>? bids) => {
+  for (final b in bids ?? const <BidModel>[])
+    if (_handedOverStatuses.contains(b.status)) b.senderId,
+}.length;

@@ -819,9 +819,13 @@ void main() {
           transportMode: TransportMode.plane,
           suitcase23Only: true,
         );
+        // Le bateau n'a pas de valise de 23 kg : elle est effacée (voir le
+        // groupe des filtres propres au bateau).
         final toBoat = plane.withTransportModeChanged(TransportMode.boat);
         expect(toBoat.transportMode, TransportMode.boat);
-        expect(toBoat.suitcase23Only, isTrue);
+        expect(toBoat.suitcase23Only, isFalse);
+        final toPlane = plane.withTransportModeChanged(TransportMode.plane);
+        expect(toPlane.suitcase23Only, isTrue);
       });
 
       test(
@@ -844,11 +848,11 @@ void main() {
     });
 
     group('curseur Capacité selon le mode', () {
-      test('maximum : 1 000 kg en route, 50 kg sinon', () {
+      test('maximum : 1 000 kg en route et en bateau, 50 kg sinon', () {
         expect(capacitySliderMaxKgFor(TransportMode.car), 1000);
         expect(capacitySliderMaxKgFor(TransportMode.bus), 1000);
+        expect(capacitySliderMaxKgFor(TransportMode.boat), 1000);
         expect(capacitySliderMaxKgFor(TransportMode.plane), 50);
-        expect(capacitySliderMaxKgFor(TransportMode.boat), 50);
         expect(capacitySliderMaxKgFor(null), kCapacitySliderMaxKg);
         expect(kCapacitySliderMaxKg, 50);
       });
@@ -878,6 +882,232 @@ void main() {
         expect(capacityBoundsFromSlider(1, 49).max, 49);
         expect(capacityBoundsFromSlider(1, 50).max, isNull);
         expect(capacityBoundsFromSlider(10, 50, sliderMaxKg: max).min, 10);
+      });
+    });
+
+    group('filtres propres au bateau : volume, prix au m³, arrivée', () {
+      const boat = HomeSearchFilters(
+        transportMode: TransportMode.boat,
+        minVolumeM3: 2.5,
+        maxPricePerM3: 600,
+        arrivalWithinWeeks: 6,
+      );
+
+      DateTime inWeeks(int weeks) {
+        final now = DateTime.now();
+        return DateTime(now.year, now.month, now.day + weeks * 7);
+      }
+
+      test('boatFilters_sendParams : requête, clés et compteur', () {
+        final q = boat.toAnnouncementQuery();
+        expect(q.minVolumeM3, 2.5);
+        expect(q.maxPricePerM3, 600);
+        expect(q.arrivalBefore, inWeeks(6));
+        expect(q.transportMode, TransportMode.boat);
+        expect(
+          boat.activeKeys,
+          containsAll({
+            'transport_mode',
+            'min_volume',
+            'max_price_per_m3',
+            'arrival_window',
+          }),
+        );
+        // Transport + trois filtres bateau.
+        expect(boat.activeCountFor(SearchMode.trips), 4);
+        expect(boat.activeCountFor(SearchMode.parcels), 0);
+      });
+
+      test('arrivée : aujourd\'hui + 4, 6 ou 8 semaines, minuit local', () {
+        for (final weeks in BoatSearchLimits.arrivalWeeks) {
+          final f = boat.copyWith(arrivalWithinWeeks: weeks);
+          expect(f.arrivalBefore, inWeeks(weeks));
+          expect(f.toAnnouncementQuery().arrivalBefore, inWeeks(weeks));
+        }
+        // Une valeur hors liste n'est jamais envoyée.
+        expect(boat.copyWith(arrivalWithinWeeks: 5).arrivalBefore, isNull);
+      });
+
+      test('jamais envoyés hors bateau, même si l\'état en garde', () {
+        for (final mode in [
+          null,
+          TransportMode.plane,
+          TransportMode.car,
+          TransportMode.bus,
+        ]) {
+          final f = HomeSearchFilters(
+            transportMode: mode,
+            minVolumeM3: 2.5,
+            maxPricePerM3: 600,
+            arrivalWithinWeeks: 6,
+          );
+          final q = f.toAnnouncementQuery();
+          expect(q.minVolumeM3, isNull, reason: '$mode');
+          expect(q.maxPricePerM3, isNull, reason: '$mode');
+          expect(q.arrivalBefore, isNull, reason: '$mode');
+          expect(f.activeKeys, isNot(contains('min_volume')));
+          expect(f.activeKeys, isNot(contains('arrival_window')));
+        }
+      });
+
+      test('valeurs bornées comme le back : jamais un 400', () {
+        HomeSearchFilters with_({double? volume, double? price}) =>
+            HomeSearchFilters(
+              transportMode: TransportMode.boat,
+              minVolumeM3: volume,
+              maxPricePerM3: price,
+            );
+        // Volume : 0,1 à 9 999.
+        expect(with_(volume: 0.05).toAnnouncementQuery().minVolumeM3, isNull);
+        expect(with_(volume: -1).toAnnouncementQuery().minVolumeM3, isNull);
+        expect(with_(volume: 0).toAnnouncementQuery().minVolumeM3, isNull);
+        expect(with_(volume: 10000).toAnnouncementQuery().minVolumeM3, isNull);
+        expect(with_(volume: 0.1).toAnnouncementQuery().minVolumeM3, 0.1);
+        expect(with_(volume: 9999).toAnnouncementQuery().minVolumeM3, 9999);
+        expect(
+          with_(volume: double.nan).toAnnouncementQuery().minVolumeM3,
+          isNull,
+        );
+        // Prix : au-dessus de zéro, 10 000 000 au plus.
+        expect(with_(price: 0).toAnnouncementQuery().maxPricePerM3, isNull);
+        expect(with_(price: -5).toAnnouncementQuery().maxPricePerM3, isNull);
+        expect(
+          with_(price: 10000000.01).toAnnouncementQuery().maxPricePerM3,
+          isNull,
+        );
+        expect(
+          with_(price: 10000000).toAnnouncementQuery().maxPricePerM3,
+          10000000,
+        );
+        // Plus de 4 décimales : ramené à 4 (le back refuse au-delà).
+        expect(with_(volume: 0.1 + 0.2).toAnnouncementQuery().minVolumeM3, 0.3);
+        // Une valeur hors bornes ne compte pas comme un filtre actif.
+        expect(with_(volume: 0).activeKeys, {'transport_mode'});
+        expect(with_(volume: 0).activeCountFor(SearchMode.trips), 1);
+      });
+
+      test('écriture serveur : sans notation scientifique, ≤ 4 décimales', () {
+        expect(BoatSearchLimits.wire(600), '600');
+        expect(BoatSearchLimits.wire(2.5), '2.5');
+        expect(BoatSearchLimits.wire(0.1 + 0.2), '0.3');
+        expect(BoatSearchLimits.wire(0.12345), '0.1235');
+        expect(BoatSearchLimits.wire(10000000), '10000000');
+        expect(BoatSearchLimits.wire(0.0001), '0.0001');
+        expect(BoatSearchLimits.wire(1234.5), '1234.5');
+      });
+
+      test('entrer en bateau efface Valise, Urgent et escales', () {
+        const plane = HomeSearchFilters(
+          transportMode: TransportMode.plane,
+          suitcase23Only: true,
+          urgentOnly: true,
+          stopsFilter: StopsFilter.directOnly,
+        );
+        final next = plane.withTransportModeChanged(TransportMode.boat);
+        expect(next.transportMode, TransportMode.boat);
+        expect(next.suitcase23Only, isFalse);
+        expect(next.urgentOnly, isFalse);
+        expect(next.stopsFilter, isNull);
+        // Tous les modes : même règle.
+        final fromAll = const HomeSearchFilters(
+          urgentOnly: true,
+        ).withTransportModeChanged(TransportMode.boat);
+        expect(fromAll.urgentOnly, isFalse);
+      });
+
+      test('quitter le bateau efface volume, prix au m³ et arrivée', () {
+        for (final mode in [null, TransportMode.plane, TransportMode.car]) {
+          final next = boat.withTransportModeChanged(mode);
+          expect(next.minVolumeM3, isNull, reason: '$mode');
+          expect(next.maxPricePerM3, isNull, reason: '$mode');
+          expect(next.arrivalWithinWeeks, isNull, reason: '$mode');
+        }
+        // Rester en bateau : tout est gardé.
+        final kept = boat.withTransportModeChanged(TransportMode.boat);
+        expect(kept.minVolumeM3, 2.5);
+        expect(kept.maxPricePerM3, 600);
+        expect(kept.arrivalWithinWeeks, 6);
+      });
+
+      test('« Urgent » resté d\'un autre mode : ni envoyé ni compté', () {
+        const f = HomeSearchFilters(
+          transportMode: TransportMode.boat,
+          urgentOnly: true,
+        );
+        expect(f.toAnnouncementQuery().urgent, isNull);
+        expect(f.activeCountFor(SearchMode.trips), 1);
+        // Mode Colis : l'urgence s'y applique toujours.
+        expect(f.activeCountFor(SearchMode.parcels), 1);
+        expect(f.toPackageRequestQuery().urgent, isTrue);
+        // Avion : inchangé.
+        const plane = HomeSearchFilters(
+          transportMode: TransportMode.plane,
+          urgentOnly: true,
+        );
+        expect(plane.toAnnouncementQuery().urgent, isTrue);
+      });
+
+      test(
+        'planeFiltersUnchanged : avion et route, aucun paramètre bateau',
+        () {
+          const plane = HomeSearchFilters(
+            transportMode: TransportMode.plane,
+            suitcase23Only: true,
+            maxPricePerKg: 8,
+            weightMin: 10,
+          );
+          final q = plane.toAnnouncementQuery();
+          expect(q.minAvailableKg, 23);
+          expect(q.maxPricePerKg, 8);
+          expect(q.minVolumeM3, isNull);
+          expect(q.maxPricePerM3, isNull);
+          expect(q.arrivalBefore, isNull);
+          expect(plane.activeKeys, {
+            'suitcase_23',
+            'price',
+            'weight',
+            'transport_mode',
+          });
+        },
+      );
+
+      test(
+        'capacité 600 kg gardée de la route au bateau, effacée vers l\'avion',
+        () {
+          const road = HomeSearchFilters(
+            transportMode: TransportMode.car,
+            weightMin: 600,
+          );
+          expect(
+            road.withTransportModeChanged(TransportMode.boat).weightMin,
+            600,
+          );
+          expect(
+            road.withTransportModeChanged(TransportMode.plane).weightMin,
+            isNull,
+          );
+          const boatHeavy = HomeSearchFilters(
+            transportMode: TransportMode.boat,
+            weightMin: 600,
+          );
+          expect(boatHeavy.withTransportModeChanged(null).weightMin, isNull);
+        },
+      );
+
+      test('copyWith : clear* retire un seul filtre', () {
+        final noVolume = boat.copyWith(clearMinVolumeM3: true);
+        expect(noVolume.minVolumeM3, isNull);
+        expect(noVolume.maxPricePerM3, 600);
+        final noPrice = boat.copyWith(clearMaxPricePerM3: true);
+        expect(noPrice.maxPricePerM3, isNull);
+        expect(noPrice.arrivalWithinWeeks, 6);
+        expect(
+          boat.copyWith(clearArrivalWeeks: true).arrivalWithinWeeks,
+          isNull,
+        );
+        // Un copyWith sans rien garde tout, y compris l'interversion du
+        // corridor.
+        expect(boat.swapCorridor().minVolumeM3, 2.5);
       });
     });
   });

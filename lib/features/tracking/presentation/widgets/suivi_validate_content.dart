@@ -5,9 +5,11 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
+import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
@@ -103,17 +105,24 @@ class SuiviValidateContent extends StatelessWidget {
             ),
           ],
           const SizedBox(height: DonySpacing.base),
-          _ParcelList(
-            bids: bids,
-            history: hub.scanHistory,
-            onValidateParcel: onValidateParcel,
+          BlocSelector<SuiviValidationCubit, SuiviValidationState, Set<String>>(
+            selector: (state) => state.sendingBidIds,
+            builder: (context, sending) => _ParcelList(
+              bids: bids,
+              history: hub.scanHistory,
+              sendingBidIds: sending,
+              onValidateParcel: onValidateParcel,
+            ),
           ),
           if (!isExpanded) ...[
             const SizedBox(height: DonySpacing.base),
             _EnterNumberButton(onTap: onEnterNumber),
           ],
           const SizedBox(height: DonySpacing.xl),
-          _RecentScans(history: hub.scanHistory),
+          _RecentScans(
+            history: hub.scanHistory,
+            mode: hub.selectedTrip.transportMode,
+          ),
         ],
       ),
     );
@@ -410,11 +419,15 @@ class _ParcelList extends StatelessWidget {
   const _ParcelList({
     required this.bids,
     required this.history,
+    required this.sendingBidIds,
     required this.onValidateParcel,
   });
 
   final List<BidModel> bids;
   final List<TripScanHistoryEntryModel> history;
+
+  /// Colis dont l'étape part en ce moment (photo comprise).
+  final Set<String> sendingBidIds;
   final void Function(BidModel bid, String step) onValidateParcel;
 
   @override
@@ -459,9 +472,10 @@ class _ParcelList extends StatelessWidget {
                 for (var i = 0; i < bids.length; i++) ...[
                   if (i > 0)
                     Divider(height: 1, color: cs.outline.withValues(alpha: .6)),
-                  _ParcelRow(
+                  SuiviParcelRow(
                     bid: bids[i],
                     lastScan: _lastScanOf(bids[i]),
+                    sending: sendingBidIds.contains(bids[i].id),
                     onValidate: onValidateParcel,
                   ),
                 ],
@@ -488,16 +502,34 @@ class _ParcelList extends StatelessWidget {
   }
 }
 
-class _ParcelRow extends StatelessWidget {
-  const _ParcelRow({
+/// Ligne d'un colis dans « Colis du trajet » : libellé, progression et
+/// bouton de l'étape suivante.
+///
+/// Le bouton garde son libellé sur une ligne : quand il ne tient pas à côté
+/// des informations (écran étroit, texte agrandi), il passe dessous au lieu
+/// de se couper sur plusieurs lignes.
+class SuiviParcelRow extends StatelessWidget {
+  const SuiviParcelRow({
     required this.bid,
     required this.lastScan,
     required this.onValidate,
+    this.sending = false,
+    super.key,
   });
 
   final BidModel bid;
   final TripScanHistoryEntryModel? lastScan;
   final void Function(BidModel bid, String step) onValidate;
+
+  /// L'étape de ce colis part en ce moment (photo comprise) : le bouton
+  /// tourne et ne renvoie rien.
+  final bool sending;
+
+  static const double _avatarRadius = 18;
+
+  /// Part maximale de la ligne que le bouton peut occuper à côté des
+  /// informations du colis.
+  static const double _inlineButtonMaxShare = 0.4;
 
   @override
   Widget build(BuildContext context) {
@@ -523,6 +555,36 @@ class _ParcelRow extends StatelessWidget {
       subtitle = null;
     }
 
+    final avatar = ExcludeSemantics(
+      child: CircleAvatar(
+        radius: _avatarRadius,
+        backgroundColor: cs.surfaceWarm,
+        child: Text(
+          label.characters.first.toUpperCase(),
+          style: tt.labelLarge?.copyWith(color: DonyColors.terra800),
+        ),
+      ),
+    );
+
+    final info = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+        const SizedBox(height: DonySpacing.xs),
+        _StepSegments(progress: progress),
+        if (subtitle != null) ...[
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            subtitle,
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontFeatures: _tabular,
+            ),
+          ),
+        ],
+      ],
+    );
+
     return InkWell(
       key: Key('suivi-parcel-${bid.id}'),
       onTap: () => context.push('/bids/${bid.id}'),
@@ -531,79 +593,137 @@ class _ParcelRow extends StatelessWidget {
           horizontal: DonySpacing.md,
           vertical: DonySpacing.md,
         ),
-        child: Row(
-          children: [
-            ExcludeSemantics(
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: cs.surfaceWarm,
-                child: Text(
-                  label.characters.first.toUpperCase(),
-                  style: tt.labelLarge?.copyWith(color: DonyColors.terra800),
-                ),
-              ),
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: next == null
+            ? Row(
                 children: [
-                  Text(
-                    label,
-                    style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: DonySpacing.xs),
-                  _StepSegments(progress: progress),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: DonySpacing.xs),
-                    Text(
-                      subtitle,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontFeatures: _tabular,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: DonySpacing.sm),
-            // Flexible : à 200 % de texte, le libellé passe à la ligne au
-            // lieu de pousser la ligne hors de l'écran.
-            Flexible(
-              flex: 2,
-              child: next != null
-                  ? TextButton(
-                      key: Key('suivi-validate-${bid.id}'),
-                      onPressed: () => onValidate(bid, next),
-                      style: TextButton.styleFrom(
-                        backgroundColor: cs.primary.withValues(alpha: 0.10),
-                        foregroundColor: cs.primary,
-                        minimumSize: const Size(44, 44),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.md,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(DonyRadius.md),
-                        ),
-                      ),
-                      child: Text(
-                        l.suiviValidateStep(next),
-                        textAlign: TextAlign.center,
-                        style: tt.labelLarge,
-                      ),
-                    )
-                  : Text(
+                  avatar,
+                  const SizedBox(width: DonySpacing.md),
+                  Expanded(flex: 3, child: info),
+                  const SizedBox(width: DonySpacing.sm),
+                  Flexible(
+                    flex: 2,
+                    child: Text(
                       l.suiviAllValidated,
                       textAlign: TextAlign.end,
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
-            ),
-          ],
-        ),
+                  ),
+                ],
+              )
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  // Libellé le plus long des deux états : le bouton ne change
+                  // pas de place quand l'envoi commence.
+                  final buttonLabel = l.suiviValidateStep(next);
+                  final buttonWidth =
+                      _labelWidth(context, buttonLabel, tt.labelLarge) +
+                      2 * DonySpacing.md;
+                  final inline =
+                      buttonWidth <=
+                      constraints.maxWidth * _inlineButtonMaxShare;
+                  if (inline) {
+                    return Row(
+                      children: [
+                        avatar,
+                        const SizedBox(width: DonySpacing.md),
+                        Expanded(child: info),
+                        const SizedBox(width: DonySpacing.sm),
+                        _validateButton(context, next, buttonLabel, 1),
+                      ],
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          avatar,
+                          const SizedBox(width: DonySpacing.md),
+                          Expanded(child: info),
+                        ],
+                      ),
+                      const SizedBox(height: DonySpacing.sm),
+                      // Aligné sur le texte du colis, sous l'avatar.
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(
+                          start: 2 * _avatarRadius + DonySpacing.md,
+                        ),
+                        child: _validateButton(context, next, buttonLabel, 2),
+                      ),
+                    ],
+                  );
+                },
+              ),
       ),
     );
+  }
+
+  Widget _validateButton(
+    BuildContext context,
+    String next,
+    String buttonLabel,
+    int maxLines,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final label = Text(
+      sending ? context.l10n.suiviSendingButton : buttonLabel,
+      key: Key('suivi-validate-label-${bid.id}'),
+      textAlign: TextAlign.center,
+      maxLines: maxLines,
+      overflow: TextOverflow.ellipsis,
+      style: tt.labelLarge,
+    );
+    return TextButton(
+      key: Key('suivi-validate-${bid.id}'),
+      onPressed: sending ? null : () => onValidate(bid, next),
+      style: TextButton.styleFrom(
+        backgroundColor: cs.primary.withValues(alpha: 0.10),
+        foregroundColor: cs.primary,
+        // En cours d'envoi : désactivé mais lisible, jamais grisé à blanc.
+        disabledBackgroundColor: cs.primary.withValues(alpha: 0.10),
+        disabledForegroundColor: cs.primary,
+        minimumSize: const Size(44, 44),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+        ),
+      ),
+      child: sending
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox.square(
+                  dimension: 16,
+                  child: CircularProgressIndicator(
+                    key: Key('suivi-validate-progress-${bid.id}'),
+                    strokeWidth: 2,
+                    color: cs.primary,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Flexible(child: label),
+              ],
+            )
+          : label,
+    );
+  }
+
+  /// Largeur du libellé sur une ligne, à la taille de texte de l'appareil.
+  static double _labelWidth(
+    BuildContext context,
+    String text,
+    TextStyle? style,
+  ) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    return width;
   }
 }
 
@@ -668,9 +788,12 @@ class _EnterNumberButton extends StatelessWidget {
 }
 
 class _RecentScans extends StatelessWidget {
-  const _RecentScans({required this.history});
+  const _RecentScans({required this.history, this.mode});
 
   final List<TripScanHistoryEntryModel> history;
+
+  /// Mode du trajet affiché : en bateau, la remise se lit « Dépôt ».
+  final TransportMode? mode;
 
   @override
   Widget build(BuildContext context) {
@@ -720,7 +843,7 @@ class _RecentScans extends StatelessWidget {
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   Text(
-                    recentScanStepLabel(l, entry),
+                    recentScanStepLabel(l, entry, mode: mode),
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],

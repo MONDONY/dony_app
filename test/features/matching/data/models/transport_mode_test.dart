@@ -109,13 +109,13 @@ void main() {
       expect(TransportMode.boat.maxArrivalDays, 120);
     });
 
-    test('valises : refusées en voiture et en bus seulement', () {
+    test('valises : refusées en voiture, en bus et en bateau', () {
       expect(TransportMode.car.allowsSuitcases, isFalse);
       expect(TransportMode.bus.allowsSuitcases, isFalse);
+      expect(TransportMode.boat.allowsSuitcases, isFalse);
       for (final m in [
         TransportMode.plane,
         TransportMode.train,
-        TransportMode.boat,
         TransportMode.other,
       ]) {
         expect(m.allowsSuitcases, isTrue, reason: m.name);
@@ -135,6 +135,17 @@ void main() {
       expect(TransportMode.boat.isRoad, isFalse);
       expect(TransportMode.plane.isRoad, isFalse);
     });
+
+    test(
+      'poids max par colis : route et bateau (miroir de ParcelFitRules)',
+      () {
+        expect(TransportMode.car.hasMaxParcelWeight, isTrue);
+        expect(TransportMode.bus.hasMaxParcelWeight, isTrue);
+        expect(TransportMode.boat.hasMaxParcelWeight, isTrue);
+        expect(TransportMode.plane.hasMaxParcelWeight, isFalse);
+        expect(TransportMode.train.hasMaxParcelWeight, isFalse);
+      },
+    );
 
     test('mode lourd : voiture, bus et bateau (miroir de WeightLimits)', () {
       expect(TransportMode.car.isHeavy, isTrue);
@@ -161,6 +172,17 @@ void main() {
       expect(TripCapacityLimits.seriesMaxKgFor(TransportMode.car), 999999);
       expect(TripCapacityLimits.seriesMaxKgFor(TransportMode.bus), 999999);
       expect(TripCapacityLimits.seriesMaxKgFor(TransportMode.boat), 999999);
+    });
+  });
+
+  group('TripVolumeLimits', () {
+    test('volume au m³ : de 0,1 à 9 999 (miroir du back)', () {
+      expect(TripVolumeLimits.isValid(null), isFalse);
+      expect(TripVolumeLimits.isValid(0.05), isFalse);
+      expect(TripVolumeLimits.isValid(0.1), isTrue);
+      expect(TripVolumeLimits.isValid(12.5), isTrue);
+      expect(TripVolumeLimits.isValid(9999), isTrue);
+      expect(TripVolumeLimits.isValid(9999.1), isFalse);
     });
   });
 }

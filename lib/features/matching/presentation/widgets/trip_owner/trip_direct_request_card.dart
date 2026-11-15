@@ -2,10 +2,10 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
+import 'package:dony/features/matching/presentation/utils/bid_parcel_size.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
@@ -14,12 +14,13 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// « contenu · poids » d'une demande ([tripParcelContent], comme la ligne
-/// d'un colis du sheet « Colis ») ; poids omis s'il n'est pas connu.
+/// d'un colis du sheet « Colis ») ; volume pour un colis au m³, poids omis
+/// s'il n'est pas connu.
 String tripRequestDetails(AppLocalizations l, BidModel bid) {
   final content = tripParcelContent(l, bid);
-  final w = bid.displayWeightKg;
-  if (w == null) return content;
-  return '$content · ${formatWeightKg(l, w)}';
+  final size = bidParcelSizeLabel(l, bid, withItemSize: false);
+  if (size == null) return content;
+  return '$content · $size';
 }
 
 /// Carte « réponse directe » de « À traiter » sur l'écran du trajet vu par

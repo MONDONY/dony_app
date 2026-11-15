@@ -295,6 +295,18 @@ void main() {
       'Limite de trajets du mois atteinte.',
     );
     expect(
+      tripSeriesErrorText(ctx, 'monthly-limit-reached'),
+      'Limite de trajets du mois atteinte.',
+    );
+    expect(
+      tripSeriesErrorText(ctx, 'traveler-status-required'),
+      'Limite de trajets du mois atteinte.',
+    );
+    expect(
+      tripSeriesErrorText(ctx, 'gp-pro-pending'),
+      contains('demande GP Pro'),
+    );
+    expect(
       tripSeriesErrorText(ctx, 'stripe-onboarding-incomplete'),
       contains('paiements par carte'),
     );

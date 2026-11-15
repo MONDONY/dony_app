@@ -12,7 +12,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// confirmé, le bouton reste visible mais éteint : le pied d'un bottom sheet
 /// qui se referme ne se vide pas pendant l'animation de sortie.
 class TripDepartAction extends StatelessWidget {
-  const TripDepartAction({super.key});
+  const TripDepartAction({super.key, this.label});
+
+  /// Libellé du bouton ; « Je pars » par défaut (« Bateau parti » en bateau,
+  /// donné par le sheet de l'écran du trajet).
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +40,7 @@ class TripDepartAction extends StatelessWidget {
       },
       builder: (context, state) => DonyButton(
         key: const Key('trip-depart-button'),
-        label: context.l10n.tripDepartButton,
+        label: label ?? context.l10n.tripDepartButton,
         isLoading: state.loading,
         onPressed: state.loading || state.departed
             ? null

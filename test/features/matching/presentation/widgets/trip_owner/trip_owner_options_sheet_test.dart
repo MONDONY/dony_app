@@ -59,6 +59,7 @@ void main() {
   group('tripMenuEntriesFor', () {
     const edit = TripMenuEntry.edit;
     const reschedule = TripMenuEntry.reschedule;
+    const delay = TripMenuEntry.announceDelay;
     const unpublish = TripMenuEntry.unpublish;
     const poster = TripMenuEntry.sharePoster;
     const arrival = TripMenuEntry.arrivalInstructions;
@@ -147,13 +148,13 @@ void main() {
         'IN_PROGRESS avec un colis remis',
         ownerTrip(status: 'IN_PROGRESS'),
         handedOver,
-        [reschedule],
+        [reschedule, delay],
       ),
       (
         'IN_PROGRESS avec instructions et colis arrivé',
         ownerTrip(status: 'IN_PROGRESS', arrivalInstructions: 'Rue 10'),
         arrived,
-        [reschedule, arrival],
+        [reschedule, delay, arrival],
       ),
       (
         'COMPLETED sans colis',
@@ -208,6 +209,21 @@ void main() {
     for (final (name, trip, bids, expected) in table) {
       test(name, () => expect(_entries(trip, bids), expected));
     }
+
+    test('bateau : ni récurrence ni modèle (refusés par le back, C16)', () {
+      for (final status in ['ACTIVE', 'COMPLETED']) {
+        final entries = _entries(
+          ownerTrip(status: status, transportMode: TransportMode.boat),
+          const [],
+        );
+        expect(entries, isNot(contains(recurring)), reason: status);
+        expect(entries, isNot(contains(template)), reason: status);
+      }
+      expect(
+        _entries(ownerTrip(transportMode: TransportMode.car), const []),
+        containsAll([recurring, template]),
+      );
+    });
 
     test('« Modifier » grisé n’existe plus : absent dès qu’on est engagé', () {
       expect(_entries(ownerTrip(), pending), isNot(contains(edit)));
@@ -380,7 +396,7 @@ void main() {
       final expected = {
         TripMenuEntry.edit: (
           'Modifier',
-          'Villes, dates, kilos, prix et conditions',
+          'Villes, dates, capacité, prix et conditions',
         ),
         TripMenuEntry.unpublish: (
           'Dépublier',

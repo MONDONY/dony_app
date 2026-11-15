@@ -194,6 +194,28 @@ void main() {
   );
 
   test(
+    'DedicatedTripPayload.toJson : arrivalDateMax seulement pour le bateau',
+    () {
+      final boat = DedicatedTripPayload(
+        departureDate: DateTime(2026, 9),
+        arrivalDate: '2026-10-20',
+        arrivalDateMax: '2026-10-27',
+        pickupAddress: const {'label': 'Entrepôt'},
+        deliveryAddress: const {'label': 'Abidjan'},
+      ).toJson();
+      expect(boat['arrivalDate'], '2026-10-20');
+      expect(boat['arrivalDateMax'], '2026-10-27');
+
+      final other = DedicatedTripPayload(
+        departureDate: DateTime(2026, 9),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+      ).toJson();
+      expect(other.containsKey('arrivalDateMax'), isFalse);
+    },
+  );
+
+  test(
     'DedicatedTripPayload.toJson omits nulls and includes required fields',
     () {
       final payload = DedicatedTripPayload(

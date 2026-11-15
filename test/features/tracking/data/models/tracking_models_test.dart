@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/data/models/qr_code_model.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
@@ -122,6 +123,33 @@ void main() {
       };
       final model = TrackingSearchModel.fromJson(withInstructions);
       expect(model.arrivalInstructions, 'Métro Châtelet, sortie 3');
+    });
+
+    // C14 (lot 3) : le back sert le mode du trajet ; absent, nul ou inconnu,
+    // il reste nul (jamais un avion supposé).
+    test('fromJson lit transportMode', () {
+      expect(
+        TrackingSearchModel.fromJson({
+          ...json,
+          'transportMode': 'BOAT',
+        }).transportMode,
+        TransportMode.boat,
+      );
+      expect(TrackingSearchModel.fromJson(json).transportMode, isNull);
+      expect(
+        TrackingSearchModel.fromJson({
+          ...json,
+          'transportMode': null,
+        }).transportMode,
+        isNull,
+      );
+      expect(
+        TrackingSearchModel.fromJson({
+          ...json,
+          'transportMode': 'ROCKET',
+        }).transportMode,
+        isNull,
+      );
     });
   });
 

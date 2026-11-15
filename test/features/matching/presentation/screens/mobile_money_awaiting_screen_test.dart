@@ -12,6 +12,7 @@ import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/mobile_money_accepted_operators.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
@@ -113,8 +114,10 @@ void main() {
     String? msisdnMasked = '+225 07 •• •• 56',
     String? authorizationUrl,
     DateTime? deadlineAt,
+    PayoutTrigger payoutTrigger = PayoutTrigger.delivery,
   }) => MobileMoneyPaymentStatus(
     subjectId: bidId,
+    payoutTrigger: payoutTrigger,
     subjectStatus: 'AWAITING_PAYMENT',
     paymentStatus: 'PENDING',
     amount: 12500,
@@ -1125,6 +1128,22 @@ void main() {
       // Seul le ✕ fait sortir : aucun bouton en bas.
       expect(find.byType(DonyButton), findsNothing);
       expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+    });
+
+    testWidgets('awaiting_depositPayout_saysWhenParcelIsDropped', (
+      tester,
+    ) async {
+      stub(
+        MobileMoneyPaymentAwaitingConfirmation(
+          awaitingStatus(payoutTrigger: PayoutTrigger.deposit),
+        ),
+      );
+
+      await pumpScreen(tester);
+
+      expect(find.text('Versé au voyageur'), findsOneWidget);
+      expect(find.text('Au dépôt du colis'), findsOneWidget);
+      expect(find.text('À la livraison'), findsNothing);
     });
 
     testWidgets('awaiting_pinPromptHint_showsPromptTexts', (tester) async {

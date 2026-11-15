@@ -3,6 +3,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/datasources/bid_negotiation_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/models/bid_volume_input.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -77,6 +78,7 @@ void main() {
     List<String>? photoKeys,
     String? countryCode,
     ItemSize? itemSize,
+    BidVolumeInput? volume,
   }) {
     when(
       () => dio.post(
@@ -103,10 +105,41 @@ void main() {
       photoKeys: photoKeys,
       countryCode: countryCode,
       itemSize: itemSize,
+      volume: volume,
     );
   }
 
   group('propose', () {
+    test(
+      'proposeVolume_sendsDimensions : trajet au m³, jamais le volume',
+      () async {
+        await propose(
+          weightKg: null,
+          volume: const BidVolumeInput(
+            lengthCm: 100,
+            widthCm: 50,
+            heightCm: 40,
+          ),
+        );
+        final body = capturedBody();
+
+        expect(body['lengthCm'], 100);
+        expect(body['widthCm'], 50);
+        expect(body['heightCm'], 40);
+        expect(body.containsKey('volumeM3'), isFalse);
+        expect(body.containsKey('weightKg'), isFalse);
+      },
+    );
+
+    test('proposeKg_noDimensions : aucune clé de dimension au kilo', () async {
+      await propose();
+      final body = capturedBody();
+
+      expect(body.containsKey('lengthCm'), isFalse);
+      expect(body.containsKey('widthCm'), isFalse);
+      expect(body.containsKey('heightCm'), isFalse);
+    });
+
     test('appelle le bon chemin et renvoie le fil', () async {
       final thread = await propose();
 

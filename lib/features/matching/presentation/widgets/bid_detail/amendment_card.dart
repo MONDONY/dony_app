@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -297,6 +298,16 @@ String _money(double amount, String currency, {bool signed = false}) =>
 
 String _kg(AppLocalizations l, double kg) => formatWeightKg(l, kg);
 
+/// Taille du colis telle que l'expéditeur la connaît : son volume en m³ pour
+/// un colis d'un trajet bateau au m³, sinon ses kilos.
+String _parcelSize(AppLocalizations l, BidModel bid) => bid.isPricedPerM3
+    ? formatParcelVolumeM3(l, bid.volumeM3!)
+    : _kg(l, bid.totalWeightKg ?? bid.weightKg ?? 0);
+
+/// Volume ajouté sans unité (« 0,3 »), pour `amendmentSheetVolumeValue`.
+String _addedVolume(AppLocalizations l, BidAmendment a) =>
+    formatVolumeValue(l.localeName, a.addedVolumeM3 ?? 0);
+
 /// « 25 oct. à 14:30 » en heure locale.
 String _deadlineLabel(BuildContext context, DateTime at) {
   final l = context.l10n;
@@ -322,6 +333,11 @@ List<_Line> _lines(BuildContext context, BidAmendment a, {required bool net}) {
   final total = net ? (a.netAmount ?? 0) : a.grossAmount;
   final itemsTotal = a.items.fold<double>(0, (sum, i) => sum + amountOf(i));
   return [
+    if (a.isVolume)
+      _Line(
+        l.amendmentSheetVolumeValue(_addedVolume(l, a)),
+        _money(total - itemsTotal, a.currency, signed: net),
+      ),
     if (a.addedWeightKg > 0)
       _Line(
         l.amendmentSheetKgValue(_kg(l, a.addedWeightKg).replaceAll(' kg', '')),
@@ -479,7 +495,7 @@ class _SenderContent extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final a = amendment;
     final name = bid.travelerName ?? l.bidDetailSenderTravelerFallback;
-    final kg = _kg(l, bid.totalWeightKg ?? bid.weightKg ?? 0);
+    final kg = _parcelSize(l, bid);
 
     if (!a.status.isOpen) {
       final held = a.rail == BidAmendment.railStripe;
@@ -492,7 +508,9 @@ class _SenderContent extends StatelessWidget {
       if (a.status == BidAmendmentStatus.refundPending) {
         statusText = l.amendmentSenderRefundPendingStatus;
       } else if (a.closedReason == 'NOT_BROUGHT') {
-        statusText = l.amendmentSenderNotBroughtStatus(name);
+        statusText = a.isVolume
+            ? l.amendmentSenderNotBroughtVolumeStatus(name)
+            : l.amendmentSenderNotBroughtStatus(name);
       } else if (refund) {
         statusText = l.amendmentSenderRefundedStatus;
       } else if (captureFailed) {
@@ -629,7 +647,11 @@ class _TravelerContentState extends State<_TravelerContent> {
               color: cs.warning,
               text: l.amendmentTravelerWaitingPayment(name),
             ),
-            _Note(l.amendmentTravelerAcceptedBody),
+            _Note(
+              a.isVolume
+                  ? l.amendmentTravelerAcceptedBodyVolume
+                  : l.amendmentTravelerAcceptedBody,
+            ),
           ]),
         );
       case BidAmendmentStatus.accepted ||
@@ -658,7 +680,9 @@ class _TravelerContentState extends State<_TravelerContent> {
     final net = a.netAmount ?? 0;
     final commission = a.commissionAmount;
     final deadline = a.expiresAt;
-    final before = bid.totalWeightKg ?? bid.weightKg;
+    final before = a.isVolume
+        ? bid.volumeM3
+        : bid.totalWeightKg ?? bid.weightKg;
     return BlocProvider(
       create: (_) => getIt<AmendmentAcceptCubit>(),
       child: BlocConsumer<AmendmentAcceptCubit, AmendmentAcceptState>(
@@ -702,17 +726,30 @@ class _TravelerContentState extends State<_TravelerContent> {
                   children: [
                     Expanded(
                       child: Text(
-                        l.amendmentTravelerParcelWeight,
+                        a.isVolume
+                            ? l.amendmentTravelerParcelVolume
+                            : l.amendmentTravelerParcelWeight,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
                       ),
                     ),
                     Text(
-                      l.amendmentTravelerParcelWeightValue(
-                        _kg(l, before).replaceAll(' kg', ''),
-                        _kg(l, before + a.addedWeightKg).replaceAll(' kg', ''),
-                      ),
+                      a.isVolume
+                          ? l.amendmentTravelerParcelVolumeValue(
+                              formatVolumeValue(l.localeName, before),
+                              formatVolumeValue(
+                                l.localeName,
+                                before + (a.addedVolumeM3 ?? 0),
+                              ),
+                            )
+                          : l.amendmentTravelerParcelWeightValue(
+                              _kg(l, before).replaceAll(' kg', ''),
+                              _kg(
+                                l,
+                                before + a.addedWeightKg,
+                              ).replaceAll(' kg', ''),
+                            ),
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                   ],
@@ -846,12 +883,18 @@ class _TravelerContentState extends State<_TravelerContent> {
               color: cs.success,
               text: l.amendmentTravelerAcceptedStatus,
             ),
-            _Note(l.amendmentTravelerAcceptedBody),
+            _Note(
+              a.isVolume
+                  ? l.amendmentTravelerAcceptedBodyVolume
+                  : l.amendmentTravelerAcceptedBody,
+            ),
           ]),
           const SizedBox(height: DonySpacing.md),
           DonyButton(
             key: const Key('amendment-not-brought-btn'),
-            label: l.amendmentNotBrought,
+            label: a.isVolume
+                ? l.amendmentNotBroughtVolume
+                : l.amendmentNotBrought,
             variant: DonyButtonVariant.destructiveGhost,
             isLoading: action.isBusy,
             onPressed: action.isBusy ? null : () => _notBrought(context),
@@ -926,7 +969,9 @@ class _TravelerContentState extends State<_TravelerContent> {
     final confirmed = await DonyDialog.show(
       context,
       title: l.amendmentDeclineConfirmTitle,
-      message: l.amendmentDeclineConfirmMessage,
+      message: a.isVolume
+          ? l.amendmentDeclineConfirmMessageVolume
+          : l.amendmentDeclineConfirmMessage,
       confirmLabel: l.amendmentDecline,
       cancelLabel: l.commonCancel,
       variant: DonyDialogVariant.destructive,
@@ -940,9 +985,15 @@ class _TravelerContentState extends State<_TravelerContent> {
     final cubit = context.read<AmendmentActionCubit>();
     final confirmed = await DonyDialog.show(
       context,
-      title: l.amendmentNotBroughtConfirmTitle,
-      message: l.amendmentNotBroughtConfirmMessage,
-      confirmLabel: l.amendmentNotBrought,
+      title: a.isVolume
+          ? l.amendmentNotBroughtVolumeConfirmTitle
+          : l.amendmentNotBroughtConfirmTitle,
+      message: a.isVolume
+          ? l.amendmentNotBroughtVolumeConfirmMessage
+          : l.amendmentNotBroughtConfirmMessage,
+      confirmLabel: a.isVolume
+          ? l.amendmentNotBroughtVolume
+          : l.amendmentNotBrought,
       cancelLabel: l.commonCancel,
       variant: DonyDialogVariant.destructive,
     );

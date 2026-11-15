@@ -24,6 +24,9 @@ class AnnouncementPayload extends Equatable {
     required this.availableKg,
     required this.pricePerKg,
     required this.transportMode,
+    this.arrivalDateMax,
+    this.volumeCapacityM3,
+    this.pricePerM3,
     this.stops,
     this.description,
     this.acceptedContentTypes = const [],
@@ -49,9 +52,19 @@ class AnnouncementPayload extends Equatable {
   final String? arrivalDate;
   final AddressData pickupAddress;
   final AddressData deliveryAddress;
-  final double availableKg;
-  final double pricePerKg;
+
+  /// Kilos et prix au kilo, absents du corps quand nuls : un trajet bateau
+  /// vendu au m³ n'envoie aucun kilo (le back refuse les deux unités).
+  final double? availableKg;
+  final double? pricePerKg;
   final TransportMode transportMode;
+
+  /// Bateau : fin de la fourchette d'arrivée estimée (`yyyy-MM-dd`).
+  final String? arrivalDateMax;
+
+  /// Bateau au m³ : volume proposé et prix net par m³.
+  final double? volumeCapacityM3;
+  final double? pricePerM3;
 
   /// Escales (FLUTTER-GE), envoyées seulement pour un trajet en avion.
   final TripStops? stops;
@@ -85,9 +98,12 @@ class AnnouncementPayload extends Equatable {
     'arrivalDate': ?arrivalDate,
     'pickupAddress': pickupAddress.toJson(),
     'deliveryAddress': deliveryAddress.toJson(),
-    'availableKg': availableKg,
-    'pricePerKg': pricePerKg,
+    'availableKg': ?availableKg,
+    'pricePerKg': ?pricePerKg,
     'transportMode': transportModeToWire(transportMode),
+    'arrivalDateMax': ?arrivalDateMax,
+    'volumeCapacityM3': ?volumeCapacityM3,
+    'pricePerM3': ?pricePerM3,
     if (stops != null && supportsStops(transportMode))
       'stopsCount': stops!.wire,
     if (description != null && description!.isNotEmpty)

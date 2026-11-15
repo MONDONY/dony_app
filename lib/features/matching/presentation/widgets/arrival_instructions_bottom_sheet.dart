@@ -39,11 +39,14 @@ class ArrivalInstructionsBottomSheet extends StatefulWidget {
   /// Notifie le bouton collant de la validité du formulaire (mode édition).
   final ValueChanged<bool>? onCanSubmitChanged;
 
+  /// [title] : titre du premier passage (« Arrivé au port d'Abidjan » en
+  /// bateau) ; « Arrivé à destination » par défaut. Sans effet en édition.
   static Future<void> show(
     BuildContext context, {
     required String announcementId,
     String? initialInstructions,
     bool isEditing = false,
+    String? title,
   }) {
     final announcementBloc = context.read<AnnouncementBloc>();
     VoidCallback? submit;
@@ -55,7 +58,7 @@ class ArrivalInstructionsBottomSheet extends StatefulWidget {
       context,
       title: isEditing
           ? l.tripOwnerArrivalEditingTitle
-          : l.tripOwnerMarkArrivedButton,
+          : title ?? l.tripOwnerMarkArrivedButton,
       subtitle: l.tripOwnerArrivalSubtitle,
       // Deux étapes distinctes du parcours : marquer l'arrivée, puis
       // corriger les instructions.

@@ -93,6 +93,7 @@ Future<void> openTripTodoSheet(
           sheetContext.l10n,
           TripTodoItem(kind: kind, count: 1),
           cardReady: live.cardReady,
+          trip: live.trip,
         ),
       ),
     ),
@@ -177,7 +178,15 @@ class _TripTodoFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     return switch (kind) {
-      TripTodoKind.depart => const TripDepartAction(),
+      // Bateau : « Bateau parti », même libellé que la carte et le pied.
+      TripTodoKind.depart => TripDepartAction(
+        label: tripTodoButton(
+          l,
+          const TripTodoItem(kind: TripTodoKind.depart, count: 1),
+          cardReady: live.cardReady,
+          trip: live.trip,
+        ),
+      ),
       _ =>
         live.cardReady
             ? DonyButton(

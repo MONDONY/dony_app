@@ -113,6 +113,7 @@ class BidAmendment {
     this.rail,
     this.currency = 'EUR',
     this.addedWeightKg = 0,
+    this.addedVolumeM3,
     this.items = const [],
     required this.grossAmount,
     this.netAmount,
@@ -143,6 +144,13 @@ class BidAmendment {
   /// Kilos ajoutés ; 0 pour une modification faite d'articles seulement.
   @JsonKey(defaultValue: 0)
   final double addedWeightKg;
+
+  /// Volume ajouté en m³ (colis d'un trajet bateau vendu au m³) ; `null` pour
+  /// une modification au kilo, ou sur un back antérieur.
+  final double? addedVolumeM3;
+
+  /// Modification d'un colis au m³ : le volume ajouté remplace les kilos.
+  bool get isVolume => (addedVolumeM3 ?? 0) > 0;
 
   @JsonKey(defaultValue: <BidAmendmentItem>[])
   final List<BidAmendmentItem> items;
@@ -201,6 +209,7 @@ class BidAmendment {
     rail: rail,
     currency: currency,
     addedWeightKg: addedWeightKg,
+    addedVolumeM3: addedVolumeM3,
     items: items,
     grossAmount: grossAmount,
     netAmount: netAmount,
@@ -247,6 +256,8 @@ class AmendmentOptions {
     required this.currency,
     this.availableKg,
     this.pricePerKgDisplay,
+    this.availableVolumeM3,
+    this.pricePerM3Display,
     this.gridItems = const [],
     this.paymentMethods = const [],
     this.expiresAt,
@@ -261,6 +272,14 @@ class AmendmentOptions {
 
   /// Prix au kilo tel que l'expéditeur le voit ; nul sans prix au kilo.
   final double? pricePerKgDisplay;
+
+  /// Colis d'un trajet bateau au m³ : volume libre du trajet en m³ ; nul quand
+  /// la capacité est libre, ou sur un back antérieur.
+  final double? availableVolumeM3;
+
+  /// Colis au m³ : prix au m³ tel que l'expéditeur le voit (brut, frais
+  /// inclus) ; nul sans prix au m³, ou sur un back antérieur.
+  final double? pricePerM3Display;
   final List<AmendmentGridItemOption> gridItems;
 
   /// Moyens de paiement proposables, déjà filtrés par le serveur. Un moyen
@@ -285,6 +304,8 @@ class AmendmentOptions {
       currency: json['currency'] as String? ?? 'EUR',
       availableKg: (json['availableKg'] as num?)?.toDouble(),
       pricePerKgDisplay: (json['pricePerKgDisplay'] as num?)?.toDouble(),
+      availableVolumeM3: (json['availableVolumeM3'] as num?)?.toDouble(),
+      pricePerM3Display: (json['pricePerM3Display'] as num?)?.toDouble(),
       gridItems: [
         for (final g in (json['gridItems'] as List?) ?? const [])
           AmendmentGridItemOption.fromJson(g as Map<String, dynamic>),

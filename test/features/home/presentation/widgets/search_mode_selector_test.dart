@@ -1,11 +1,15 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/plane_icon_expectations.dart';
+import '../../../matching/presentation/widgets/trip_owner/trip_card_harness.dart'
+    show loadAppFonts;
 
 const _trajetsKey = Key('search_mode_segment_trips');
 const _colisKey = Key('search_mode_segment_colis');
@@ -26,7 +30,7 @@ void main() {
         wrap(SearchModeSelector(mode: SearchMode.trips, onChanged: (_) {})),
       );
 
-      expect(find.text('J\'envoie un colis'), findsOneWidget);
+      expect(find.text('J\'envoie'), findsOneWidget);
       expect(find.text('Je voyage'), findsOneWidget);
       // Le sous-titre prenait une ligne à la liste : il ne reste que dans le
       // libellé sémantique (voir plus bas).
@@ -260,7 +264,7 @@ void main() {
       ),
     );
 
-    expect(find.text("I'm sending a parcel"), findsOneWidget);
+    expect(find.text("I'm sending"), findsOneWidget);
     expect(find.text("I'm traveling"), findsOneWidget);
     expect(tester.widget<Text>(find.byKey(_compteurKey)).data, '2');
     expect(find.text('Parcels to carry'), findsNothing);
@@ -376,4 +380,50 @@ void main() {
       expect(find.byType(DonyIcon), findsNWidgets(2));
     });
   }
+
+  // Recette 13/11 : à 360 dp, « J'envoie un … » quand la pastille du compteur
+  // se posait sur le segment Envoi.
+  group('360 dp, vraies polices', () {
+    setUpAll(loadAppFonts);
+    for (final english in [false, true]) {
+      for (final mode in SearchMode.values) {
+        testWidgets('${english ? 'EN' : 'FR'}, ${mode.name} actif, pastille '
+            '128 : titres entiers sur une ligne', (tester) async {
+          if (english) useEnglish();
+          tester.view.physicalSize = const Size(360, 640);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.reset);
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: AppTheme.light(),
+              home: Scaffold(
+                body: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: SearchModeSelector(
+                    mode: mode,
+                    onChanged: (_) {},
+                    otherModeCount: 128,
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          for (final title
+              in english
+                  ? ["I'm sending", "I'm traveling"]
+                  : ["J'envoie", 'Je voyage']) {
+            final text = find.text(title);
+            expect(text, findsOneWidget);
+            expect(
+              tester.renderObject<RenderParagraph>(text).didExceedMaxLines,
+              isFalse,
+              reason: '« $title » abrégé',
+            );
+          }
+          expect(tester.takeException(), isNull);
+        });
+      }
+    }
+  });
 }

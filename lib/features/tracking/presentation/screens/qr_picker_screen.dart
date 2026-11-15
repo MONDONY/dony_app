@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/tracking/data/models/scanned_qr.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
 /// Lecteur QR plein écran qui rend l'identifiant du colis lu à l'appelant
-/// (`context.push<String?>('/tracking/scan/qr-picker')`).
+/// (`context.push<ScannedQr?>('/tracking/scan/qr-picker')`).
 class QrPickerScreen extends StatefulWidget {
   const QrPickerScreen({super.key});
 
@@ -29,14 +30,14 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
     super.dispose();
   }
 
-  Future<void> _onBidId(String bidId) async {
+  Future<void> _onScanned(ScannedQr scanned) async {
     if (_detected.value) return;
     _detected.value = true;
     // Laisser voir la coche avant de refermer : fermée dans la même image,
     // la lecture passait inaperçue (FLUTTER-20).
     unawaited(HapticFeedback.mediumImpact());
     await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (mounted) context.pop<String>(bidId);
+    if (mounted) context.pop<ScannedQr>(scanned);
   }
 
   @override
@@ -49,7 +50,11 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            QrCameraView(onBidId: _onBidId, paused: _detected, torch: _torch),
+            QrCameraView(
+              onScanned: _onScanned,
+              paused: _detected,
+              torch: _torch,
+            ),
             // Top bar
             Positioned(
               top: 0,
@@ -66,7 +71,7 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
                     IconButton(
                       tooltip: l.commonClose,
                       icon: const DonyIcon('x', color: DonyColors.neutral0),
-                      onPressed: () => context.pop<String?>(),
+                      onPressed: () => context.pop<ScannedQr?>(),
                     ),
                     Expanded(
                       child: Text(

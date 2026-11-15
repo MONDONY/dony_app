@@ -10,6 +10,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -158,5 +159,31 @@ void main() {
         ),
       ),
     ).called(1);
+  });
+
+  test('entryLabel_volumeForBoatM3Parcel_kilosOtherwise', () {
+    final fr = lookupAppLocalizations(AppL10n.fr);
+    final en = lookupAppLocalizations(AppL10n.en);
+    final boat = BidModel(
+      id: 'bid-2',
+      announcementId: 'ann-1',
+      senderId: 'sender-1',
+      status: 'ACCEPTED',
+      transportMode: TransportMode.boat,
+      volumeM3: 0.5,
+      createdAt: DateTime(2026, 11),
+      updatedAt: DateTime(2026, 11),
+    );
+
+    expect(
+      AmendmentEntry.entryLabel(fr, boat),
+      'Ajouter du volume ou des articles',
+    );
+    expect(AmendmentEntry.entryLabel(en, boat), 'Add volume or items');
+    expect(
+      AmendmentEntry.entryLabel(fr, _bid()),
+      'Ajouter des kilos ou des articles',
+    );
+    expect(AmendmentEntry.entryLabel(en, _bid()), 'Add kilos or items');
   });
 }

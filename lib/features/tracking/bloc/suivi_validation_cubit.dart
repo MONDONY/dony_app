@@ -20,6 +20,7 @@ class PendingValidation {
     required this.method,
     required this.deadline,
     this.photoPath,
+    this.deposit = false,
   });
 
   final int id;
@@ -33,19 +34,31 @@ class PendingValidation {
   final ScanMethod method;
   final DateTime deadline;
   final String? photoPath;
+
+  /// Dépôt à l'entrepôt d'un colis payé au dépôt (bateau) : les messages
+  /// parlent du dépôt, jamais d'une récupération.
+  final bool deposit;
 }
 
 /// Issue d'un envoi, jouée une fois par l'écran (message, rechargement).
 sealed class SuiviValidationOutcome {
-  const SuiviValidationOutcome(this.step, this.parcelLabel);
+  const SuiviValidationOutcome(
+    this.step,
+    this.parcelLabel, {
+    this.deposit = false,
+  });
   final String step;
   final String parcelLabel;
+
+  /// Étape `DEPART` d'un dépôt à l'entrepôt (bateau).
+  final bool deposit;
 }
 
 final class SuiviValidationSent extends SuiviValidationOutcome {
   const SuiviValidationSent(
     super.step,
     super.parcelLabel, {
+    super.deposit,
     this.photoDropped = false,
   });
 
@@ -55,29 +68,42 @@ final class SuiviValidationSent extends SuiviValidationOutcome {
 
 /// Sans réseau : l'étape attend dans la file hors ligne.
 final class SuiviValidationQueued extends SuiviValidationOutcome {
-  const SuiviValidationQueued(super.step, super.parcelLabel);
+  const SuiviValidationQueued(super.step, super.parcelLabel, {super.deposit});
 }
 
 final class SuiviValidationFailed extends SuiviValidationOutcome {
-  const SuiviValidationFailed(super.step, super.parcelLabel, this.error);
+  const SuiviValidationFailed(
+    super.step,
+    super.parcelLabel,
+    this.error, {
+    super.deposit,
+  });
   final AppException error;
 }
 
 class SuiviValidationState {
   const SuiviValidationState({
     this.pending = const [],
+    this.sending = const [],
     this.outcome,
     this.outcomeId = 0,
   });
 
   /// Du plus ancien au plus récent.
   final List<PendingValidation> pending;
+
+  /// Validations dont le délai est écoulé et dont l'envoi (photo comprise)
+  /// attend la réponse du serveur. L'écran les montre en cours d'envoi et
+  /// bloque un second envoi du même colis.
+  final List<PendingValidation> sending;
   final SuiviValidationOutcome? outcome;
 
   /// Incrémenté à chaque [outcome] : l'écran n'écoute que ce compteur.
   final int outcomeId;
 
   Set<String> get pendingBidIds => {for (final p in pending) p.bidId};
+
+  Set<String> get sendingBidIds => {for (final p in sending) p.bidId};
 }
 
 /// Validation rapide de l'onglet Suivi : l'étape est affichée comme validée
@@ -151,6 +177,9 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     String? photoPath,
     ScanPosition? position,
     String? trackingNumber,
+    String? qrToken,
+    bool photoRequired = false,
+    bool deposit = false,
   }) {
     // Une étape en cours d'envoi (délai écoulé, réponse pas encore reçue) ne
     // se reprogramme pas : sa ligne n'est plus « en attente » mais le back
@@ -175,6 +204,8 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
       gpsLabel: position?.label,
       scanMethod: method,
       trackingNumber: trackingNumber,
+      qrToken: qrToken,
+      photoRequired: photoRequired,
       notBefore: deadline.add(replayGrace),
     )..ignore();
     _positions[id] = position != null
@@ -196,6 +227,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
             method: method,
             deadline: deadline,
             photoPath: photoPath,
+            deposit: deposit,
           ),
         ],
       ),
@@ -236,7 +268,16 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     final position = _positions.remove(id)!;
     final key = _keys.remove(id)!;
     _sendingBids.add(pending.bidId);
-    if (!isClosed) emit(_copy(pending: _without(id)));
+    if (!isClosed) {
+      emit(
+        SuiviValidationState(
+          pending: _without(id),
+          sending: [...state.sending, pending],
+          outcome: state.outcome,
+          outcomeId: state.outcomeId,
+        ),
+      );
+    }
 
     SuiviValidationOutcome outcome;
     try {
@@ -255,14 +296,20 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
           ? SuiviValidationSent(
               pending.step,
               pending.parcelLabel,
+              deposit: pending.deposit,
               photoDropped: sent.photoDropped,
             )
-          : SuiviValidationQueued(pending.step, pending.parcelLabel);
+          : SuiviValidationQueued(
+              pending.step,
+              pending.parcelLabel,
+              deposit: pending.deposit,
+            );
     } catch (e) {
       outcome = SuiviValidationFailed(
         pending.step,
         pending.parcelLabel,
         unwrapDioError(e),
+        deposit: pending.deposit,
       );
     } finally {
       _sendingBids.remove(pending.bidId);
@@ -271,6 +318,10 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
       emit(
         SuiviValidationState(
           pending: state.pending,
+          sending: [
+            for (final p in state.sending)
+              if (p.id != id) p,
+          ],
           outcome: outcome,
           outcomeId: state.outcomeId + 1,
         ),
@@ -301,6 +352,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
   SuiviValidationState _copy({required List<PendingValidation> pending}) =>
       SuiviValidationState(
         pending: pending,
+        sending: state.sending,
         outcome: state.outcome,
         outcomeId: state.outcomeId,
       );

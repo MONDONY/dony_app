@@ -1,3 +1,4 @@
+import 'package:dony/core/utils/arrival_range.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -210,6 +211,125 @@ void main() {
       await tester.tapAt(const Offset(10, 10));
       await tester.pumpAndSettle();
       expect(notifier.value, 4);
+    });
+  });
+
+  // Recette 13/11 : au-delà de 14 jours, le sélecteur disait seulement
+  // « Hors de portée. ».
+  for (final (locale, expected) in [
+    (
+      'fr',
+      (DateTime first, DateTime last) {
+        final d = arrivalRangeDays(
+          lookupAppLocalizations(const Locale('fr')),
+          first,
+          last,
+        );
+        return 'Choisissez entre le ${d.from} et le ${d.to} : l\'arrivée est '
+            'au plus 14 jours après le départ.';
+      },
+    ),
+    (
+      'en',
+      (DateTime first, DateTime last) {
+        final d = arrivalRangeDays(
+          lookupAppLocalizations(const Locale('en')),
+          first,
+          last,
+        );
+        return 'Pick a date between ${d.from} and ${d.to}: arrival is at most '
+            '14 days after departure.';
+      },
+    ),
+  ]) {
+    testWidgets('$locale : date hors fenêtre, message des 14 jours', (
+      tester,
+    ) async {
+      final dep = _departure();
+      await tester.pumpWidget(
+        _host(notifier, maxDays: 14, departureDate: dep, locale: locale),
+      );
+      await tester.tap(find.byKey(const Key('arrival-day-other')));
+      await tester.pumpAndSettle();
+
+      final picker = tester.widget<DatePickerDialog>(
+        find.byType(DatePickerDialog),
+      );
+      expect(
+        picker.errorInvalidText,
+        expected(_plusDays(dep, 3), _plusDays(dep, 14)),
+      );
+
+      // Saisie au clavier d'une date au-delà : le message s'affiche.
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byType(TextField),
+        DateFormat.yMd(locale).format(_plusDays(dep, 15)),
+      );
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(expected(_plusDays(dep, 3), _plusDays(dep, 14))),
+        findsOneWidget,
+      );
+      expect(notifier.value, 0);
+    });
+  }
+
+  group('arrivalOffsetAfterDepartureChange', () {
+    final dep = DateTime(2026, 11, 20);
+    test('date choisie toujours dans la fenêtre : la date reste la même', () {
+      // Arrivée 30 nov. (J+10), départ avancé au 25 : J+5, même jour.
+      expect(
+        arrivalOffsetAfterDepartureChange(
+          oldDeparture: dep,
+          newDeparture: DateTime(2026, 11, 25),
+          offset: 10,
+          maxDays: 14,
+        ),
+        (offset: 5, moved: false),
+      );
+    });
+    test('hors fenêtre : l\'arrivée suit le départ et c\'est signalé', () {
+      // Recette : arrivée 4 déc. (J+14), départ ramené au 15 nov. : 19 jours.
+      expect(
+        arrivalOffsetAfterDepartureChange(
+          oldDeparture: dep,
+          newDeparture: DateTime(2026, 11, 15),
+          offset: 14,
+          maxDays: 14,
+        ),
+        (offset: 14, moved: true),
+      );
+      // Départ après l'arrivée.
+      expect(
+        arrivalOffsetAfterDepartureChange(
+          oldDeparture: dep,
+          newDeparture: DateTime(2026, 12, 10),
+          offset: 5,
+          maxDays: 14,
+        ),
+        (offset: 5, moved: true),
+      );
+    });
+    test('puces rapides, avion, ou premier départ : rien ne change', () {
+      for (final (old, offset, max) in [
+        (dep, 1, 14),
+        (dep, 2, 14),
+        (dep, 1, 2),
+        (null, 9, 14),
+      ]) {
+        expect(
+          arrivalOffsetAfterDepartureChange(
+            oldDeparture: old,
+            newDeparture: DateTime(2026, 11, 2),
+            offset: offset,
+            maxDays: max,
+          ),
+          (offset: offset, moved: false),
+        );
+      }
     });
   });
 

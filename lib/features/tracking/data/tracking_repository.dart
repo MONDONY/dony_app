@@ -47,6 +47,7 @@ class TrackingRepository {
     DateTime? offlineTimestamp,
     ScanMethod? scanMethod,
     String? trackingNumber,
+    String? qrToken,
   }) async {
     final response = await _apiClient.dio.post(
       '/tracking/events',
@@ -60,6 +61,9 @@ class TrackingRepository {
         'scanMethod': ?scanMethod?.wire,
         // Remise du colis (DEPART) : numéro de suivi donné par l'expéditeur.
         'trackingNumber': ?trackingNumber,
+        // Dépôt d'un colis payé au dépôt (bateau) : jeton `?k=` du QR de
+        // l'expéditeur, vérifié par le serveur.
+        'qrToken': ?qrToken,
         if (offlineTimestamp != null)
           'offlineTimestamp': offlineTimestamp.toUtc().toIso8601String(),
       },

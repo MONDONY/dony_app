@@ -10,6 +10,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/gallery_save_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_fullscreen_view.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -356,28 +357,56 @@ class _QrLoadedView extends StatelessWidget {
 
         const SizedBox(height: DonySpacing.xl),
 
-        // QR image
+        // QR image : un appui l'ouvre en plein écran.
         Center(
-          child: Container(
-            decoration: BoxDecoration(
+          child: Semantics(
+            button: true,
+            label: context.l10n.bidDetailQrFullscreenOpen,
+            excludeSemantics: true,
+            child: Material(
               color: cs.surface,
               borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(color: cs.outline),
+              child: InkWell(
+                key: const Key('qr-sheet-image'),
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                onTap: () => QrFullscreenView.show(context, imageBytes),
+                child: Ink(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                    border: Border.all(color: cs.outline),
+                  ),
+                  padding: const EdgeInsets.all(DonySpacing.md),
+                  child:
+                      Image.memory(
+                            imageBytes,
+                            width: 240,
+                            height: 240,
+                            fit: BoxFit.contain,
+                          )
+                          .animate()
+                          .fadeIn(duration: 250.ms)
+                          .scale(
+                            begin: const Offset(0.95, 0.95),
+                            curve: Curves.easeOutCubic,
+                          ),
+                ),
+              ),
             ),
-            padding: const EdgeInsets.all(DonySpacing.md),
-            child:
-                Image.memory(
-                      imageBytes,
-                      width: 240,
-                      height: 240,
-                      fit: BoxFit.contain,
-                    )
-                    .animate()
-                    .fadeIn(duration: 250.ms)
-                    .scale(
-                      begin: const Offset(0.95, 0.95),
-                      curve: Curves.easeOutCubic,
-                    ),
+          ),
+        ),
+
+        const SizedBox(height: DonySpacing.sm),
+
+        Center(
+          child: TextButton.icon(
+            key: const Key('qr-sheet-fullscreen'),
+            onPressed: () => QrFullscreenView.show(context, imageBytes),
+            style: TextButton.styleFrom(
+              foregroundColor: cs.primary,
+              minimumSize: const Size(44, 44),
+            ),
+            icon: const Icon(Icons.fullscreen_rounded, size: 20),
+            label: Text(context.l10n.bidDetailQrFullscreenOpen),
           ),
         ),
 

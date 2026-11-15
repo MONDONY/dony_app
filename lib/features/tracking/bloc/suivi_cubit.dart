@@ -12,6 +12,7 @@ import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/models/trip_milestones.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 
 /// Les deux usages de l'onglet Suivi. Le nom sert aussi de valeur de
@@ -76,6 +77,7 @@ final class SuiviValidateStep extends SuiviEffect {
     this.method = ScanMethod.qr,
     this.confirmNumber = false,
     this.trackingNumber,
+    this.qrToken,
   });
   final BidModel bid;
   final String step;
@@ -83,11 +85,32 @@ final class SuiviValidateStep extends SuiviEffect {
   final bool confirmNumber;
   final String? trackingNumber;
 
+  /// Jeton `?k=` du QR de l'expéditeur, pour le dépôt d'un colis payé au dépôt
+  /// (bateau). Part tel quel avec l'étape ; jamais affiché.
+  final String? qrToken;
+
+  /// Dépôt d'un colis payé au dépôt : la photo, preuve du dépôt, doit être
+  /// réellement téléversée avant l'envoi (sinon 422
+  /// `boat-deposit-photo-required`). Décidé par le seul `payoutTrigger` du
+  /// colis : la présence d'un jeton `?k=` dans le QR ne change ni le mode, ni
+  /// la photo, ni le libellé (un colis avion ou route garde son parcours).
+  bool get isDeposit =>
+      step == 'DEPART' && bid.payoutTrigger == PayoutTrigger.deposit;
+
   /// Remise sans QR ni numéro saisi : le numéro doit être demandé.
   bool get needsTrackingNumber =>
       step == 'DEPART' && method == ScanMethod.manual && trackingNumber == null;
 
-  bool get photoRequired => step != 'TRANSIT' || method == ScanMethod.manual;
+  bool get photoRequired =>
+      step != 'TRANSIT' || method == ScanMethod.manual || isDeposit;
+}
+
+/// Dépôt d'un colis payé au dépôt tenté sans QR (numéro saisi, bouton d'une
+/// ligne colis) : le serveur exige le jeton du QR de l'expéditeur. L'écran dit
+/// de le scanner.
+final class SuiviDepositNeedsQr extends SuiviEffect {
+  const SuiviDepositNeedsQr(this.bid);
+  final BidModel bid;
 }
 
 /// Colis du trajet dont une validation attend déjà son envoi.
@@ -147,10 +170,15 @@ final class SuiviShowTimeline extends SuiviEffect {
     this.arrivalInstructions,
     this.trackingNumber,
     this.bidStatus,
+    this.milestones,
     this.bid,
     this.source,
   });
   final String bidId;
+
+  /// Jalons du trajet (départ prévu, arrivée estimée, dernier retard) d'un
+  /// colis connu de l'app, `null` sinon.
+  final TripMilestones? milestones;
 
   /// Colis quand il est connu de l'app (liste « Mes envois »), `null` pour un
   /// colis d'un tiers retrouvé par numéro ou par QR.
@@ -487,6 +515,7 @@ class SuiviCubit extends Cubit<SuiviState> {
   void onQrScanned(
     String bidId,
     ScanHubState? hub, {
+    String? qrToken,
     Set<String> pendingBidIds = const {},
   }) {
     if (state.busy) return;
@@ -529,7 +558,13 @@ class SuiviCubit extends Cubit<SuiviState> {
       _emitEffect(SuiviParcelUnknown(bidId));
     } else {
       _emitValidation(
-        _validationOf(located, loaded!, ScanMethod.qr, pendingBidIds),
+        _validationOf(
+          located,
+          loaded!,
+          ScanMethod.qr,
+          pendingBidIds,
+          qrToken: qrToken,
+        ),
       );
     }
   }
@@ -567,6 +602,10 @@ class SuiviCubit extends Cubit<SuiviState> {
       _emitEffect(SuiviStepPending(bid));
       return;
     }
+    if (step == 'DEPART' && bid.payoutTrigger == PayoutTrigger.deposit) {
+      _emitEffect(SuiviDepositNeedsQr(bid));
+      return;
+    }
     _emitEffect(SuiviValidateStep(bid, step, method: ScanMethod.manual));
   }
 
@@ -577,6 +616,7 @@ class SuiviCubit extends Cubit<SuiviState> {
     ScanMethod method,
     Set<String> pendingBidIds, {
     String? trackingNumber,
+    String? qrToken,
   }) {
     final bid = located.bid;
     if (located.trip.id != hub.selectedTripId) {
@@ -597,12 +637,21 @@ class SuiviCubit extends Cubit<SuiviState> {
         (forced == 'TRANSIT' && progress.transit)) {
       return SuiviStepAlreadyDone(bid, forced!);
     }
+    final step = forced ?? next;
+    // Un colis payé au dépôt ne se dépose pas par numéro saisi : seul le QR de
+    // l'expéditeur porte le jeton que le serveur vérifie.
+    if (step == 'DEPART' &&
+        method == ScanMethod.manual &&
+        bid.payoutTrigger == PayoutTrigger.deposit) {
+      return SuiviDepositNeedsQr(bid);
+    }
     return SuiviValidateStep(
       bid,
-      forced ?? next,
+      step,
       method: method,
       confirmNumber: method == ScanMethod.manual,
       trackingNumber: trackingNumber,
+      qrToken: qrToken,
     );
   }
 
@@ -763,9 +812,9 @@ class SuiviCubit extends Cubit<SuiviState> {
             bidId: result.bidId,
             departureCity: result.departureCity,
             arrivalCity: result.arrivalCity,
-            // Le back ne sert pas le mode du colis d'un tiers : icône neutre
-            // explicite, jamais un avion supposé.
-            transportMode: TransportMode.other,
+            // Mode servi par le back (lot 3) ; inconnu ou absent (back
+            // antérieur) : icône et étapes neutres, jamais un avion supposé.
+            transportMode: result.transportMode ?? TransportMode.other,
             arrivalInstructions: result.arrivalInstructions,
             trackingNumber: result.trackingNumber,
             source: 'number',
@@ -808,11 +857,17 @@ class SuiviCubit extends Cubit<SuiviState> {
         bidId: bidId,
         departureCity: hasRoute ? from : null,
         arrivalCity: hasRoute ? to : null,
-        transportMode: known?.transportMode ?? trip?.transportMode,
+        // Colis inconnu de l'app (QR d'un tiers, « Suivre ce colis ») : aucun
+        // mode connu, icône et étapes neutres, jamais l'avion (C14). Un colis
+        // connu garde son mode, `null` (ancienne donnée) compris.
+        transportMode: known == null && trip == null
+            ? TransportMode.other
+            : known?.transportMode ?? trip?.transportMode,
         arrivalInstructions:
             known?.arrivalInstructions ?? trip?.arrivalInstructions,
         trackingNumber: known?.trackingNumber,
         bidStatus: known?.status,
+        milestones: known == null ? null : TripMilestones.fromBid(known),
         bid: known,
         source: source,
       ),

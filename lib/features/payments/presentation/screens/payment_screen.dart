@@ -10,6 +10,7 @@ import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/utils/bid_parcel_size.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -240,7 +241,13 @@ class _SummaryCard extends StatelessWidget {
             ),
             child: Column(
               children: [
-                if (bid.pricingMode == BidPricingMode.kg ||
+                // Colis au m³ : son volume, jamais de kilos ni de prix au kg.
+                if (bid.hasParcelVolume) ...[
+                  DonyInfoRow(
+                    label: l.paymentSummaryVolumeLabel,
+                    value: bidVolumeLabel(l, bid, withDimensions: true)!,
+                  ),
+                ] else if (bid.pricingMode == BidPricingMode.kg ||
                     bid.pricingMode == BidPricingMode.mixed) ...[
                   DonyInfoRow(
                     label: l.paymentSummaryWeightLabel,

@@ -9,6 +9,7 @@ import 'package:dony/features/matching/data/models/parcel_fit_wire.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
+import 'package:dony/features/matching/data/models/trip_delay_info.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/models/trip_series_result.dart';
@@ -34,9 +35,12 @@ class AnnouncementRemoteDatasource {
     String? arrivalDate,
     required AddressData pickupAddress,
     required AddressData deliveryAddress,
-    required double availableKg,
-    required double pricePerKg,
+    required double? availableKg,
+    required double? pricePerKg,
     required TransportMode transportMode,
+    String? arrivalDateMax,
+    double? volumeCapacityM3,
+    double? pricePerM3,
     TripStops? stops,
     String? description,
     List<String> acceptedContentTypes = const [],
@@ -67,6 +71,9 @@ class AnnouncementRemoteDatasource {
         availableKg: availableKg,
         pricePerKg: pricePerKg,
         transportMode: transportMode,
+        arrivalDateMax: arrivalDateMax,
+        volumeCapacityM3: volumeCapacityM3,
+        pricePerM3: pricePerM3,
         stops: stops,
         description: description,
         acceptedContentTypes: acceptedContentTypes,
@@ -255,6 +262,9 @@ class AnnouncementRemoteDatasource {
     List<String>? paymentMethods,
     ItemSize? minItemSize,
     String? viaCity,
+    double? minVolumeM3,
+    double? maxPricePerM3,
+    DateTime? arrivalBefore,
   }) async {
     final result = await searchAnnouncementsPage(
       departureCity: departureCity,
@@ -281,6 +291,9 @@ class AnnouncementRemoteDatasource {
       paymentMethods: paymentMethods,
       minItemSize: minItemSize,
       viaCity: viaCity,
+      minVolumeM3: minVolumeM3,
+      maxPricePerM3: maxPricePerM3,
+      arrivalBefore: arrivalBefore,
     );
     return result.content;
   }
@@ -310,6 +323,9 @@ class AnnouncementRemoteDatasource {
     List<String>? paymentMethods,
     ItemSize? minItemSize,
     String? viaCity,
+    double? minVolumeM3,
+    double? maxPricePerM3,
+    DateTime? arrivalBefore,
     bool includeFull = false,
   }) async {
     final params = <String, dynamic>{
@@ -343,6 +359,9 @@ class AnnouncementRemoteDatasource {
         paymentMethods: paymentMethods,
         minItemSize: minItemSize,
         viaCity: viaCity,
+        minVolumeM3: minVolumeM3,
+        maxPricePerM3: maxPricePerM3,
+        arrivalBefore: arrivalBefore,
       ),
     };
     final response = await _apiClient.dio.get(
@@ -387,6 +406,9 @@ class AnnouncementRemoteDatasource {
     List<String>? paymentMethods,
     ItemSize? minItemSize,
     String? viaCity,
+    double? minVolumeM3,
+    double? maxPricePerM3,
+    DateTime? arrivalBefore,
   }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/announcements',
@@ -415,6 +437,9 @@ class AnnouncementRemoteDatasource {
           paymentMethods: paymentMethods,
           minItemSize: minItemSize,
           viaCity: viaCity,
+          minVolumeM3: minVolumeM3,
+          maxPricePerM3: maxPricePerM3,
+          arrivalBefore: arrivalBefore,
         ),
       },
     );
@@ -450,6 +475,9 @@ class AnnouncementRemoteDatasource {
     List<String>? paymentMethods,
     ItemSize? minItemSize,
     String? viaCity,
+    double? minVolumeM3,
+    double? maxPricePerM3,
+    DateTime? arrivalBefore,
   }) => <String, dynamic>{
     'departureCity': ?departureCity,
     'arrivalCity': ?arrivalCity,
@@ -485,6 +513,22 @@ class AnnouncementRemoteDatasource {
     // s'arrête. Absents sans filtre ; un back antérieur les ignore.
     if (minItemSize != null) 'minItemSize': itemSizeToWire(minItemSize),
     if (viaCity != null && viaCity.trim().isNotEmpty) 'viaCity': viaCity.trim(),
+    // Bateau : volume restant minimal (m³), prix maximal au m³ (devise du
+    // lecteur) et arrivée estimée au plus tard (jour). STRICTS côté back : un
+    // trajet au kilo n'y passe pas. Le back répond 400 `invalid-search` à une
+    // valeur négative, au-dessus de sa borne ou à plus de 4 décimales : elles
+    // sont bornées et écrites sans notation scientifique avant de partir, une
+    // valeur hors bornes n'est pas envoyée. Un back antérieur les ignore.
+    if (BoatSearchLimits.volume(minVolumeM3) != null)
+      'minVolumeM3': BoatSearchLimits.wire(
+        BoatSearchLimits.volume(minVolumeM3)!,
+      ),
+    if (BoatSearchLimits.pricePerM3(maxPricePerM3) != null)
+      'maxPricePerM3': BoatSearchLimits.wire(
+        BoatSearchLimits.pricePerM3(maxPricePerM3)!,
+      ),
+    if (arrivalBefore != null)
+      'arrivalBefore': DateFormat('yyyy-MM-dd').format(arrivalBefore),
   };
 
   Future<void> deleteAnnouncement(String id) async {
@@ -514,9 +558,12 @@ class AnnouncementRemoteDatasource {
     String? arrivalDate,
     required AddressData pickupAddress,
     required AddressData deliveryAddress,
-    required double availableKg,
-    required double pricePerKg,
+    required double? availableKg,
+    required double? pricePerKg,
     required TransportMode transportMode,
+    String? arrivalDateMax,
+    double? volumeCapacityM3,
+    double? pricePerM3,
     TripStops? stops,
     String? description,
     List<String> acceptedContentTypes = const [],
@@ -543,9 +590,13 @@ class AnnouncementRemoteDatasource {
         'arrivalDate': ?arrivalDate,
         'pickupAddress': pickupAddress.toJson(),
         'deliveryAddress': deliveryAddress.toJson(),
-        'availableKg': availableKg,
-        'pricePerKg': pricePerKg,
+        // Absents au m³ : un trajet bateau vendu au m³ n'envoie aucun kilo.
+        'availableKg': ?availableKg,
+        'pricePerKg': ?pricePerKg,
         'transportMode': transportModeToWire(transportMode),
+        'arrivalDateMax': ?arrivalDateMax,
+        'volumeCapacityM3': ?volumeCapacityM3,
+        'pricePerM3': ?pricePerM3,
         if (stops != null && supportsStops(transportMode))
           'stopsCount': stops.wire,
         if (description != null && description.isNotEmpty)
@@ -596,5 +647,38 @@ class AnnouncementRemoteDatasource {
       },
     );
     return TripRescheduleResult.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Annonce d'un retard sur un trajet parti (`POST
+  /// /announcements/{id}/delays`, 201) : nouvelle arrivée estimée (début et
+  /// fin, jours calendaires), motif, message facultatif (300 caractères au
+  /// plus). Un rejeu identique de moins de 10 minutes rend le retard déjà
+  /// créé. Une réponse illisible (back plus récent) rend le retard demandé :
+  /// le serveur l'a accepté.
+  Future<TripDelayInfo> announceDelay({
+    required String announcementId,
+    required TripDelayReason reason,
+    required DateTime arrivalDate,
+    required DateTime arrivalDateMax,
+    String? message,
+  }) async {
+    final text = message?.trim() ?? '';
+    final response = await _apiClient.dio.post(
+      '/announcements/$announcementId/delays',
+      data: {
+        'reason': reason.wire,
+        'arrivalDate': DateFormat('yyyy-MM-dd').format(arrivalDate),
+        'arrivalDateMax': DateFormat('yyyy-MM-dd').format(arrivalDateMax),
+        if (text.isNotEmpty) 'message': text,
+      },
+    );
+    return TripDelayInfo.fromJsonOrNull(response.data) ??
+        TripDelayInfo(
+          reason: reason.wire,
+          arrivalDate: arrivalDate,
+          arrivalDateMax: arrivalDateMax,
+          message: text.isEmpty ? null : text,
+          announcedAt: DateTime.now(),
+        );
   }
 }

@@ -16,6 +16,7 @@ import 'package:dony/features/package_request/data/models/package_request_duplic
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/package_request/data/parcel_dimensions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PackageRequestFormBloc
@@ -114,6 +115,9 @@ class PackageRequestFormBloc
       weightKg: r.weightKg,
       parcelSize: r.parcelSize,
       itemSize: r.itemSize,
+      lengthCm: r.lengthCm,
+      widthCm: r.widthCm,
+      heightCm: r.heightCm,
       categories: r.categories,
       description: r.description,
       photoUrl: r.photoUrl,
@@ -150,6 +154,9 @@ class PackageRequestFormBloc
       weightKg: base.weightKg,
       parcelSize: base.parcelSize,
       itemSize: base.itemSize,
+      lengthCm: base.lengthCm,
+      widthCm: base.widthCm,
+      heightCm: base.heightCm,
       categories: base.categories,
       description: base.description,
       pickupNeighborhood: base.pickupNeighborhood,
@@ -231,9 +238,16 @@ class PackageRequestFormBloc
   }
 
   /// Un mode sans taille de colis (avion, bateau) efface celle déjà choisie :
-  /// une taille invisible serait envoyée à l'insu de l'expéditeur.
-  static PackageRequestFormState _withModeRules(PackageRequestFormState next) =>
-      next.modeHasItemSize ? next : next.copyWith(clearItemSize: true);
+  /// une taille invisible serait envoyée à l'insu de l'expéditeur. De même, un
+  /// mode sans dimensions (avion, route) efface celles déjà saisies.
+  static PackageRequestFormState _withModeRules(PackageRequestFormState next) {
+    var rules = next;
+    if (!rules.modeHasItemSize) rules = rules.copyWith(clearItemSize: true);
+    if (!rules.modeKeepsDimensions) {
+      rules = rules.copyWith(clearDimensions: true);
+    }
+    return rules;
+  }
 
   void _onItemSizeChanged(
     FormItemSizeChanged e,
@@ -251,6 +265,12 @@ class PackageRequestFormBloc
   }
 
   void _onStep2(FormStep2Submitted e, Emitter<PackageRequestFormState> emit) {
+    // Dimensions tout ou rien, et seulement pour un mode qui les porte.
+    final dimensions =
+        state.modeKeepsDimensions &&
+        e.lengthCm != null &&
+        e.widthCm != null &&
+        e.heightCm != null;
     emit(
       state.copyWith(
         currentStep: 2,
@@ -258,11 +278,16 @@ class PackageRequestFormBloc
         parcelSize: e.parcelSize,
         categories: e.categories,
         description: e.description,
+        lengthCm: dimensions ? e.lengthCm : null,
+        widthCm: dimensions ? e.widthCm : null,
+        heightCm: dimensions ? e.heightCm : null,
+        clearDimensions: !dimensions,
       ),
     );
     _logStepCompleted(2, {
       'parcel_size': e.parcelSize.wireName,
       'categories_count': e.categories.length,
+      if (state.modeKeepsDimensions) 'has_dimensions': dimensions,
     });
   }
 
@@ -288,6 +313,29 @@ class PackageRequestFormBloc
           AnalyticsEvents.packageRequestSubmitFailed,
           properties: {
             'error_code': 'weight-too-heavy-for-mode',
+            'is_draft': e.saveAsDraft,
+            'editing': state.editingRequestId != null,
+          },
+        ),
+      );
+      return;
+    }
+    // Bateau : les dimensions sont obligatoires (le back refuserait en 422
+    // `boat-dimensions-required`). Cas d'un brouillon repris sans elles.
+    if (ParcelDimensions.isRequiredFor(state.requestTransportMode) &&
+        !state.hasDimensions) {
+      emit(
+        state.copyWith(
+          submissionStatus: FormSubmissionStatus.error,
+          formError: PackageRequestFormError.dimensionsRequired,
+          clearDraftLimitMessage: true,
+        ),
+      );
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.packageRequestSubmitFailed,
+          properties: {
+            'error_code': 'boat-dimensions-required',
             'is_draft': e.saveAsDraft,
             'editing': state.editingRequestId != null,
           },
@@ -349,6 +397,11 @@ class PackageRequestFormBloc
           // Taille non touchée : clé absente (le back la conserve) ; changée :
           // envoyée ; retirée : effacée côté back (`NONE`).
           itemSize: _itemSizeChange(),
+          // Dimensions absentes : le back conserve celles de la demande (il
+          // n'existe pas de moyen de les effacer en « peu importe »).
+          lengthCm: _sentDimensions ? state.lengthCm : null,
+          widthCm: _sentDimensions ? state.widthCm : null,
+          heightCm: _sentDimensions ? state.heightCm : null,
         );
       } else {
         saved = await _repository.create(
@@ -380,6 +433,9 @@ class PackageRequestFormBloc
           currency: state.currency?.code,
           // Facultative : la clé ne part que renseignée.
           itemSize: state.itemSize,
+          lengthCm: _sentDimensions ? state.lengthCm : null,
+          widthCm: _sentDimensions ? state.widthCm : null,
+          heightCm: _sentDimensions ? state.heightCm : null,
         );
       }
       if (!e.saveAsDraft && saved.status == PackageRequestStatus.draft) {
@@ -412,6 +468,7 @@ class PackageRequestFormBloc
             if (state.parcelSize != null)
               'parcel_size': state.parcelSize!.wireName,
             if (state.itemSize != null) 'item_size': state.itemSize!.wire,
+            if (state.modeKeepsDimensions) 'has_dimensions': _sentDimensions,
             'has_photos': (e.photoKeys ?? const []).isNotEmpty,
             'has_promo_code': _blankToNull(state.promoCode) != null,
           },
@@ -450,6 +507,10 @@ class PackageRequestFormBloc
       }
     }
   }
+
+  /// Les dimensions partent avec la demande : bateau ou « peu importe », les
+  /// trois renseignées. Jamais pour l'avion ni la route.
+  bool get _sentDimensions => state.modeKeepsDimensions && state.hasDimensions;
 
   void _onStepBack(FormStepBack e, Emitter<PackageRequestFormState> emit) {
     if (state.currentStep > 0) {

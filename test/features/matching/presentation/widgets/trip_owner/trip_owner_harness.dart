@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -44,6 +45,7 @@ AnnouncementModel ownerTrip({
   Set<BidPaymentMethod> methods = const {BidPaymentMethod.stripe},
   bool trackingActive = false,
   TripParcelsSummary? parcelsSummary,
+  TransportMode? transportMode,
 }) => AnnouncementModel(
   id: 'trip-1',
   travelerId: 'trav-1',
@@ -63,6 +65,7 @@ AnnouncementModel ownerTrip({
   acceptedPaymentMethods: methods,
   trackingActive: trackingActive,
   parcelsSummary: parcelsSummary,
+  transportMode: transportMode,
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),
 );

@@ -1,8 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/presentation/utils/bid_parcel_size.dart';
 import 'package:dony/features/matching/presentation/widgets/parcel_status_pill.dart';
 import 'package:dony/features/matching/presentation/widgets/rating_pending_pill.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -120,11 +119,7 @@ class ShipmentCard extends StatelessWidget {
   /// Format weight at the effective language: '4,5 kg' in French, '4.5 kg'
   /// in English.
   String _weightLabel(AppLocalizations l) {
-    final kg = bid.displayWeightKg;
-    if (kg == null) {
-      return '- kg';
-    }
-    return parcelWeightWithSize(l, formatWeightKg(l, kg), bid.itemSize);
+    return bidParcelSizeLabel(l, bid) ?? '- kg';
   }
 
   @override

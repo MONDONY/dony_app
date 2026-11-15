@@ -32,7 +32,8 @@ class CreateNewPublication extends PublishDraftsSheetResult {
 /// « Terminer ce trajet ou en créer un nouveau ? », avant le formulaire de
 /// publication, quand il reste des brouillons.
 abstract final class PublishDraftsSheet {
-  /// Étapes du formulaire, pour situer un brouillon local.
+  /// Étapes du formulaire de demande d'envoi, pour situer un brouillon local
+  /// sans position propre ([LocalPublishDraft.stepCount]).
   static const totalSteps = 3;
 
   static Future<PublishDraftsSheetResult?> show(
@@ -120,8 +121,9 @@ class _DraftRow extends StatelessWidget {
     final status = switch (entry) {
       ServerTripDraftSeries() => l10n.publishDraftSeriesStatus,
       final LocalPublishDraft d => l10n.publishDraftLocalStatus(
-        d.draft.step.clamp(0, PublishDraftsSheet.totalSteps - 1) + 1,
-        PublishDraftsSheet.totalSteps,
+        d.stepNumber ??
+            d.draft.step.clamp(0, PublishDraftsSheet.totalSteps - 1) + 1,
+        d.stepCount ?? PublishDraftsSheet.totalSteps,
         DateFormat.MMMd(
           l10n.localeName,
         ).add_Hm().format(d.draft.savedAt.toLocal()),

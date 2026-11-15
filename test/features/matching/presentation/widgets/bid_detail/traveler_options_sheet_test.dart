@@ -18,6 +18,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -55,8 +56,10 @@ BidModel _bid({
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   bool? contactWindowOpen,
   DateTime? returnDeadline,
+  PayoutTrigger payoutTrigger = PayoutTrigger.delivery,
 }) => BidModel(
   id: 'b1',
+  payoutTrigger: payoutTrigger,
   contactWindowOpen: contactWindowOpen,
   returnDeadline: returnDeadline,
   supplementRequestAllowed: supplementRequestAllowed,
@@ -187,6 +190,48 @@ void main() {
     expect(find.text('Annuler ce transport'), findsNothing);
     expect(find.text('Le colis ne correspond pas'), findsNothing);
     expect(find.text('Partager le suivi'), findsNothing);
+  });
+
+  group('colis payé au dépôt (bateau)', () {
+    testWidgets(
+      'refuseAndCancel_hiddenForDepositPaid : le support à la place',
+      (tester) async {
+        await _open(
+          tester,
+          _bid(status: 'HANDED_OVER', payoutTrigger: PayoutTrigger.deposit),
+        );
+
+        expect(find.text('Le colis ne correspond pas'), findsNothing);
+        expect(find.text('Annuler ce transport'), findsNothing);
+        expect(
+          find.byKey(const Key('deposit-paid-support-tile')),
+          findsOneWidget,
+        );
+        expect(find.text('Contacter le support'), findsOneWidget);
+        expect(
+          find.textContaining('un litige se règle avec le support Yadony'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('refuseAndCancel_unchangedBeforeDeposit : ACCEPTED', (
+      tester,
+    ) async {
+      await _open(tester, _bid(payoutTrigger: PayoutTrigger.deposit));
+
+      expect(find.text('Le colis ne correspond pas'), findsOneWidget);
+      expect(find.text('Annuler ce transport'), findsOneWidget);
+      expect(find.byKey(const Key('deposit-paid-support-tile')), findsNothing);
+    });
+
+    testWidgets('refuseAndCancel_unchanged_deliveryParcel', (tester) async {
+      await _open(tester, _bid(status: 'HANDED_OVER'));
+
+      expect(find.text('Le colis ne correspond pas'), findsOneWidget);
+      expect(find.text('Annuler ce transport'), findsOneWidget);
+      expect(find.byKey(const Key('deposit-paid-support-tile')), findsNothing);
+    });
   });
 
   group('Supprimer cette demande (ex-footer)', () {
@@ -461,6 +506,55 @@ void main() {
   ) async {
     await _open(tester, _bid(token: 'abc123'));
     expect(find.text('Partager le suivi'), findsNothing);
+  });
+
+  // Recette du 14/11 : en espèces, aucun paiement ne passe par Yadony, aucun
+  // remboursement automatique n'est promis.
+  for (final english in [false, true]) {
+    final lang = english ? 'en' : 'fr';
+    testWidgets('espèces $lang 360 dp : menu sans promesse de remboursement, '
+        'dialogue d\'annulation non plus', (tester) async {
+      if (english) useEnglish();
+      final l = lookupAppLocalizations(english ? AppL10n.en : AppL10n.fr);
+      await _open(
+        tester,
+        _bid(token: null, paymentMethod: BidPaymentMethod.cash),
+        size: const Size(360, 800),
+      );
+
+      expect(
+        find.text(l.bidDetailCancelTransportAcceptedCashSubtitle),
+        findsOneWidget,
+      );
+      expect(find.text(l.bidDetailRefuseParcelCashSubtitle), findsOneWidget);
+      expect(
+        find.text(l.bidDetailCancelTransportAcceptedSubtitle),
+        findsNothing,
+      );
+      expect(find.text(l.bidDetailRefuseParcelSubtitle), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      await tester.ensureVisible(find.text(l.bidDetailCancelTransportLabel));
+      await tester.tap(find.text(l.bidDetailCancelTransportLabel));
+      await tester.pumpAndSettle();
+      expect(find.text(l.bidCancelAcceptedCashSubtitle), findsOneWidget);
+      expect(find.text(l.bidCancelAcceptedSubtitle), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('carte : le remboursement automatique reste annoncé', (
+    tester,
+  ) async {
+    await _open(tester, _bid(token: null));
+    expect(
+      find.text("L'expéditeur sera remboursé automatiquement"),
+      findsOneWidget,
+    );
+    expect(
+      find.text("Refusez-le sans pénalité, l'expéditeur est remboursé"),
+      findsOneWidget,
+    );
   });
 
   testWidgets('tap Annuler ce transport → dialog affiché', (tester) async {

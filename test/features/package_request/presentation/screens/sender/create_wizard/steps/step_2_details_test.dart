@@ -17,6 +17,7 @@ import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -188,6 +189,38 @@ void main() {
         findsOneWidget,
       );
     });
+
+    // Recette 13/11 : à 360 dp, « … choisissez Route à l'étape … » finissait
+    // en points de suspension.
+    for (final english in [false, true]) {
+      testWidgets('360 dp ${english ? 'EN' : 'FR'} : message des 32 kg entier, '
+          'sur plusieurs lignes', (tester) async {
+        if (english) useEnglish();
+        setTransportModes(
+          const TransportModesAvailability(road: true, boat: false),
+        );
+        addTearDown(resetTransportModesForTest);
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final key = GlobalKey<Step2DetailsState>();
+        await tester.pumpWidget(wrap(Step2Details(key: key)));
+        await tester.enterText(find.byType(TextFormField).first, '35');
+        key.currentState!.submit();
+        await tester.pump();
+        final message = find.text(
+          english
+              ? 'Above 32 kg, choose Road in the previous step.'
+              : "Au-delà de 32 kg, choisissez Route à l'étape précédente.",
+        );
+        expect(message, findsOneWidget);
+        expect(
+          tester.renderObject<RenderParagraph>(message).didExceedMaxLines,
+          isFalse,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
 
     testWidgets('écran traduit en anglais : titre, poids et plage de poids', (
       tester,
@@ -564,6 +597,7 @@ void main() {
       TransportMode? mode,
       double weight = 5,
       ItemSize? size,
+      (int, int, int)? dimensions,
     }) => PackageRequest(
       id: 'r-1',
       senderId: 's-1',
@@ -574,6 +608,9 @@ void main() {
       parcelSize: ParcelSize.large,
       transportMode: mode,
       itemSize: size,
+      lengthCm: dimensions?.$1,
+      widthCm: dimensions?.$2,
+      heightCm: dimensions?.$3,
       categories: const ['Meubles'],
       status: PackageRequestStatus.open,
       createdAt: DateTime(2026, 11, 12),
@@ -586,11 +623,17 @@ void main() {
       TransportMode? mode,
       double weight = 5,
       ItemSize? size,
+      (int, int, int)? dimensions,
     }) {
       final bloc = PackageRequestFormBloc(
         repo,
         analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-        editing: request(mode: mode, weight: weight, size: size),
+        editing: request(
+          mode: mode,
+          weight: weight,
+          size: size,
+          dimensions: dimensions,
+        ),
       );
       addTearDown(bloc.close);
       return bloc;
@@ -681,7 +724,11 @@ void main() {
       viewport(tester);
       final canContinue = await pump(
         tester,
-        editing(mode: TransportMode.boat, weight: 5000),
+        editing(
+          mode: TransportMode.boat,
+          weight: 5000,
+          dimensions: (50, 40, 30),
+        ),
       );
       expect(sizeSection, findsNothing);
       expect(canContinue.value, isTrue);

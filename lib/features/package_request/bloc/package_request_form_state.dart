@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/data/parcel_dimensions.dart';
 import 'package:equatable/equatable.dart';
 
 enum FormSubmissionStatus { idle, submitting, success, error }
@@ -17,7 +18,14 @@ enum FormSubmissionStatus { idle, submitting, success, error }
 /// [weightTooHeavyForMode] : le poids dépasse le plafond du mode (32 kg en
 /// avion et « peu importe »), par exemple après un retour à l'étape « Le
 /// trajet » pour changer de mode.
-enum PackageRequestFormError { budgetRequired, weightTooHeavyForMode }
+///
+/// [dimensionsRequired] : demande en bateau sans ses trois dimensions (brouillon
+/// repris sans elles, retour à l'étape « Le trajet » pour passer en bateau).
+enum PackageRequestFormError {
+  budgetRequired,
+  weightTooHeavyForMode,
+  dimensionsRequired,
+}
 
 class PackageRequestFormState extends Equatable {
   const PackageRequestFormState({
@@ -31,6 +39,9 @@ class PackageRequestFormState extends Equatable {
     this.weightKg,
     this.parcelSize,
     this.itemSize,
+    this.lengthCm,
+    this.widthCm,
+    this.heightCm,
     this.categories = const [],
     this.description,
     this.targetPriceEur,
@@ -86,6 +97,28 @@ class PackageRequestFormState extends Equatable {
   /// Taille du colis (S à XL) : facultative, `null` tant que l'expéditeur n'en
   /// choisit pas. Distincte de [parcelSize], dérivée du poids pour les filtres.
   final ItemSize? itemSize;
+
+  /// Dimensions du colis en centimètres, obligatoires en bateau, facultatives
+  /// mais « tout ou rien » en « peu importe », sans objet pour les autres
+  /// modes. Le volume en m³ n'est qu'un aperçu ([volumeM3]), jamais envoyé.
+  final int? lengthCm;
+  final int? widthCm;
+  final int? heightCm;
+
+  /// Les trois dimensions sont renseignées.
+  bool get hasDimensions =>
+      lengthCm != null && widthCm != null && heightCm != null;
+
+  /// Aperçu du volume (même calcul que le back) ; `null` sans dimensions
+  /// valides.
+  double? get volumeM3 =>
+      ParcelDimensions.volumeM3(lengthCm, widthCm, heightCm);
+
+  /// Le mode de la demande porte-t-il des dimensions ? Oui en bateau
+  /// (obligatoires) et en « peu importe » (facultatives) ; non en avion et en
+  /// route, où elles sont effacées.
+  bool get modeKeepsDimensions =>
+      ParcelDimensions.isKeptFor(requestTransportMode);
 
   /// Catégories de colis sélectionnées (libellés libres, comme une annonce).
   final List<String> categories;
@@ -155,6 +188,11 @@ class PackageRequestFormState extends Equatable {
     // Même pattern que clearTotalBudgetEur : la taille est facultative, elle
     // doit pouvoir être retirée (désélection, passage en avion).
     bool clearItemSize = false,
+    int? lengthCm,
+    int? widthCm,
+    int? heightCm,
+    // Les trois dimensions vont ensemble : tout ou rien.
+    bool clearDimensions = false,
     List<String>? categories,
     String? description,
     double? targetPriceEur,
@@ -204,6 +242,9 @@ class PackageRequestFormState extends Equatable {
     weightKg: weightKg ?? this.weightKg,
     parcelSize: parcelSize ?? this.parcelSize,
     itemSize: clearItemSize ? null : (itemSize ?? this.itemSize),
+    lengthCm: clearDimensions ? null : (lengthCm ?? this.lengthCm),
+    widthCm: clearDimensions ? null : (widthCm ?? this.widthCm),
+    heightCm: clearDimensions ? null : (heightCm ?? this.heightCm),
     categories: categories ?? this.categories,
     description: description ?? this.description,
     targetPriceEur: targetPriceEur ?? this.targetPriceEur,
@@ -243,6 +284,9 @@ class PackageRequestFormState extends Equatable {
     weightKg,
     parcelSize,
     itemSize,
+    lengthCm,
+    widthCm,
+    heightCm,
     categories,
     description,
     targetPriceEur,

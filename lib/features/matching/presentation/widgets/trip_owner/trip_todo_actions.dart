@@ -5,11 +5,13 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_activity_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_live.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_parcels_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_todo_sheets.dart';
 import 'package:dony/features/traveler_status/presentation/traveler_status_prompt.dart';
 import 'package:dony/features/traveler_status/presentation/traveler_status_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -116,6 +118,13 @@ Future<void> _open(
         context,
         announcementId: trip.id,
         initialInstructions: trip.arrivalInstructions,
+        // Même titre que la carte : « Arrivé au port de … » en bateau.
+        title: tripTodoTitle(
+          context.l10n,
+          item,
+          cardReady: live.cardReady,
+          trip: trip,
+        ),
       );
     case TripTodoKind.notify:
       log();

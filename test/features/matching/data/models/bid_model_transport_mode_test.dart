@@ -34,4 +34,46 @@ void main() {
       expect(BidModel.fromJson(b.toJson()).transportMode, TransportMode.car);
     });
   });
+
+  group('BidModel : paiement au dépôt', () {
+    test('depositedAt lu en date, nul sans la clé (back antérieur)', () {
+      final b = BidModel.fromJson(
+        _bid({
+          'payoutTrigger': 'DEPOSIT',
+          'depositedAt': '2026-11-26T14:10:00Z',
+        }),
+      );
+      expect(b.depositedAt, DateTime.utc(2026, 11, 26, 14, 10));
+      expect(BidModel.fromJson(_bid()).depositedAt, isNull);
+      expect(BidModel.fromJson(b.toJson()).depositedAt, b.depositedAt);
+    });
+
+    test(
+      'isPaidOutAtDeposit : dépôt + carte ou mobile money + colis déposé',
+      () {
+        BidModel bid({
+          String status = 'HANDED_OVER',
+          String method = 'STRIPE',
+          String trigger = 'DEPOSIT',
+        }) => BidModel.fromJson(
+          _bid({
+            'status': status,
+            'paymentMethod': method,
+            'payoutTrigger': trigger,
+          }),
+        );
+
+        expect(bid().isPaidOutAtDeposit, isTrue);
+        expect(bid(method: 'MOBILE_MONEY').isPaidOutAtDeposit, isTrue);
+        expect(bid(status: 'IN_TRANSIT').isPaidOutAtDeposit, isTrue);
+        // Avant le dépôt : le colis est encore remboursable.
+        expect(bid(status: 'ACCEPTED').isPaidOutAtDeposit, isFalse);
+        // Espèces : aucun paiement de la plateforme versé.
+        expect(bid(method: 'CASH').isPaidOutAtDeposit, isFalse);
+        // Paiement à la livraison (avion, route) : jamais.
+        expect(bid(trigger: 'DELIVERY').isPaidOutAtDeposit, isFalse);
+        expect(bid(status: 'CANCELLED').isPaidOutAtDeposit, isFalse);
+      },
+    );
+  });
 }

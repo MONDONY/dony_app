@@ -12,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/models/bid_volume_input.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -353,6 +354,78 @@ void main() {
   });
 
   group('propose', () {
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'les dimensions d\'un trajet au m³ sont transmises au depot',
+      build: () {
+        when(
+          () => repo.propose(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+            description: any(named: 'description'),
+            contentCategory: any(named: 'contentCategory'),
+            recipientName: any(named: 'recipientName'),
+            recipientPhone: any(named: 'recipientPhone'),
+            proposedTotalEur: any(named: 'proposedTotalEur'),
+            paymentMethod: any(named: 'paymentMethod'),
+            countryCode: any(named: 'countryCode'),
+            photoKeys: any(named: 'photoKeys'),
+            customItems: any(named: 'customItems'),
+            gridItems: any(named: 'gridItems'),
+            itemSize: any(named: 'itemSize'),
+            volume: any(named: 'volume'),
+          ),
+        ).thenAnswer((_) async => _thread());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const BidNegotiationProposeRequested(
+          announcementId: 'ann1',
+          weightKg: null,
+          description: 'Un carton',
+          contentCategory: 'CLOTHING',
+          recipientName: 'Awa Diop',
+          recipientPhone: '+221700000000',
+          proposedTotalEur: 42,
+          volume: BidVolumeInput(lengthCm: 100, widthCm: 50, heightCm: 40),
+        ),
+      ),
+      wait: const Duration(milliseconds: 1),
+      verify: (_) {
+        verify(
+          () => repo.propose(
+            announcementId: 'ann1',
+            weightKg: null,
+            description: any(named: 'description'),
+            contentCategory: any(named: 'contentCategory'),
+            recipientName: any(named: 'recipientName'),
+            recipientPhone: any(named: 'recipientPhone'),
+            proposedTotalEur: 42,
+            paymentMethod: any(named: 'paymentMethod'),
+            countryCode: any(named: 'countryCode'),
+            photoKeys: any(named: 'photoKeys'),
+            customItems: any(named: 'customItems'),
+            gridItems: any(named: 'gridItems'),
+            itemSize: any(named: 'itemSize'),
+            volume: const BidVolumeInput(
+              lengthCm: 100,
+              widthCm: 50,
+              heightCm: 40,
+            ),
+          ),
+        ).called(1);
+        final captured =
+            verify(
+                  () => backend.capture(
+                    AnalyticsEvents.tripNegotiationProposed,
+                    captureAny(),
+                  ),
+                ).captured.single
+                as Map<String, Object?>;
+        expect(captured['price_unit'], 'm3');
+        expect(captured.keys, isNot(contains('length_cm')));
+      },
+    );
+
     blocTest<BidNegotiationBloc, BidNegotiationState>(
       'la taille choisie du colis est transmise au depot',
       build: () {

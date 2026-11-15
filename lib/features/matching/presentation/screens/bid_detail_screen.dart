@@ -558,7 +558,9 @@ class _BidDetailViewState extends State<_BidDetailView>
           } else if (state is RescheduleWithdrawn) {
             DonySnackbar.show(
               context,
-              message: l.bidRescheduleWithdrawnSnackbar,
+              message: _bid.paymentMethod == BidPaymentMethod.cash
+                  ? l.bidRescheduleWithdrawnCashSnackbar
+                  : l.bidRescheduleWithdrawnSnackbar,
               type: DonySnackbarType.success,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
@@ -642,7 +644,11 @@ class _BidDetailViewState extends State<_BidDetailView>
                   _bid = state.bid;
                   DonySnackbar.show(
                     context,
-                    message: l.bidDetailCancelledSnackbar,
+                    message: bidCancelledMessage(
+                      l,
+                      state.bid,
+                      viewerIsSender: !_viewerIsTraveler(context),
+                    ),
                   );
                   if (context.canPop()) {
                     context.pop();

@@ -15,12 +15,16 @@
 // qui perdrait son animation et, plus grave, ferait clignoter un état
 // identique.
 //
+// Selon le filtre Transport : route, « Taille » remplace la valise ; bateau,
+// « Volume » et « Arrivée » remplacent « Urgent » et la valise.
+//
 // Le sélecteur de mode ne vit plus ici : rendu au milieu des chips, il se
 // lisait comme un filtre de plus. Il a sa propre ligne, sous la barre de
 // recherche (`SearchModeSelector`).
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
@@ -57,6 +61,10 @@ class HomeFilterChipsRow extends StatelessWidget {
     required this.onMatchingMyTripsBlocked,
     required this.onTransportTap,
     required this.onTransportClear,
+    required this.onVolumeTap,
+    required this.onVolumeClear,
+    required this.onArrivalTap,
+    required this.onArrivalClear,
     this.transportModes = const [],
     this.activeTrips,
     this.onNearMeClear,
@@ -98,6 +106,15 @@ class HomeFilterChipsRow extends StatelessWidget {
   /// un tap ouvre le choix de la taille minimale ; active, un tap la retire.
   final VoidCallback onItemSizeTap;
   final VoidCallback onItemSizeClear;
+
+  /// Bateau : la puce « Volume » (volume restant minimal, en m³) et la puce
+  /// « Arrivée » (arrivée estimée au plus tard, en semaines) remplacent « Urgent »
+  /// et « Valise 23 kg ». Inactives, un tap ouvre le choix ; actives, il retire
+  /// le filtre.
+  final VoidCallback onVolumeTap;
+  final VoidCallback onVolumeClear;
+  final VoidCallback onArrivalTap;
+  final VoidCallback onArrivalClear;
 
   // Colis
   final VoidCallback onMaxWeightTap;
@@ -191,6 +208,34 @@ class HomeFilterChipsRow extends StatelessWidget {
     );
   }
 
+  /// Puce « Volume » du filtre Bateau : volume restant minimal.
+  Widget _volumeChip(AppLocalizations l) {
+    final volume = filters.minVolumeM3;
+    return HomeSmallChip(
+      key: const Key('home-chip-volume'),
+      label: volume != null
+          ? l.homeFilterBoatVolumeValue(formatVolumeM3(l, volume))
+          : l.homeFilterChipsVolume,
+      isActive: volume != null,
+      iconAsset: 'package',
+      onTap: volume != null ? onVolumeClear : onVolumeTap,
+    );
+  }
+
+  /// Puce « Arrivée » du filtre Bateau : arrivée estimée au plus tard.
+  Widget _arrivalChip(AppLocalizations l) {
+    final weeks = filters.arrivalWithinWeeks;
+    return HomeSmallChip(
+      key: const Key('home-chip-arrival'),
+      label: weeks != null
+          ? l.homeFilterChipsArrivalActive(weeks)
+          : l.homeFilterChipsArrival,
+      isActive: weeks != null,
+      iconAsset: 'clock',
+      onTap: weeks != null ? onArrivalClear : onArrivalTap,
+    );
+  }
+
   /// Puce Transport, en tête des puces de filtre du mode Trajets. Le bus
   /// s'affiche « Route » (`displayGroup`).
   Widget _transportChip(AppLocalizations l) {
@@ -218,6 +263,12 @@ class HomeFilterChipsRow extends StatelessWidget {
     final hasDate = filters.datePreset != DonyDatePreset.none;
     final hasCapacity = filters.weightMin != null || filters.weightMax != null;
     final isRoad = filters.transportMode?.isRoad ?? false;
+    final isBoat = filters.transportMode == TransportMode.boat;
+    // Valise de 23 kg : propre à l'avion. « Peu importe » ne la propose que si
+    // l'avion est le seul mode offert à la recherche.
+    final showSuitcase =
+        filters.transportMode == TransportMode.plane ||
+        (filters.transportMode == null && transportModes.length < 2);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -261,21 +312,30 @@ class HomeFilterChipsRow extends StatelessWidget {
               onTap: hasCapacity ? onCapacityClear : onCapacityTap,
             ),
             const SizedBox(width: DonySpacing.xs),
-            _urgentChip(l),
-            const SizedBox(width: DonySpacing.xs),
-            if (isRoad)
-              // En route, la valise de 23 kg n'a pas de sens (un trajet y
-              // porte des centaines de kilos) : la taille du colis la remplace.
-              _itemSizeChip(l)
-            else
-              // Le besoin le plus courant de la diaspora (une valise en soute),
-              // en un toucher (YADONY-FLUTTER-PROD-Z).
-              HomeSmallChip(
-                key: const Key('chip-suitcase-23'),
-                label: l.homeFilterChipsSuitcase23,
-                isActive: filters.suitcase23Only,
-                onTap: onSuitcase23Toggle,
-              ),
+            if (isBoat) ...[
+              // Par bateau, ni « Urgent » ni la valise de 23 kg n'ont de sens :
+              // on cherche une place au m³ et une arrivée estimée.
+              _volumeChip(l),
+              const SizedBox(width: DonySpacing.xs),
+              _arrivalChip(l),
+            ] else ...[
+              _urgentChip(l),
+              const SizedBox(width: DonySpacing.xs),
+              if (isRoad)
+                // En route, la valise de 23 kg n'a pas de sens (un trajet y
+                // porte des centaines de kilos) : la taille du colis la
+                // remplace.
+                _itemSizeChip(l)
+              else if (showSuitcase)
+                // Le besoin le plus courant de la diaspora (une valise en
+                // soute), en un toucher (YADONY-FLUTTER-PROD-Z).
+                HomeSmallChip(
+                  key: const Key('chip-suitcase-23'),
+                  label: l.homeFilterChipsSuitcase23,
+                  isActive: filters.suitcase23Only,
+                  onTap: onSuitcase23Toggle,
+                ),
+            ],
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
               label: _ratingLabel(l),

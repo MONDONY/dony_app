@@ -23,6 +23,7 @@ import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation_pricing.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/payout_wording.dart';
 import 'package:dony/features/matching/presentation/activity_refresh.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_negotiation_parcel_sheet.dart';
@@ -488,9 +489,13 @@ class _TripContextCard extends StatelessWidget {
               color: cs.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            // Le fil de négociation ne porte pas encore le mode du trajet : icône
-            // neutre, jamais un avion supposé.
-            child: DonyIcon(kNeutralTripIconAsset, color: cs.primary, size: 18),
+            // Icône du mode du trajet ; sans mode (back antérieur, mode
+            // inconnu) l'icône neutre, jamais un avion supposé.
+            child: DonyIcon(
+              negotiation.transportMode?.iconAsset ?? kNeutralTripIconAsset,
+              color: cs.primary,
+              size: 18,
+            ),
           ),
         ],
       ),
@@ -853,7 +858,9 @@ class _ThreadActions extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             hint(
-              l.negotiationThreadPayHint,
+              paidAtDeposit(negotiation.transportMode)
+                  ? l.negotiationThreadPayHintDeposit
+                  : l.negotiationThreadPayHint,
               'nego-pay-hint',
               icon: 'smartphone',
               tint: DonyColors.threadStatusViolet,
@@ -898,7 +905,9 @@ class _ThreadActions extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             hint(
-              l.negotiationThreadPayHint,
+              paidAtDeposit(negotiation.transportMode)
+                  ? l.negotiationThreadPayHintDeposit
+                  : l.negotiationThreadPayHint,
               'nego-pay-hint',
               icon: 'credit-card',
               tint: DonyColors.threadStatusViolet,

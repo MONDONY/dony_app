@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
@@ -13,6 +16,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/confirm_delete_bid.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/presence_confirm_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/commission_allocation_sheet.dart';
@@ -188,14 +192,27 @@ class ConfirmPresenceBar extends StatelessWidget {
       child: DonyButton(
         label: context.l10n.bidDetailConfirmPresence,
         iconAsset: 'map-pin',
-        onPressed: isLoading
-            ? null
-            : () => context.read<BidBloc>().add(
-                BidConfirmPresenceRequested(bid.id),
-              ),
+        onPressed: isLoading ? null : () => _confirm(context),
         isLoading: isLoading,
       ),
     );
+  }
+
+  /// La présence ne se « dé-confirme » pas : on rappelle l'engagement avant
+  /// d'appeler le serveur.
+  Future<void> _confirm(BuildContext context) async {
+    final confirmed = await PresenceConfirmSheet.show(context, bid: bid);
+    unawaited(
+      getItSafe<AnalyticsService>()?.logEvent(
+        AnalyticsEvents.bidPresenceConfirmPrompted,
+        properties: {
+          'outcome': confirmed ? 'confirmed' : 'dismissed',
+          'transport_mode': bid.transportMode?.name ?? 'unknown',
+        },
+      ),
+    );
+    if (!confirmed || !context.mounted) return;
+    context.read<BidBloc>().add(BidConfirmPresenceRequested(bid.id));
   }
 }
 
@@ -302,7 +319,7 @@ class _SenderOptionsSheet extends StatelessWidget {
                 iconColor: cs.primary,
                 iconBg: cs.primaryContainer,
                 label: l.amendmentSheetTitle,
-                subtitle: l.amendmentEntryButton,
+                subtitle: AmendmentEntry.entryLabel(l, bid),
                 onTap: () {
                   context.pop();
                   unawaited(AmendmentEntry.open(outerContext, bid));
@@ -316,7 +333,10 @@ class _SenderOptionsSheet extends StatelessWidget {
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
                 label: l.bidDetailCancelRequestLabel,
-                subtitle: l.bidDetailCancelRefundAutoSubtitle,
+                // Espèces : rien n'est passé par Yadony, rien à rembourser.
+                subtitle: bid.paymentMethod == BidPaymentMethod.cash
+                    ? l.bidDetailCancelCashSubtitle
+                    : l.bidDetailCancelRefundAutoSubtitle,
                 onTap: () {
                   context.pop();
                   showSenderCancelBidDialog(outerContext, bid);
@@ -326,13 +346,32 @@ class _SenderOptionsSheet extends StatelessWidget {
             ],
             // Annulation après remise (D5) — colis déjà chez le voyageur, avant le
             // départ. L'expéditeur récupère son colis via le code de retour.
-            if (bid.canCancelAfterHandover) ...[
+            // Colis déjà payé au voyageur au dépôt (bateau) : plus de
+            // remboursement automatique, le litige passe par le support.
+            if (bid.canCancelAfterHandover && bid.isPaidOutAtDeposit) ...[
+              _OptionTile(
+                key: const Key('deposit-paid-support-tile'),
+                iconAsset: 'headset',
+                iconColor: cs.primary,
+                iconBg: cs.primaryContainer,
+                label: l.supportContactCta,
+                subtitle: l.bidDepositPaidSupportSenderSubtitle,
+                onTap: () {
+                  context.pop();
+                  unawaited(outerContext.push<void>('/support'));
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+            if (bid.canCancelAfterHandover && !bid.isPaidOutAtDeposit) ...[
               _OptionTile(
                 iconAsset: 'ban',
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
                 label: l.bidDetailCancelRequestLabel,
-                subtitle: l.bidDetailCancelAfterHandoverOptionSubtitle,
+                subtitle: bid.paymentMethod == BidPaymentMethod.cash
+                    ? l.bidDetailCancelAfterHandoverCashOptionSubtitle
+                    : l.bidDetailCancelAfterHandoverOptionSubtitle,
                 onTap: () {
                   context.pop();
                   _showAfterHandoverCancelDialog(outerContext);
@@ -389,7 +428,9 @@ class _SenderOptionsSheet extends StatelessWidget {
           style: tt.headlineMedium,
         ),
         content: Text(
-          l.bidDetailCancelAfterHandoverBody,
+          bid.paymentMethod == BidPaymentMethod.cash
+              ? l.bidDetailCancelAfterHandoverCashBody
+              : l.bidDetailCancelAfterHandoverBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         actions: [
@@ -429,6 +470,7 @@ class _OptionTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   const _OptionTile({
+    super.key,
     required this.iconAsset,
     required this.iconColor,
     required this.iconBg,

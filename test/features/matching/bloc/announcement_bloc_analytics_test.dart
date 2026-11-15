@@ -128,6 +128,78 @@ void main() {
     },
   );
 
+  test('announcement_created d\'un bateau au m³ : price_unit, aucun kilo, '
+      'champs bateau transmis au dépôt', () async {
+    when(
+      () => repo.createAnnouncement(
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        departureDate: any(named: 'departureDate'),
+        arrivalDate: any(named: 'arrivalDate'),
+        pickupAddress: any(named: 'pickupAddress'),
+        deliveryAddress: any(named: 'deliveryAddress'),
+        availableKg: any(named: 'availableKg'),
+        pricePerKg: any(named: 'pricePerKg'),
+        transportMode: any(named: 'transportMode'),
+        arrivalDateMax: any(named: 'arrivalDateMax'),
+        volumeCapacityM3: any(named: 'volumeCapacityM3'),
+        pricePerM3: any(named: 'pricePerM3'),
+        handoverDeadline: any(named: 'handoverDeadline'),
+      ),
+    ).thenAnswer((_) async => fakeAnnouncement());
+
+    final bloc = makeBloc();
+    bloc.add(
+      AnnouncementCreateRequested(
+        departureCity: 'Marseille',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2026, 12),
+        arrivalDate: '2027-01-10',
+        pickupAddress: fakeAddress,
+        deliveryAddress: fakeAddress,
+        availableKg: null,
+        pricePerKg: null,
+        transportMode: TransportMode.boat,
+        arrivalDateMax: '2027-01-25',
+        volumeCapacityM3: 12.5,
+        pricePerM3: 150,
+        handoverDeadline: DateTime(2026, 11, 30, 18),
+      ),
+    );
+    await bloc.stream.firstWhere((s) => s is AnnouncementCreated);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(
+      () => repo.createAnnouncement(
+        departureCity: 'Marseille',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2026, 12),
+        arrivalDate: '2027-01-10',
+        pickupAddress: fakeAddress,
+        deliveryAddress: fakeAddress,
+        availableKg: null,
+        pricePerKg: null,
+        transportMode: TransportMode.boat,
+        arrivalDateMax: '2027-01-25',
+        volumeCapacityM3: 12.5,
+        pricePerM3: 150,
+        handoverDeadline: DateTime(2026, 11, 30, 18),
+      ),
+    ).called(1);
+    final props =
+        verify(
+              () => backend.capture(
+                AnalyticsEvents.announcementCreated,
+                captureAny(),
+              ),
+            ).captured.single
+            as Map<String, Object>;
+    expect(props['price_unit'], 'm3');
+    expect(props.containsKey('available_kg'), isFalse);
+    expect(props.containsKey('price_per_kg'), isFalse);
+    expect(props['transport_mode'], 'boat');
+  });
+
   test(
     'announcement_created porte from_ai quand l’IA a rempli le trajet',
     () async {

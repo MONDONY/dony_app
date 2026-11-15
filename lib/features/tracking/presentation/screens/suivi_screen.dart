@@ -9,6 +9,7 @@ import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.d
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
 import 'package:dony/features/recipients/bloc/incoming_invitations_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
@@ -16,6 +17,7 @@ import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/models/scanned_qr.dart';
 import 'package:dony/features/tracking/presentation/photo_dropped_warning.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
@@ -41,17 +43,17 @@ import 'package:go_router/go_router.dart';
 typedef SuiviCameraBuilder =
     Widget Function(
       BuildContext context,
-      ValueChanged<String> onBidId,
+      ValueChanged<ScannedQr> onScanned,
       ValueListenable<bool> paused,
       QrTorch torch,
     );
 
 Widget _defaultCamera(
   BuildContext context,
-  ValueChanged<String> onBidId,
+  ValueChanged<ScannedQr> onScanned,
   ValueListenable<bool> paused,
   QrTorch torch,
-) => QrCameraView(onBidId: onBidId, paused: paused, torch: torch);
+) => QrCameraView(onScanned: onScanned, paused: paused, torch: torch);
 
 /// Onglet Suivi : un seul écran, deux usages.
 ///
@@ -296,10 +298,11 @@ class _SuiviBodyState extends State<_SuiviBody> {
     );
   }
 
-  void _onBidId(String bidId) {
+  void _onScanned(ScannedQr scanned) {
     context.read<SuiviCubit>().onQrScanned(
-      bidId,
+      scanned.bidId,
       widget.canValidate ? context.read<ScanHubCubit>().state : null,
+      qrToken: scanned.qrToken,
       pendingBidIds: _pendingBidIds,
     );
   }
@@ -342,6 +345,9 @@ class _SuiviBodyState extends State<_SuiviBody> {
         }
         await _validateStep(effect);
         if (!mounted) return;
+        cubit.releaseScan();
+      case SuiviDepositNeedsQr():
+        _refuse(context.l10n.trackingDepositNeedsQr);
         cubit.releaseScan();
       case SuiviStepNeedsDepart(:final bid):
         _refuse(context.l10n.suiviStepNeedsDepart(suiviParcelLabel(bid)));
@@ -388,12 +394,14 @@ class _SuiviBodyState extends State<_SuiviBody> {
         :final arrivalInstructions,
         :final trackingNumber,
         :final bidStatus,
+        :final milestones,
       ):
         BidModel? parcelToOpen;
         await showTrackingTimelineSheet(
           context,
           bidId: bidId,
           bidStatus: bidStatus,
+          milestones: milestones,
           departureCity: departureCity,
           arrivalCity: arrivalCity,
           transportMode: transportMode,
@@ -445,6 +453,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
           'packageLabel': label,
           'scanMethod': method,
           'deliveryWindow': DeliveryWindow.fromBid(bid),
+          'transportMode': ?bid.transportMode,
         },
       );
       if (mounted) _reloadTrips();
@@ -473,6 +482,10 @@ class _SuiviBodyState extends State<_SuiviBody> {
           'etape': step,
           'packageLabel': label,
           'returnResult': true,
+          // Bateau : « Dépôt à l'entrepôt » ; colis payé au dépôt : appareil
+          // photo ouvert d'office. Absents : comportement d'avant.
+          'transportMode': ?bid.transportMode,
+          if (effect.isDeposit) 'payoutTrigger': PayoutTrigger.deposit,
         },
       );
       if (!mounted || photo == null) return;
@@ -485,6 +498,9 @@ class _SuiviBodyState extends State<_SuiviBody> {
       photoPath: photo?.photoPath,
       position: photo?.position,
       trackingNumber: trackingNumber,
+      qrToken: effect.qrToken,
+      photoRequired: effect.isDeposit,
+      deposit: effect.isDeposit,
     );
   }
 
@@ -492,7 +508,11 @@ class _SuiviBodyState extends State<_SuiviBody> {
   /// directement, puis colis et derniers scans rechargés.
   void _onValidationOutcome(SuiviValidationOutcome outcome) {
     final l = context.l10n;
-    final step = trackingStepLabel(l, outcome.step);
+    final step = trackingStepLabel(
+      l,
+      outcome.step,
+      mode: outcome.deposit ? TransportMode.boat : null,
+    );
     switch (outcome) {
       case SuiviValidationSent(:final photoDropped):
         if (photoDropped) warnTrackingPhotoDropped(context);
@@ -565,9 +585,9 @@ class _SuiviBodyState extends State<_SuiviBody> {
   }
 
   Future<void> _openQrPicker() async {
-    final bidId = await context.push<String?>('/tracking/scan/qr-picker');
-    if (!mounted || bidId == null) return;
-    _onBidId(bidId);
+    final scanned = await context.push<ScannedQr?>('/tracking/scan/qr-picker');
+    if (!mounted || scanned == null) return;
+    _onScanned(scanned);
   }
 
   void _openTripPicker(ScanHubLoaded hub) {
@@ -758,7 +778,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
                     Positioned.fill(
                       child: widget.cameraBuilder(
                         context,
-                        _onBidId,
+                        _onScanned,
                         _cameraPaused,
                         _torch,
                       ),

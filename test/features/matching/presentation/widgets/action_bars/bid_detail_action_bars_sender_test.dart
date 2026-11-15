@@ -12,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_money_breakdown.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -24,6 +25,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../../helpers/l10n_test_helpers.dart';
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
@@ -47,8 +49,10 @@ BidModel _bid({
   String? trackingToken,
   bool amendmentAllowed = false,
   BidMoneyBreakdown? moneyBreakdown,
+  PayoutTrigger payoutTrigger = PayoutTrigger.delivery,
 }) => BidModel(
   moneyBreakdown: moneyBreakdown,
+  payoutTrigger: payoutTrigger,
   id: 'bid-42',
   announcementId: 'ann-1',
   senderId: 'sender-1',
@@ -81,9 +85,12 @@ void main() {
     when(() => openBloc.state).thenReturn(const ConversationOpenInitial());
   });
 
-  Widget wrap(Widget Function(BuildContext) bar) => MaterialApp.router(
+  Widget wrap(
+    Widget Function(BuildContext) bar, {
+    Locale locale = AppL10n.fr,
+  }) => MaterialApp.router(
     theme: AppTheme.light(),
-    locale: AppL10n.fr,
+    locale: locale,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     routerConfig: GoRouter(
@@ -108,11 +115,12 @@ void main() {
     ),
   );
 
-  Widget optionsHost(BidModel bid) => wrap(
+  Widget optionsHost(BidModel bid, {Locale locale = AppL10n.fr}) => wrap(
     (context) => TextButton(
       onPressed: () => showSenderOptionsSheet(context, bid),
       child: const Text('open-options'),
     ),
+    locale: locale,
   );
 
   Future<void> openOptions(WidgetTester tester, BidModel bid) async {
@@ -127,15 +135,68 @@ void main() {
   }
 
   group('ConfirmPresenceBar', () {
-    testWidgets('tap dispatch BidConfirmPresenceRequested', (tester) async {
+    Future<void> openSheet(WidgetTester tester, {BidModel? bid}) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
       await tester.pumpWidget(
-        wrap((_) => ConfirmPresenceBar(bid: _bid(), isLoading: false)),
+        wrap((_) => ConfirmPresenceBar(bid: bid ?? _bid(), isLoading: false)),
       );
       await tester.pumpAndSettle();
-
       expect(find.text(_l.bidDetailConfirmPresence), findsOneWidget);
       await tester.tap(find.byType(DonyButton));
-      await tester.pump();
+      await tester.pumpAndSettle();
+    }
+
+    // Recette bateau : « Confirmer ma présence » validait sans rien demander.
+    testWidgets('le tap ouvre une confirmation, sans appeler le serveur', (
+      tester,
+    ) async {
+      await openSheet(tester);
+
+      expect(find.text(_l.bidPresenceSheetTitle), findsOneWidget);
+      expect(find.text(_l.bidPresenceSheetBody), findsOneWidget);
+      expect(find.text(_l.bidPresenceSheetFinalNote), findsOneWidget);
+      expect(find.byKey(const Key('presence-confirm-yes')), findsOneWidget);
+      expect(find.byKey(const Key('presence-confirm-no')), findsOneWidget);
+      verifyNever(() => bidBloc.add(any()));
+    });
+
+    testWidgets('la confirmation rappelle la date limite de remise', (
+      tester,
+    ) async {
+      final bid = BidModel(
+        id: 'bid-42',
+        announcementId: 'ann-1',
+        senderId: 'sender-1',
+        status: 'ACCEPTED',
+        handoverDeadline: DateTime(2026, 11, 20, 18),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      );
+      await openSheet(tester, bid: bid);
+
+      expect(
+        find.textContaining(RegExp('Vous vous engagez.*18:00')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Annuler referme la feuille sans rien envoyer', (tester) async {
+      await openSheet(tester);
+      await tester.tap(find.byKey(const Key('presence-confirm-no')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(_l.bidPresenceSheetTitle), findsNothing);
+      verifyNever(() => bidBloc.add(any()));
+    });
+
+    testWidgets('Confirmer dispatch BidConfirmPresenceRequested', (
+      tester,
+    ) async {
+      await openSheet(tester);
+      await tester.tap(find.byKey(const Key('presence-confirm-yes')));
+      await tester.pumpAndSettle();
 
       verify(
         () => bidBloc.add(
@@ -150,6 +211,30 @@ void main() {
       ).called(1);
     });
 
+    for (final mode in TransportMode.values) {
+      testWidgets('textes neutres quel que soit le mode (${mode.name})', (
+        tester,
+      ) async {
+        final bid = BidModel(
+          id: 'bid-42',
+          announcementId: 'ann-1',
+          senderId: 'sender-1',
+          status: 'ACCEPTED',
+          transportMode: mode,
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+        );
+        await openSheet(tester, bid: bid);
+        expect(find.text(_l.bidPresenceSheetBody), findsOneWidget);
+        expect(
+          find.textContaining(
+            RegExp('vol|avion|aéroport|port', caseSensitive: false),
+          ),
+          findsNothing,
+        );
+      });
+    }
+
     testWidgets('chargement : aucun événement au tap', (tester) async {
       await tester.pumpWidget(
         wrap((_) => ConfirmPresenceBar(bid: _bid(), isLoading: true)),
@@ -158,6 +243,70 @@ void main() {
       await tester.tap(find.byType(DonyButton), warnIfMissed: false);
       await tester.pump();
       verifyNever(() => bidBloc.add(any()));
+    });
+  });
+
+  // Recette du 14/11 : « Your payment will be refunded automatically » sur un
+  // colis payé en espèces, alors qu'aucun paiement ne passe par Yadony.
+  group('espèces : aucune promesse de remboursement', () {
+    for (final locale in const [AppL10n.fr, AppL10n.en]) {
+      final l = lookupAppLocalizations(locale);
+
+      Future<void> open360(WidgetTester tester, BidModel bid) async {
+        if (locale == AppL10n.en) useEnglish();
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(optionsHost(bid, locale: locale));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('open-options'));
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('${locale.languageCode} 360 dp : avant la remise, rien à '
+          'rembourser', (tester) async {
+        await open360(
+          tester,
+          _bid(status: 'ACCEPTED', method: BidPaymentMethod.cash),
+        );
+        expect(find.text(l.bidDetailCancelCashSubtitle), findsOneWidget);
+        expect(find.text(l.bidDetailCancelRefundAutoSubtitle), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('${locale.languageCode} 360 dp : après la remise, le '
+          'voyageur rend l\'argent, Yadony ne rembourse rien', (tester) async {
+        await open360(
+          tester,
+          _bid(status: 'HANDED_OVER', method: BidPaymentMethod.cash),
+        );
+        expect(
+          find.text(l.bidDetailCancelAfterHandoverCashOptionSubtitle),
+          findsOneWidget,
+        );
+        expect(
+          find.text(l.bidDetailCancelAfterHandoverOptionSubtitle),
+          findsNothing,
+        );
+        await tester.tap(
+          find.text(l.bidDetailCancelAfterHandoverCashOptionSubtitle),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text(l.bidDetailCancelAfterHandoverCashBody),
+          findsOneWidget,
+        );
+        expect(find.text(l.bidDetailCancelAfterHandoverBody), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('carte : le remboursement automatique reste annoncé', (
+      tester,
+    ) async {
+      await openOptions(tester, _bid(status: 'ACCEPTED'));
+      expect(find.text(_l.bidDetailCancelRefundAutoSubtitle), findsOneWidget);
+      expect(find.text(_l.bidDetailCancelCashSubtitle), findsNothing);
     });
   });
 
@@ -311,6 +460,60 @@ void main() {
             any(that: isA<CancelAfterHandoverRequested>()),
           ),
         ).called(1);
+      },
+    );
+
+    testWidgets(
+      'cancelAfterHandover_hiddenForDepositPaid : le support à la place',
+      (tester) async {
+        await openOptions(
+          tester,
+          _bid(status: 'HANDED_OVER', payoutTrigger: PayoutTrigger.deposit),
+        );
+
+        expect(
+          find.text(_l.bidDetailCancelAfterHandoverOptionSubtitle),
+          findsNothing,
+        );
+        expect(find.text(_l.bidDetailCancelRequestLabel), findsNothing);
+        expect(
+          find.byKey(const Key('deposit-paid-support-tile')),
+          findsOneWidget,
+        );
+        expect(find.text(_l.supportContactCta), findsOneWidget);
+        expect(
+          find.text(_l.bidDepositPaidSupportSenderSubtitle),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'cancelAfterHandover_shownForDepositCash : espèces, rien de versé',
+      (tester) async {
+        await openOptions(
+          tester,
+          _bid(
+            status: 'HANDED_OVER',
+            method: BidPaymentMethod.cash,
+            payoutTrigger: PayoutTrigger.deposit,
+          ),
+        );
+
+        // Annulation proposée, sans promesse de remboursement : en espèces,
+        // c'est le voyageur qui rend l'argent remis (recette du 14/11).
+        expect(
+          find.text(_l.bidDetailCancelAfterHandoverCashOptionSubtitle),
+          findsOneWidget,
+        );
+        expect(
+          find.text(_l.bidDetailCancelAfterHandoverOptionSubtitle),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const Key('deposit-paid-support-tile')),
+          findsNothing,
+        );
       },
     );
 

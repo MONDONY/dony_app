@@ -82,7 +82,12 @@ Future<void> openTripTodoParcelsSheet(
     titleWidget: follow((sheetContext, live) {
       final item = itemOf(live) ?? TripTodoItem(kind: kind, count: 1);
       return Text(
-        tripTodoTitle(sheetContext.l10n, item, cardReady: live.cardReady),
+        tripTodoTitle(
+          sheetContext.l10n,
+          item,
+          cardReady: live.cardReady,
+          trip: live.trip,
+        ),
       );
     }),
     analyticsName: 'trip-owner/todo-${kind.name}',

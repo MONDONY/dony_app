@@ -226,4 +226,96 @@ void main() {
       expect(body().containsKey('itemSize'), isFalse);
     });
   });
+
+  group('trajet bateau (lot 3)', () {
+    test(
+      'création au m³ : volume, prix au m³, fourchette, aucun kilo',
+      () async {
+        api.on('POST', '/announcements', _announcementJson, status: 201);
+        await announcements.createAnnouncement(
+          departureCity: 'Marseille',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2026, 12),
+          arrivalDate: '2027-01-10',
+          pickupAddress: _pickup,
+          deliveryAddress: _delivery,
+          availableKg: null,
+          pricePerKg: null,
+          transportMode: TransportMode.boat,
+          arrivalDateMax: '2027-01-25',
+          volumeCapacityM3: 12.5,
+          pricePerM3: 150,
+          handoverDeadline: DateTime.utc(2026, 11, 30),
+          maxParcelWeightKg: 40,
+        );
+        expect(body()['transportMode'], 'BOAT');
+        expect(body().containsKey('availableKg'), isFalse);
+        expect(body().containsKey('pricePerKg'), isFalse);
+        expect(body()['arrivalDate'], '2027-01-10');
+        expect(body()['arrivalDateMax'], '2027-01-25');
+        expect(body()['volumeCapacityM3'], 12.5);
+        expect(body()['pricePerM3'], 150);
+        expect(body()['maxParcelWeightKg'], 40);
+      },
+    );
+
+    test(
+      'modification au m³ : aucun kilo, poids max inchangé absent',
+      () async {
+        api.on('PUT', '/announcements/ann-001', _announcementJson);
+        await announcements.updateAnnouncement(
+          id: 'ann-001',
+          departureCity: 'Marseille',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2026, 12),
+          arrivalDate: '2027-01-10',
+          pickupAddress: _pickup,
+          deliveryAddress: _delivery,
+          availableKg: null,
+          pricePerKg: null,
+          transportMode: TransportMode.boat,
+          arrivalDateMax: '2027-01-25',
+          volumeCapacityM3: 20,
+          pricePerM3: 120,
+          handoverDeadline: DateTime.utc(2026, 11, 30),
+        );
+        expect(body().containsKey('availableKg'), isFalse);
+        expect(body().containsKey('pricePerKg'), isFalse);
+        expect(body()['arrivalDateMax'], '2027-01-25');
+        expect(body()['volumeCapacityM3'], 20);
+        expect(body()['pricePerM3'], 120);
+        expect(body().containsKey('maxParcelWeightKg'), isFalse);
+      },
+    );
+
+    test('hors bateau : aucun champ bateau dans le corps', () async {
+      await create();
+      expect(body().containsKey('arrivalDateMax'), isFalse);
+      expect(body().containsKey('volumeCapacityM3'), isFalse);
+      expect(body().containsKey('pricePerM3'), isFalse);
+      expect(body()['pricePerKg'], 3);
+    });
+
+    test('AnnouncementPayload au m³ : sans kilos', () {
+      final json = AnnouncementPayload(
+        departureCity: 'Marseille',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2026, 12),
+        pickupAddress: _pickup,
+        deliveryAddress: _delivery,
+        availableKg: null,
+        pricePerKg: null,
+        transportMode: TransportMode.boat,
+        arrivalDateMax: '2027-01-25',
+        volumeCapacityM3: 3,
+        pricePerM3: 99,
+        handoverDeadline: DateTime.utc(2026, 11, 30),
+      ).toJson();
+      expect(json.containsKey('availableKg'), isFalse);
+      expect(json.containsKey('pricePerKg'), isFalse);
+      expect(json['volumeCapacityM3'], 3);
+      expect(json['pricePerM3'], 99);
+      expect(json['arrivalDateMax'], '2027-01-25');
+    });
+  });
 }

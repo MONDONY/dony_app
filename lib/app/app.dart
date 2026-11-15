@@ -38,6 +38,7 @@ import 'package:dony/features/connectivity/bloc/connectivity_cubit.dart';
 import 'package:dony/features/connectivity/presentation/widgets/connectivity_banner.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/data/favorites_migration.dart';
+import 'package:dony/features/home/bloc/home_search_session_cubit.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/maintenance/bloc/maintenance_cubit.dart';
 import 'package:dony/features/maintenance/presentation/maintenance_gate.dart';
@@ -537,6 +538,9 @@ class _DonyAppState extends State<DonyApp> {
                     // compte suivant voyait le colis du précédent sur la carte
                     // d'un trajet, ouvert en vue voyageur (FLUTTER-XF).
                     context.read<BidBloc>().add(const BidSessionReset());
+                    // Recherche de l'onglet Rechercher : celle du compte
+                    // précédent ne se rouvre pas pour le suivant.
+                    getIt<HomeSearchSessionCubit>().reset();
                   }
                   // Garde-fou de démarrage : session Firebase valide mais
                   // compte absent côté backend (404 → AuthInitial). On ne peut

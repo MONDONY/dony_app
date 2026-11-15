@@ -333,6 +333,33 @@ void main() {
       );
 
       blocTest<BidAcceptanceBloc, BidAcceptanceState>(
+        '409 insufficient-volume (colis au m³) → refus définitif, sans second appel',
+        build: () {
+          when(() => repo.acceptBidWithCommission('bid_x')).thenThrow(
+            const ConflictException(
+              'Volume insuffisant',
+              code: 'insufficient-volume',
+            ),
+          );
+          return BidAcceptanceBloc(repo, stripe);
+        },
+        act: (b) async {
+          b.add(BidAcceptRequested('bid_x'));
+          await Future<void>.delayed(Duration.zero);
+          b.add(BidAcceptRequested('bid_x'));
+        },
+        expect: () => [
+          isA<BidAccepting>(),
+          isA<BidFailed>()
+              .having((s) => s.definitive, 'definitive', isTrue)
+              .having((s) => s.error?.code, 'code', 'insufficient-volume'),
+          isA<BidFailed>().having((s) => s.definitive, 'definitive', isTrue),
+        ],
+        verify: (_) =>
+            verify(() => repo.acceptBidWithCommission('bid_x')).called(1),
+      );
+
+      blocTest<BidAcceptanceBloc, BidAcceptanceState>(
         'la carte (CARD) est aussi rejouée sans appel une fois le refus connu',
         build: () {
           when(() => repo.acceptBidWithCommission('bid_x')).thenThrow(capacity);

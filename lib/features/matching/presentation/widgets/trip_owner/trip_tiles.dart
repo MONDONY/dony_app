@@ -1,6 +1,8 @@
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_audience_line.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_detail_sections.dart';
@@ -65,6 +67,13 @@ List<TripTile> tripTilesFor({
   ];
 }
 
+/// Chaque colis du trajet [trip] est-il payé au transporteur à son dépôt à
+/// l'entrepôt ? Trajet bateau, interrupteur bateau du serveur allumé : la
+/// règle du back (`payoutTrigger` posé à l'acceptation). Bateau éteint, ou
+/// tout autre mode : versement à la livraison, rien n'est annoncé.
+bool tripPaidAtDeposit(AnnouncementModel trip) =>
+    trip.transportMode == TransportMode.boat && transportModes.boat;
+
 /// Icône de la tuile (nom d'un SVG de `assets/icons`).
 String tripTileIcon(TripTile tile) => switch (tile) {
   TripTile.itinerary => 'route',
@@ -88,6 +97,8 @@ String tripTileTitle(AppLocalizations l, TripTile tile) => switch (tile) {
 /// - `itinerary` : « Remise : {ville} · Retrait : {ville} » (la ville de
 ///   l'adresse, à défaut son libellé) ; sans lieu, la date limite de dépôt ;
 /// - `payments` : les moyens acceptés (« Carte, Espèces, Mobile money ») ;
+///   en bateau, interrupteur allumé ([tripPaidAtDeposit]), « Payé au dépôt
+///   de chaque colis » ;
 /// - `conditions` : « 3 types acceptés · 2 types refusés », à défaut ce qui
 ///   existe, ou « Note aux expéditeurs » s'il n'y a que la note ;
 /// - `poster` : l'audience du trajet une fois chargée ([audience], « 12
@@ -115,6 +126,7 @@ String? tripTileSubtitle(
           ? tripHandoverDeadlineLabel(l, trip)
           : null;
     case TripTile.payments:
+      if (tripPaidAtDeposit(trip)) return l.tripTilePaymentsDeposit;
       final methods = [
         for (final m in trip.acceptedPaymentMethods) _methodLabel(l, m),
       ];

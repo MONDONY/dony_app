@@ -119,6 +119,74 @@ void main() {
             ).captured.single
             as Future<ScanPosition?>;
 
+    // Recette bateau : pendant l'envoi de la photo de dépôt, rien ne le
+    // montrait à l'écran et le bouton du colis revenait, prêt à renvoyer.
+    test('le délai écoulé, le colis est « en cours d\'envoi » jusqu\'à la '
+        'réponse, photo comprise', () {
+      fakeAsync((async) {
+        final response = Completer<SentScan?>();
+        stubSend((_) => response.future);
+        when(
+          () => queue.queueScan(
+            bidId: any(named: 'bidId'),
+            eventType: any(named: 'eventType'),
+            photoPath: any(named: 'photoPath'),
+            gpsLat: any(named: 'gpsLat'),
+            gpsLon: any(named: 'gpsLon'),
+            gpsLabel: any(named: 'gpsLabel'),
+            scanMethod: any(named: 'scanMethod'),
+            photoRequired: any(named: 'photoRequired'),
+            notBefore: any(named: 'notBefore'),
+          ),
+        ).thenAnswer((_) async => 7);
+        final c = build();
+        c.schedule(
+          bidId: 'bid-1',
+          step: 'DEPART',
+          parcelLabel: 'Madou',
+          method: ScanMethod.qr,
+          photoPath: '/tmp/depot.jpg',
+          position: _here,
+          photoRequired: true,
+          deposit: true,
+        );
+        expect(c.state.sendingBidIds, isEmpty);
+
+        async.elapse(const Duration(seconds: 5));
+        expect(c.state.pending, isEmpty);
+        expect(c.state.sendingBidIds, {'bid-1'});
+        expect(c.state.sending.single.photoPath, '/tmp/depot.jpg');
+        expect(c.state.sending.single.deposit, isTrue);
+        // Un second « Valider » du même colis pendant l'envoi ne part pas.
+        expect(
+          c.schedule(
+            bidId: 'bid-1',
+            step: 'DEPART',
+            parcelLabel: 'Madou',
+            method: ScanMethod.qr,
+          ),
+          isNull,
+        );
+
+        response.complete(SentScan(_event));
+        async.flushMicrotasks();
+        expect(c.state.sendingBidIds, isEmpty);
+        expect(c.state.outcome, isA<SuiviValidationSent>());
+      });
+    });
+
+    test('un envoi en échec quitte aussi l\'état « en cours d\'envoi »', () {
+      fakeAsync((async) {
+        stubSend((_) async => throw Exception('réseau'));
+        final c = build();
+        scheduleTransit(c);
+        async.elapse(const Duration(seconds: 5));
+        async.flushMicrotasks();
+        expect(c.state.sendingBidIds, isEmpty);
+        expect(c.state.outcome, isA<SuiviValidationFailed>());
+      });
+    });
+
     test('écrite dans la file dès « Valider », envoyée à la fin du délai', () {
       fakeAsync((async) {
         final c = build();
@@ -159,6 +227,36 @@ void main() {
         unawaited(c.close());
         async.flushMicrotasks();
       });
+    });
+
+    test('dépôt à l\'entrepôt (bateau) : le drapeau suit l\'attente et '
+        'l\'issue', () {
+      fakeAsync((async) {
+        final c = build();
+        c.schedule(
+          bidId: 'bid-1',
+          step: 'DEPART',
+          parcelLabel: 'Madou',
+          method: ScanMethod.qr,
+          deposit: true,
+        );
+        expect(c.state.pending.single.deposit, isTrue);
+        async.elapse(const Duration(seconds: 6));
+        async.flushMicrotasks();
+        expect(
+          c.state.outcome,
+          isA<SuiviValidationSent>().having((o) => o.deposit, 'deposit', true),
+        );
+        unawaited(c.close());
+        async.flushMicrotasks();
+      });
+    });
+
+    test('une étape ordinaire n\'est pas un dépôt', () {
+      final c = build();
+      scheduleTransit(c);
+      expect(c.state.pending.single.deposit, isFalse);
+      unawaited(c.close());
     });
 
     test('Annuler : retirée de la file, rien n\'est envoyé', () {
@@ -619,6 +717,53 @@ void main() {
       await until(() => hive.offlineQueue.isEmpty);
       await c.close();
       expect(posts, 0);
+    });
+
+    test('dépôt (bateau) : jeton du QR et photo exigée écrits dans la file, '
+        'puis envoyés avec l\'étape', () async {
+      when(
+        () => repo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+          scanMethod: any(named: 'scanMethod'),
+          qrToken: any(named: 'qrToken'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).thenAnswer((_) async => _event);
+      final queue = OfflineSyncService(hive, repo);
+      final c = build(queue);
+      c.schedule(
+        bidId: 'bid-1',
+        step: 'DEPART',
+        parcelLabel: 'Madou',
+        method: ScanMethod.qr,
+        photoPath: '/tmp/colis.jpg',
+        qrToken: 'tok_abc',
+        photoRequired: true,
+      );
+      await until(() => hive.offlineQueue.length == 1);
+      final entry = onlyEntry();
+      expect(entry['qrToken'], 'tok_abc');
+      expect(entry['photoRequired'], isTrue);
+
+      await until(() => c.state.outcome != null);
+      expect(c.state.outcome, isA<SuiviValidationSent>());
+      verify(
+        () => repo.postScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          gpsLat: 14.7,
+          gpsLon: -17.4,
+          gpsLabel: 'Dakar',
+          photoUrl: 'tracking/bid-1/photo.jpg',
+          scanMethod: ScanMethod.qr,
+          qrToken: 'tok_abc',
+        ),
+      ).called(1);
     });
 
     test('à l\'échéance : envoyée une fois, retirée de la file', () async {

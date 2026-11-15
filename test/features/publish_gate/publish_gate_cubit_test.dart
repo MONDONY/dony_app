@@ -73,6 +73,55 @@ void main() {
     analytics: analytics,
   );
 
+  group('relecture du serveur avant le blocage identité', () {
+    test('cache non vérifié, serveur VERIFIED : engagements déjà acceptés, on '
+        'passe aux brouillons', () async {
+      when(
+        () => commitmentRepo.fetch(),
+      ).thenAnswer((_) async => commitments(travelerRequired: false));
+      final cubit = build(PublishCommitmentRole.traveler);
+      var rechecks = 0;
+      await cubit.start(
+        kycVerified: false,
+        recheckKyc: () async {
+          rechecks++;
+          return true;
+        },
+      );
+      expect(rechecks, 1);
+      expect(cubit.state.status, PublishGateStatus.ready);
+      await cubit.close();
+    });
+
+    test('cache non vérifié, serveur non vérifié : écran conservé', () async {
+      when(
+        () => commitmentRepo.fetch(),
+      ).thenAnswer((_) async => commitments(travelerRequired: false));
+      final cubit = build(PublishCommitmentRole.traveler);
+      await cubit.start(kycVerified: false, recheckKyc: () async => false);
+      expect(cubit.state.status, PublishGateStatus.intro);
+      await cubit.close();
+    });
+
+    test('cache vérifié : aucune relecture', () async {
+      when(
+        () => commitmentRepo.fetch(),
+      ).thenAnswer((_) async => commitments(travelerRequired: false));
+      final cubit = build(PublishCommitmentRole.traveler);
+      var rechecks = 0;
+      await cubit.start(
+        kycVerified: true,
+        recheckKyc: () async {
+          rechecks++;
+          return true;
+        },
+      );
+      expect(rechecks, 0);
+      expect(cubit.state.status, PublishGateStatus.ready);
+      await cubit.close();
+    });
+  });
+
   group('limite mensuelle de trajets (voyageur)', () {
     // Enregistrer un brouillon n'est jamais bloqué : le gate ne lit plus le
     // droit de publier, seul le clic sur « Publier » est refusé (403).

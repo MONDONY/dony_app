@@ -27,7 +27,9 @@ Widget _host({
   AddressData? initialPickupAddress,
   AddressData? initialDeliveryAddress,
   double? lockedCapacityKg,
+  double? lockedVolumeM3,
   TransportMode? lockedTransportMode,
+  TransportMode? transportMode,
 }) {
   return MaterialApp(
     home: Scaffold(
@@ -45,7 +47,9 @@ Widget _host({
               onPickupChanged: (_) {},
               onDeliveryChanged: (_) {},
               lockedCapacityKg: lockedCapacityKg,
+              lockedVolumeM3: lockedVolumeM3,
               lockedTransportMode: lockedTransportMode,
+              transportMode: transportMode,
             ),
           ),
         ),
@@ -106,6 +110,46 @@ void main() {
         findsOneWidget,
       );
       expect(luggage, findsNothing);
+    });
+
+    testWidgets('lockedVolume_boat : le volume de la demande, icône colis, ni '
+        'kilos ni valise', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          lockedCapacityKg: 12,
+          lockedVolumeM3: 0.5,
+          lockedTransportMode: TransportMode.boat,
+          transportMode: TransportMode.boat,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+
+      expect(find.text('0,50 m³'), findsOneWidget);
+      expect(find.text('12 kg'), findsNothing);
+      expect(luggage, findsNothing);
+      expect(
+        find.descendant(
+          of: locked,
+          matching: find.byWidgetPredicate(
+            (w) => w is DonyIcon && w.name == 'package',
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(CapacityControl), findsNothing);
+    });
+
+    testWidgets('lockedVolume_nullVolume : repli sur les kilos de la demande', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(lockedCapacityKg: 12, lockedTransportMode: TransportMode.boat),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+
+      expect(find.text('12 kg'), findsOneWidget);
     });
 
     testWidgets('avion : 23 kg et la valise, inchangés', (tester) async {

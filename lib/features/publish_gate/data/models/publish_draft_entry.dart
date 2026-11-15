@@ -22,9 +22,18 @@ class LocalPublishDraft extends PublishDraftEntry {
     this.departureCity,
     this.arrivalCity,
     this.date,
+    this.stepNumber,
+    this.stepCount,
   });
 
   final StoredFormDraft draft;
+
+  /// Étape où la saisie s'est arrêtée (1 = première) et nombre d'étapes du
+  /// formulaire. `null` : repli sur l'index historique à trois étapes de
+  /// [StoredFormDraft.step] (le trajet en a cinq depuis les modes de
+  /// transport : « étape 3 sur 3 » à l'étape 5, recette du 13/11).
+  final int? stepNumber;
+  final int? stepCount;
   @override
   final String? departureCity;
   @override
@@ -33,7 +42,14 @@ class LocalPublishDraft extends PublishDraftEntry {
   final DateTime? date;
 
   @override
-  List<Object?> get props => [draft.savedAt, departureCity, arrivalCity, date];
+  List<Object?> get props => [
+    draft.savedAt,
+    departureCity,
+    arrivalCity,
+    date,
+    stepNumber,
+    stepCount,
+  ];
 }
 
 /// Trajet complet enregistré en brouillon sur le serveur, pas encore publié.

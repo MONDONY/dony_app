@@ -45,4 +45,32 @@ void main() {
       );
     });
   });
+
+  group('ProfileRefreshThrottle', () {
+    test('première reprise : relecture due', () {
+      expect(ProfileRefreshThrottle().shouldRefresh(now), isTrue);
+    });
+
+    test('plusieurs reprises dans la fenêtre : un seul rafraîchissement', () {
+      final throttle = ProfileRefreshThrottle();
+      expect(throttle.shouldRefresh(now), isTrue);
+      expect(
+        throttle.shouldRefresh(now.add(const Duration(seconds: 5))),
+        isFalse,
+      );
+      expect(
+        throttle.shouldRefresh(now.add(const Duration(seconds: 29))),
+        isFalse,
+      );
+    });
+
+    test('après la fenêtre de 30 s : de nouveau due', () {
+      final throttle = ProfileRefreshThrottle();
+      expect(throttle.shouldRefresh(now), isTrue);
+      expect(
+        throttle.shouldRefresh(now.add(const Duration(seconds: 30))),
+        isTrue,
+      );
+    });
+  });
 }

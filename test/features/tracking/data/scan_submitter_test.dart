@@ -409,4 +409,120 @@ void main() {
       expect((result as ScanSubmitSent).event, _event);
     },
   );
+
+  group('dépôt d\'un colis payé au dépôt', () {
+    test('en ligne : le jeton du QR part avec l\'étape', () async {
+      when(
+        () => repo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          photoUrl: any(named: 'photoUrl'),
+          qrToken: any(named: 'qrToken'),
+        ),
+      ).thenAnswer((_) async => _event);
+      await build().submit(
+        bidId: 'bid-1',
+        eventType: 'DEPART',
+        photoPath: '/tmp/p.jpg',
+        qrToken: 'tok_abc',
+        photoRequired: true,
+      );
+      verify(
+        () => repo.postScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photoUrl: 'tracking/bid-1/photo.jpg',
+          qrToken: 'tok_abc',
+        ),
+      ).called(1);
+    });
+
+    test(
+      'hors ligne : le jeton et la photo exigée passent par la file',
+      () async {
+        online = false;
+        when(
+          () => offline.queueScan(
+            bidId: any(named: 'bidId'),
+            eventType: any(named: 'eventType'),
+            photoPath: any(named: 'photoPath'),
+            qrToken: any(named: 'qrToken'),
+            photoRequired: any(named: 'photoRequired'),
+          ),
+        ).thenAnswer((_) async => 1);
+        await build().submit(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photoPath: '/tmp/p.jpg',
+          qrToken: 'tok_abc',
+          photoRequired: true,
+        );
+        verify(
+          () => offline.queueScan(
+            bidId: 'bid-1',
+            eventType: 'DEPART',
+            photoPath: '/tmp/p.jpg',
+            qrToken: 'tok_abc',
+            photoRequired: true,
+          ),
+        ).called(1);
+      },
+    );
+
+    test('photo refusée par le serveur : l\'étape ne part PAS', () async {
+      when(() => repo.uploadTrackingPhoto(any(), any())).thenThrow(
+        const ValidationException('Trop lourd', code: 'file-too-large'),
+      );
+      await expectLater(
+        build().submit(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photoPath: '/tmp/p.jpg',
+          qrToken: 'tok_abc',
+          photoRequired: true,
+        ),
+        throwsA(
+          isA<ValidationException>().having(
+            (e) => e.code,
+            'code',
+            'boat-deposit-photo-required',
+          ),
+        ),
+      );
+      verifyNever(
+        () => repo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+        ),
+      );
+    });
+
+    test('aucune photo : l\'étape ne part pas non plus', () async {
+      await expectLater(
+        build().submit(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          qrToken: 'tok_abc',
+          photoRequired: true,
+        ),
+        throwsA(isA<ValidationException>()),
+      );
+      verifyNever(() => repo.uploadTrackingPhoto(any(), any()));
+    });
+
+    test(
+      'colis livré (avion) : photo refusée = étape postée, inchangé',
+      () async {
+        when(() => repo.uploadTrackingPhoto(any(), any())).thenThrow(
+          const ValidationException('Trop lourd', code: 'file-too-large'),
+        );
+        final result = await build().submit(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photoPath: '/tmp/p.jpg',
+        );
+        expect((result as ScanSubmitSent).photoDropped, isTrue);
+      },
+    );
+  });
 }

@@ -34,6 +34,7 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/models/scanned_qr.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
@@ -112,8 +113,10 @@ BidModel _bid(
   String? to,
   double? weight,
   TransportMode? mode,
+  PayoutTrigger payoutTrigger = PayoutTrigger.delivery,
 }) => BidModel(
   id: id,
+  payoutTrigger: payoutTrigger,
   announcementId: trip,
   senderId: 's',
   status: status,
@@ -172,6 +175,7 @@ void main() {
   late Map<String, dynamic>? lastExtra;
   late Object? lastExtraObject;
   ValueChanged<String>? scan;
+  ValueChanged<ScannedQr>? scanQr;
   ValueListenable<bool>? cameraPaused;
 
   setUpAll(() async {
@@ -260,6 +264,8 @@ void main() {
         gpsLabel: any(named: 'gpsLabel'),
         scanMethod: any(named: 'scanMethod'),
         trackingNumber: any(named: 'trackingNumber'),
+        qrToken: any(named: 'qrToken'),
+        photoRequired: any(named: 'photoRequired'),
         notBefore: any(named: 'notBefore'),
       ),
     ).thenAnswer((_) async => 1);
@@ -286,6 +292,7 @@ void main() {
     lastExtra = null;
     lastExtraObject = null;
     scan = null;
+    scanQr = null;
     cameraPaused = null;
 
     when(
@@ -315,6 +322,7 @@ void main() {
     when(() => offlineSync.queueChanges).thenReturn(queue);
     when(() => offlineSync.lostPhotoChanges).thenReturn(queue);
     when(() => offlineSync.lostPhotosFor(any())).thenReturn(const []);
+    when(() => offlineSync.depositRetakeFor(any())).thenReturn(const []);
     when(() => offlineSync.closedScanChanges).thenReturn(queue);
     when(() => offlineSync.closedScansFor(any())).thenReturn(const []);
 
@@ -350,11 +358,12 @@ void main() {
 
   Widget fakeCamera(
     BuildContext context,
-    ValueChanged<String> onBidId,
+    ValueChanged<ScannedQr> onScanned,
     ValueListenable<bool> paused,
     QrTorch torch,
   ) {
-    scan = onBidId;
+    scan = (bidId) => onScanned(ScannedQr(bidId));
+    scanQr = onScanned;
     cameraPaused = paused;
     return const ColoredBox(
       key: Key('fake-camera'),
@@ -426,7 +435,7 @@ void main() {
           page: (_) => Builder(
             builder: (context) => Scaffold(
               body: TextButton(
-                onPressed: () => context.pop('ship-1'),
+                onPressed: () => context.pop(const ScannedQr('ship-1')),
                 child: const Text('lire le QR'),
               ),
             ),
@@ -1169,6 +1178,94 @@ void main() {
       expect(text('Madou récupéré'), findsNothing);
       // Position relevée avant la photo : pas de nouveau relevé.
       verifyNever(() => locator.capture());
+    });
+
+    testWidgets('dépôt (bateau) : QR avec jeton → photo, puis étape envoyée '
+        'avec le jeton et la photo exigée', (tester) async {
+      stubTrips(
+        [_trip('trip-a', 'IN_PROGRESS', 'Marseille', 'Abidjan')],
+        {
+          'trip-a': [
+            _bid(
+              'dep',
+              'ACCEPTED',
+              name: 'Awa',
+              number: 'DON-DEP001',
+              mode: TransportMode.boat,
+              payoutTrigger: PayoutTrigger.deposit,
+            ),
+          ],
+        },
+      );
+      await pump(tester);
+
+      scanQr!(const ScannedQr('dep', qrToken: 'tok_abc'));
+      await settle(tester);
+      expect(visited, contains('/tracking/scan/photo'));
+      expect(lastExtra?['payoutTrigger'], PayoutTrigger.deposit);
+      expect(
+        lastExtra?['qrToken'],
+        isNull,
+      ); // le jeton ne passe jamais par l'écran photo
+
+      await tester.tap(text('page /tracking/scan/photo'));
+      await settle(tester, rounds: 2);
+      await tester.pump(const Duration(seconds: 5));
+      await settle(tester, rounds: 2);
+      verify(
+        () => offlineSync.queueScan(
+          bidId: 'dep',
+          eventType: 'DEPART',
+          photoPath: '/tmp/colis.jpg',
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          scanMethod: ScanMethod.qr,
+          qrToken: 'tok_abc',
+          photoRequired: true,
+          notBefore: any(named: 'notBefore'),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('dépôt (bateau) : le bouton de la ligne colis ne dépose pas '
+        'sans QR, message clair', (tester) async {
+      stubTrips(
+        [_trip('trip-a', 'IN_PROGRESS', 'Marseille', 'Abidjan')],
+        {
+          'trip-a': [
+            _bid(
+              'dep',
+              'ACCEPTED',
+              name: 'Awa',
+              number: 'DON-DEP001',
+              payoutTrigger: PayoutTrigger.deposit,
+            ),
+          ],
+        },
+      );
+      await pump(tester);
+
+      await tapVisible(tester, const Key('suivi-validate-dep'));
+      await settle(tester);
+
+      expect(text("Scannez le QR de l'expéditeur"), findsOneWidget);
+      expect(visited, isNot(contains('/tracking/scan/photo')));
+      verifyNever(
+        () => offlineSync.queueScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          photoPath: any(named: 'photoPath'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          scanMethod: any(named: 'scanMethod'),
+          trackingNumber: any(named: 'trackingNumber'),
+          qrToken: any(named: 'qrToken'),
+          photoRequired: any(named: 'photoRequired'),
+          notBefore: any(named: 'notBefore'),
+        ),
+      );
     });
 
     testWidgets('numéro de suivi d\'un autre colis → refusé, pas de photo', (

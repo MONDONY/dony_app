@@ -1121,6 +1121,22 @@ void main() {
       expect(fieldsOf(tester).transportMode.value, TransportMode.plane);
     });
 
+    testWidgets('nouveau modèle, route et bateau ouverts : jamais le bateau '
+        '(refusé par le back, C16)', (tester) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: true),
+      );
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.byKey(const Key('mode-chip-plane')), findsOneWidget);
+      expect(find.byKey(const Key('mode-chip-car')), findsOneWidget);
+      expect(find.byKey(const Key('mode-chip-boat')), findsNothing);
+    });
+
     testWidgets('nouveau modèle, route ouverte : choix du mode en tête', (
       tester,
     ) async {

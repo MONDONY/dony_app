@@ -167,6 +167,7 @@ class NegotiationRepository {
     String? departureTime,
     String? arrivalTime,
     String? arrivalDate,
+    String? arrivalDateMax,
     required Map<String, dynamic> pickupAddress,
     required Map<String, dynamic> deliveryAddress,
     String? description,
@@ -183,6 +184,8 @@ class NegotiationRepository {
         'departureTime': ?departureTime,
         'arrivalTime': ?arrivalTime,
         'arrivalDate': ?arrivalDate,
+        // Trajet dédié bateau : fin de la fourchette d'arrivée estimée.
+        'arrivalDateMax': ?arrivalDateMax,
         'pickupAddress': pickupAddress,
         'deliveryAddress': deliveryAddress,
         'description': ?description,

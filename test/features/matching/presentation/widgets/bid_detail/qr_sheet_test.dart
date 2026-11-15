@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
@@ -35,9 +35,9 @@ const _tinyPngB64 =
 
 // ── Host widget ───────────────────────────────────────────────────────────────
 
-Widget _host(_MockTrackingBloc bloc) {
+Widget _host(_MockTrackingBloc bloc, {ThemeData? theme}) {
   return MaterialApp(
-    theme: AppTheme.light(),
+    theme: theme ?? AppTheme.light(),
     home: Scaffold(
       body: Builder(
         builder: (ctx) => TextButton(
@@ -499,5 +499,80 @@ void main() {
     expect(find.textContaining('drop-off'), findsOneWidget);
     expect(find.text('Save'), findsOneWidget);
     expect(find.text('Share'), findsOneWidget);
+  });
+
+  // Recette bateau : le QR que le transporteur scanne n'avait pas de vrai
+  // plein écran.
+  group('plein écran', () {
+    Future<void> openLoaded(WidgetTester tester, {ThemeData? theme}) async {
+      tester.view.physicalSize = const Size(360, 780);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final bloc = _MockTrackingBloc();
+      const qr = QrCodeModel(
+        bidId: 'bid-1',
+        scanUrl: 'https://dony.app/track/bid-1',
+        qrCodeBase64: _tinyPngB64,
+      );
+      whenListen<TrackingState>(
+        bloc,
+        Stream<TrackingState>.fromIterable([TrackingQrLoaded(qr)]),
+        initialState: TrackingQrLoaded(qr),
+      );
+      await tester.pumpWidget(_host(bloc, theme: theme));
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('le bouton ouvre le QR sur fond blanc, à la taille de '
+        'l\'écran', (tester) async {
+      await openLoaded(tester, theme: AppTheme.dark());
+
+      await tester.tap(find.byKey(const Key('qr-sheet-fullscreen')));
+      await tester.pumpAndSettle();
+
+      final view = find.byKey(const Key('qr-fullscreen'));
+      expect(view, findsOneWidget);
+      expect(tester.widget<Material>(view).color, DonyColors.neutral0);
+      final size = tester.getSize(find.byKey(const Key('qr-fullscreen-image')));
+      // 360 dp de large, moins les marges : bien plus que les 240 de la
+      // feuille.
+      expect(size.width, greaterThanOrEqualTo(320));
+      expect(size.width, size.height);
+      expect(
+        find.text('Présentez ce QR au voyageur pour qu\'il le scanne.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('un appui sur le QR de la feuille l\'ouvre aussi', (
+      tester,
+    ) async {
+      await openLoaded(tester);
+
+      await tester.tap(find.byKey(const Key('qr-sheet-image')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('qr-fullscreen')), findsOneWidget);
+    });
+
+    testWidgets('fermeture accessible : bouton 48 dp avec infobulle, '
+        'retour à la feuille', (tester) async {
+      await openLoaded(tester);
+      await tester.tap(find.byKey(const Key('qr-sheet-fullscreen')));
+      await tester.pumpAndSettle();
+
+      final close = find.byKey(const Key('qr-fullscreen-close'));
+      expect(tester.widget<IconButton>(close).tooltip, 'Fermer');
+      final size = tester.getSize(close);
+      expect(size.width, greaterThanOrEqualTo(44));
+      expect(size.height, greaterThanOrEqualTo(44));
+
+      await tester.tap(close);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('qr-fullscreen')), findsNothing);
+      expect(find.text('QR du colis'), findsOneWidget);
+    });
   });
 }

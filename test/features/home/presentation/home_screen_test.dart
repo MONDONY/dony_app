@@ -26,6 +26,7 @@ import 'package:dony/features/content_categories/data/content_category_model.dar
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
+import 'package:dony/features/home/bloc/home_search_session_cubit.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/data/home_matching_default_store.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
@@ -780,6 +781,79 @@ Widget _buildHomeStubRoutes({
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
+
+Widget _buildHomeInShell({required MockAnnouncementBloc announcementBloc}) {
+  final authBloc = MockAuthBloc();
+  final roleCubit = MockActiveRoleCubit();
+  final notifBloc = MockNotificationBloc();
+  final bidBloc = MockBidBloc();
+  when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+  when(() => announcementBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => authBloc.state).thenReturn(
+    AuthAuthenticated(_makeUser(roles: const ['SENDER', 'TRAVELER'])),
+  );
+  when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => roleCubit.state).thenReturn(ActiveRole.sender);
+  when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
+  when(() => notifBloc.state).thenReturn(const NotificationInitial());
+  when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => bidBloc.state).thenReturn(BidInitial());
+  when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+
+  Widget stub(String label) => Scaffold(
+    body: Builder(
+      builder: (ctx) =>
+          TextButton(onPressed: () => ctx.pop(), child: Text(label)),
+    ),
+  );
+
+  final router = GoRouter(
+    initialLocation: '/home',
+    routes: [
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, shell) => Scaffold(body: shell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/other', builder: (_, _) => stub('OTHER'))],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/announcements/:id/trip',
+        builder: (_, _) => stub('STUB_TRIP'),
+      ),
+      _composerRoute(),
+    ],
+  );
+
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
+      BlocProvider<AuthBloc>.value(value: authBloc),
+      BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+      BlocProvider<NotificationBloc>.value(value: notifBloc),
+      BlocProvider<BidBloc>.value(value: bidBloc),
+      BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
+      _helpCenterProvider(),
+    ],
+    child: MaterialApp.router(
+      routerConfig: router,
+      theme: AppTheme.light(),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('fr'), Locale('en')],
+      locale: const Locale('fr'),
+    ),
+  );
+}
 
 void main() {
   late MockAnalyticsService analytics;
@@ -2209,6 +2283,78 @@ void main() {
     });
   });
 
+  // Recette bateau (Redmi) : le filtre Bateau disparaissait au retour sur
+  // l'onglet. Une navigation par `go()` hors du shell détruit l'écran
+  // Rechercher ; recréé, il repartait de filtres vides.
+  group('filtre Transport conservé quand l\'écran est recréé', () {
+    Future<MockAnnouncementBloc> pickBoatThenLeaveShell(
+      WidgetTester tester,
+    ) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: true),
+      );
+      final bloc = MockAnnouncementBloc();
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_buildHomeInShell(announcementBloc: bloc));
+      await tester.pump(const Duration(milliseconds: 1000));
+      final chip = find.byKey(const Key('home-chip-transport'));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bateau'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<HomeSmallChip>(chip).label, 'Bateau');
+
+      // Ouverture d'un trajet hors du shell puis retour sur l'onglet.
+      GoRouter.of(tester.element(chip)).go('/announcements/a1/trip');
+      await tester.pumpAndSettle();
+      GoRouter.of(tester.element(find.text('STUB_TRIP'))).go('/home');
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 1000));
+      return bloc;
+    }
+
+    testWidgets('le filtre Bateau et la recherche bateau reviennent', (
+      tester,
+    ) async {
+      getIt.registerSingleton<HomeSearchSessionCubit>(HomeSearchSessionCubit());
+      final bloc = await pickBoatThenLeaveShell(tester);
+
+      final chip = find.byKey(const Key('home-chip-transport'));
+      expect(tester.widget<HomeSmallChip>(chip).label, 'Bateau');
+      final searches = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<AnnouncementSearchRequested>().toList();
+      expect(searches.last.transportMode, TransportMode.boat);
+    });
+
+    testWidgets('après déconnexion, la recherche repart de zéro', (
+      tester,
+    ) async {
+      final session = HomeSearchSessionCubit();
+      getIt.registerSingleton<HomeSearchSessionCubit>(session);
+      await pickBoatThenLeaveShell(tester);
+      session.reset();
+
+      final router = GoRouter.of(
+        tester.element(find.byKey(const Key('home-chip-transport'))),
+      );
+      router.go('/announcements/a2/trip');
+      await tester.pumpAndSettle();
+      router.go('/home');
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      final chip = find.byKey(const Key('home-chip-transport'));
+      expect(tester.widget<HomeSmallChip>(chip).label, isNot('Bateau'));
+    });
+  });
+
   group('puce Transport (filtre de la recherche)', () {
     Future<MockAnnouncementBloc> pumpTrips(WidgetTester tester) async {
       final bloc = MockAnnouncementBloc();
@@ -2557,6 +2703,146 @@ void main() {
         );
         expect(searches(bloc).last.minAvailableKg, 30);
       });
+    });
+  });
+
+  // Bateau : puces Volume et Arrivée, filtres envoyés au serveur.
+  group('filtres bateau de la rangée de puces', () {
+    Future<MockAnnouncementBloc> pumpTrips(WidgetTester tester) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: true),
+      );
+      final bloc = MockAnnouncementBloc();
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        _buildHome(
+          announcementBlocOverride: bloc,
+          user: _makeUser(roles: const ['SENDER', 'TRAVELER']),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+      return bloc;
+    }
+
+    Future<void> pickBoat(WidgetTester tester) async {
+      final chip = find.byKey(const Key('home-chip-transport'));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bateau'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+    }
+
+    List<AnnouncementSearchRequested> searches(MockAnnouncementBloc bloc) =>
+        verify(
+          () => bloc.add(captureAny()),
+        ).captured.whereType<AnnouncementSearchRequested>().toList();
+
+    Future<void> tapChip(WidgetTester tester, String key) async {
+      final chip = find.byKey(Key(key));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('boatFilters_sendParams : puce Volume → feuille, 3 m³ envoyé, '
+        'un tap sur la puce active le retire', (tester) async {
+      final bloc = await pumpTrips(tester);
+      await pickBoat(tester);
+      expect(find.byKey(const Key('chip-urgent')), findsNothing);
+      expect(find.byKey(const Key('chip-suitcase-23')), findsNothing);
+
+      await tapChip(tester, 'home-chip-volume');
+      expect(find.text('Volume minimum'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('boat-filter-volume-field')),
+        '3',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('boat-filter-apply')));
+      await tester.pumpAndSettle();
+
+      final withVolume = searches(bloc).last;
+      expect(withVolume.transportMode, TransportMode.boat);
+      expect(withVolume.minVolumeM3, 3);
+      expect(withVolume.maxPricePerM3, isNull);
+      expect(withVolume.arrivalBefore, isNull);
+      expect(find.text('≥ 3 m³'), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'min_volume', 'mode': 'trips'},
+        ),
+      ).called(1);
+
+      await tapChip(tester, 'home-chip-volume');
+      expect(searches(bloc).last.minVolumeM3, isNull);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterCleared,
+          properties: {'filter': 'min_volume', 'mode': 'trips'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('puce Arrivée : 6 semaines → arrivalBefore = aujourd\'hui + '
+        '42 jours, puis retrait', (tester) async {
+      final bloc = await pumpTrips(tester);
+      await pickBoat(tester);
+
+      await tapChip(tester, 'home-chip-arrival');
+      expect(find.text('Arrivée estimée'), findsOneWidget);
+      expect(
+        find.text(
+          'Toute la fourchette d\'arrivée annoncée par le transporteur tombe '
+          'avant cette limite.',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('boat-arrival-6')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('boat-filter-apply')));
+      await tester.pumpAndSettle();
+
+      final now = DateTime.now();
+      expect(
+        searches(bloc).last.arrivalBefore,
+        DateTime(now.year, now.month, now.day + 42),
+      );
+      expect(find.text('Arrivée ≤ 6 sem.'), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'arrival_window', 'mode': 'trips'},
+        ),
+      ).called(1);
+
+      await tapChip(tester, 'home-chip-arrival');
+      expect(searches(bloc).last.arrivalBefore, isNull);
+    });
+
+    testWidgets('avion : aucune puce bateau, Urgent et Valise gardés', (
+      tester,
+    ) async {
+      await pumpTrips(tester);
+      expect(find.byKey(const Key('home-chip-volume')), findsNothing);
+      expect(find.byKey(const Key('home-chip-arrival')), findsNothing);
+      expect(find.byKey(const Key('chip-urgent')), findsOneWidget);
+    });
+
+    testWidgets('curseur Capacité à 1 000 kg en bateau', (tester) async {
+      await pumpTrips(tester);
+      await pickBoat(tester);
+      await tapChip(tester, 'chip-capacity');
+      final slider = tester.widget<RangeSlider>(find.byType(RangeSlider));
+      expect(slider.max, 1000);
     });
   });
 

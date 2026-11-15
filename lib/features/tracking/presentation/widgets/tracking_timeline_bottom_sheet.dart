@@ -9,6 +9,7 @@ import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
+import 'package:dony/features/tracking/data/models/trip_milestones.dart';
 import 'package:dony/features/tracking/presentation/widgets/journey_timeline.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
@@ -37,7 +38,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// [travelerTracking] : suivi approximatif du voyageur (fiche colis de
 /// l'expéditeur). Ses villes (« Près de Lyon ») s'insèrent dans la frise, dans
 /// l'ordre du temps, entre les étapes enregistrées ; absent, la frise est
-/// inchangée.
+/// inchangée. Jamais en bateau : sa position se lit sur ses jalons.
+/// [milestones] : jalons du trajet (départ prévu, arrivée estimée, dernier
+/// retard), intercalés entre les étapes du colis en bateau
+/// ([boatJourneySteps]) ; `null` pour un colis lu par QR ou par numéro.
+///
+/// La frise suit le mode : bateau (dépôt à l'entrepôt, bateau parti, en mer,
+/// arrivée au port), tout autre mode, inconnu compris, garde les étapes
+/// neutres (remise au voyageur, en route, remise au destinataire).
 Future<void> showTrackingTimelineSheet(
   BuildContext context, {
   required String bidId,
@@ -50,6 +58,7 @@ Future<void> showTrackingTimelineSheet(
   String? bidStatus,
   VoidCallback? onOpenParcel,
   TravelerTrackingModel? travelerTracking,
+  TripMilestones? milestones,
 }) {
   return DonyBottomSheet.show<void>(
     context,
@@ -72,6 +81,7 @@ Future<void> showTrackingTimelineSheet(
       trackingNumber: trackingNumber,
       arrivalInstructions: arrivalInstructions,
       travelerTracking: travelerTracking,
+      milestones: milestones,
     ),
   );
 }
@@ -141,6 +151,7 @@ class _TrackingTimelineContent extends StatefulWidget {
     this.trackingNumber,
     this.arrivalInstructions,
     this.travelerTracking,
+    this.milestones,
   });
 
   final String bidId;
@@ -151,6 +162,7 @@ class _TrackingTimelineContent extends StatefulWidget {
   final String? trackingNumber;
   final String? arrivalInstructions;
   final TravelerTrackingModel? travelerTracking;
+  final TripMilestones? milestones;
 
   @override
   State<_TrackingTimelineContent> createState() =>
@@ -222,7 +234,8 @@ class _TrackingTimelineContentState extends State<_TrackingTimelineContent>
             ),
             TrackingEventsLoaded(:final events) => _Journey(
               events: events,
-              arrived: widget.bidStatus == 'ARRIVED',
+              bidStatus: widget.bidStatus,
+              milestones: widget.milestones,
               departureCity: departureCity,
               arrivalCity: arrivalCity,
               transportMode: transportMode,
@@ -280,11 +293,15 @@ class _ReadOnlyHeader extends StatelessWidget {
 /// étapes faites par ordre d'heure ; à heure égale, l'étape enregistrée passe
 /// avant la ville. La dernière ville est marquée « Maintenant » (voyageur en
 /// route) ou « Dernière position, il y a X » (position ancienne).
+///
+/// Frise neutre de l'avion, de la route et d'un mode inconnu ; le bateau a la
+/// sienne ([boatJourneySteps]).
 List<JourneyStep> _journeySteps(
   AppLocalizations l,
   List<TrackingEventModel> events, {
   bool arrived = false,
   TravelerTrackingModel? tracking,
+  TransportMode? mode,
   DateTime? now,
 }) {
   final sorted = [...events]
@@ -293,7 +310,7 @@ List<JourneyStep> _journeySteps(
   final delivered = sorted.any((e) => e.eventType == 'ARRIVEE');
   final arrivedOnly = arrived && departed && !delivered;
   return [
-    ...mergedDoneSteps(l, sorted, tracking, now ?? DateTime.now()),
+    ...mergedDoneSteps(l, sorted, tracking, now ?? DateTime.now(), mode: mode),
     if (!delivered && !departed) ...[
       JourneyStep(JourneyStepState.current, l.trackingStepHandoverToTraveler),
       JourneyStep(JourneyStepState.upcoming, l.trackingStepDeparture),
@@ -340,7 +357,8 @@ String _headline(
 class _Journey extends StatelessWidget {
   const _Journey({
     required this.events,
-    this.arrived = false,
+    this.bidStatus,
+    this.milestones,
     this.departureCity,
     this.arrivalCity,
     this.transportMode,
@@ -350,7 +368,8 @@ class _Journey extends StatelessWidget {
   });
 
   final List<TrackingEventModel> events;
-  final bool arrived;
+  final String? bidStatus;
+  final TripMilestones? milestones;
   final String? departureCity;
   final String? arrivalCity;
   final TransportMode? transportMode;
@@ -358,17 +377,45 @@ class _Journey extends StatelessWidget {
   final String? arrivalInstructions;
   final TravelerTrackingModel? travelerTracking;
 
+  bool get _arrived => bidStatus == 'ARRIVED';
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final steps = _journeySteps(
-      l,
-      events,
-      arrived: arrived,
-      tracking: travelerTracking,
-    );
+    final now = DateTime.now();
+    final isBoat = transportMode == TransportMode.boat;
+    final steps = isBoat
+        ? boatJourneySteps(
+            l,
+            events,
+            bidStatus: bidStatus,
+            milestones: milestones,
+            departureCity: departureCity,
+            arrivalCity: arrivalCity,
+            now: now,
+          )
+        : _journeySteps(
+            l,
+            events,
+            arrived: _arrived,
+            tracking: travelerTracking,
+            mode: transportMode,
+            now: now,
+          );
+    final headline = isBoat
+        ? boatJourneyHeadline(
+            l,
+            boatJourneyProgress(
+              events,
+              bidStatus: bidStatus,
+              milestones: milestones,
+              now: now,
+            ),
+            arrivalCity,
+          )
+        : _headline(l, events, arrivalCity, arrived: _arrived);
     final number = trackingNumber?.trim() ?? '';
     final instructions = arrivalInstructions?.trim() ?? '';
     final from = departureCity?.trim() ?? '';
@@ -391,7 +438,7 @@ class _Journey extends StatelessWidget {
           const SizedBox(height: DonySpacing.xs),
         ],
         Text(
-          _headline(l, events, arrivalCity, arrived: arrived),
+          headline,
           key: const Key('tracking-headline'),
           style: tt.headlineLarge?.copyWith(fontWeight: FontWeight.w800),
         ),

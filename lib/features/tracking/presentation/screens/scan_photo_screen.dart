@@ -5,6 +5,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
@@ -36,11 +38,18 @@ class ScanPhotoScreen extends StatefulWidget {
     this.scanMethod,
     this.deliveryWindow,
     this.locator = const ScanLocator(),
+    this.transportMode,
+    this.payoutTrigger = PayoutTrigger.delivery,
+    this.qrToken,
   });
 
   final String bidId;
   final String etape;
   final String packageLabel;
+
+  /// Jeton `?k=` du QR de dépôt (bateau), transmis à la confirmation qui
+  /// l'envoie avec l'étape. Jamais affiché.
+  final String? qrToken;
 
   /// Onglet Suivi : la photo (obligatoire) est rendue à l'appelant par
   /// `context.pop(ScanPhotoResult)` au lieu d'ouvrir la confirmation.
@@ -54,6 +63,23 @@ class ScanPhotoScreen extends StatefulWidget {
   final DeliveryWindow? deliveryWindow;
 
   final ScanLocator locator;
+
+  /// Mode du trajet du colis quand il est connu : en bateau, `DEPART` est le
+  /// dépôt à l'entrepôt (`trackingStepLabel`).
+  final TransportMode? transportMode;
+
+  /// Versement du colis (`BidModel.payoutTrigger`) ; absent (back sans la PR
+  /// B) : livraison, comportement d'avant.
+  final PayoutTrigger payoutTrigger;
+
+  /// Colis payé au dépôt dont on valide le dépôt (`DEPART`) : la photo en
+  /// est la preuve, le serveur refuse le dépôt sans elle (422
+  /// `boat-deposit-photo-required`).
+  bool get isDeposit =>
+      etape == 'DEPART' && payoutTrigger == PayoutTrigger.deposit;
+
+  /// Mode qui nomme l'étape : un colis payé au dépôt voyage en bateau.
+  TransportMode? get stepMode => isDeposit ? TransportMode.boat : transportMode;
 
   /// Taille maximale acceptée par le back pour une photo d'étape.
   static const maxPhotoBytes = 10 * 1024 * 1024;
@@ -77,6 +103,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
 
   bool get _photoRequired =>
       widget.returnResult ||
+      widget.isDeposit ||
       widget.etape == 'DEPART' ||
       widget.etape == 'ARRIVEE';
 
@@ -84,6 +111,13 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
   void initState() {
     super.initState();
     _gpsFuture = _captureGps();
+    // Dépôt d'un colis payé au dépôt : la photo est la seule suite possible,
+    // l'appareil photo s'ouvre d'office (annulé, le bouton reste là).
+    if (widget.isDeposit) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _busy.value == _Busy.idle) unawaited(_takePhoto());
+      });
+    }
   }
 
   @override
@@ -181,6 +215,10 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
         'gpsLabel': _position.value?.label,
         'scanMethod': widget.scanMethod,
         'deliveryWindow': widget.deliveryWindow,
+        'transportMode': ?widget.transportMode,
+        if (widget.payoutTrigger == PayoutTrigger.deposit)
+          'payoutTrigger': widget.payoutTrigger,
+        'qrToken': ?widget.qrToken,
       },
     );
   }
@@ -215,6 +253,9 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                     ? _ResultHeader(
                         parcel: widget.packageLabel,
                         step: widget.etape,
+                        deposit:
+                            widget.etape == 'DEPART' &&
+                            widget.stepMode == TransportMode.boat,
                       )
                     : Column(
                         children: [
@@ -310,7 +351,11 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                                       const SizedBox(width: DonySpacing.xs),
                                       Text(
                                         l.scanStepLabel(
-                                          trackingStepLabel(l, widget.etape),
+                                          trackingStepLabel(
+                                            l,
+                                            widget.etape,
+                                            mode: widget.stepMode,
+                                          ),
                                         ),
                                         style: tt.labelSmall?.copyWith(
                                           color: DonyColors.neutral0,
@@ -496,10 +541,17 @@ enum _Busy { idle, opening, locating }
 /// En-tête du mode « retour de résultat » : « Photo du colis de X » et
 /// l'étape qu'elle valide.
 class _ResultHeader extends StatelessWidget {
-  const _ResultHeader({required this.parcel, required this.step});
+  const _ResultHeader({
+    required this.parcel,
+    required this.step,
+    this.deposit = false,
+  });
 
   final String parcel;
   final String step;
+
+  /// `DEPART` est le dépôt à l'entrepôt (bateau).
+  final bool deposit;
 
   @override
   Widget build(BuildContext context) {
@@ -529,7 +581,9 @@ class _ResultHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
-                  l.suiviPhotoRequiredFor(step),
+                  deposit
+                      ? l.suiviDepositPhotoRequired
+                      : l.suiviPhotoRequiredFor(step),
                   style: tt.bodyMedium?.copyWith(
                     color: DonyColors.neutral0.withValues(alpha: 0.75),
                   ),

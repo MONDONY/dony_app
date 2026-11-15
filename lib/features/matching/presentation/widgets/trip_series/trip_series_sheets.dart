@@ -13,7 +13,10 @@ String tripSeriesErrorText(BuildContext context, String? code) {
   return switch (code) {
     'draft-limit-reached' => l10n.tripSeriesErrorDraftLimit,
     'kyc-not-verified' => l10n.tripSeriesErrorKyc,
+    'monthly-limit-reached' ||
+    'traveler-status-required' ||
     'pro-limit-reached' => l10n.tripSeriesErrorProLimit,
+    'gp-pro-pending' => l10n.tripSeriesErrorGpProPending,
     'stripe-onboarding-incomplete' => l10n.tripSeriesErrorStripe,
     _ => l10n.tripSeriesErrorGeneric,
   };

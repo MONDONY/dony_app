@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
@@ -771,6 +772,82 @@ void main() {
         expect(find.text('Jun 15 ±2d · 5 kg · Clo. · ≈35 €'), findsOneWidget);
         expect(find.textContaining('±2j'), findsNothing);
         expect(find.textContaining('Vêt.'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'l\'expéditeur voit le prix brut de sa demande, jamais le net du '
+      'voyageur, et l\'icône du mode de la demande',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [
+              PackageRequest(
+                id: 'pr-boat',
+                senderId: 's-1',
+                departureCity: 'Marseille',
+                arrivalCity: 'Dakar',
+                dateToleranceDays: 0,
+                weightKg: 30,
+                parcelSize: ParcelSize.medium,
+                transportMode: TransportMode.boat,
+                categories: const ['Vêtements & tissus'],
+                targetPriceEur: 5,
+                grossPriceEur: 6,
+                status: PackageRequestStatus.draft,
+                createdAt: DateTime(2026, 5, 10),
+              ),
+            ],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        expect(
+          find.textContaining('≈${formatPriceIn(6, 'EUR')}'),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('≈${formatPriceIn(5, 'EUR')}'),
+          findsNothing,
+        );
+        final icons = tester
+            .widgetList<DonyIcon>(find.byType(DonyIcon))
+            .map((i) => i.name);
+        expect(icons, contains(TransportMode.boat.iconAsset));
+      },
+    );
+
+    testWidgets(
+      'une demande « Peu importe » prend l\'icône neutre, jamais l\'avion',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [
+              PackageRequest(
+                id: 'pr-any',
+                senderId: 's-1',
+                departureCity: 'Paris',
+                arrivalCity: 'Dakar',
+                dateToleranceDays: 0,
+                weightKg: 5,
+                parcelSize: ParcelSize.medium,
+                transportMode: null,
+                categories: const ['Vêtements & tissus'],
+                status: PackageRequestStatus.open,
+                createdAt: DateTime(2026, 5, 10),
+              ),
+            ],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        final icons = tester
+            .widgetList<DonyIcon>(find.byType(DonyIcon))
+            .map((i) => i.name);
+        expect(icons, contains(kNeutralTripIconAsset));
+        expect(icons, isNot(contains(TransportMode.plane.iconAsset)));
       },
     );
   });

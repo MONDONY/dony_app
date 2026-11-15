@@ -1,9 +1,8 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/presentation/utils/bid_parcel_size.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_tile_sheets.dart';
@@ -81,16 +80,11 @@ class TravelerTransportSection extends StatelessWidget {
   /// Résumé de la tuile Colis : poids puis destinataire. Un destinataire qui a
   /// refusé n'est pas nommé : la carte du sheet cache aussi son nom.
   String? _parcelSubtitle(AppLocalizations l) {
-    final weight = bid.displayWeightKg;
-    if (weight == null) return null;
+    final size = bidParcelSizeLabel(l, bid);
+    if (size == null) return null;
     final recipient = bid.recipientName?.trim() ?? '';
-    if (recipient.isEmpty || bid.recipientDeclined) {
-      return parcelWeightWithSize(l, formatWeightKg(l, weight), bid.itemSize);
-    }
-    return l.travelerTileColisSubtitle(
-      parcelWeightWithSize(l, formatWeightKg(l, weight), bid.itemSize),
-      recipient,
-    );
+    if (recipient.isEmpty || bid.recipientDeclined) return size;
+    return l.travelerTileColisSubtitle(size, recipient);
   }
 
   /// Le destinataire a refusé (ou s'est retiré, FLUTTER-E8) et le voyageur

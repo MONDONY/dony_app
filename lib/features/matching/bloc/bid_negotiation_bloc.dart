@@ -133,6 +133,7 @@ class BidNegotiationBloc
         customItems: event.customItems,
         gridItems: event.gridItems,
         itemSize: event.itemSize,
+        volume: event.volume,
       );
       _emitLoaded(thread, BidNegotiationAction.proposed, emit);
       // Ni description, ni destinataire, ni téléphone : on mesure si la
@@ -147,6 +148,8 @@ class BidNegotiationBloc
             'custom_item_count': (event.customItems ?? const []).length,
             'payment_method': event.paymentMethod.apiValue,
             if (event.itemSize case final size?) 'item_size': size.wire,
+            // Trajet au m³ : dimensions envoyées, jamais leurs valeurs.
+            if (event.volume != null) 'price_unit': 'm3',
           },
         ),
       );

@@ -27,6 +27,7 @@ BidModel _bid(
   String status = 'ACCEPTED',
   String senderName = 'Aïcha',
   BidPaymentMethod method = BidPaymentMethod.stripe,
+  PayoutTrigger payoutTrigger = PayoutTrigger.delivery,
 }) => BidModel(
   id: 'b1',
   announcementId: 'a1',
@@ -39,6 +40,7 @@ BidModel _bid(
   senderName: senderName,
   travelerName: 'Moussa',
   moneyBreakdown: breakdown,
+  payoutTrigger: payoutTrigger,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );
@@ -139,6 +141,116 @@ void main() {
       expect(find.textContaining('avant de scanner'), findsNothing);
       expect(find.textContaining('dont'), findsNothing);
       expect(find.text('74,00\u00a0€'), findsNWidgets(2));
+    });
+
+    testWidgets('boatAmendment_wordingDeposit_traveler', (tester) async {
+      final b = BidMoneyBreakdown(
+        lines: [
+          _line(MoneyLineKind.principal, 'STRIPE', 54),
+          _line(MoneyLineKind.amendment, 'STRIPE', 20),
+        ],
+        total: 74,
+        onlineAmount: 74,
+        cashAmount: 0,
+      );
+      await _pump(
+        tester,
+        MoneyBreakdownCard(
+          bid: _bid(b, payoutTrigger: PayoutTrigger.deposit),
+          isSender: false,
+        ),
+      );
+      expect(
+        find.text('Versé sur votre compte au dépôt du colis'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Versé sur votre compte après la livraison'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('boatAmendment_wordingDeposit_sender_card', (tester) async {
+      final b = BidMoneyBreakdown(
+        lines: [
+          _line(MoneyLineKind.principal, 'STRIPE', 61.2),
+          _line(MoneyLineKind.amendment, 'STRIPE', 20),
+        ],
+        total: 81.2,
+        onlineAmount: 81.2,
+        cashAmount: 0,
+      );
+      await _pump(
+        tester,
+        MoneyBreakdownCard(
+          bid: _bid(b, payoutTrigger: PayoutTrigger.deposit),
+          isSender: true,
+        ),
+      );
+      expect(
+        find.text('Payé par carte, versé au transporteur au dépôt'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('livraison'), findsNothing);
+    });
+
+    testWidgets('boatAmendment_wordingDeposit_sender_onlineNotCard', (
+      tester,
+    ) async {
+      final b = BidMoneyBreakdown(
+        lines: [_line(MoneyLineKind.principal, 'MOBILE_MONEY', 61.2)],
+        total: 61.2,
+        onlineAmount: 61.2,
+        cashAmount: 0,
+      );
+      await _pump(
+        tester,
+        MoneyBreakdownCard(
+          bid: _bid(b, payoutTrigger: PayoutTrigger.deposit),
+          isSender: true,
+        ),
+      );
+      expect(
+        find.text('Payé en ligne, versé au transporteur au dépôt'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('boatAmendment_cancelledParcel_noDepositWording', (
+      tester,
+    ) async {
+      final b = BidMoneyBreakdown(
+        lines: [_line(MoneyLineKind.principal, 'STRIPE', 61.2)],
+        total: 61.2,
+        onlineAmount: 61.2,
+        cashAmount: 0,
+      );
+      for (final isSender in [true, false]) {
+        await _pump(
+          tester,
+          MoneyBreakdownCard(
+            bid: _bid(
+              b,
+              status: 'CANCELLED',
+              payoutTrigger: PayoutTrigger.deposit,
+            ),
+            isSender: isSender,
+          ),
+        );
+        expect(find.textContaining('au dépôt'), findsNothing);
+      }
+    });
+
+    testWidgets('deliveryWording_unchanged_sender', (tester) async {
+      await _pump(
+        tester,
+        MoneyBreakdownCard(bid: _bid(_senderCashBreakdown), isSender: true),
+      );
+      expect(
+        find.text("Payé par carte, gardé jusqu'à la livraison"),
+        findsOneWidget,
+      );
+      expect(find.textContaining('au dépôt'), findsNothing);
     });
 
     testWidgets('sender_neverShowsNet', (tester) async {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/camera_permission_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -167,6 +168,9 @@ void main() {
     when(
       () => analytics.logScreen(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
     kycBloc = _MockKycBloc();
     whenListen(
       kycBloc,
@@ -285,6 +289,163 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Unable to load the verification page'), findsNothing);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+  });
+
+  /// Propriétés des émissions de [event] ; vide si l'événement n'est pas parti.
+  List<Map<String, Object>> emitted(String event) => verify(
+    () =>
+        analytics.logEvent(event, properties: captureAny(named: 'properties')),
+  ).captured.cast<Map<String, Object>>();
+
+  // Un utilisateur a quitté la vérification quatre fois sans aucune trace :
+  // ni `kyc_failed`, ni `kyc_completed`. Ces événements disent où il bloque.
+  group('instrumentation du parcours', () {
+    testWidgets('première page chargée : une seule émission avec la durée', (
+      tester,
+    ) async {
+      await pump(tester);
+      platform.onPageFinished!('https://verify.didit.me/session/x');
+      platform.onPageFinished!('https://verify.didit.me/step/2');
+      await tester.pump();
+
+      final events = emitted(AnalyticsEvents.kycWebviewPageLoaded);
+      expect(events, hasLength(1));
+      expect(events.single['provider'], 'didit');
+      expect(events.single['duration_ms'], isA<int>());
+    });
+
+    testWidgets('erreur de la page principale : code et description', (
+      tester,
+    ) async {
+      await pump(tester);
+      platform.onError!(
+        const WebResourceError(
+          errorCode: -2,
+          description: 'net::ERR_INTERNET_DISCONNECTED',
+          isForMainFrame: true,
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 10));
+
+      final events = emitted(AnalyticsEvents.kycWebviewError);
+      expect(events, hasLength(1));
+      expect(events.single['error_code'], -2);
+      expect(events.single['description'], 'net::ERR_INTERNET_DISCONNECTED');
+    });
+
+    testWidgets('description trop longue : tronquée à 100 caractères', (
+      tester,
+    ) async {
+      await pump(tester);
+      platform.onError!(
+        WebResourceError(
+          errorCode: -1,
+          description: 'x' * 300,
+          isForMainFrame: true,
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 10));
+
+      expect(
+        (emitted(AnalyticsEvents.kycWebviewError).single['description']!
+                as String)
+            .length,
+        100,
+      );
+    });
+
+    testWidgets('erreur d\'une sous-ressource : aucune émission', (
+      tester,
+    ) async {
+      await pump(tester);
+      platform.onError!(
+        const WebResourceError(
+          errorCode: -1,
+          description: 'net::ERR_FAILED',
+          isForMainFrame: false,
+        ),
+      );
+      await tester.pump();
+
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.kycWebviewError,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    testWidgets('caméra refusée par le système : source system', (
+      tester,
+    ) async {
+      await pump(tester, cameraGranted: false);
+      platform.onPermission!(
+        _FakeRequest(const {WebViewPermissionResourceType.camera}),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+
+      final events = emitted(AnalyticsEvents.kycWebviewCameraBlocked);
+      expect(events.single['source'], 'system');
+    });
+
+    testWidgets('croix sans page chargée : abandon avant tout affichage', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final events = emitted(AnalyticsEvents.kycWebviewClosed);
+      expect(events.single['via'], 'button');
+      expect(events.single['page_loaded'], isFalse);
+      expect(events.single['camera_blocked'], isFalse);
+      expect(events.single['duration_ms'], isA<int>());
+    });
+
+    testWidgets('retour système après chargement : page_loaded vrai', (
+      tester,
+    ) async {
+      await pump(tester);
+      platform.onPageFinished!('https://verify.didit.me/session/x');
+      await tester.pump();
+      platform.canGoBack = false;
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final events = emitted(AnalyticsEvents.kycWebviewClosed);
+      expect(events.single['via'], 'system_back');
+      expect(events.single['page_loaded'], isTrue);
+    });
+
+    testWidgets('sortie après caméra bloquée : camera_blocked vrai', (
+      tester,
+    ) async {
+      await pump(tester, cameraGranted: false);
+      platform.onPermission!(
+        _FakeRequest(const {WebViewPermissionResourceType.camera}),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      // Ferme la feuille « caméra bloquée » avant de toucher la croix.
+      Navigator.of(
+        tester.element(find.text('Open settings')),
+        rootNavigator: true,
+      ).pop();
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(
+        emitted(AnalyticsEvents.kycWebviewClosed).single['camera_blocked'],
+        isTrue,
+      );
     });
   });
 

@@ -3,6 +3,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_request_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
 
 /// Entrée de la modification d'un colis accepté, dans le détail d'envoi de
@@ -12,6 +13,11 @@ import 'package:flutter/widgets.dart';
 abstract final class AmendmentEntry {
   /// Le serveur décide (éligibilité, drapeau, fenêtre) : l'app ne recalcule rien.
   static bool shouldShow(BidModel bid) => bid.amendmentAllowed;
+
+  /// Libellé de l'entrée : « kilos » pour un colis au kilo, « volume » pour un
+  /// colis au m³ (trajet bateau).
+  static String entryLabel(AppLocalizations l, BidModel bid) =>
+      bid.isPricedPerM3 ? l.amendmentEntryButtonVolume : l.amendmentEntryButton;
 
   /// Ouvre la feuille puis relit le colis (`BidBloc` de l'écran, s'il est là)
   /// quand une demande a été envoyée ou n'est plus possible. Aussi appelée par

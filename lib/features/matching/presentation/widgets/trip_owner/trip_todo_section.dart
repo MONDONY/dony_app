@@ -138,7 +138,12 @@ class TripTodoNextCard extends StatelessWidget {
       now: tripTodoNow(),
       trip: live.trip,
     );
-    final title = tripTodoTitle(l, item, cardReady: live.cardReady);
+    final title = tripTodoTitle(
+      l,
+      item,
+      cardReady: live.cardReady,
+      trip: live.trip,
+    );
     final subtitle = tripTodoSubtitle(l, item, cardReady: live.cardReady);
     final radius = BorderRadius.circular(DonyRadius.card);
     return Container(
@@ -219,7 +224,12 @@ class TripTodoNextCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
           DonyButton(
             key: const Key('trip-todo-next-button'),
-            label: tripTodoButton(l, item, cardReady: live.cardReady),
+            label: tripTodoButton(
+              l,
+              item,
+              cardReady: live.cardReady,
+              trip: live.trip,
+            ),
             flat: true,
             onPressed: onPressed,
           ),
@@ -344,7 +354,7 @@ class TripTodoQueueRow extends StatelessWidget {
         urgent: urgent,
         small: true,
       ),
-      title: tripTodoTitle(l, item, cardReady: live.cardReady),
+      title: tripTodoTitle(l, item, cardReady: live.cardReady, trip: live.trip),
       subtitle: tripTodoSubtitle(l, item, cardReady: live.cardReady),
       due: due,
       trailing: item.count > 1

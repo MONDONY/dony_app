@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -87,30 +88,50 @@ class TripOwnerHeader extends StatelessWidget {
         ],
 
         // ── 2 info pills (capacité · prix) ───────────────────────────────────
+        // Bateau vendu au m³ : le volume restant sur le volume proposé et le
+        // prix NET au m³ (le voyageur lit ce qu'il touche, comme ses kilos),
+        // jamais un kilo (le trajet n'en porte aucun).
         IntrinsicHeight(
           child: Row(
             children: [
               Expanded(
-                child: _InfoPill(
-                  value: a.capacityUnit == 'KG_FREE'
-                      ? l.tripKgFree
-                      : formatWeightKg(l, a.availableKg.roundToDouble()),
-                  label: l.listingCapacityAvailableSuffix,
-                ),
+                child: a.isPricedPerM3
+                    ? _InfoPill(
+                        key: const Key('trip-owner-capacity-pill'),
+                        value: formatVolumeRemainingM3(
+                          l,
+                          a.availableVolumeM3 ?? 0,
+                        ),
+                        label: a.volumeCapacityM3 == null
+                            ? l.listingCapacityAvailableSuffix
+                            : l.tripOwnerVolumeRemainingOf(
+                                formatVolumeM3(l, a.volumeCapacityM3!),
+                              ),
+                      )
+                    : _InfoPill(
+                        key: const Key('trip-owner-capacity-pill'),
+                        value: a.capacityUnit == 'KG_FREE'
+                            ? l.tripKgFree
+                            : formatWeightKg(l, a.availableKg.roundToDouble()),
+                        label: l.listingCapacityAvailableSuffix,
+                      ),
               ),
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: _InfoPill(
+                  key: const Key('trip-owner-price-pill'),
                   // Garde sur hasKgPrice (valeur > 0), pas sur la seule
                   // nullité : voir announcement_detail_screen.dart pour le
                   // même raisonnement (écran propriétaire, 0 est la valeur
                   // trompeuse à écarter, pas l'absence).
-                  value: a.pricingMode == 'MIXED'
-                      ? l.listingPriceGridShort
-                      : (a.hasKgPrice && a.pricePerKg != null)
-                      ? '${formatPriceIn(a.pricePerKg!, a.currency)}/kg'
-                      : l.listingPriceUnavailableShort,
-                  label: a.pricingMode == 'MIXED'
+                  value:
+                      tripPricePerM3Text(l, a, net: true) ??
+                      (a.pricingMode == 'MIXED'
+                          ? l.listingPriceGridShort
+                          : (a.hasKgPrice && a.pricePerKg != null)
+                          ? '${formatPriceIn(a.pricePerKg!, a.currency)}/kg'
+                          : l.listingPriceUnavailableShort),
+                  label: a.pricingMode == 'MIXED' && !a.isPricedPerM3
                       ? l.listingPricingSuffixTarifaire
                       : l.listingPricingSuffixPrix,
                 ),
@@ -259,7 +280,7 @@ class _SurplusSplitRow extends StatelessWidget {
 class _InfoPill extends StatelessWidget {
   final String value;
   final String label;
-  const _InfoPill({required this.value, required this.label});
+  const _InfoPill({super.key, required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {

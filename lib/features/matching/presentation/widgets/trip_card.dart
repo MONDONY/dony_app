@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -33,12 +34,24 @@ import 'package:intl/intl.dart';
 // • Motion : fadeIn + slideY staggeré par index, easeOutCubic 300 ms.
 // ─────────────────────────────────────────────────────────────
 
+/// Qui regarde la carte : décide du prix au m³ affiché (brut frais inclus pour
+/// l'expéditeur, net pour le voyageur propriétaire), indépendamment du cœur
+/// des favoris ([TripCard.showFavorite]).
+enum TripCardViewer {
+  /// Un expéditeur : prix brut, frais de service inclus.
+  sender,
+
+  /// Le voyageur propriétaire du trajet : son net.
+  owner,
+}
+
 class TripCard extends StatelessWidget {
   const TripCard({
     super.key,
     required this.announcement,
     required this.onTap,
     required this.index,
+    required this.viewer,
     this.showFavorite = false,
     this.pinned,
     this.onTogglePin,
@@ -47,6 +60,9 @@ class TripCard extends StatelessWidget {
   final AnnouncementModel announcement;
   final VoidCallback onTap;
   final int index;
+
+  /// Qui regarde : obligatoire, jamais déduit d'un drapeau d'affichage.
+  final TripCardViewer viewer;
 
   /// When true, renders a heart button in the header row.
   /// Requires a [FavoriteIdsCubit] to be in the widget tree; if absent the
@@ -206,6 +222,7 @@ class TripCard extends StatelessWidget {
                 kg: (v) => _kg(l, v),
                 price: _price,
                 showFavorite: showFavorite,
+                viewer: viewer,
                 pinButton: _pinButton(),
               ),
       ),
@@ -308,6 +325,13 @@ class TripPinButton extends StatelessWidget {
 // Active card content
 // ─────────────────────────────────────────────────────────────
 
+/// Volume déjà vendu d'un trajet bateau au m³ : capacité moins volume restant.
+double _volumeSoldOf(AnnouncementModel a) {
+  final capacity = a.volumeCapacityM3 ?? 0;
+  final available = a.availableVolumeM3 ?? capacity;
+  return (capacity - available).clamp(0, capacity).toDouble();
+}
+
 class _ActiveCardContent extends StatelessWidget {
   const _ActiveCardContent({
     required this.announcement,
@@ -322,9 +346,11 @@ class _ActiveCardContent extends StatelessWidget {
     required this.kg,
     required this.price,
     required this.showFavorite,
+    required this.viewer,
     this.pinButton,
   });
 
+  final TripCardViewer viewer;
   final AnnouncementModel announcement;
   final ({Color bg, Color fg, String label, bool pulse}) badge;
   final double soldKg;
@@ -339,9 +365,20 @@ class _ActiveCardContent extends StatelessWidget {
   final bool showFavorite;
   final Widget? pinButton;
 
+  /// Volume vendu d'un trajet bateau au m³ (proposé moins restant).
+  double get _volumeSold => _volumeSoldOf(announcement);
+
+  double get _volumeProgress {
+    final capacity = announcement.volumeCapacityM3 ?? 0;
+    return capacity > 0 ? (_volumeSold / capacity).clamp(0.0, 1.0) : 0.0;
+  }
+
   /// Pied de carte : kilos disponibles (ou kilo libre), suivis de la taille
-  /// maximale de colis d'un trajet en route.
+  /// maximale de colis d'un trajet en route. Un bateau au m³ dit son volume
+  /// restant, jamais des kilos.
   String _footerCapacity(AppLocalizations l, String availableLabel) {
+    final volume = tripVolumeRemainingText(l, announcement);
+    if (volume != null) return volume;
     final size = tripShownItemSize(announcement);
     if (announcement.isKgFree) {
       return size == null
@@ -458,8 +495,23 @@ class _ActiveCardContent extends StatelessWidget {
 
           const SizedBox(height: DonySpacing.md),
 
-          // ── Progress bar (hidden for KG_FREE) ──
-          if (!announcement.isKgFree) ...[
+          // ── Progress bar (hidden for KG_FREE ; en m³ pour un bateau au m³) ──
+          if (announcement.isPricedPerM3) ...[
+            _KgProgressBar(progress: _volumeProgress),
+
+            const SizedBox(height: DonySpacing.xs),
+
+            Text(
+              l.listingSoldOfTotalLabel(
+                formatVolumeSoldM3(l, _volumeSold),
+                formatVolumeM3(l, announcement.volumeCapacityM3 ?? 0),
+              ),
+              key: const Key('trip-card-volume-sold'),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+
+            const SizedBox(height: DonySpacing.md),
+          ] else if (!announcement.isKgFree) ...[
             _KgProgressBar(progress: progress),
 
             const SizedBox(height: DonySpacing.xs),
@@ -479,39 +531,47 @@ class _ActiveCardContent extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
 
           // ── Footer: available kg + price ──
-          Row(
+          // Wrap, pas deux Flexible : la capacité n'avait que la moitié de la
+          // ligne (« 1500 kg disponi… » à 360 dp). Le prix passe à la ligne
+          // quand les deux ne tiennent pas côte à côte.
+          Wrap(
+            spacing: DonySpacing.sm,
+            runSpacing: DonySpacing.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Flexible(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const DonyEmoji.parcel(size: 14),
-                    const SizedBox(width: DonySpacing.xs),
-                    Flexible(
-                      child: Text(
-                        _footerCapacity(l, kg(availableKg)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: tt.titleSmall?.copyWith(
-                          color: cs.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const DonyEmoji.parcel(size: 14),
+                  const SizedBox(width: DonySpacing.xs),
+                  Flexible(
+                    child: Text(
+                      _footerCapacity(l, kg(availableKg)),
+                      key: const Key('trip-card-capacity'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.titleSmall?.copyWith(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: DonySpacing.sm),
-              Flexible(
-                child: Text(
-                  _activePriceLabel(announcement, price, l),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: tt.titleSmall?.copyWith(
-                    color: cs.primary,
-                    fontWeight: FontWeight.w700,
                   ),
+                ],
+              ),
+              Text(
+                // Voyageur propriétaire : son net. Expéditeur : le prix frais
+                // inclus.
+                tripPricePerM3Text(
+                      l,
+                      announcement,
+                      net: viewer == TripCardViewer.owner,
+                    ) ??
+                    _activePriceLabel(announcement, price, l),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: tt.titleSmall?.copyWith(
+                  color: cs.primary,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -614,11 +674,16 @@ class _PastCardContent extends StatelessWidget {
                 // badge de statut (FLUTTER-WM).
                 Text(
                   [
-                    if (announcement.isKgFree)
+                    if (announcement.isPricedPerM3)
+                      l.listingSoldLabel(
+                        formatVolumeSoldM3(l, _volumeSoldOf(announcement)),
+                      )
+                    else if (announcement.isKgFree)
                       l.tripKgFree
                     else
                       l.listingSoldLabel(kg(soldKg)),
-                    if (!announcement.isKgFree &&
+                    if (!announcement.isPricedPerM3 &&
+                        !announcement.isKgFree &&
                         isCompleted &&
                         soldKg > 0 &&
                         earned != null)
@@ -665,28 +730,29 @@ class _RouteTitle extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    // Wrap, pas deux Flexible : chaque ville avait la moitié de la ligne,
+    // « Marseil… → Dakar » à 360 dp alors que « Dakar » laissait de la
+    // place. La ville d'arrivée passe à la ligne si le tout ne tient pas ;
+    // une ville plus large que la ligne entière reste seule à s'abréger.
+    final style = tt.headlineMedium?.copyWith(color: cs.onSurface);
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Flexible(
-          child: Text(
-            departure,
-            style: tt.headlineMedium?.copyWith(color: cs.onSurface),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
+        Text(
+          departure,
+          style: style,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
           child: DonyIcon('arrow-right', size: 16, color: cs.primary),
         ),
-        Flexible(
-          child: Text(
-            arrival,
-            style: tt.headlineMedium?.copyWith(color: cs.onSurface),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
+        Text(
+          arrival,
+          style: style,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
       ],
     );

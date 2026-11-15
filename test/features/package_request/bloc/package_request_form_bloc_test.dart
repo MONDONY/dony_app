@@ -1789,6 +1789,9 @@ void main() {
             weightKg: 5,
             parcelSize: ParcelSize.small,
             categories: ['Vêtements'],
+            lengthCm: 50,
+            widthCm: 40,
+            heightCm: 30,
           ),
         )
         ..add(const FormStep3Submitted(targetPriceEur: 25)),
@@ -1807,6 +1810,9 @@ void main() {
             negotiable: true,
             acceptedPaymentMethods: {PaymentMethod.stripe},
             totalBudgetEur: 25,
+            lengthCm: 50,
+            widthCm: 40,
+            heightCm: 30,
           ),
         ).called(1);
       },

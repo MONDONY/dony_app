@@ -50,6 +50,10 @@ abstract final class PackageRequestFormDraft {
     'parcelSize': state.parcelSize?.wireName,
     // Facultative : absente tant que l'expéditeur n'en choisit pas.
     'itemSize': itemSizeToWireOrNull(state.itemSize),
+    // Bateau et « peu importe » seulement : absentes sinon.
+    'lengthCm': state.lengthCm,
+    'widthCm': state.widthCm,
+    'heightCm': state.heightCm,
     'categories': state.categories,
     'description': state.description,
     'pickupNeighborhood': state.pickupNeighborhood,
@@ -106,6 +110,10 @@ abstract final class PackageRequestFormDraft {
           : ParcelSize.values.where((e) => e.wireName == size).firstOrNull,
       // Ancien brouillon (sans clé) ou valeur inconnue : aucune taille.
       itemSize: itemSizeFromWire(json['itemSize']),
+      // Ancien brouillon (sans clés) : aucune dimension.
+      lengthCm: (json['lengthCm'] as num?)?.toInt(),
+      widthCm: (json['widthCm'] as num?)?.toInt(),
+      heightCm: (json['heightCm'] as num?)?.toInt(),
       categories: _strings(json['categories']),
       description: json['description'] as String?,
       pickupNeighborhood: json['pickupNeighborhood'] as String?,
@@ -119,10 +127,19 @@ abstract final class PackageRequestFormDraft {
       promoCode: json['promoCode'] as String?,
       currency: SupportedCurrency.fromCode(json['currency'] as String?),
     );
-    // Une taille d'un brouillon passé en avion ou en bateau n'a plus de sens.
-    return restored.modeHasItemSize
-        ? restored
-        : restored.copyWith(clearItemSize: true);
+    // Une taille d'un brouillon passé en avion ou en bateau n'a plus de sens,
+    // pas plus que des dimensions d'un brouillon en avion ou en route. Un jeu
+    // incomplet est écarté : les dimensions vont ensemble.
+    return _withModeRules(restored);
+  }
+
+  static PackageRequestFormState _withModeRules(PackageRequestFormState s) {
+    var next = s;
+    if (!next.modeHasItemSize) next = next.copyWith(clearItemSize: true);
+    if (!next.modeKeepsDimensions || !next.hasDimensions) {
+      next = next.copyWith(clearDimensions: true);
+    }
+    return next;
   }
 
   /// Photos gardées par le brouillon, dans l'ordre d'ajout.

@@ -1,8 +1,12 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/arrival_range.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/trip_delay_labels.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_photo_viewer.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/traveler_tracking_model.dart';
+import 'package:dony/features/tracking/data/models/trip_milestones.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -13,16 +17,33 @@ enum JourneyStepState { done, current, upcoming, position }
 
 /// Une ligne de la frise.
 class JourneyStep {
-  const JourneyStep(this.state, this.title, {this.event, this.at, this.note});
+  const JourneyStep(
+    this.state,
+    this.title, {
+    this.event,
+    this.at,
+    this.note,
+    this.detail,
+    this.dateOnly = false,
+  });
 
   final JourneyStepState state;
   final String title;
 
-  /// Heure d'une ville approximative ([JourneyStepState.position]).
+  /// Heure d'une ville approximative ([JourneyStepState.position]), ou jour
+  /// d'un jalon du trajet ([dateOnly]).
   final DateTime? at;
+
+  /// [at] est un jour du calendrier (jalon du trajet : « 2 déc. ») : affiché
+  /// sans heure ni conversion de fuseau.
+  final bool dateOnly;
 
   /// Marque sous la ville : « Maintenant » ou « Dernière position, … ».
   final String? note;
+
+  /// Précision sous un jalon du trajet sans événement enregistré (« Estimé
+  /// du 11 au 18 janv. », dernier retard annoncé).
+  final String? detail;
 
   /// Événement enregistré d'une étape faite : heure, lieu, provenance, photo.
   final TrackingEventModel? event;
@@ -30,12 +51,14 @@ class JourneyStep {
 
 /// Étapes faites ([sorted], par heure) et villes du voyageur, dans l'ordre du
 /// temps. Une ville sans heure ne peut pas être placée : elle est ignorée.
+/// [mode] : mode du trajet, qui nomme les étapes ([doneStepTitle]).
 List<JourneyStep> mergedDoneSteps(
   AppLocalizations l,
   List<TrackingEventModel> sorted,
   TravelerTrackingModel? tracking,
-  DateTime now,
-) {
+  DateTime now, {
+  TransportMode? mode,
+}) {
   final entries = <(DateTime, int, JourneyStep)>[
     for (final event in sorted)
       (
@@ -43,7 +66,7 @@ List<JourneyStep> mergedDoneSteps(
         0,
         JourneyStep(
           JourneyStepState.done,
-          doneStepTitle(l, event),
+          doneStepTitle(l, event, mode: mode),
           event: event,
         ),
       ),
@@ -91,18 +114,26 @@ List<JourneyStep> mergedDoneSteps(
   return [for (final e in indexed) e.$2.$3];
 }
 
-String doneStepTitle(AppLocalizations l, TrackingEventModel event) =>
-    switch (event.eventType) {
-      'DEPART' => l.trackingStepHandedToTraveler,
-      'ARRIVEE' => l.trackingStepHandedToRecipient,
-      _ => trackingStepLabel(l, event.eventType),
-    };
+/// Titre d'une étape faite. En bateau, la remise (`DEPART`) est le dépôt à
+/// l'entrepôt ; tout autre mode (avion, route, inconnu) garde les libellés
+/// neutres.
+String doneStepTitle(
+  AppLocalizations l,
+  TrackingEventModel event, {
+  TransportMode? mode,
+}) => switch (event.eventType) {
+  'DEPART' when mode == TransportMode.boat => l.trackingBoatStepDeposited,
+  'DEPART' => l.trackingStepHandedToTraveler,
+  'ARRIVEE' => l.trackingStepHandedToRecipient,
+  _ => trackingStepLabel(l, event.eventType, mode: mode),
+};
 
 /// Frise compacte de la carte « Suivi du voyageur » : toutes les étapes faites
 /// (remise, transit, arrivée, remise au destinataire) et au plus
 /// [maxCities] villes approximatives, les plus récentes, dans l'ordre du
 /// temps. [arrived] ajoute « Arrivé » quand le voyageur a déclaré son arrivée
-/// sans scan (le colis est `ARRIVED`).
+/// sans scan (le colis est `ARRIVED`) ; en bateau, « Arrivé au port de
+/// [arrivalCity] ».
 List<JourneyStep> compactJourneySteps(
   AppLocalizations l,
   List<TrackingEventModel> events, {
@@ -110,10 +141,20 @@ List<JourneyStep> compactJourneySteps(
   required DateTime now,
   bool arrived = false,
   int maxCities = 3,
+  TransportMode? mode,
+  String? arrivalCity,
 }) {
   final sorted = [...events]
     ..sort((a, b) => a.scannedAt.compareTo(b.scannedAt));
-  final merged = mergedDoneSteps(l, sorted, tracking, now);
+  // En bateau, la position se lit sur les jalons, jamais sur le téléphone du
+  // transporteur (comme la frise complète).
+  final merged = mergedDoneSteps(
+    l,
+    sorted,
+    mode == TransportMode.boat ? null : tracking,
+    now,
+    mode: mode,
+  );
   final cityCount = merged
       .where((s) => s.state == JourneyStepState.position)
       .length;
@@ -126,10 +167,197 @@ List<JourneyStep> compactJourneySteps(
   final delivered = sorted.any((e) => e.eventType == 'ARRIVEE');
   if (arrived && departed && !delivered) {
     steps.add(
-      JourneyStep(JourneyStepState.done, l.trackingStepArrivedAtDestination),
+      JourneyStep(
+        JourneyStepState.done,
+        mode == TransportMode.boat
+            ? boatPortArrivalLabel(l, arrivalCity)
+            : l.trackingStepArrivedAtDestination,
+      ),
     );
   }
   return steps;
+}
+
+/// Avancement d'un colis bateau, lu sur ses étapes scannées, son statut et
+/// les jalons du trajet.
+typedef BoatJourneyProgress = ({
+  bool deposited,
+  bool departed,
+  bool atPort,
+  bool delivered,
+});
+
+/// Où en est un colis bateau.
+///
+/// - Remis au destinataire : étape `ARRIVEE` scannée.
+/// - Arrivé au port : remis, ou trajet marqué arrivé (colis `ARRIVED`).
+/// - Bateau parti : arrivé, transit scanné, colis `IN_TRANSIT`, retard annoncé
+///   (le transporteur ne peut l'annoncer qu'une fois parti) ou départ prévu
+///   passé pour un colis déposé.
+/// - Déposé : dépôt (`DEPART`) scanné, ou bateau parti.
+BoatJourneyProgress boatJourneyProgress(
+  List<TrackingEventModel> events, {
+  String? bidStatus,
+  TripMilestones? milestones,
+  required DateTime now,
+}) {
+  bool scanned(String type) => events.any((e) => e.eventType == type);
+  final delivered = scanned('ARRIVEE');
+  final atPort = delivered || bidStatus == 'ARRIVED';
+  final depositScanned = scanned('DEPART');
+  final departed =
+      atPort ||
+      scanned('TRANSIT') ||
+      bidStatus == 'IN_TRANSIT' ||
+      milestones?.latestDelay != null ||
+      (depositScanned && (milestones?.departurePassed(now) ?? false));
+  return (
+    deposited: depositScanned || departed,
+    departed: departed,
+    atPort: atPort,
+    delivered: delivered,
+  );
+}
+
+/// Phrase d'état de la frise d'un colis bateau (maquette FriseMer).
+String boatJourneyHeadline(
+  AppLocalizations l,
+  BoatJourneyProgress progress,
+  String? arrivalCity,
+) {
+  if (progress.delivered) return l.trackingHeadlineDelivered;
+  if (progress.atPort) return boatPortArrivalLabel(l, arrivalCity);
+  if (progress.departed) {
+    final city = arrivalCity?.trim() ?? '';
+    return city.isEmpty
+        ? l.trackingBoatStepAtSea
+        : l.trackingBoatHeadlineAtSeaTo(city);
+  }
+  if (progress.deposited) return l.trackingBoatStepDeposited;
+  return l.trackingBoatHeadlineAwaitingDeposit;
+}
+
+/// Frise d'un colis bateau (maquette FriseMer) : « Déposé à l'entrepôt »
+/// (étape `DEPART`), « Bateau parti » (départ du trajet), « En mer » (en cours,
+/// avec le dernier retard annoncé), « Arrivé au port de … » (arrivée estimée
+/// du … au …), puis la remise au destinataire. Les jalons du trajet
+/// s'intercalent entre les étapes scannées du colis, dans l'ordre du voyage ;
+/// les transits scannés suivent le départ du bateau.
+///
+/// Jamais les villes approximatives du voyageur : la position d'un bateau se
+/// lit sur ses jalons et ses retards, pas sur un téléphone.
+List<JourneyStep> boatJourneySteps(
+  AppLocalizations l,
+  List<TrackingEventModel> events, {
+  String? bidStatus,
+  TripMilestones? milestones,
+  String? departureCity,
+  String? arrivalCity,
+  required DateTime now,
+}) {
+  const mode = TransportMode.boat;
+  final sorted = [...events]
+    ..sort((a, b) => a.scannedAt.compareTo(b.scannedAt));
+  final progress = boatJourneyProgress(
+    sorted,
+    bidStatus: bidStatus,
+    milestones: milestones,
+    now: now,
+  );
+  JourneyStep done(TrackingEventModel event) => JourneyStep(
+    JourneyStepState.done,
+    doneStepTitle(l, event, mode: mode),
+    event: event,
+  );
+  final deposits = sorted.where((e) => e.eventType == 'DEPART');
+  final deliveries = sorted.where((e) => e.eventType == 'ARRIVEE');
+  final onTheWay = sorted.where(
+    (e) => e.eventType != 'DEPART' && e.eventType != 'ARRIVEE',
+  );
+  final from = departureCity?.trim();
+  final departureCityLabel = from == null || from.isEmpty ? null : from;
+
+  // Jour du départ prévu : la date du trajet, sinon le jour de son instant.
+  final departureDay =
+      milestones?.departureDate ?? milestones?.departureAt?.toLocal();
+  final days = departureDay == null
+      ? null
+      : arrivalRangeDays(l, departureDay, null, now: now).from;
+
+  final delay = milestones?.latestDelay;
+  final delayNote = delay == null
+      ? null
+      : l.trackingBoatDelayNote(
+          delay.message?.trim() ?? tripDelayInfoReasonLabel(l, delay, mode),
+        );
+
+  final earliest = milestones?.estimatedArrival;
+  String? estimate;
+  if (earliest != null) {
+    final range = arrivalRangeDays(
+      l,
+      earliest,
+      milestones?.estimatedArrivalMax,
+      now: now,
+    );
+    final to = range.to;
+    estimate = to == null
+        ? l.trackingBoatEstimatedDate(range.from)
+        : l.trackingBoatEstimatedRange(range.from, to);
+  }
+  final port = boatPortArrivalLabel(l, arrivalCity);
+
+  return [
+    // Dépôt à l'entrepôt.
+    if (deposits.isNotEmpty)
+      ...deposits.map(done)
+    else if (progress.deposited)
+      JourneyStep(JourneyStepState.done, l.trackingBoatStepDeposited)
+    else
+      JourneyStep(
+        JourneyStepState.current,
+        l.trackingBoatStepDeposit,
+        detail: departureCityLabel,
+      ),
+    // Départ du bateau, jalon du trajet.
+    if (progress.departed)
+      JourneyStep(
+        JourneyStepState.done,
+        l.trackingBoatStepDeparted,
+        at: departureDay,
+        dateOnly: true,
+        detail: departureCityLabel,
+      )
+    else
+      JourneyStep(
+        progress.deposited
+            ? JourneyStepState.current
+            : JourneyStepState.upcoming,
+        l.trackingBoatStepDeparture,
+        detail: days == null ? null : l.trackingBoatPlannedDeparture(days),
+      ),
+    // Transits scannés, une fois parti.
+    ...onTheWay.map(done),
+    if (progress.departed && !progress.atPort)
+      JourneyStep(
+        JourneyStepState.current,
+        l.trackingBoatStepAtSea,
+        detail: delayNote,
+      ),
+    // Arrivée au port, jalon du trajet.
+    if (progress.atPort)
+      JourneyStep(JourneyStepState.done, port)
+    else
+      JourneyStep(JourneyStepState.upcoming, port, detail: estimate),
+    // Remise au destinataire.
+    if (deliveries.isNotEmpty)
+      ...deliveries.map(done)
+    else
+      JourneyStep(
+        progress.atPort ? JourneyStepState.current : JourneyStepState.upcoming,
+        l.trackingStepHandoverToRecipient,
+      ),
+  ];
 }
 
 /// Une ligne de la frise : repère, titre, heure, lieu, photo (ou mention de
@@ -151,8 +379,15 @@ class JourneyRow extends StatelessWidget {
     final event = step.event;
     final line = connector;
     final time = event?.scannedAt ?? step.at;
+    // Jalon du trajet : jour seul (« 2 déc. »), tel que servi ; étape ou ville :
+    // jour et heure de l'appareil.
+    final timeLabel = time == null
+        ? null
+        : event == null && step.dateOnly
+        ? DateFormat.MMMd(l.localeName).format(time)
+        : DateFormat.MMMd(l.localeName).add_Hm().format(time.toLocal());
     final details = event == null
-        ? ''
+        ? (step.detail?.trim() ?? '')
         : [?event.locationLabel(l), ?event.methodLabel(l)].join(' · ');
     final photo = event?.photoUrl;
     final photoPurged = event?.photoPurged ?? false;
@@ -253,12 +488,10 @@ class JourneyRow extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (time != null) ...[
+                      if (timeLabel != null) ...[
                         const SizedBox(width: DonySpacing.sm),
                         Text(
-                          DateFormat.MMMd(
-                            l.localeName,
-                          ).add_Hm().format(time.toLocal()),
+                          timeLabel,
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                             fontFeatures: const [FontFeature.tabularFigures()],
@@ -282,7 +515,9 @@ class JourneyRow extends StatelessWidget {
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
                       details,
-                      key: event?.scanMethod != null
+                      key: event == null
+                          ? const Key('tracking-step-detail')
+                          : event.scanMethod != null
                           ? const Key('tracking-step-method')
                           : null,
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),

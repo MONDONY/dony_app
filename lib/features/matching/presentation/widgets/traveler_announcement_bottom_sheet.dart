@@ -132,6 +132,10 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
   // décision produit « offres classiques seulement ». Un trajet qui
   // n'accepte QUE le mobile money ne propose donc pas l'entrée de
   // négociation, même si `announcement.negotiable` vaut true côté back.
+  //
+  // Un trajet bateau vendu au m³ propose le prix : la proposition porte les
+  // dimensions du colis (formulaire de la feuille), sans quoi le back répond
+  // 422 `boat-dimensions-required`.
   final canNegotiate =
       announcement.negotiable &&
       (announcement.acceptedPaymentMethods.contains(BidPaymentMethod.stripe) ||
@@ -816,7 +820,10 @@ class _TravelerAnnouncementContent extends StatelessWidget {
               child: _SafetyButton(
                 key: const Key('report-announcement-link'),
                 iconAsset: 'flag',
-                label: l.listingReportTripLink,
+                // Libellé court sur le bouton (deux boutons côte à côte à
+                // 360 dp), phrase complète pour le lecteur d'écran.
+                label: l.listingReportTripShort,
+                semanticLabel: l.listingReportTripLink,
                 color: cs.onSurface,
                 onTap: () {
                   const location = '/settings/report-incident';
@@ -840,7 +847,8 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                 child: _SafetyButton(
                   key: const Key('block-traveler-link'),
                   iconAsset: 'ban',
-                  label: l.listingBlockTravelerLink,
+                  label: l.listingBlockTravelerShort,
+                  semanticLabel: l.listingBlockTravelerLink,
                   color: cs.error,
                   onTap: () => showBlockMenu(
                     context,
@@ -866,12 +874,18 @@ class _SafetyButton extends StatelessWidget {
     super.key,
     required this.iconAsset,
     required this.label,
+    required this.semanticLabel,
     required this.color,
     required this.onTap,
   });
 
   final String iconAsset;
+
+  /// Libellé visible, court : il tient sur une ligne à 360 dp.
   final String label;
+
+  /// Action complète lue par le lecteur d'écran (« Signaler ce trajet »).
+  final String semanticLabel;
   final Color color;
   final VoidCallback onTap;
 
@@ -880,7 +894,7 @@ class _SafetyButton extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Semantics(
       button: true,
-      label: label,
+      label: semanticLabel,
       excludeSemantics: true,
       child: InkWell(
         borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -904,6 +918,8 @@ class _SafetyButton extends StatelessWidget {
                 child: Text(
                   label,
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  softWrap: false,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: color,
                     fontWeight: FontWeight.w600,
@@ -1168,11 +1184,26 @@ class _PriceStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
+    // Bateau vendu au m³ : aucun kilo, le prix au m³ frais inclus
+    // (`pricePerM3Display`, servi à tous les lecteurs, invité compris ; repli
+    // sur le net d'un back qui ne le sert pas).
+    if (announcement.isPricedPerM3) {
+      final perM3 = announcement.pricePerM3Display ?? announcement.pricePerM3;
+      if (perM3 == null || perM3 <= 0) {
+        return _StatCard(value: '-', label: l.tripPosterPriceUnavailable);
+      }
+      return _StatCard(
+        key: const Key('trip-price-per-m3-stat'),
+        value: formatPriceIn(perM3, announcement.currency),
+        label: l.listingPricePerM3Label,
+        valueColor: cs.primary,
+      );
+    }
     // Garde sur hasKgPrice (valeur > 0), pas sur la seule nullité :
     // senderPricePerKg n'est en pratique jamais null (pricePerKgDisplay
     // toujours servi), 0 est la vraie valeur trompeuse en mode MIXED.
     if (!announcement.hasKgPrice) {
-      return _StatCard(value: '—', label: l.tripPosterPriceUnavailable);
+      return _StatCard(value: '-', label: l.tripPosterPriceUnavailable);
     }
     return _StatCard(
       value: formatPriceIn(

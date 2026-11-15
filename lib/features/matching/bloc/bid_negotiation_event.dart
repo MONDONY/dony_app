@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_volume_input.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:equatable/equatable.dart';
 
@@ -48,6 +49,10 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
   /// Taille du colis choisie par l'expéditeur, facultative.
   final ItemSize? itemSize;
 
+  /// Dimensions du colis d'un trajet vendu au m³ (obligatoires, 422
+  /// `boat-dimensions-required` sinon) ; `null` pour un colis au kilo.
+  final BidVolumeInput? volume;
+
   const BidNegotiationProposeRequested({
     required this.announcementId,
     required this.weightKg,
@@ -62,6 +67,7 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
     this.customItems,
     this.gridItems,
     this.itemSize,
+    this.volume,
   });
 
   @override
@@ -79,6 +85,7 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
     customItems,
     gridItems,
     itemSize,
+    volume,
   ];
 }
 

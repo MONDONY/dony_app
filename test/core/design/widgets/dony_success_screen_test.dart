@@ -8,6 +8,7 @@ import 'package:dony/core/design/widgets/dony_success_screen.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:flutter/material.dart';
@@ -131,23 +132,64 @@ void main() {
     });
   });
 
-  testWidgets(
-    'barre de navigation système : le dernier bouton défile au-dessus d\'elle',
-    (tester) async {
-      // Redmi 720 px de large (densité 2), contenu plus haut que l'écran, barre à 3 boutons : 56 dp réservés en
-      // bas (plus que l'ancienne marge fixe de 48 dp).
+  // Redmi 720x1640 : barre de navigation à 3 boutons de 48 dp (96 px) ; petit
+  // écran 360x640. Les boutons sont dans une zone fixe, au-dessus de la barre,
+  // quelle que soit la façon dont l'inset arrive (padding, viewPadding, ou
+  // viewPadding seul quand le Scaffold/bord à bord a consommé le padding).
+  final configs =
+      <
+        ({
+          String name,
+          Size size,
+          double ratio,
+          double padding,
+          double viewPadding,
+        })
+      >[
+        (
+          name: 'padding 0 / viewPadding 48 (Redmi)',
+          size: const Size(720, 1640),
+          ratio: 2,
+          padding: 0,
+          viewPadding: 48,
+        ),
+        (
+          name: 'padding 48 / viewPadding 48 (Redmi)',
+          size: const Size(720, 1640),
+          ratio: 2,
+          padding: 48,
+          viewPadding: 48,
+        ),
+        (
+          name: 'sans barre (720x1640)',
+          size: const Size(720, 1640),
+          ratio: 2,
+          padding: 0,
+          viewPadding: 0,
+        ),
+        (
+          name: 'petit écran 360x640 avec barre',
+          size: const Size(360, 640),
+          ratio: 1,
+          padding: 0,
+          viewPadding: 48,
+        ),
+      ];
+  for (final c in configs) {
+    testWidgets('boutons visibles au-dessus de la barre système : ${c.name}', (
+      tester,
+    ) async {
       tester.view
-        ..physicalSize = const Size(720, 700)
-        ..devicePixelRatio = 2;
+        ..physicalSize = c.size
+        ..devicePixelRatio = c.ratio;
       addTearDown(tester.view.reset);
-      const navBar = 56.0;
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.light(),
           builder: (context, child) => MediaQuery(
             data: MediaQuery.of(context).copyWith(
-              padding: const EdgeInsets.only(bottom: navBar),
-              viewPadding: const EdgeInsets.only(bottom: navBar),
+              padding: EdgeInsets.only(bottom: c.padding),
+              viewPadding: EdgeInsets.only(bottom: c.viewPadding),
             ),
             child: child!,
           ),
@@ -161,35 +203,57 @@ void main() {
             onSecondary: () {},
             tertiaryLabel: 'Partager',
             onTertiary: () {},
-            extraActions: [
-              DonySuccessAction(label: 'Configurer', onTap: () {}),
-              DonySuccessAction(label: 'Autre', onTap: () {}),
-            ],
+            extraActions: [DonySuccessAction(label: 'Autre', onTap: () {})],
             secondaryIconAsset: null,
           ),
         ),
       );
       await tester.pump(const Duration(seconds: 1));
-      final scrollable = find.byType(Scrollable).first;
-      await tester.drag(scrollable, const Offset(0, -2000));
-      await tester.pump();
-      final bouton = find.widgetWithText(DonyButton, 'Voir mon trajet');
+      expect(tester.takeException(), isNull);
+
+      final viewportBottom = c.size.height / c.ratio;
+      final principal = find.widgetWithText(DonyButton, 'Voir les colis');
+      final secondaire = find.widgetWithText(DonyButton, 'Voir mon trajet');
       final dernier = find.widgetWithText(DonyButton, 'Autre');
-      final viewportBottom = tester.view.physicalSize.height / 2;
-      // En fin de défilement, le dernier bouton garde sa marge habituelle
-      // (DonySpacing.huge) AU-DESSUS de la barre de navigation : sans l'inset
-      // système, il se retrouvait collé à elle (un tap sur son bas touchait la
-      // touche Accueil).
+
+      // Sans aucun défilement : tous les boutons sont à l'écran et au-dessus
+      // de la barre (bord bas moins l'inset).
+      for (final f in [principal, secondaire, dernier]) {
+        expect(
+          tester.getBottomLeft(f).dy,
+          lessThanOrEqualTo(viewportBottom - c.viewPadding),
+        );
+        expect(tester.getTopLeft(f).dy, greaterThanOrEqualTo(0));
+      }
       expect(
         viewportBottom - tester.getBottomLeft(dernier).dy,
-        greaterThanOrEqualTo(navBar + DonySpacing.huge),
+        greaterThanOrEqualTo(c.viewPadding + DonySpacing.lg),
       );
       expect(
-        tester.getBottomLeft(bouton).dy,
-        lessThan(tester.getTopLeft(dernier).dy),
+        tester.getBottomLeft(principal).dy,
+        lessThan(tester.getTopLeft(secondaire).dy),
       );
-    },
-  );
+      // Le bouton secondaire reçoit bien le tap à son centre.
+      await tester.tap(secondaire);
+      await tester.pump();
+    });
+  }
+
+  // Recette du 14/11 : la bulle de l'assistant, au milieu du bord droit,
+  // masquait le sous-titre de « Offer sent! ». Masquée sur l'écran de succès,
+  // rendue à sa fermeture.
+  testWidgets('la bulle de l\'assistant est masquée tant que l\'écran est '
+      'affiché', (tester) async {
+    assistantBubbleBlockers.reset();
+    addTearDown(assistantBubbleBlockers.reset);
+    await tester.pumpWidget(host(onCta: () {}));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(assistantBubbleBlockers.active.value, isTrue);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+    expect(assistantBubbleBlockers.active.value, isFalse);
+  });
 
   testWidgets('affiche titre, sous-titre et label du CTA', (tester) async {
     await tester.pumpWidget(host(onCta: () {}));

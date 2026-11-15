@@ -67,6 +67,7 @@ class ColisBillet extends StatelessWidget {
                 departureTime: bid.departureTime,
                 arrivalDate: bid.arrivalDate,
                 arrivalTime: bid.arrivalTime,
+                arrivalDateMax: bid.arrivalDateMax,
                 notchColor: talon
                     ? Theme.of(context).scaffoldBackgroundColor
                     : null,

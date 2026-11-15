@@ -2,10 +2,10 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
-/// Le bateau peut être demandé et recherché, mais pas encore proposé à la
-/// publication d'un trajet : passe à `true` au lot 3 (choix C1), quand
-/// l'écran de création de trajet gère le bateau.
-const bool kBoatTripCreationReady = false;
+/// L'écran de création de trajet gère le bateau depuis le lot 3 (choix C1,
+/// C15) : proposé à la publication dès que l'interrupteur bateau du serveur
+/// est allumé. Un voyageur non vérifié voit la carte grisée (étape Mode).
+const bool kBoatTripCreationReady = true;
 
 /// Modes de transport ouverts par le serveur (`GET /config/transport-modes`,
 /// réglages plateforme pilotés depuis le back-office). L'avion est toujours
@@ -47,11 +47,26 @@ class TransportModesAvailability extends Equatable {
   /// Modes proposés dans les filtres de recherche.
   List<TransportMode> get searchModes => requestModes;
 
+  /// Modes proposés aux modèles et aux trajets récurrents : jamais le bateau,
+  /// que le back refuse (422 `boat-template-unsupported`, C16).
+  List<TransportMode> get templateModes => [
+    for (final mode in tripCreationModes)
+      if (mode != TransportMode.boat) mode,
+  ];
+
   bool get hasTripChoice => tripCreationModes.length > 1;
+
+  bool get hasTemplateChoice => templateModes.length > 1;
 
   bool get hasRequestChoice => requestModes.length > 1;
 
   bool allowsForTrip(TransportMode mode) => tripCreationModes.contains(mode);
+
+  /// Mêmes interrupteurs, bateau éteint : modes d'un trajet dédié à une
+  /// demande, dont la version bateau (volume de la demande, fourchette
+  /// d'arrivée) n'existe pas encore côté formulaire.
+  TransportModesAvailability get withoutBoat =>
+      TransportModesAvailability(road: road, boat: false);
 
   @override
   List<Object?> get props => [road, boat];

@@ -617,4 +617,98 @@ void main() {
       expect(out['arrivalInstructions'], 'Métro Châtelet, sortie 3');
     });
   });
+
+  group('AnnouncementModel bateau (lot 3)', () {
+    test('champs bateau absents : null, aucun m³', () {
+      final model = AnnouncementModel.fromJson(baseAnnouncementJson());
+      expect(model.arrivalDateMax, isNull);
+      expect(model.volumeCapacityM3, isNull);
+      expect(model.availableVolumeM3, isNull);
+      expect(model.pricePerM3, isNull);
+      expect(model.pricePerM3Display, isNull);
+      expect(model.latestTripDelay, isNull);
+      expect(model.isPricedPerM3, isFalse);
+    });
+
+    test('trajet au m³ : volume, prix net et brut, fourchette, retard', () {
+      final json = baseAnnouncementJson()
+        ..['transportMode'] = 'BOAT'
+        ..['availableKg'] = null
+        ..['totalKg'] = null
+        ..['pricePerKg'] = null
+        ..['arrivalDate'] = '2026-07-10'
+        ..['arrivalDateMax'] = '2026-07-20'
+        ..['volumeCapacityM3'] = 12.5
+        ..['availableVolumeM3'] = 8
+        ..['pricePerM3'] = 90
+        ..['pricePerM3Display'] = 99.5
+        ..['latestTripDelay'] = {
+          'id': 'd1',
+          'reason': 'PORT_CONGESTION',
+          'arrivalDate': '2026-07-15',
+          'arrivalDateMax': '2026-07-25',
+          'message': 'Port saturé',
+          'announcedAt': '2026-07-01T08:00:00Z',
+        };
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.transportMode, TransportMode.boat);
+      expect(model.arrivalDateMax, DateTime(2026, 7, 20));
+      expect(model.volumeCapacityM3, 12.5);
+      expect(model.availableVolumeM3, 8.0);
+      expect(model.pricePerM3, 90.0);
+      expect(model.pricePerM3Display, 99.5);
+      expect(model.isPricedPerM3, isTrue);
+      expect(model.availableKg, 0);
+      expect(model.totalKg, 0);
+      expect(model.pricePerKg, isNull);
+      expect(model.latestTripDelay?.reason, 'PORT_CONGESTION');
+      expect(model.latestTripDelay?.arrivalDateMax, DateTime(2026, 7, 25));
+    });
+
+    test('invité : prix net masqué, prix affiché conservé', () {
+      final json = baseAnnouncementJson()
+        ..['transportMode'] = 'BOAT'
+        ..['volumeCapacityM3'] = 10
+        ..['availableVolumeM3'] = 10
+        ..['pricePerM3'] = null
+        ..['pricePerM3Display'] = 110;
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.pricePerM3, isNull);
+      expect(model.pricePerM3Display, 110.0);
+      expect(model.isPricedPerM3, isTrue);
+    });
+
+    test('isPricedPerM3 : BOAT et prix au m³ servi, jamais le volume seul', () {
+      Map<String, dynamic> json(String mode, {num? perM3, num? display}) =>
+          baseAnnouncementJson()
+            ..['transportMode'] = mode
+            ..['volumeCapacityM3'] = 10
+            ..['availableVolumeM3'] = 10
+            ..['pricePerM3'] = perM3
+            ..['pricePerM3Display'] = display;
+      bool perM3(Map<String, dynamic> j) =>
+          AnnouncementModel.fromJson(j).isPricedPerM3;
+
+      // Bateau au kilo qui porte un volume facultatif : pas vendu au m³.
+      expect(perM3(json('BOAT')), isFalse);
+      // Prix au m³ servi (net ou seulement affiché à un invité) : vendu au m³.
+      expect(perM3(json('BOAT', perM3: 90)), isTrue);
+      expect(perM3(json('BOAT', display: 99.5)), isTrue);
+      // Hors bateau, jamais, même avec des champs au m³.
+      expect(perM3(json('PLANE', perM3: 90, display: 99.5)), isFalse);
+      expect(perM3(json('CAR', perM3: 90, display: 99.5)), isFalse);
+    });
+
+    test('toJson conserve les champs bateau', () {
+      final json = baseAnnouncementJson()
+        ..['arrivalDateMax'] = '2026-07-20'
+        ..['volumeCapacityM3'] = 12.5
+        ..['pricePerM3Display'] = 99.5;
+      final out = AnnouncementModel.fromJson(json).toJson();
+      expect(out['volumeCapacityM3'], 12.5);
+      expect(out['pricePerM3Display'], 99.5);
+      expect(out['arrivalDateMax'], isNotNull);
+      expect(out['latestTripDelay'], isNull);
+    });
+  });
 }

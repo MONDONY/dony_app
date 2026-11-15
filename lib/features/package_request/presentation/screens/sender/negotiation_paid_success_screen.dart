@@ -15,10 +15,17 @@ import 'package:flutter/material.dart';
 /// branche mobile money passe par cette route ; la branche carte sera
 /// ramenée dessus dans un lot ultérieur.
 class NegotiationPaidSuccessScreen extends StatelessWidget {
-  const NegotiationPaidSuccessScreen({super.key, required this.threadId});
+  const NegotiationPaidSuccessScreen({
+    super.key,
+    required this.threadId,
+    this.payoutAtDeposit = false,
+  });
 
   /// Fil de négociation payé, cible du CTA « Voir le suivi ».
   final String threadId;
+
+  /// Le transporteur est payé au dépôt du colis (bateau), pas à la livraison.
+  final bool payoutAtDeposit;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +33,9 @@ class NegotiationPaidSuccessScreen extends StatelessWidget {
     return DonySuccessScreen(
       mascotteType: DonyMascotteType.securise,
       title: l.negotiationOfferAcceptedPaidTitle,
-      subtitle: l.negotiationOfferAcceptedPaidSubtitle,
+      subtitle: payoutAtDeposit
+          ? l.negotiationOfferAcceptedPaidSubtitleDeposit
+          : l.negotiationOfferAcceptedPaidSubtitle,
       ctaLabel: l.negotiationTrackShipmentCta,
       onCta: () => returnToNegotiationThread(context, threadId),
       analyticsContext: 'negotiation_payment',

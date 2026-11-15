@@ -121,6 +121,7 @@ class TripBilletCard extends StatelessWidget {
             departureTime: announcement.departureTime,
             arrivalDate: announcement.arrivalDate,
             arrivalTime: announcement.arrivalTime,
+            arrivalDateMax: announcement.arrivalDateMax,
             showWeekday: true,
             notchColor: notch,
             transportMode: announcement.transportMode,

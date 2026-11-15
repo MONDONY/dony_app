@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_volume.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
@@ -111,6 +112,16 @@ class _PreviewBody extends StatelessWidget {
               s.itemSize,
             ),
           ),
+        if (s.volumeM3 != null)
+          _WrappedInfoRow(
+            label: l.requestPreviewVolumeLabel,
+            value: l.requestPreviewVolumeValue(
+              formatParcelVolumeM3(l, s.volumeM3!),
+              s.lengthCm!,
+              s.widthCm!,
+              s.heightCm!,
+            ),
+          ),
         if (photoCount > 0)
           DonyInfoRow(
             label: l.requestPreviewPhotosLabel,
@@ -168,5 +179,33 @@ class _PreviewBody extends StatelessWidget {
         : l.requestPreviewFixedPrice(
             CurrencyFormatter.formatOrPlain(amount, currency),
           );
+  }
+}
+
+/// Ligne d'aperçu dont la valeur passe à la ligne au lieu d'être tronquée :
+/// « 0,03 m³ (100 × 60 × 5 cm) » ne tient pas sur une ligne à 360 dp (recette
+/// du 13/11 : « (100 × 60 × … »).
+class _WrappedInfoRow extends StatelessWidget {
+  const _WrappedInfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return DonyInfoRow(
+      label: label,
+      value: value,
+      valueWidget: Text(
+        value,
+        textAlign: TextAlign.end,
+        style: tt.bodyMedium?.copyWith(
+          color: cs.onSurface,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
   }
 }

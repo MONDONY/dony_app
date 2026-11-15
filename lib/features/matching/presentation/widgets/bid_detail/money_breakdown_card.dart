@@ -29,6 +29,11 @@ class MoneyBreakdownCard extends StatelessWidget {
   /// de scanner la remise.
   bool get _beforeHandover => bid.status == 'ACCEPTED';
 
+  /// Le voyageur est payé au dépôt du colis (bateau), pas à la livraison :
+  /// mêmes gardes que `PaiementCard` (un colis annulé, refusé ou à régler ne
+  /// dit pas « versé au dépôt »).
+  bool get _paidAtDeposit => bid.isDepositPayoutOpen;
+
   @override
   Widget build(BuildContext context) {
     final breakdown = bid.moneyBreakdown;
@@ -79,9 +84,13 @@ class MoneyBreakdownCard extends StatelessWidget {
         _DestinationRow(
           icon: 'lock',
           color: cs.primary,
-          label: cardHeld
-              ? l.amendmentPaymentHeldByCard
-              : l.amendmentPaymentHeldOnline,
+          label: _paidAtDeposit
+              ? (cardHeld
+                    ? l.amendmentPaymentHeldByCardDeposit
+                    : l.amendmentPaymentHeldOnlineDeposit)
+              : (cardHeld
+                    ? l.amendmentPaymentHeldByCard
+                    : l.amendmentPaymentHeldOnline),
           amount: _fmt(b.onlineAmount),
         ),
       if (b.cashAmount > 0)
@@ -110,7 +119,9 @@ class MoneyBreakdownCard extends StatelessWidget {
         _DestinationRow(
           icon: 'landmark',
           color: cs.primary,
-          label: l.amendmentGainPaidOut,
+          label: _paidAtDeposit
+              ? l.amendmentGainPaidOutDeposit
+              : l.amendmentGainPaidOut,
           amount: _fmt(b.onlineAmount),
         ),
       if (b.cashAmount > 0) ...[

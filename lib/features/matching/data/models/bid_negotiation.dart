@@ -5,6 +5,7 @@
 // dans le datasource), un aller-retour build_runner n'apporterait rien.
 
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 
 /// Type d'un message du fil.
 ///
@@ -203,6 +204,11 @@ class BidNegotiation {
   /// sinon). Il multiplie les frais APRÈS le minimum de la devise.
   final double? commissionVoucherFactor;
 
+  /// Mode de transport du trajet du fil. `null` : champ absent (back antérieur)
+  /// ou mode inconnu ; l'écran montre alors une icône neutre et garde les
+  /// textes de paiement à la livraison, jamais l'avion.
+  final TransportMode? transportMode;
+
   const BidNegotiation({
     required this.bidId,
     required this.announcementId,
@@ -238,6 +244,7 @@ class BidNegotiation {
     this.commissionGridId,
     this.commissionOverrideRate,
     this.commissionVoucherFactor,
+    this.transportMode,
   });
 
   factory BidNegotiation.fromJson(Map<String, dynamic> json) => BidNegotiation(
@@ -285,6 +292,7 @@ class BidNegotiation {
     commissionGridId: json['commissionGridId'] as String?,
     commissionOverrideRate: _asDouble(json['commissionOverrideRate']),
     commissionVoucherFactor: _asDouble(json['commissionVoucherFactor']),
+    transportMode: transportModeFromWire(json['transportMode'] as String?),
   );
 
   /// Le voyageur contre-propose en net : il connaît la grille figée du fil

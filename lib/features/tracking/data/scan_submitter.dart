@@ -80,6 +80,8 @@ class ScanSubmitter {
     String? gpsLabel,
     ScanMethod? scanMethod,
     String? trackingNumber,
+    String? qrToken,
+    bool photoRequired = false,
   }) async {
     // Photo de l'étape une fois réglée (envoyée, refusée ou perdue) ;
     // `null` tant qu'elle ne l'est pas.
@@ -99,6 +101,8 @@ class ScanSubmitter {
         photoKey: photo?.key,
         scanMethod: scanMethod,
         trackingNumber: trackingNumber,
+        qrToken: qrToken,
+        photoRequired: photoRequired,
       );
       return ScanSubmitQueued(reason);
     }
@@ -119,6 +123,9 @@ class ScanSubmitter {
             bidId: bidId,
             photoPath: photoPath,
           );
+          // Dépôt d'un colis payé au dépôt : pas d'événement sans photo
+          // réellement téléversée.
+          if (photoRequired) requireUploadedDepositPhoto(sent);
           return _repository.postScan(
             bidId: bidId,
             eventType: eventType,
@@ -128,6 +135,7 @@ class ScanSubmitter {
             photoUrl: sent.key,
             scanMethod: scanMethod,
             trackingNumber: trackingNumber,
+            qrToken: qrToken,
           );
         },
       );

@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Fil servi par le back à commission par paliers (yadony-back, commission
@@ -61,5 +62,28 @@ void main() {
       final t = BidNegotiation.fromJson(_json(commissionGridId: null));
       expect(t.counterInNet, isFalse);
     });
+  });
+
+  group('BidNegotiation.transportMode', () {
+    test(
+      'lu quand le back le sert, nul sinon (icône neutre, jamais l\'avion)',
+      () {
+        expect(
+          BidNegotiation.fromJson({
+            ..._json(),
+            'transportMode': 'BOAT',
+          }).transportMode,
+          TransportMode.boat,
+        );
+        expect(BidNegotiation.fromJson(_json()).transportMode, isNull);
+        expect(
+          BidNegotiation.fromJson({
+            ..._json(),
+            'transportMode': 'ROCKET',
+          }).transportMode,
+          isNull,
+        );
+      },
+    );
   });
 }

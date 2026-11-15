@@ -259,6 +259,72 @@ void main() {
   );
 
   blocTest<SearchComposerBloc, SearchComposerState>(
+    'boatFilters_sendParams : volume, prix au m³ et arrivée partent au '
+    'comptage',
+    build: build,
+    act: (bloc) => bloc.add(
+      const SearchComposerFiltersChanged(
+        HomeSearchFilters(
+          transportMode: TransportMode.boat,
+          minVolumeM3: 2.5,
+          maxPricePerM3: 600,
+          arrivalWithinWeeks: 4,
+        ),
+      ),
+    ),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      final now = DateTime.now();
+      verify(
+        () => announcementRepo.countAnnouncements(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDateFrom: any(named: 'departureDateFrom'),
+          departureDateTo: any(named: 'departureDateTo'),
+          minAvailableKg: any(named: 'minAvailableKg'),
+          maxAvailableKg: any(named: 'maxAvailableKg'),
+          maxPricePerKg: any(named: 'maxPricePerKg'),
+          gpProOnly: any(named: 'gpProOnly'),
+          minRating: any(named: 'minRating'),
+          weekendOnly: any(named: 'weekendOnly'),
+          transportMode: TransportMode.boat,
+          kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+          contentType: any(named: 'contentType'),
+          userLat: any(named: 'userLat'),
+          userLng: any(named: 'userLng'),
+          radiusKm: any(named: 'radiusKm'),
+          urgent: any(named: 'urgent'),
+          minVolumeM3: 2.5,
+          maxPricePerM3: 600,
+          arrivalBefore: DateTime(now.year, now.month, now.day + 28),
+        ),
+      ).called(1);
+    },
+  );
+
+  blocTest<SearchComposerBloc, SearchComposerState>(
+    'tout effacer retire aussi le volume, le prix au m³ et l\'arrivée du '
+    'bateau',
+    build: build,
+    seed: () => const SearchComposerState(
+      filters: HomeSearchFilters(
+        transportMode: TransportMode.boat,
+        minVolumeM3: 2.5,
+        maxPricePerM3: 600,
+        arrivalWithinWeeks: 6,
+      ),
+    ),
+    act: (bloc) => bloc.add(const SearchComposerCleared()),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      expect(bloc.state.filters.transportMode, isNull);
+      expect(bloc.state.filters.minVolumeM3, isNull);
+      expect(bloc.state.filters.maxPricePerM3, isNull);
+      expect(bloc.state.filters.arrivalWithinWeeks, isNull);
+    },
+  );
+
+  blocTest<SearchComposerBloc, SearchComposerState>(
     'tout effacer retire aussi le mode Route, la taille et la ville de '
     'passage',
     build: build,

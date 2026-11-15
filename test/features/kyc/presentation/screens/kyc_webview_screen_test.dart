@@ -24,6 +24,9 @@ void main() {
     when(
       () => analytics.logScreen(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
   });
 
   var settingsOpened = 0;

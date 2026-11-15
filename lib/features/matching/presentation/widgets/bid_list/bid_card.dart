@@ -1,12 +1,11 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/utils/text_search.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
+import 'package:dony/features/matching/presentation/utils/bid_parcel_size.dart';
 import 'package:dony/features/matching/presentation/widgets/rating_pending_pill.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -157,15 +156,11 @@ class BidCard extends StatelessWidget {
                 children: [
                   _MetaPill(
                     iconAsset: 'scale',
-                    label: bid.displayWeightKg != null
-                        ? parcelWeightWithSize(
-                            l,
-                            formatWeightKg(l, bid.displayWeightKg!),
-                            bid.itemSize,
-                          )
-                        : bid.pricingMode == BidPricingMode.grid
-                        ? l.bidListCardFlatRateLabel
-                        : '-',
+                    label:
+                        bidParcelSizeLabel(l, bid) ??
+                        (bid.pricingMode == BidPricingMode.grid
+                            ? l.bidListCardFlatRateLabel
+                            : '-'),
                   ),
                   if (categories.isNotEmpty) ...[
                     _MetaPill(iconAsset: 'package', label: categories.first),

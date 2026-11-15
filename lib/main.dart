@@ -6,6 +6,7 @@ import 'package:dony/app/initial_location.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/config/app_orientations.dart';
+import 'package:dony/core/config/boat_price_bounds.dart';
 import 'package:dony/core/config/environment.dart';
 import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/config/payment_methods_flag.dart';
@@ -252,6 +253,19 @@ Future<void> _bootstrap() async {
   // décident si le choix du mode (avion, route, bateau) est proposé. Repli
   // sûr : avion seul tant que le flag n'est pas chargé ou en cas d'erreur.
   unawaited(_loadTransportModes());
+
+  // Bornes du prix au m³ d'un trajet bateau (réglages plateforme) : bornent
+  // la saisie comme le serveur. Repli sûr : bornes par défaut tant qu'elles
+  // ne sont pas chargées ou en cas d'erreur, jamais un blocage.
+  unawaited(_loadBoatPriceBounds());
+}
+
+Future<void> _loadBoatPriceBounds() async {
+  try {
+    setBoatPriceBounds(await getIt<IConfigRepository>().getBoatPriceBounds());
+  } catch (_) {
+    // Repli sur BoatPriceBounds.defaults conservé — non bloquant.
+  }
 }
 
 Future<void> _loadTransportModes() async {

@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -44,6 +45,7 @@ PackageRequest _req({
   String departureCity = 'Paris',
   String arrivalCity = 'Dakar',
   Set<PaymentMethod> acceptedPaymentMethods = const {},
+  TransportMode? transportMode = TransportMode.plane,
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 'sender-1',
@@ -53,7 +55,7 @@ PackageRequest _req({
   dateToleranceDays: flexibleDate ? 0 : 3,
   weightKg: 5,
   parcelSize: ParcelSize.medium,
-  transportMode: TransportMode.plane,
+  transportMode: transportMode,
   categories: categories,
   status: status,
   createdAt: DateTime(2026, 6),
@@ -801,6 +803,50 @@ void main() {
       expect(reassurance, findsOneWidget);
       expect(find.text(secured), findsOneWidget);
       expect(find.text(negotiable), findsOneWidget);
+    });
+
+    testWidgets('demande par bateau : versé dès le dépôt du colis', (
+      tester,
+    ) async {
+      setTransportModes(
+        const TransportModesAvailability(road: false, boat: true),
+      );
+      addTearDown(resetTransportModesForTest);
+      await tester.pumpWidget(
+        wrapLogged(
+          _req(
+            transportMode: TransportMode.boat,
+            acceptedPaymentMethods: {PaymentMethod.stripe},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Paiement sécurisé : versé dès le dépôt du colis'),
+        findsOneWidget,
+      );
+      expect(find.text(secured), findsNothing);
+    });
+
+    testWidgets('« peu importe » (mode inconnu) : reste à la livraison', (
+      tester,
+    ) async {
+      setTransportModes(
+        const TransportModesAvailability(road: false, boat: true),
+      );
+      addTearDown(resetTransportModesForTest);
+      await tester.pumpWidget(
+        wrapLogged(
+          _req(
+            transportMode: null,
+            acceptedPaymentMethods: {PaymentMethod.stripe},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(secured), findsOneWidget);
     });
 
     testWidgets('prix ferme, mobile money : seulement la première ligne', (

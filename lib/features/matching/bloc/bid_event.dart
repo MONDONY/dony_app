@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_volume_input.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 
 abstract class BidEvent {
@@ -24,6 +25,10 @@ class BidCheckoutRequested extends BidEvent {
   /// taille maximum). Facultative : absente, rien n'est envoyé.
   final ItemSize? itemSize;
 
+  /// Dimensions du colis, trajet vendu au m³ (bateau) seulement : alors
+  /// [weightKg] vaut 0 et rien n'est envoyé au kilo.
+  final BidVolumeInput? volume;
+
   BidCheckoutRequested({
     required this.announcementId,
     required this.weightKg,
@@ -34,6 +39,7 @@ class BidCheckoutRequested extends BidEvent {
     this.gridItems,
     this.photoKeys,
     this.itemSize,
+    this.volume,
   });
 }
 
@@ -64,6 +70,10 @@ class BidCreateRequested extends BidEvent {
   /// [BidCheckoutRequested.itemSize]).
   final ItemSize? itemSize;
 
+  /// Dimensions du colis, trajet vendu au m³ (bateau) seulement : alors
+  /// [weightKg] vaut 0 et rien n'est envoyé au kilo.
+  final BidVolumeInput? volume;
+
   BidCreateRequested({
     required this.announcementId,
     required this.weightKg,
@@ -77,6 +87,7 @@ class BidCreateRequested extends BidEvent {
     this.gridItems,
     this.photoKeys,
     this.itemSize,
+    this.volume,
   });
 }
 
@@ -98,12 +109,16 @@ class BidQuoteRequested extends BidEvent {
   /// réponse périmée (saisie changée entre-temps).
   final String? backgroundKey;
 
+  /// Dimensions du colis, trajet vendu au m³ (bateau) seulement.
+  final BidVolumeInput? volume;
+
   BidQuoteRequested({
     required this.announcementId,
     this.weightKg,
     this.promoCode,
     this.gridItems,
     this.backgroundKey,
+    this.volume,
   });
 }
 

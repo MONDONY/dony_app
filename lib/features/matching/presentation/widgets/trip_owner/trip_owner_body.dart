@@ -7,6 +7,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_activity_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_audience_line.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
@@ -35,7 +36,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///    prix, jauge des valises) ;
 /// 2. carte de statut ([TripStatusCard]) pour un brouillon, un trajet
 ///    complet, arrivé, annulé ou retiré par l'équipe ; ailleurs le badge du
-///    billet suffit ;
+///    billet suffit ; puis, sur un trajet parti, le dernier retard annoncé
+///    ([TripDelayCard]) ;
 /// 3. « À traiter », seulement si quelque chose attend le voyageur
 ///    ([TripTodoLiveData.todo], [TripTodoSection]) : la grosse carte de
 ///    l'action la plus urgente (la carte de réponse directe
@@ -178,6 +180,13 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
     return [
       ('header', TripOwnerHeader(a: trip, todoCount: tripTodoCount(items))),
       if (_statusCard(trip, bids) case final card?) ('status', card),
+      // Dernier retard annoncé (menu ⋮, « Annoncer un retard »), tant que
+      // le trajet roule : ce que les expéditeurs ont reçu.
+      if (trip.status == 'IN_PROGRESS' && trip.latestTripDelay != null)
+        (
+          'delay',
+          TripDelayCard(delay: trip.latestTripDelay!, mode: trip.transportMode),
+        ),
       if (items.isNotEmpty)
         (
           'todo',

@@ -160,6 +160,20 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   travelerTracking: TravelerTrackingModel.fromJsonOrNull(
     json['travelerTracking'],
   ),
+  arrivalDateMax: json['arrivalDateMax'] == null
+      ? null
+      : DateTime.parse(json['arrivalDateMax'] as String),
+  volumeM3: (json['volumeM3'] as num?)?.toDouble(),
+  lengthCm: (json['lengthCm'] as num?)?.toInt(),
+  widthCm: (json['widthCm'] as num?)?.toInt(),
+  heightCm: (json['heightCm'] as num?)?.toInt(),
+  payoutTrigger: json['payoutTrigger'] == null
+      ? PayoutTrigger.delivery
+      : _payoutTriggerFromJson(json['payoutTrigger']),
+  depositedAt: json['depositedAt'] == null
+      ? null
+      : DateTime.parse(json['depositedAt'] as String),
+  latestTripDelay: TripDelayInfo.fromJsonOrNull(json['latestTripDelay']),
 );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -258,6 +272,14 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'totalWeightKg': instance.totalWeightKg,
   'moneyBreakdown': instance.moneyBreakdown,
   'travelerTracking': _travelerTrackingToJson(instance.travelerTracking),
+  'arrivalDateMax': instance.arrivalDateMax?.toIso8601String(),
+  'volumeM3': instance.volumeM3,
+  'lengthCm': instance.lengthCm,
+  'widthCm': instance.widthCm,
+  'heightCm': instance.heightCm,
+  'payoutTrigger': _payoutTriggerToJson(instance.payoutTrigger),
+  'depositedAt': instance.depositedAt?.toIso8601String(),
+  'latestTripDelay': tripDelayToJson(instance.latestTripDelay),
 };
 
 const _$BidPaymentMethodEnumMap = {

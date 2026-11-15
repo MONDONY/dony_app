@@ -591,6 +591,84 @@ void main() {
       },
     );
 
+    test('boatFilters_sendParams : minVolumeM3, maxPricePerM3, arrivalBefore '
+        'sur les deux recherches, absents si null', () async {
+      when(
+        () => mockDio.get(
+          '/announcements',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((_) async => _ok({'content': []}, '/announcements'));
+
+      await datasource.searchAnnouncements(
+        transportMode: TransportMode.boat,
+        minVolumeM3: 2.5,
+        maxPricePerM3: 600,
+        arrivalBefore: DateTime(2027, 1, 5),
+      );
+      await datasource.searchAnnouncements();
+      await datasource.searchAnnouncementsPage(
+        minVolumeM3: 12,
+        maxPricePerM3: 0.5,
+      );
+
+      final calls = verify(
+        () => mockDio.get(
+          '/announcements',
+          queryParameters: captureAny(named: 'queryParameters'),
+        ),
+      ).captured.cast<Map<String, dynamic>>();
+      expect(calls[0]['minVolumeM3'], '2.5');
+      expect(calls[0]['maxPricePerM3'], '600');
+      expect(calls[0]['arrivalBefore'], '2027-01-05');
+      expect(calls[0]['transportMode'], 'BOAT');
+      expect(calls[1].containsKey('minVolumeM3'), isFalse);
+      expect(calls[1].containsKey('maxPricePerM3'), isFalse);
+      expect(calls[1].containsKey('arrivalBefore'), isFalse);
+      expect(calls[2]['minVolumeM3'], '12');
+      expect(calls[2]['maxPricePerM3'], '0.5');
+      expect(calls[2].containsKey('arrivalBefore'), isFalse);
+    });
+
+    test(
+      'bornes du back : jamais une valeur qu\'il refuserait en 400',
+      () async {
+        when(
+          () => mockDio.get(
+            '/announcements',
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer((_) async => _ok({'content': []}, '/announcements'));
+
+        for (final bad in [-1.0, 0.0, 0.05, 10000.0, double.nan]) {
+          await datasource.searchAnnouncements(minVolumeM3: bad);
+        }
+        for (final bad in [-1.0, 0.0, 10000000.5, double.infinity]) {
+          await datasource.searchAnnouncements(maxPricePerM3: bad);
+        }
+        // Rond à 4 décimales, sans notation scientifique.
+        await datasource.searchAnnouncements(
+          minVolumeM3: 0.1 + 0.2,
+          maxPricePerM3: 10000000,
+        );
+        await datasource.searchAnnouncements(minVolumeM3: 0.12345);
+
+        final calls = verify(
+          () => mockDio.get(
+            '/announcements',
+            queryParameters: captureAny(named: 'queryParameters'),
+          ),
+        ).captured.cast<Map<String, dynamic>>();
+        for (final c in calls.take(9)) {
+          expect(c.containsKey('minVolumeM3'), isFalse);
+          expect(c.containsKey('maxPricePerM3'), isFalse);
+        }
+        expect(calls[9]['minVolumeM3'], '0.3');
+        expect(calls[9]['maxPricePerM3'], '10000000');
+        expect(calls[10]['minVolumeM3'], '0.1235');
+      },
+    );
+
     test(
       'omits urgent param when urgent is false or null (never sends urgent=false)',
       () async {
@@ -769,6 +847,23 @@ void main() {
         final q = capturedQuery();
         expect(q['minItemSize'], 'M');
         expect(q['viaCity'], 'Tanger');
+      },
+    );
+
+    test(
+      'volume, prix au m³ et arrivée : mêmes paramètres que la recherche',
+      () async {
+        stubCount({'content': <dynamic>[], 'totalElements': 1});
+
+        await datasource.countAnnouncements(
+          minVolumeM3: 3,
+          maxPricePerM3: 450.5,
+          arrivalBefore: DateTime(2027, 2),
+        );
+        final q = capturedQuery();
+        expect(q['minVolumeM3'], '3');
+        expect(q['maxPricePerM3'], '450.5');
+        expect(q['arrivalBefore'], '2027-02-01');
       },
     );
 

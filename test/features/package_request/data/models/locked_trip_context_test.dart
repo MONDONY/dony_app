@@ -17,6 +17,27 @@ void main() {
       agreedPriceEur: 120.0,
     );
 
+    test(
+      'volumeM3 : nul par défaut, porté par la demande bateau, dans l\'égalité',
+      () {
+        expect(base.volumeM3, isNull);
+        final boat = LockedTripContext(
+          threadId: 't-1',
+          packageRequestId: 'pr-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 8, 15),
+          dateToleranceDays: 3,
+          weightKg: 10.0,
+          transportMode: TransportMode.plane,
+          agreedPriceEur: 120.0,
+          volumeM3: 0.5,
+        );
+        expect(boat.volumeM3, 0.5);
+        expect(boat, isNot(base));
+      },
+    );
+
     test('earliestDate = desiredDate - dateToleranceDays', () {
       expect(base.earliestDate, DateTime(2026, 8, 12));
     });

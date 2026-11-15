@@ -7,9 +7,11 @@ import 'package:dony/features/matching/presentation/widgets/billet_perforation.d
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/plane_icon_expectations.dart';
+import '../trip_owner/trip_card_harness.dart' show loadAppFonts;
 
 const _longDep = 'Fontenay-le-Fleury-sous-Bois';
 const _longArr = 'Saint-Germain-en-Laye-Centre';
@@ -46,7 +48,42 @@ void _expectNeverTruncated(WidgetTester tester) {
   expect(tester.takeException(), isNull);
 }
 
+/// Chaque ligne du nom de ville finit sur une coupure de mot (espace, tiret
+/// ou fin du texte), jamais au milieu d'un mot.
+void _expectBreaksBetweenWords(WidgetTester tester, String key, String city) {
+  final paragraph = tester.renderObject<RenderParagraph>(find.byKey(Key(key)));
+  double? top(int i) {
+    final boxes = paragraph.getBoxesForSelection(
+      TextSelection(baseOffset: i, extentOffset: i + 1),
+    );
+    return boxes.isEmpty ? null : boxes.first.top;
+  }
+
+  var previous = top(0);
+  for (var i = 1; i < city.length; i++) {
+    final current = top(i);
+    if (current == null || previous == null) continue;
+    if (current > previous + 1) {
+      // Retour à la ligne avant le caractère i.
+      final before = city[i - 1];
+      final after = city[i];
+      expect(
+        before == '-' || before == ' ' || after == ' ',
+        isTrue,
+        reason:
+            '$key coupé au milieu d\'un mot : '
+            '« ${city.substring(0, i)} / ${city.substring(i)} »',
+      );
+    }
+    previous = current;
+  }
+}
+
 void main() {
+  // Vraies polices : la coupure d'un mot dépend de la largeur réelle des
+  // glyphes, la police de test (carrés de 1 em) la fausserait.
+  setUpAll(loadAppFonts);
+
   for (final width in [360.0, 414.0]) {
     testWidgets('villes longues jamais tronquées (${width.toInt()} px)', (
       tester,
@@ -98,6 +135,50 @@ void main() {
       },
     );
   }
+
+  // Recette 13/11 (route, 360 dp) : « Yamoussoukro » en grand se coupait au
+  // milieu du mot (« Yamouss / oukro »).
+  for (final width in [320.0, 360.0]) {
+    for (final cities in [
+      ('Abidjan', 'Yamoussoukro'),
+      ('Ouagadougou', 'Yamoussoukro'),
+      (_longDep, _longArr),
+    ]) {
+      testWidgets('route : ${cities.$2} coupé entre les mots, jamais au '
+          'milieu (${width.toInt()} px)', (tester) async {
+        await _pump(
+          tester,
+          BilletRoute(
+            departureCity: cities.$1,
+            arrivalCity: cities.$2,
+            transportMode: TransportMode.car,
+          ),
+          width: width,
+        );
+        _expectNeverTruncated(tester);
+        _expectBreaksBetweenWords(tester, 'billet_departure_city', cities.$1);
+        _expectBreaksBetweenWords(tester, 'billet_arrival_city', cities.$2);
+      });
+    }
+  }
+
+  testWidgets('route : une ville courte garde la grande taille', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      const BilletRoute(
+        departureCity: 'Dakar',
+        arrivalCity: 'Thiès',
+        transportMode: TransportMode.car,
+      ),
+      width: 360,
+    );
+    final text = tester.widget<Text>(
+      find.byKey(const Key('billet_arrival_city')),
+    );
+    expect(text.style?.fontSize, 22);
+  });
 
   testWidgets('lecture d\'écran « départ → arrivée » d\'un seul tenant', (
     tester,
@@ -320,5 +401,104 @@ void main() {
       ),
       findsNWidgets(2),
     );
+  });
+
+  // A6 : un trajet bateau annonce une fourchette d'arrivée estimée.
+  group('arrivée estimée (bateau)', () {
+    final year = DateTime.now().year;
+    for (final width in [360.0, 414.0]) {
+      testWidgets('« Arrivée estimée » du premier au dernier jour, sans heure '
+          '(${width.toInt()} px)', (tester) async {
+        await initializeDateFormatting('fr');
+        await _pump(
+          tester,
+          BilletRoute(
+            departureCity: 'Le Havre',
+            arrivalCity: 'Abidjan',
+            transportMode: TransportMode.boat,
+            departureDate: DateTime(year, 12, 2),
+            departureTime: '18:00',
+            arrivalDate: DateTime(year, 12, 11),
+            arrivalTime: '06:30',
+            arrivalDateMax: DateTime(year, 12, 18),
+          ),
+          width: width,
+        );
+        expect(
+          tester
+              .widget<Text>(find.byKey(const Key('billet-arrival-label')))
+              .data,
+          'Arrivée estimée',
+        );
+        expect(
+          tester
+              .widget<Text>(find.byKey(const Key('billet-arrival-value')))
+              .data,
+          '11 déc. au 18 déc.',
+        );
+        expect(find.textContaining('06:30'), findsNothing);
+        expect(tester.takeException(), isNull);
+        expectNoPlaneIcon(tester);
+      });
+    }
+
+    testWidgets('en anglais', (tester) async {
+      useEnglish();
+      await initializeDateFormatting('en');
+      await _pump(
+        tester,
+        BilletRoute(
+          departureCity: 'Le Havre',
+          arrivalCity: 'Abidjan',
+          transportMode: TransportMode.boat,
+          departureDate: DateTime(year, 12, 2),
+          arrivalDate: DateTime(year, 12, 11),
+          arrivalDateMax: DateTime(year, 12, 18),
+        ),
+        width: 360,
+      );
+      expect(find.text('Estimated arrival'), findsOneWidget);
+      expect(find.text('Dec 11 to Dec 18'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('fourchette d\'un jour : la date seule', (tester) async {
+      await initializeDateFormatting('fr');
+      await _pump(
+        tester,
+        BilletRoute(
+          departureCity: 'Le Havre',
+          arrivalCity: 'Abidjan',
+          transportMode: TransportMode.boat,
+          departureDate: DateTime(year, 12, 2),
+          arrivalDate: DateTime(year, 12, 11),
+          arrivalDateMax: DateTime(year, 12, 11),
+        ),
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const Key('billet-arrival-value'))).data,
+        '11 déc.',
+      );
+    });
+
+    testWidgets('sans fin de fourchette : libellé et heure habituels', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        BilletRoute(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(year, 10, 6),
+          arrivalDate: DateTime(year, 10, 7),
+          arrivalTime: '06:30',
+        ),
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const Key('billet-arrival-label'))).data,
+        'Arrivée',
+      );
+      expect(find.textContaining('06:30'), findsOneWidget);
+    });
   });
 }

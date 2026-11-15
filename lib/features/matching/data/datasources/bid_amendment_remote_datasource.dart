@@ -25,15 +25,18 @@ class BidAmendmentRemoteDatasource {
   }
 
   /// Devis : le brut à payer pour [addedKg] et [items] (identifiant d'article
-  /// de grille vers quantité). Lecture pure, rien n'est créé.
+  /// de grille vers quantité). Colis d'un trajet bateau au m³ : [addedVolumeM3]
+  /// part à la place des kilos (`addedVolumeM3`, jamais `addedKg`). Lecture
+  /// pure, rien n'est créé.
   Future<double> quote(
     String bidId, {
     required double addedKg,
+    double? addedVolumeM3,
     required Map<String, int> items,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '${_base(bidId)}/quote',
-      data: {'addedKg': addedKg, 'items': _lines(items)},
+      data: _body(addedKg, addedVolumeM3, items),
     );
     return (response.data!['grossAmount'] as num).toDouble();
   }
@@ -43,14 +46,14 @@ class BidAmendmentRemoteDatasource {
   Future<AmendmentCheckout> create(
     String bidId, {
     required double addedKg,
+    double? addedVolumeM3,
     required Map<String, int> items,
     required BidPaymentMethod method,
   }) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       _base(bidId),
       data: {
-        'addedKg': addedKg,
-        'items': _lines(items),
+        ..._body(addedKg, addedVolumeM3, items),
         'paymentMethod': method.apiValue,
       },
     );
@@ -103,6 +106,20 @@ class BidAmendmentRemoteDatasource {
       json['amendment'] as Map<String, dynamic>,
     ).withCommissionClientSecret(json['commissionClientSecret'] as String?);
   }
+
+  /// Colis au m³ : `addedVolumeM3` remplace `addedKg`. Sinon les kilos, comme
+  /// avant.
+  Map<String, Object> _body(
+    double addedKg,
+    double? addedVolumeM3,
+    Map<String, int> items,
+  ) => {
+    if (addedVolumeM3 != null)
+      'addedVolumeM3': addedVolumeM3
+    else
+      'addedKg': addedKg,
+    'items': _lines(items),
+  };
 
   /// Articles envoyés en `[{gridItemId, quantity}]`, quantités nulles écartées.
   List<Map<String, Object>> _lines(Map<String, int> items) => [

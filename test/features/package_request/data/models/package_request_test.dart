@@ -321,4 +321,47 @@ void main() {
       );
     });
   });
+
+  group('PackageRequest dimensions (lot 3 bateau)', () {
+    Map<String, dynamic> base() => {
+      'id': 'aaa-111',
+      'senderId': 'sender-1',
+      'departureCity': 'Marseille',
+      'arrivalCity': 'Dakar',
+      'dateToleranceDays': 0,
+      'weightKg': 40.0,
+      'parcelSize': 'LARGE',
+      'transportMode': 'BOAT',
+      'status': 'OPEN',
+      'createdAt': '2026-05-10T10:00:00Z',
+    };
+
+    test('dimensions absentes : null', () {
+      final pr = PackageRequest.fromJson(base());
+      expect(pr.lengthCm, isNull);
+      expect(pr.widthCm, isNull);
+      expect(pr.heightCm, isNull);
+      expect(pr.volumeM3, isNull);
+    });
+
+    test('dimensions et volume calculé par le serveur lus', () {
+      final pr = PackageRequest.fromJson(
+        base()
+          ..['lengthCm'] = 120
+          ..['widthCm'] = 80
+          ..['heightCm'] = 60
+          ..['volumeM3'] = 0.576,
+      );
+      expect(pr.lengthCm, 120);
+      expect(pr.widthCm, 80);
+      expect(pr.heightCm, 60);
+      expect(pr.volumeM3, 0.576);
+    });
+
+    test('les dimensions comptent dans l égalité', () {
+      final a = PackageRequest.fromJson(base()..['lengthCm'] = 10);
+      final b = PackageRequest.fromJson(base()..['lengthCm'] = 11);
+      expect(a == b, isFalse);
+    });
+  });
 }

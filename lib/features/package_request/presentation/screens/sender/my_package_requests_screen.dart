@@ -15,6 +15,7 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_mode_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -517,6 +518,19 @@ class _RequestCard extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Mode de la demande, icône neutre pour « Peu
+                        // importe » : jamais un avion par défaut.
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            top: 2,
+                            right: DonySpacing.sm,
+                          ),
+                          child: DonyIcon(
+                            requestModeIconAsset(request.transportMode),
+                            size: 18,
+                            color: cs.primary,
+                          ),
+                        ),
                         Expanded(
                           child: Text(
                             '${request.departureCity} → ${request.arrivalCity}',
@@ -741,11 +755,17 @@ String _buildDetails(AppLocalizations l, PackageRequest r) {
     parcelWeightWithSize(l, formatWeightKg(l, r.weightKg), r.itemSize),
     if (r.categories.isNotEmpty)
       _shortCat(contentCategoryDisplayName(l, r.categories.first)),
-    if (r.targetPriceEur != null)
-      '≈${formatPriceIn(r.targetPriceEur!, r.currency)}',
+    // L'expéditeur voit toujours le brut, frais de service inclus, comme la
+    // fiche « Ma demande » : `targetPriceEur` seul est le net du voyageur.
+    if (_senderPrice(r) case final price?)
+      '≈${formatPriceIn(price, r.currency)}',
   ];
   return parts.join(' · ');
 }
+
+/// Prix d'une demande vu par son expéditeur : le brut ([grossPriceEur]), repli
+/// sur [targetPriceEur] pour un payload antérieur au brut.
+double? _senderPrice(PackageRequest r) => r.grossPriceEur ?? r.targetPriceEur;
 
 String _shortCat(String label) =>
     label.length > 5 ? '${label.substring(0, 3)}.' : label;

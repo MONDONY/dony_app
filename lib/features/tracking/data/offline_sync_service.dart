@@ -65,6 +65,19 @@ final class TrackingPhotoLostError implements SeverityAwareError {
   String toString() => 'TrackingPhotoLostError';
 }
 
+/// Dépôt resté en file hors ligne parce que sa photo n'a pas pu partir.
+class DepositPhotoRetake {
+  const DepositPhotoRetake({
+    required this.key,
+    required this.bidId,
+    required this.eventType,
+  });
+
+  final int key;
+  final String bidId;
+  final String eventType;
+}
+
 /// File Hive des étapes pas encore reçues par le back : scans faits hors
 /// ligne, et validations annulables de l'onglet Suivi (entrées avec une
 /// échéance `notBefore`, envoyées par [sendScheduled] ou, si le process est
@@ -200,6 +213,7 @@ class OfflineSyncService {
       // Une étape refusée pour l'instant reste « en attente » pour
       // l'utilisateur malgré son échéance : la remise n'est pas validée.
       if (raw == null ||
+          raw[photoRetakeField] == true ||
           _inFlight.contains(key) ||
           (_notDue(raw, now) && raw[retryLaterField] != true)) {
         continue;
@@ -227,6 +241,8 @@ class OfflineSyncService {
     String? photoKey,
     ScanMethod? scanMethod,
     String? trackingNumber,
+    String? qrToken,
+    bool photoRequired = false,
     DateTime? notBefore,
   }) async {
     // Copiée hors du cache temporaire, que le système purge (FLUTTER-MJ).
@@ -257,6 +273,11 @@ class OfflineSyncService {
       // Numéro saisi à la remise (DEPART) : il doit survivre à un envoi
       // différé, le serveur le vérifie à la réception.
       'trackingNumber': ?trackingNumber,
+      // Dépôt d'un colis payé au dépôt : jeton du QR de l'expéditeur, il doit
+      // survivre à un envoi différé (le serveur le vérifie à la réception) ; et
+      // la photo, preuve du dépôt, sans laquelle l'étape ne part jamais.
+      'qrToken': ?qrToken,
+      if (photoRequired) 'photoRequired': true,
       'offlineTimestamp': _now().toUtc().toIso8601String(),
       'notBefore': ?notBefore?.toUtc().toIso8601String(),
     };
@@ -481,7 +502,7 @@ class OfflineSyncService {
       final keys = _hive.offlineQueue.keys.toList();
       for (final key in keys) {
         final raw = _hive.offlineQueue.get(key);
-        if (raw == null) continue;
+        if (raw == null || raw[photoRetakeField] == true) continue;
         final notBefore = _notBefore(raw);
         if (notBefore != null && notBefore.isAfter(_now())) {
           // Encore annulable : l'onglet Suivi l'enverra lui-même, sinon on
@@ -548,6 +569,7 @@ class OfflineSyncService {
     final bidId = entry['bidId'] as String;
     final eventType = entry['eventType'] as String;
     var photoDropped = false;
+    var depositPhotoMissing = false;
     try {
       await _migrateLegacyPhoto(key, entry);
       final event = await _guard.postStepOnce(
@@ -571,8 +593,20 @@ class OfflineSyncService {
             );
             photoDropped = photo.dropped;
             photoKey = photo.key;
-            if (photo.lost) await _forgetLostPhoto(key, entry);
+            // Dépôt : la photo est la preuve, son message propre (« à
+            // reprendre ») remplace celui de la photo perdue.
+            if (photo.lost && entry['photoRequired'] != true) {
+              await _forgetLostPhoto(key, entry);
+            }
             if (photoKey != null) await _rememberPhotoKey(key, entry, photoKey);
+          }
+          if (entry['photoRequired'] == true && photoKey == null) {
+            depositPhotoMissing = true;
+            requireUploadedDepositPhoto((
+              key: null,
+              dropped: photoDropped,
+              lost: false,
+            ));
           }
           return _repository.postScan(
             bidId: bidId,
@@ -583,6 +617,7 @@ class OfflineSyncService {
             photoUrl: photoKey,
             scanMethod: ScanMethod.fromWire(entry['scanMethod']),
             trackingNumber: entry['trackingNumber'] as String?,
+            qrToken: entry['qrToken'] as String?,
             offlineTimestamp: deferred
                 ? DateTime.parse(entry['offlineTimestamp'] as String)
                 : null,
@@ -618,6 +653,14 @@ class OfflineSyncService {
             ),
           );
         }
+        rethrow;
+      }
+      if (depositPhotoMissing && deferred) {
+        // Garde LOCALE (photo du dépôt refusée, quota, fichier perdu), pas un
+        // verdict du serveur : l'entrée n'est jamais supprimée en silence.
+        // Elle reste en file, mise de côté (plus rejouée), et l'utilisateur
+        // est prévenu de reprendre la photo ([depositRetakeFor]).
+        await _parkForPhotoRetake(key, entry);
         rethrow;
       }
       if (isDefinitiveRejection(cause)) {
@@ -713,6 +756,44 @@ class OfflineSyncService {
 
   /// Champ de l'entrée : code du dernier refus « pour l'instant ».
   static const retryLaterCodeField = 'retryLaterCode';
+
+  /// Champ de l'entrée : dépôt dont la photo n'a pas pu être envoyée au
+  /// rejeu (refusée, quota, fichier perdu). Mis de côté, jamais supprimé :
+  /// l'utilisateur doit reprendre la photo du dépôt.
+  static const photoRetakeField = 'photoRetake';
+
+  /// Dépôts de ces colis restés en file faute de photo : à reprendre.
+  List<DepositPhotoRetake> depositRetakeFor(Set<String> bidIds) {
+    final box = _hive.offlineQueue;
+    return [
+      for (final key in box.keys)
+        if (box.get(key) case final Map raw
+            when raw[photoRetakeField] == true && bidIds.contains(raw['bidId']))
+          DepositPhotoRetake(
+            key: key as int,
+            bidId: raw['bidId'] as String,
+            eventType: raw['eventType'] as String,
+          ),
+    ];
+  }
+
+  /// Le message « reprendre la photo » est lu : l'entrée mise de côté part.
+  Future<void> dismissDepositRetake(DepositPhotoRetake retake) =>
+      discard(retake.key);
+
+  Future<void> _parkForPhotoRetake(
+    Object? key,
+    Map<String, dynamic> entry,
+  ) async {
+    if (!_hive.offlineQueue.containsKey(key)) return;
+    final photoFile = entry.remove('photoFile') as String?;
+    entry
+      ..[photoRetakeField] = true
+      ..remove('notBefore')
+      ..remove('photoPath');
+    await _photos?.remove(photoFile);
+    await _hive.offlineQueue.put(key, entry);
+  }
 
   /// Champ de l'entrée : clé de la photo déjà envoyée.
   static const photoKeyField = 'photoKey';

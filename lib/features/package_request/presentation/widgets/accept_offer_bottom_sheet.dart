@@ -55,6 +55,10 @@ class AcceptOfferBottomSheet {
     /// AWAITING_TRIP step (backend goes straight to AWAITING_PAYMENT).
     bool hasLinkedTrip = false,
 
+    /// Le transporteur est payé au dépôt du colis (bateau) : le texte de succès
+    /// de la carte le dit à la place de « à la livraison ».
+    bool payoutAtDeposit = false,
+
     /// Prix du fil (grille figée et devise) : `ThreadPricer.of(thread)`. Ne
     /// sert qu'en repli, quand ni le devis ni [grossPriceEur] ne sont servis.
     required ThreadPricer pricer,
@@ -202,8 +206,9 @@ class AcceptOfferBottomSheet {
                                       mascotteType: DonyMascotteType.securise,
                                       title:
                                           lb.negotiationOfferAcceptedPaidTitle,
-                                      subtitle: lb
-                                          .negotiationOfferAcceptedPaidSubtitle,
+                                      subtitle: payoutAtDeposit
+                                          ? lb.negotiationOfferAcceptedPaidSubtitleDeposit
+                                          : lb.negotiationOfferAcceptedPaidSubtitle,
                                       ctaLabel: lb.negotiationTrackShipmentCta,
                                       onCta: () => returnToNegotiationThread(
                                         routeContext,

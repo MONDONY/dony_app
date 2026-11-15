@@ -620,12 +620,14 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
         builder: (context, modes, _) => ValueListenableBuilder<TransportMode?>(
           valueListenable: _fields.transportMode,
           builder: (context, mode, _) =>
-              modes.hasTripChoice ||
+              modes.hasTemplateChoice ||
                   transportModeOrPlane(mode) != TransportMode.plane
               ? Padding(
                   padding: const EdgeInsets.only(bottom: DonySpacing.lg),
                   child: TransportModeRow(
-                    modes: modes.tripCreationModes,
+                    // Jamais le bateau : le back refuse les modèles bateau
+                    // (422 `boat-template-unsupported`, C16).
+                    modes: modes.templateModes,
                     notifier: _fields.transportMode,
                   ),
                 )

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
+import 'package:dony/features/matching/data/payout_wording.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -515,7 +516,12 @@ class _SenderDepositActions extends StatelessWidget {
     if (!context.mounted) return;
     bloc.add(NegotiationFetchRequested(thread.id));
     if (paid == true) {
-      unawaited(context.push('/negotiations/${thread.id}/paid'));
+      unawaited(
+        context.push(
+          '/negotiations/${thread.id}/paid',
+          extra: paidAtDeposit(thread.transportMode),
+        ),
+      );
     }
   }
 
@@ -585,6 +591,7 @@ class _SenderOpenActions extends StatelessWidget {
                   priceEur: thread.currentPriceEur,
                   grossPriceEur: thread.grossPriceEur,
                   hasLinkedTrip: thread.travelerAnnouncementId != null,
+                  payoutAtDeposit: paidAtDeposit(thread.transportMode),
                   pricer: ThreadPricer.of(thread),
                   paymentMethod: thread.paymentMethod,
                 ),
@@ -663,6 +670,7 @@ class _TravelerOpenActions extends StatelessWidget {
                     grossPriceEur: thread.grossPriceEur,
                     isTraveler: true,
                     hasLinkedTrip: thread.travelerAnnouncementId != null,
+                    payoutAtDeposit: paidAtDeposit(thread.transportMode),
                     pricer: ThreadPricer.of(thread),
                     paymentMethod: thread.paymentMethod,
                   ),

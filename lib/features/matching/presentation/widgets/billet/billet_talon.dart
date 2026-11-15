@@ -5,6 +5,7 @@ import 'package:dony/features/content_categories/presentation/content_category_l
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_rejection_reason.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
+import 'package:dony/features/matching/presentation/utils/bid_parcel_size.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/return_code_sheet.dart';
@@ -218,7 +219,10 @@ class BilletTalon extends StatelessWidget {
       'CANCELLED' => _CancelledBlock(bid: bid, isSender: true),
       'REJECTED' => _RejectedBlock(bid: bid, isSender: true),
       'EXPIRED' when bid.isExpiredAtHandoverDeadline =>
-        const _HandoverDeadlineExpiredBlock(isSender: true),
+        _HandoverDeadlineExpiredBlock(
+          isSender: true,
+          cash: bid.paymentMethod == BidPaymentMethod.cash,
+        ),
       'NO_SHOW' ||
       'PARCEL_REFUSED' ||
       'EXPIRED' => _ClosedBlock(status: status, isSender: true),
@@ -937,11 +941,16 @@ class _ClosedBlock extends StatelessWidget {
 
 /// any / EXPIRED à la date limite de dépôt (FLUTTER-GA) : la demande, jamais
 /// acceptée, a été annulée automatiquement par le serveur. L'expéditeur lit
-/// qu'il est remboursé intégralement (Yadony ne retient jamais rien).
+/// qu'il est remboursé intégralement (Yadony ne retient jamais rien), sauf en
+/// espèces : rien n'est passé par Yadony, rien n'est à rembourser.
 class _HandoverDeadlineExpiredBlock extends StatelessWidget {
   final bool isSender;
+  final bool cash;
 
-  const _HandoverDeadlineExpiredBlock({required this.isSender});
+  const _HandoverDeadlineExpiredBlock({
+    required this.isSender,
+    this.cash = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -965,9 +974,11 @@ class _HandoverDeadlineExpiredBlock extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            isSender
-                ? l.ticketHandoverDeadlineExpiredSender
-                : l.ticketHandoverDeadlineExpiredTraveler,
+            !isSender
+                ? l.ticketHandoverDeadlineExpiredTraveler
+                : cash
+                ? l.ticketHandoverDeadlineExpiredSenderCash
+                : l.ticketHandoverDeadlineExpiredSender,
             textAlign: TextAlign.center,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
@@ -987,16 +998,26 @@ class _TravelerDecisionSummary extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
 
-    final weight = bid.displayWeightKg != null
-        ? formatWeightKg(l, bid.displayWeightKg!)
-        : '-';
+    // Colis au m³ : son volume, jamais « 0 kg » ni un tiret.
+    final volume = bidVolumeLabel(l, bid);
+    final weight =
+        volume ??
+        (bid.displayWeightKg != null
+            ? formatWeightKg(l, bid.displayWeightKg!)
+            : '-');
     final category = bid.contentCategory != null
         ? contentCategoriesDisplayName(l, bid.contentCategory!)
         : '-';
 
     return Row(
       children: [
-        _MiniStat(value: weight, label: l.ticketMiniStatWeightLabel, tt: tt),
+        _MiniStat(
+          value: weight,
+          label: volume != null
+              ? l.ticketMiniStatVolumeLabel
+              : l.ticketMiniStatWeightLabel,
+          tt: tt,
+        ),
         _MiniStat(
           value: category,
           label: l.ticketMiniStatCategoryLabel,

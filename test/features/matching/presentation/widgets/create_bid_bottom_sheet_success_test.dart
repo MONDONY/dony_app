@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -14,6 +15,7 @@ import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
@@ -30,6 +32,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/error_reporting_test_doubles.dart';
+import '../../../../helpers/plane_icon_expectations.dart';
 
 /// Integration test of the LIVE bid-payment success flow.
 ///
@@ -92,7 +95,8 @@ class _FakeContentCategoryRepository implements IContentCategoryRepository {
 
 // ── Fixtures ───────────────────────────────────────────────────────────────────
 
-AnnouncementModel _announcement() => AnnouncementModel(
+AnnouncementModel _announcement({TransportMode? mode}) => AnnouncementModel(
+  transportMode: mode,
   id: 'ann-1',
   travelerId: 'trav-1',
   departureCity: 'Paris',
@@ -359,6 +363,112 @@ void main() {
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
     expect(find.text('Faire une demande'), findsOneWidget);
+  }
+
+  // ── Versé au dépôt (bateau) : textes des écrans de succès ───────────────────
+  //
+  // Le transporteur d'un trajet bateau est payé au dépôt du colis : ni
+  // « jusqu'à la livraison », ni « le voyageur ». Avion et route gardent le
+  // texte de la livraison, même avec le bateau allumé.
+
+  const depositPaidSubtitle =
+      "Votre paiement est sécurisé par Yadony jusqu'au dépôt de votre colis, "
+      'puis versé au transporteur. Le transporteur est notifié de votre '
+      'demande.';
+  const depositMobileMoneySubtitle =
+      'Paiement mobile money : si le transporteur accepte, vous recevrez une '
+      'notification et aurez 30 minutes pour valider le paiement sur votre '
+      "téléphone. Le montant est gardé en sécurité par Yadony jusqu'au dépôt "
+      'du colis.';
+
+  Future<void> payWithPayPal(WidgetTester tester, TransportMode mode) async {
+    setTransportModes(const TransportModesAvailability(road: true, boat: true));
+    addTearDown(resetTransportModesForTest);
+    final paymentStates = StreamController<PaymentState>.broadcast();
+    addTearDown(paymentStates.close);
+    when(() => paymentBloc.stream).thenAnswer((_) => paymentStates.stream);
+
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_buildHarness(_announcement(mode: mode)));
+    await tester.tap(find.text('Ouvrir'));
+    await tester.pumpAndSettle();
+    paymentStates.add(
+      const CheckoutPaymentSheetReady(
+        clientSecret: 'pi_test_secret',
+        publishableKey: 'pk_test',
+        bidId: 'bid-77',
+        amountEur: 56.0,
+        paymentMethodTypes: ['paypal'],
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('paymentSheetPayPalButton')));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pumpAndSettle();
+    expect(find.text('Offre payée !'), findsOneWidget);
+  }
+
+  testWidgets('paiement carte réussi, bateau : sous-titre du dépôt', (
+    tester,
+  ) async {
+    await payWithPayPal(tester, TransportMode.boat);
+
+    expect(find.text(depositPaidSubtitle), findsOneWidget);
+    expect(find.textContaining('jusqu\'à la livraison'), findsNothing);
+    expectNoPlaneIcon(tester);
+  });
+
+  for (final mode in [TransportMode.car, TransportMode.plane]) {
+    testWidgets('paiement carte réussi, ${mode.name} : texte de la livraison, '
+        'jamais celui du dépôt', (tester) async {
+      await payWithPayPal(tester, mode);
+
+      expect(
+        find.textContaining("jusqu'à la livraison confirmée"),
+        findsOneWidget,
+      );
+      expect(find.text(depositPaidSubtitle), findsNothing);
+      expect(find.textContaining('au dépôt'), findsNothing);
+    });
+  }
+
+  for (final mode in [TransportMode.boat, TransportMode.car]) {
+    testWidgets('offre mobile money envoyée, ${mode.name} : sous-titre '
+        'selon le mode', (tester) async {
+      setTransportModes(
+        const TransportModesAvailability(road: true, boat: true),
+      );
+      addTearDown(resetTransportModesForTest);
+      final bidStates = StreamController<BidState>.broadcast();
+      addTearDown(bidStates.close);
+      when(() => bidBloc.stream).thenAnswer((_) => bidStates.stream);
+
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_buildHarness(_announcement(mode: mode)));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+      bidStates.add(
+        BidCreated(bidWithMethod('bid-mm-2', BidPaymentMethod.mobileMoney)),
+      );
+      await tester.pumpAndSettle();
+
+      final deposit = mode == TransportMode.boat;
+      expect(
+        find.text(depositMobileMoneySubtitle),
+        deposit ? findsOneWidget : findsNothing,
+      );
+      expect(
+        find.textContaining("jusqu'à la livraison"),
+        deposit ? findsNothing : findsOneWidget,
+      );
+      expectNoPlaneIcon(tester);
+    });
   }
 
   testWidgets(

@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -26,15 +27,22 @@ class OfflineScanQueueScreen extends StatelessWidget {
   /// ligne. La file ne contient que DEPART et TRANSIT, les étapes du back
   /// (`TrackingEventType`) : l'arrivée (ARRIVEE) passe par la confirmation
   /// de livraison, en ligne seulement.
-  static (String, String) _eventTexts(AppLocalizations l, String eventType) =>
-      switch (eventType) {
-        'DEPART' => (trackingStepLabel(l, eventType), l.scanOfflineDescPickup),
-        'TRANSIT' => (
-          trackingStepLabel(l, eventType),
-          l.scanOfflineDescTransit,
-        ),
-        _ => (l.scanOfflineEventDefaultLabel, l.scanOfflineDescDefault),
-      };
+  ///
+  /// [deposit] : étape `DEPART` d'un colis payé au dépôt (photo obligatoire,
+  /// entrée marquée `photoRequired`) : dépôt à l'entrepôt, jamais récupération.
+  static (String, String) _eventTexts(
+    AppLocalizations l,
+    String eventType, {
+    bool deposit = false,
+  }) => switch (eventType) {
+    'DEPART' when deposit => (
+      trackingStepLabel(l, eventType, mode: TransportMode.boat),
+      l.scanOfflineDescDeposit,
+    ),
+    'DEPART' => (trackingStepLabel(l, eventType), l.scanOfflineDescPickup),
+    'TRANSIT' => (trackingStepLabel(l, eventType), l.scanOfflineDescTransit),
+    _ => (l.scanOfflineEventDefaultLabel, l.scanOfflineDescDefault),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -121,6 +129,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
                           bidId: entry['bidId'] as String? ?? '',
                           eventType: entry['eventType'] as String? ?? '',
                           timestamp: entry['offlineTimestamp'] as String? ?? '',
+                          deposit: entry['photoRequired'] == true,
                         ),
                       ),
                     ),
@@ -210,11 +219,13 @@ class _QueueItemCard extends StatelessWidget {
     required this.bidId,
     required this.eventType,
     required this.timestamp,
+    required this.deposit,
   });
 
   final String bidId;
   final String eventType;
   final String timestamp;
+  final bool deposit;
 
   String get _shortCode {
     if (bidId.length >= 4) {
@@ -231,6 +242,7 @@ class _QueueItemCard extends StatelessWidget {
     final (label, description) = OfflineScanQueueScreen._eventTexts(
       l,
       eventType,
+      deposit: deposit,
     );
     final relTime = OfflineScanQueueScreen._relativeTime(l, timestamp);
 

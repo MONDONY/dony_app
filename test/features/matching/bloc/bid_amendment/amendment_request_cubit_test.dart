@@ -641,7 +641,8 @@ void main() {
       c.setKg(100);
     },
     wait: settle,
-    verify: (c) => expect(c.state.addedKg, 60),
+    // Plafond (un net) passé à la base du prix affiché (brut) : 300 × 1,05 / 5.
+    verify: (c) => expect(c.state.addedKg, 63),
   );
 
   blocTest<AmendmentRequestCubit, AmendmentRequestState>(
@@ -652,7 +653,7 @@ void main() {
       c.setItemQuantity('g1', 99);
     },
     wait: settle,
-    // 300 / 11,4 = 26,3 -> 26
-    verify: (c) => expect(c.state.items, {'g1': 26}),
+    // 300 × 1,05 / 11,4 = 27,6 -> 27 (plafond net passé à la base brute)
+    verify: (c) => expect(c.state.items, {'g1': 27}),
   );
 }

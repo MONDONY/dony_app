@@ -257,6 +257,9 @@ class _PackageRequestCreateScreenState
     s.transportModeAny,
     s.weightKg,
     s.parcelSize,
+    s.lengthCm,
+    s.widthCm,
+    s.heightCm,
     (s.categories.toList()..sort()).join(','),
     s.description,
     s.targetPriceEur,
@@ -613,6 +616,15 @@ class _PackageRequestCreateScreenState
         message: transportModes.road
             ? context.l10n.requestCreateWeightTooHeavySubmit
             : weightRangeLabel(context.l10n, mode: state.requestTransportMode),
+        type: DonySnackbarType.warning,
+      );
+    } else if (state.submissionStatus == FormSubmissionStatus.error &&
+        state.formError == PackageRequestFormError.dimensionsRequired) {
+      // Bateau sans dimensions (brouillon repris sans elles) : l'étape « Le
+      // colis » les demande.
+      DonySnackbar.show(
+        context,
+        message: context.l10n.requestCreateDimensionsRequiredSubmit,
         type: DonySnackbarType.warning,
       );
     } else if (state.submissionStatus == FormSubmissionStatus.error) {

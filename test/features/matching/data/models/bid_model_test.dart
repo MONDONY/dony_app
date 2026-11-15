@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_delay_info.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, dynamic> _minimalBid() => {
@@ -225,6 +226,49 @@ void main() {
 
     test('code valide (pas de drapeau) : pas expiré', () {
       expect(model(code: '123456', flag: false).isPickupCodeExpired, isFalse);
+    });
+  });
+
+  group('BidModel bateau (lot 3)', () {
+    test('champs absents : valeurs par défaut', () {
+      final model = BidModel.fromJson(_minimalBid());
+      expect(model.volumeM3, isNull);
+      expect(model.arrivalDateMax, isNull);
+      expect(model.latestTripDelay, isNull);
+      expect(model.payoutTrigger, PayoutTrigger.delivery);
+    });
+
+    test('payoutTrigger : DEPOSIT lu, inconnu ou null = livraison', () {
+      BidModel withTrigger(Object? value) =>
+          BidModel.fromJson(_minimalBid()..['payoutTrigger'] = value);
+      expect(withTrigger('DEPOSIT').payoutTrigger, PayoutTrigger.deposit);
+      expect(withTrigger('DELIVERY').payoutTrigger, PayoutTrigger.delivery);
+      expect(
+        withTrigger('SOMETHING_NEW').payoutTrigger,
+        PayoutTrigger.delivery,
+      );
+      expect(withTrigger(null).payoutTrigger, PayoutTrigger.delivery);
+    });
+
+    test('volume, fourchette et retard lus, puis réécrits', () {
+      final json = _minimalBid()
+        ..['volumeM3'] = 0.75
+        ..['arrivalDateMax'] = '2026-07-20'
+        ..['payoutTrigger'] = 'DEPOSIT'
+        ..['latestTripDelay'] = {
+          'id': 'd1',
+          'reason': 'WEATHER',
+          'arrivalDate': '2026-07-15',
+          'arrivalDateMax': '2026-07-25',
+          'announcedAt': '2026-07-01T08:00:00Z',
+        };
+      final model = BidModel.fromJson(json);
+      expect(model.volumeM3, 0.75);
+      expect(model.arrivalDateMax, DateTime(2026, 7, 20));
+      expect(model.latestTripDelay?.reasonKind, TripDelayReason.weather);
+      final out = model.toJson();
+      expect(out['payoutTrigger'], 'DEPOSIT');
+      expect(out['volumeM3'], 0.75);
     });
   });
 }

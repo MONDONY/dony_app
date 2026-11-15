@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/config/boat_price_bounds.dart';
 import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -99,6 +100,85 @@ void main() {
         );
       },
     );
+  });
+
+  group('ConfigRepository — getBoatPriceBounds', () {
+    const path = '/config/boat-price-bounds';
+
+    test('lit les bornes du serveur', () async {
+      when(() => mockDio.get(path)).thenAnswer(
+        (_) async => Response(
+          data: {
+            'hardMinEur': 100,
+            'hardMaxEur': 600,
+            'advisedMinEur': 150,
+            'advisedMaxEur': 400,
+            'referenceEur': 240,
+          },
+          statusCode: 200,
+          requestOptions: RequestOptions(path: path),
+        ),
+      );
+
+      expect(await datasource.getBoatPriceBounds(), BoatPriceBounds.defaults);
+      when(() => mockDio.get(path)).thenAnswer(
+        (_) async => Response(
+          data: {
+            'hardMinEur': 80,
+            'hardMaxEur': 700,
+            'advisedMinEur': 120,
+            'advisedMaxEur': 450,
+            'referenceEur': 260,
+          },
+          statusCode: 200,
+          requestOptions: RequestOptions(path: path),
+        ),
+      );
+      expect(
+        await repository.getBoatPriceBounds(),
+        const BoatPriceBounds(
+          hardMinEur: 80,
+          hardMaxEur: 700,
+          advisedMinEur: 120,
+          advisedMaxEur: 450,
+          referenceEur: 260,
+        ),
+      );
+    });
+
+    test('404 (back pas encore déployé) : bornes par défaut', () async {
+      when(() => mockDio.get(path)).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: path),
+          response: Response(
+            statusCode: 404,
+            requestOptions: RequestOptions(path: path),
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
+
+      expect(await repository.getBoatPriceBounds(), BoatPriceBounds.defaults);
+    });
+
+    test('erreur réseau ou réponse illisible : bornes par défaut', () async {
+      when(() => mockDio.get(path)).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: path),
+          type: DioExceptionType.connectionError,
+        ),
+      );
+      expect(await repository.getBoatPriceBounds(), BoatPriceBounds.defaults);
+
+      when(() => mockDio.get(path)).thenAnswer(
+        (_) async => Response(
+          data: 'oops',
+          statusCode: 200,
+          requestOptions: RequestOptions(path: path),
+        ),
+      );
+      expect(await repository.getBoatPriceBounds(), BoatPriceBounds.defaults);
+    });
   });
 
   group('ConfigDatasource — getPaymentMethods (YADONY-FLUTTER-PROD-11)', () {

@@ -9,6 +9,11 @@
 // villes, visible, dès que la recherche propose plusieurs modes. Un filtre rare déjà actif ouvre
 // « Plus de filtres » d'office : un filtre posé n'est jamais caché.
 //
+// Bateau : « VOLUME ET PRIX » (volume minimal en m³, prix maximal au m³) et
+// « ARRIVÉE » (sous 4, 6 ou 8 semaines) suivent « POIDS ET PRIX » ; « Urgent »,
+// la valise de 23 kg et les escales n'y existent pas, et le curseur du poids
+// minimum monte à 1 000 kg comme en route.
+//
 // Route (voiture, bus) : « TAILLE DU COLIS » suit « POIDS ET PRIX », la valise
 // de 23 kg disparaît des filtres rapides, « PASSE PAR » (une ville du voyage)
 // prend la place des escales, et le curseur du poids minimum monte à 1 000 kg.
@@ -37,6 +42,7 @@ import 'package:dony/features/home/bloc/search_composer_event.dart';
 import 'package:dony/features/home/bloc/search_composer_state.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/home/presentation/widgets/boat_search_fields.dart';
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
 import 'package:dony/features/home/presentation/widgets/search_section_label.dart';
@@ -262,6 +268,15 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
     final l = context.l10n;
     // Route : taille et ville de passage au lieu de valise et escales.
     final road = f.transportMode?.isRoad ?? false;
+    // Bateau : volume, prix au m³ et arrivée au lieu de « Urgent », de la
+    // valise et des escales.
+    final boat = f.transportMode == TransportMode.boat;
+    // Valise de 23 kg : propre à l'avion. « Peu importe » (aucun mode) ne la
+    // propose que si l'avion est le seul mode offert à la recherche.
+    final suitcase =
+        f.transportMode == TransportMode.plane ||
+        (f.transportMode == null &&
+            transportModesListenable.value.searchModes.length < 2);
     return [
       SearchSectionLabel(l.homeComposerSectionWeightPrice),
       Row(
@@ -301,6 +316,76 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         ],
       ).animate().fadeIn(delay: 40.ms),
 
+      if (boat) ...[
+        SearchSectionLabel(l.homeComposerSectionVolumePrice),
+        Row(
+          children: [
+            Expanded(
+              child: BoatFilterField(
+                key: const Key('composer-boat-volume'),
+                label: l.homeFilterFieldsMinVolume,
+                valueLabel: f.minVolumeM3 == null
+                    ? null
+                    : boatVolumeFilterLabel(l, f.minVolumeM3!),
+                iconAsset: 'package',
+                onTap: () => unawaited(
+                  showBoatVolumePicker(
+                    context,
+                    volumeM3: f.minVolumeM3,
+                    onApply: (v) => _update(
+                      v == null
+                          ? f.copyWith(clearMinVolumeM3: true)
+                          : f.copyWith(minVolumeM3: v),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: DonySpacing.md),
+            Expanded(
+              child: BoatFilterField(
+                key: const Key('composer-boat-price'),
+                label: l.homeFilterFieldsMaxPricePerM3,
+                valueLabel: f.maxPricePerM3 == null
+                    ? null
+                    : boatPriceFilterLabel(l, f.maxPricePerM3!),
+                iconAsset: 'euro',
+                onTap: () => unawaited(
+                  showBoatPricePerM3Picker(
+                    context,
+                    pricePerM3: f.maxPricePerM3,
+                    onApply: (v) => _update(
+                      v == null
+                          ? f.copyWith(clearMaxPricePerM3: true)
+                          : f.copyWith(maxPricePerM3: v),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ).animate().fadeIn(delay: 45.ms),
+        const SizedBox(height: DonySpacing.sm),
+        Text(
+          l.homeComposerVolumeHint,
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        SearchSectionLabel(l.homeComposerSectionArrival),
+        ArrivalWindowChips(
+          selected: f.arrivalWithinWeeks,
+          onChanged: (weeks) => _update(
+            weeks == null
+                ? f.copyWith(clearArrivalWeeks: true)
+                : f.copyWith(arrivalWithinWeeks: weeks),
+          ),
+        ).animate().fadeIn(delay: 50.ms),
+        const SizedBox(height: DonySpacing.sm),
+        Text(
+          l.homeFilterBoatArrivalHelp,
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+      ],
+
       if (road) ...[
         SearchSectionLabel(l.homeComposerSectionItemSize),
         ItemSizeSelector(
@@ -325,13 +410,14 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         spacing: DonySpacing.sm,
         runSpacing: DonySpacing.sm,
         children: [
-          QuickChip(
-            key: const Key('composer-urgent'),
-            label: l.homeFilterChipsUrgent,
-            active: f.urgentOnly,
-            onChanged: (v) => _update(f.copyWith(urgentOnly: v)),
-          ),
-          if (!road)
+          if (!boat)
+            QuickChip(
+              key: const Key('composer-urgent'),
+              label: l.homeFilterChipsUrgent,
+              active: f.urgentOnly,
+              onChanged: (v) => _update(f.copyWith(urgentOnly: v)),
+            ),
+          if (suitcase)
             QuickChip(
               key: const Key('composer-suitcase-23'),
               label: l.homeFilterChipsSuitcase23,
@@ -360,6 +446,8 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         activeCount: _moreFiltersActiveCount(f),
         hint: road
             ? l.homeComposerMoreFiltersHintRoad
+            : boat
+            ? l.homeComposerMoreFiltersHintBoat
             : l.homeComposerMoreFiltersHint,
         children: [
           SearchSectionLabel(l.homeComposerSectionContents),
@@ -425,7 +513,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
               l.homeComposerViaHelp,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
-          ] else ...[
+          ] else if (!boat) ...[
             // ── Escales (FLUTTER-GD) ── choix unique, « Peu importe » = aucun
             // filtre.
             SearchSectionLabel(l.homeComposerSectionStops),
@@ -534,14 +622,17 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
   /// pastille sur l'en-tête replié et ouvre le bloc d'office s'il n'est pas nul.
   static int _moreFiltersActiveCount(HomeSearchFilters f) {
     final road = f.transportMode?.isRoad ?? false;
+    final boat = f.transportMode == TransportMode.boat;
     final via = f.viaCity?.trim();
     return (f.contentType != null ? 1 : 0) +
         (f.minRating != null ? 1 : 0) +
         (f.weekendOnly ? 1 : 0) +
-        // Escales (avion) ou ville de passage (route), jamais les deux : même
-        // garde que la requête (`toAnnouncementQuery`).
+        // Escales (avion) ou ville de passage (route), jamais les deux ni en
+        // bateau : même garde que la requête (`toAnnouncementQuery`).
         (road
             ? (via != null && via.isNotEmpty ? 1 : 0)
+            : boat
+            ? 0
             : (f.stopsFilter != null ? 1 : 0)) +
         (f.paymentMethods.isNotEmpty ? 1 : 0) +
         (f.urgencyFilter != null ? 1 : 0);

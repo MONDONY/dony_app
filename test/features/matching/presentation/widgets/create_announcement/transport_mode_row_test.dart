@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/plane_icon_expectations.dart';
 
 Future<void> _pump(
   WidgetTester tester,
@@ -121,10 +122,24 @@ void main() {
       final notifier = ValueNotifier<TransportMode?>(TransportMode.plane);
       await _pump(tester, notifier, readOnly: true);
 
-      await tester.tap(find.text('Route'));
+      await tester.tap(find.text('Avion'));
       await tester.pump();
 
       expect(notifier.value, TransportMode.plane);
+    });
+
+    testWidgets('lecture seule : seule la puce du mode réel, jamais avion '
+        'pour un trajet bateau', (tester) async {
+      await _pump(
+        tester,
+        ValueNotifier<TransportMode?>(TransportMode.boat),
+        readOnly: true,
+      );
+
+      expect(find.byKey(const Key('mode-chip-boat')), findsOneWidget);
+      expect(find.byKey(const Key('mode-chip-plane')), findsNothing);
+      expect(find.byKey(const Key('mode-chip-car')), findsNothing);
+      expectNoPlaneIcon(tester);
     });
 
     for (final locale in [AppL10n.fr, AppL10n.en]) {

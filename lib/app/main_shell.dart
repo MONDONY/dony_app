@@ -96,6 +96,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   /// [isResumeRefreshDue]).
   DateTime? _hiddenAt;
 
+  /// Plancher des relectures silencieuses du profil (reprise, onglet Profil).
+  final _profileRefreshThrottle = ProfileRefreshThrottle();
+
   /// Relecture du compteur de notifications pour l'icône : au seul retour au
   /// premier plan, une à la fois, silencieuse en cas d'échec.
   late final NotificationBadgeSync _badgeSync = NotificationBadgeSync(
@@ -177,6 +180,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       // notification. Lecture asynchrone, échec avalé : jamais bloquant.
       _lastProfileRefreshAt = DateTime.now();
       requestTaxInfoRefresh();
+    }
+    if (index == 4 && getIt<FirebaseSessionProbe>().hasRealSession) {
+      _refreshProfileSilently();
     }
     if (index == 3 && !_shouldThrottle(_lastMessagesRefreshAt)) {
       // Messages : ConversationListScreen ne charge qu'au premier montage
@@ -318,7 +324,20 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
         authBloc.state.currentUser == null &&
         authBloc.state is! AuthLoading) {
       authBloc.add(const AuthProfileRefreshRequested());
+    } else {
+      _refreshProfileSilently();
     }
+  }
+
+  /// Relit le profil sans bruit (pas d'état de chargement), au plus une fois
+  /// par fenêtre : l'identité peut avoir été validée hors de l'app (admin,
+  /// webhook) sans qu'aucune push n'ait corrigé le profil en cache.
+  void _refreshProfileSilently() {
+    if (!mounted) return;
+    final authBloc = context.read<AuthBloc>();
+    if (authBloc.isClosed || authBloc.state is AuthLoading) return;
+    if (!_profileRefreshThrottle.shouldRefresh(DateTime.now())) return;
+    authBloc.add(const AuthProfileRefreshRequested());
   }
 
   @override

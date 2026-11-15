@@ -3,6 +3,7 @@ import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
+import 'package:dony/features/matching/data/models/bid_volume_input.dart';
 import 'package:dony/features/matching/data/models/commission_allocation_preview.dart';
 import 'package:dony/features/matching/data/models/item_size.dart';
 import 'package:dony/features/matching/data/models/traveler_bids_page.dart';
@@ -25,6 +26,7 @@ class BidRepository {
     List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
     ItemSize? itemSize,
+    BidVolumeInput? volume,
   }) => _datasource.checkoutBid(
     announcementId: announcementId,
     weightKg: weightKg,
@@ -35,6 +37,7 @@ class BidRepository {
     photoKeys: photoKeys,
     gridItems: gridItems,
     itemSize: itemSize,
+    volume: volume,
   );
 
   Future<BidQuoteResponse> quoteBid({
@@ -42,11 +45,13 @@ class BidRepository {
     double? weightKg,
     String? promoCode,
     List<Map<String, dynamic>>? gridItems,
+    BidVolumeInput? volume,
   }) => _datasource.quoteBid(
     announcementId: announcementId,
     weightKg: weightKg,
     promoCode: promoCode,
     gridItems: gridItems,
+    volume: volume,
   );
 
   Future<BidModel> createBid({
@@ -62,6 +67,7 @@ class BidRepository {
     List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
     ItemSize? itemSize,
+    BidVolumeInput? volume,
   }) => _datasource.createBid(
     announcementId: announcementId,
     weightKg: weightKg,
@@ -75,6 +81,7 @@ class BidRepository {
     photoKeys: photoKeys,
     gridItems: gridItems,
     itemSize: itemSize,
+    volume: volume,
   );
 
   Future<List<BidModel>> getBidsForAnnouncement(String announcementId) =>

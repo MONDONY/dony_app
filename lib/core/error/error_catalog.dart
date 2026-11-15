@@ -736,7 +736,7 @@ abstract final class ErrorCatalog {
       title: (l) => l.errorCapacityInsufficientTitle,
       message: (l) => l.errorCapacityInsufficientMessage,
       severity: ErrorSeverity.warning,
-      icon: Icons.luggage_outlined,
+      icon: Icons.inventory_2_outlined,
     ),
     'announcement-not-accepting': _Entry(
       title: (l) => l.errorAnnouncementNotAcceptingTitle,
@@ -857,6 +857,16 @@ abstract final class ErrorCatalog {
     'price-out-of-bounds': _Entry(
       title: (l) => l.errorPriceOutOfBoundsTitle,
       message: (l) => l.errorPriceOutOfBoundsMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.price_change_outlined,
+    ),
+    // Prix au m³ d'un trajet bateau hors des bornes dures réglées dans le
+    // back-office, converties dans la devise du trajet (création et
+    // modification). Code distinct du kilo ; le message donne la fourchette
+    // depuis `min`, `max` et `currency` du ProblemDetail.
+    'price-per-m3-out-of-bounds': _Entry(
+      title: (l) => l.errorPriceOutOfBoundsTitle,
+      message: (l) => l.errorPricePerM3OutOfBoundsMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.price_change_outlined,
     ),
@@ -1646,7 +1656,7 @@ abstract final class ErrorCatalog {
       title: (l) => l.errorSurplusNotOpenTitle,
       message: (l) => l.errorSurplusNotOpenMessage,
       severity: ErrorSeverity.info,
-      icon: Icons.luggage_outlined,
+      icon: Icons.inventory_2_outlined,
     ),
     'reserved-sender-cannot-bid': _Entry(
       title: (l) => l.errorReservedSenderCannotBidTitle,
@@ -1997,6 +2007,146 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.schedule_rounded,
     ),
+    // Bateau (lot 3 du back) : gardes de publication, de réservation et de
+    // retard. Textes de repli ; seul `trip-delay-too-frequent` lit le `detail`
+    // du serveur (nombre de retards inclus).
+    'boat-carrier-not-verified': _Entry(
+      title: (l) => l.errorBoatCarrierNotVerifiedTitle,
+      message: (l) => l.errorBoatCarrierNotVerifiedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.verified_user_outlined,
+    ),
+    'boat-template-unsupported': _Entry(
+      title: (l) => l.errorBoatTemplateUnsupportedTitle,
+      message: (l) => l.errorBoatTemplateUnsupportedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'arrival-range-invalid': _Entry(
+      title: (l) => l.errorArrivalRangeInvalidTitle,
+      message: (l) => l.errorArrivalRangeInvalidMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.date_range_rounded,
+    ),
+    // Émis par `ArrivalRules.validate` (publication, trajet dédié) ; le
+    // `detail` du back est lui aussi dans `_serverDetailCodes`.
+    'arrival-before-departure': _Entry(
+      title: (l) => l.errorArrivalBeforeDepartureTitle,
+      message: (l) => l.errorArrivalBeforeDepartureMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.schedule_rounded,
+    ),
+    // Même règle, à l'heure près : arrivée le jour du départ à une heure qui
+    // ne le suit pas (formulaire de trajet après un changement de l'heure de
+    // départ, report). `detail` du back dans `_serverDetailCodes`.
+    'arrival-time-before-departure': _Entry(
+      title: (l) => l.errorArrivalTimeBeforeDepartureTitle,
+      message: (l) => l.errorArrivalTimeBeforeDepartureMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.schedule_rounded,
+    ),
+    'boat-volume-required': _Entry(
+      title: (l) => l.errorBoatVolumeRequiredTitle,
+      message: (l) => l.errorBoatVolumeRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.straighten_rounded,
+    ),
+    'boat-volume-unit-invalid': _Entry(
+      title: (l) => l.errorBoatVolumeUnitInvalidTitle,
+      message: (l) => l.errorBoatVolumeUnitInvalidMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.straighten_rounded,
+    ),
+    'boat-price-required': _Entry(
+      title: (l) => l.errorBoatPriceRequiredTitle,
+      message: (l) => l.errorBoatPriceRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.sell_outlined,
+    ),
+    'volume-price-too-high': _Entry(
+      title: (l) => l.errorVolumePriceTooHighTitle,
+      message: (l) => l.errorVolumePriceTooHighMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.sell_outlined,
+    ),
+    'transport-mode-locked': _Entry(
+      title: (l) => l.errorTransportModeLockedTitle,
+      message: (l) => l.errorTransportModeLockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_outline_rounded,
+    ),
+    'pricing-unit-locked': _Entry(
+      title: (l) => l.errorPricingUnitLockedTitle,
+      message: (l) => l.errorPricingUnitLockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_outline_rounded,
+    ),
+    'dimensions-incomplete': _Entry(
+      title: (l) => l.errorDimensionsIncompleteTitle,
+      message: (l) => l.errorDimensionsIncompleteMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.straighten_rounded,
+    ),
+    'boat-dimensions-required': _Entry(
+      title: (l) => l.errorBoatDimensionsRequiredTitle,
+      message: (l) => l.errorBoatDimensionsRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.straighten_rounded,
+    ),
+    'insufficient-volume': _Entry(
+      title: (l) => l.errorInsufficientVolumeTitle,
+      message: (l) => l.errorInsufficientVolumeMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.straighten_rounded,
+    ),
+    'trip-delay-not-allowed': _Entry(
+      title: (l) => l.errorTripDelayNotAllowedTitle,
+      message: (l) => l.errorTripDelayNotAllowedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.schedule_rounded,
+    ),
+    'trip-delay-reason-invalid': _Entry(
+      title: (l) => l.errorTripDelayReasonInvalidTitle,
+      message: (l) => l.errorTripDelayReasonInvalidMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.schedule_rounded,
+    ),
+    'trip-delay-too-frequent': _Entry(
+      title: (l) => l.errorTripDelayTooFrequentTitle,
+      message: (l) => l.errorTripDelayTooFrequentMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.schedule_rounded,
+    ),
+    'boat-deposit-photo-required': _Entry(
+      title: (l) => l.errorBoatDepositPhotoRequiredTitle,
+      message: (l) => l.errorBoatDepositPhotoRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.photo_camera_outlined,
+    ),
+    'boat-deposit-qr-required': _Entry(
+      title: (l) => l.errorBoatDepositQrRequiredTitle,
+      message: (l) => l.errorBoatDepositQrRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.qr_code_scanner_rounded,
+    ),
+    'deposit-paid-no-refund': _Entry(
+      title: (l) => l.errorDepositPaidNoRefundTitle,
+      message: (l) => l.errorDepositPaidNoRefundMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'supplement-after-deposit': _Entry(
+      title: (l) => l.errorSupplementAfterDepositTitle,
+      message: (l) => l.errorSupplementAfterDepositMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'surplus/volume-trip-unsupported': _Entry(
+      title: (l) => l.errorSurplusVolumeTripUnsupportedTitle,
+      message: (l) => l.errorSurplusVolumeTripUnsupportedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
     // Bornes de poids, de capacité et de taille (422, lot « route » du back) :
     // `weight-too-heavy` (demande ou offre au-dessus du maximum du mode),
     // `trip-capacity-too-high` (capacité du trajet), `parcel-too-heavy` et
@@ -2051,6 +2201,17 @@ abstract final class ErrorCatalog {
     'transport-mode-disabled',
     'invalid-transport-mode',
     'arrival-too-far',
+    'arrival-before-departure',
+    'arrival-time-before-departure',
+    // Fourchette d'arrivée invalide : le back émet toujours ce code et choisit
+    // le `detail` selon le cas (fin avant début, fin dans le passé, début
+    // avant le départ) ; le texte du catalogue couvre les trois en repli.
+    'arrival-range-invalid',
+    // Retards du trajet : le `detail` du back porte le nombre de retards annoncés.
+    'trip-delay-too-frequent',
+    // Colis payé au dépôt : le `detail` du back (409) dit déjà que le voyageur a
+    // été payé et que le litige passe par le support. Texte fixe en repli.
+    'deposit-paid-no-refund',
     // Bornes de poids, de capacité et de taille : `detail` localisé par le back.
     'weight-too-heavy',
     'trip-capacity-too-high',
@@ -2090,6 +2251,14 @@ abstract final class ErrorCatalog {
           return ErrorPresentation(
             title: p.title,
             message: _bidBelowMinPriceMessage(error, l) ?? p.message,
+            severity: p.severity,
+            icon: p.icon,
+          );
+        }
+        if (error.code == 'price-per-m3-out-of-bounds') {
+          return ErrorPresentation(
+            title: p.title,
+            message: _pricePerM3OutOfBoundsMessage(error, l) ?? p.message,
             severity: p.severity,
             icon: p.icon,
           );
@@ -2149,6 +2318,29 @@ abstract final class ErrorCatalog {
     );
     return l.errorBidBelowMinPriceMessage(
       CurrencyFormatter.format(amount, currency),
+    );
+  }
+
+  /// « Le prix par m³ doit être compris entre {min} et {max} », depuis les
+  /// propriétés `min`, `max` et `currency` du ProblemDetail (bornes déjà
+  /// converties par le serveur). `null` si elles manquent ou sont illisibles.
+  static String? _pricePerM3OutOfBoundsMessage(
+    AppException error,
+    AppLocalizations l,
+  ) {
+    if (error is! ValidationException) return null;
+    final ext = error.extensions;
+    double? read(Object? raw) =>
+        raw is num ? raw.toDouble() : double.tryParse('${raw ?? ''}');
+    final min = read(ext?['min']);
+    final max = read(ext?['max']);
+    if (min == null || max == null) return null;
+    final currency = SupportedCurrency.fromCodeOrDefault(
+      ext?['currency'] as String?,
+    );
+    return l.tripPublishBoatPriceOutOfRange(
+      CurrencyFormatter.format(min, currency, compact: true),
+      CurrencyFormatter.format(max, currency, compact: true),
     );
   }
 

@@ -104,6 +104,19 @@ void _warnUnreadable(FileSystemException error) => AppLog.warn(
   },
 );
 
+/// Dépôt d'un colis payé au dépôt : la photo est la preuve du dépôt et le
+/// serveur vérifie qu'elle a bien été téléversée pour ce colis. Une photo
+/// absente, refusée ou perdue ([photo] sans clé) arrête l'étape AVANT son
+/// envoi (jamais un départ sans preuve) : 422 `boat-deposit-photo-required`,
+/// refus définitif que le catalogue d'erreurs traduit.
+void requireUploadedDepositPhoto(TrackingPhotoUpload photo) {
+  if (photo.key != null) return;
+  throw const ValidationException(
+    'Deposit photo not uploaded',
+    code: 'boat-deposit-photo-required',
+  );
+}
+
 /// Envoie la photo de l'étape si [photoPath] existe. Une photo refusée par
 /// le serveur n'empêche jamais l'étape : elle part sans photo (le scan
 /// d'arrivée déclenche la capture du paiement, le perdre est grave). Une

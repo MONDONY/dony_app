@@ -15,6 +15,7 @@ class BidQuoteResponse {
     this.promoLabel,
     this.gridNetEur = 0,
     this.kgNetEur = 0,
+    this.volumeNetEur = 0,
     this.currency,
     this.minimumApplied = false,
     this.minimumAmount,
@@ -22,7 +23,7 @@ class BidQuoteResponse {
     this.promoIneffectiveReason,
   });
 
-  /// Montant net voyageur total (= gridNetEur + kgNetEur).
+  /// Montant net voyageur total (= gridNetEur + kgNetEur + volumeNetEur).
   final double netEur;
 
   /// Part nette issue des articles de la grille (= Σ unitPriceNet × quantité). 0 en mode KG.
@@ -32,6 +33,12 @@ class BidQuoteResponse {
   /// Part nette issue du poids (= weightKg × pricePerKg). 0 en mode GRID.
   @JsonKey(defaultValue: 0)
   final double kgNetEur;
+
+  /// Part nette issue du volume (= volume × prix au m³ net), trajet bateau au
+  /// m³ seulement. 0 hors m³ (et [kgNetEur] vaut alors 0 au m³), ou sur un back
+  /// antérieur.
+  @JsonKey(defaultValue: 0)
+  final double volumeNetEur;
 
   /// Taux de commission Yadony effectif (promo/override/global).
   final double rate;

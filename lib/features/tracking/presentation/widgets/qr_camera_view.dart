@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/camera_handoff.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/tracking/data/models/scanned_qr.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -35,13 +36,26 @@ String? extractBidIdFromQr(String raw) {
   return _uuidPattern.hasMatch(candidate) ? candidate : null;
 }
 
-/// Premier identifiant de colis Yadony trouvé parmi les codes d'une capture.
-String? bidIdFromCapture(BarcodeCapture capture) {
+/// QR Yadony lu : colis et, pour un colis payé au dépôt, jeton `?k=` de
+/// l'expéditeur (`null` sans jeton ou jeton vide). `null` si le contenu lu
+/// n'est pas un QR de colis.
+ScannedQr? extractScannedQr(String raw) {
+  final bidId = extractBidIdFromQr(raw);
+  if (bidId == null) return null;
+  final token = Uri.tryParse(raw.trim())?.queryParameters['k']?.trim();
+  return ScannedQr(
+    bidId,
+    qrToken: token == null || token.isEmpty ? null : token,
+  );
+}
+
+/// Premier QR de colis Yadony trouvé parmi les codes d'une capture.
+ScannedQr? scannedQrFromCapture(BarcodeCapture capture) {
   for (final barcode in capture.barcodes) {
     final raw = barcode.rawValue;
     if (raw == null) continue;
-    final bidId = extractBidIdFromQr(raw);
-    if (bidId != null) return bidId;
+    final scanned = extractScannedQr(raw);
+    if (scanned != null) return scanned;
   }
   return null;
 }
@@ -112,7 +126,7 @@ class QrTorch extends ValueNotifier<QrTorchStatus> {
   }
 }
 
-/// Flux caméra qui lit les QR Yadony et ne rend que l'identifiant du colis.
+/// Flux caméra qui lit les QR Yadony et rend le colis (et son jeton de dépôt).
 ///
 /// Le contrôleur vit ici, démarré et arrêté à la main :
 /// - [paused] à `true` coupe la caméra (feuille dépliée, écran recouvert,
@@ -133,7 +147,7 @@ class QrTorch extends ValueNotifier<QrTorchStatus> {
 class QrCameraView extends StatefulWidget {
   const QrCameraView({
     super.key,
-    required this.onBidId,
+    required this.onScanned,
     this.paused,
     this.torch,
     this.cameraHandoff,
@@ -141,7 +155,7 @@ class QrCameraView extends StatefulWidget {
 
   /// Appelé à chaque QR Yadony détecté tant que la caméra n'est pas en pause.
   /// L'anti-rafale reste à la charge de l'appelant.
-  final ValueChanged<String> onBidId;
+  final ValueChanged<ScannedQr> onScanned;
 
   final ValueListenable<bool>? paused;
   final QrTorch? torch;
@@ -326,9 +340,9 @@ class _QrCameraViewState extends State<QrCameraView>
 
   void _onDetect(BarcodeCapture capture) {
     if (!_shouldRun) return;
-    final bidId = bidIdFromCapture(capture);
-    if (bidId != null) {
-      widget.onBidId(bidId);
+    final scanned = scannedQrFromCapture(capture);
+    if (scanned != null) {
+      widget.onScanned(scanned);
     } else if (capture.barcodes.any((b) => b.rawValue != null)) {
       _onForeignCode();
     }

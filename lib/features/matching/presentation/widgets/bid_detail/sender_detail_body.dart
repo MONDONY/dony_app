@@ -1,13 +1,12 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_cta_cell.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_procedure_card.dart';
 import 'package:dony/features/matching/data/models/bid_amendment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/data/models/item_size.dart';
+import 'package:dony/features/matching/presentation/utils/bid_parcel_size.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
@@ -134,6 +133,11 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     });
   }
 
+  /// Garde l'état de la carte Paiement quand l'enveloppe du stagger d'entrée
+  /// disparaît : sans elle, la carte est recréée et relit les étapes du colis
+  /// (2e `TrackingBloc`, 2e requête, la date du dépôt clignote).
+  final _paiementKey = GlobalKey();
+
   /// Encart du supplément, cible de [SenderDetailBody.focusSupplement].
   final _supplementKey = GlobalKey();
   bool _supplementFocused = false;
@@ -216,7 +220,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final summary = SenderHeroCard.statusLine(context, bid);
-    final weight = bid.displayWeightKg;
+    final size = bidParcelSizeLabel(l, bid);
     final recipient = bid.recipientName?.trim();
 
     final (iconName, label, color) = switch (tile) {
@@ -238,18 +242,11 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
             : l.senderTilePrevenirLink,
       SenderTile.suivi || SenderTile.lieux => summary,
       SenderTile.colis =>
-        weight == null
+        size == null
             ? null
             : (recipient == null || recipient.isEmpty)
-            ? parcelWeightWithSize(l, formatWeightKg(l, weight), bid.itemSize)
-            : l.senderTileColisSubtitle(
-                parcelWeightWithSize(
-                  l,
-                  formatWeightKg(l, weight),
-                  bid.itemSize,
-                ),
-                recipient,
-              ),
+            ? size
+            : l.senderTileColisSubtitle(size, recipient),
       SenderTile.details => l.senderTileDetailsSubtitle,
     };
 
@@ -379,6 +376,10 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     ];
 
     final infos = <(String, Widget)>[
+      // Dernier retard annoncé sur le trajet (bateau, route, avion) : sous le
+      // billet, avant tout le reste, comme le report (maquette FicheMer).
+      if (TripDelayCard.shouldShow(bid))
+        ('info-delay', TripDelayCard.forBid(bid: bid)),
       // Remise bloquée par une déclaration d'absence examinée par l'équipe :
       // ni QR au footer ni au talon, la carte dit pourquoi.
       if (SenderHandoverBlockedCard.shouldShow(bid))
@@ -426,7 +427,11 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       ('voyageur', VoyageurContactCard(bid: bid)),
       (
         'paiement',
-        PaiementCard(bid: bid, existingPayment: widget.existingPayment),
+        PaiementCard(
+          key: _paiementKey,
+          bid: bid,
+          existingPayment: widget.existingPayment,
+        ),
       ),
       (
         'shipment',

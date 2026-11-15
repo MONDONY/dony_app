@@ -6,6 +6,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/trip_series_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/todo_tile_views.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_edit.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_actions.dart';
@@ -22,6 +23,7 @@ import 'package:flutter/material.dart';
 enum TripMenuEntry {
   edit,
   reschedule,
+  announceDelay,
   unpublish,
   sharePoster,
   arrivalInstructions,
@@ -41,13 +43,15 @@ const _reusableStatuses = {'ACTIVE', 'COMPLETED'};
 ///
 /// - `edit` : trajet modifiable ([canEditTrip]) ;
 /// - `reschedule` : trajet reportable ([tripCanReschedule]) ;
+/// - `announceDelay` : trajet parti ([tripCanAnnounceDelay], tous modes),
+///   même quand le report est verrouillé par des colis à bord ;
 /// - `unpublish` : ACTIVE sans demande ;
 /// - `sharePoster` : ACTIVE ([canShareTripPoster]) ;
 /// - `arrivalInstructions` : instructions de retrait ou colis arrivé (la
 ///   tuile `arrival` de « Votre trajet », [tripTilesFor]) ;
 /// - `makeRecurring` : trajet direct (sans étapes, le back refuse
-///   `series-multi-leg-trip`) ACTIVE ou COMPLETED ;
-/// - `saveTemplate` : ACTIVE ou COMPLETED ;
+///   `series-multi-leg-trip`) ACTIVE ou COMPLETED, hors bateau ;
+/// - `saveTemplate` : ACTIVE ou COMPLETED, hors bateau ;
 /// - `cancelTrip` : ACTIVE avec des demandes (jamais FULL : le back n'annule
 ///   qu'un trajet ACTIVE) ;
 /// - `delete` : trajet modifiable, ou annulé.
@@ -64,10 +68,15 @@ List<TripMenuEntry> tripMenuEntriesFor({
   final hasBids = tripHasBids(trip, bids);
   final canEdit = canEditTrip(trip, hasBids);
   final active = trip.status == 'ACTIVE';
-  final reusable = _reusableStatuses.contains(trip.status);
+  // Modèle et récurrence : jamais en bateau, que le back refuse (422
+  // `boat-template-unsupported`, C16).
+  final reusable =
+      _reusableStatuses.contains(trip.status) &&
+      trip.transportMode != TransportMode.boat;
   return [
     if (canEdit) TripMenuEntry.edit,
     if (tripCanReschedule(trip, hasBids)) TripMenuEntry.reschedule,
+    if (tripCanAnnounceDelay(trip)) TripMenuEntry.announceDelay,
     if (active && !hasBids) TripMenuEntry.unpublish,
     if (canShareTripPoster(trip)) TripMenuEntry.sharePoster,
     if (tripTilesFor(
@@ -125,6 +134,7 @@ class TripOwnerOptionsButton extends StatelessWidget {
 /// depuis [context], le contexte de l'écran, qui porte ses blocs et en écoute
 /// les suites :
 /// - Modifier : [openTripEdit] ; Reporter : `TripRescheduleBottomSheet` ;
+///   Annoncer un retard : [openTripDelay] ;
 ///   Dépublier, Supprimer : [confirmTripUnpublish], [confirmTripDelete]
 ///   (confirmation, étapes suivantes d'un voyage) ; Annuler le voyage :
 ///   [openTripCancellation] (colis déjà remis annoncés) ; Partager
@@ -233,6 +243,11 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
             ? l.tripRescheduleSubtitle
             : tripRescheduleBlockMessage(l, block),
       ),
+      TripMenuEntry.announceDelay => (
+        'hourglass',
+        l.tripDelaySheetTitle,
+        l.tripMenuAnnounceDelaySubtitle,
+      ),
       TripMenuEntry.unpublish => (
         'eye-off',
         l.tripOwnerUnpublishTile,
@@ -299,6 +314,8 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
         unawaited(openTripEdit(ctx, trip));
       case TripMenuEntry.reschedule:
         unawaited(TripRescheduleBottomSheet.show(ctx, announcement: trip));
+      case TripMenuEntry.announceDelay:
+        unawaited(openTripDelay(ctx, trip, bids));
       case TripMenuEntry.unpublish:
         unawaited(confirmTripUnpublish(ctx, trip));
       case TripMenuEntry.sharePoster:
