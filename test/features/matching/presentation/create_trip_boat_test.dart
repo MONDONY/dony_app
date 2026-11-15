@@ -1729,6 +1729,27 @@ void main() {
       expect(trajet(tester).boatArrivalMinNotifier!.value, _inDays(50));
       expect(trajet(tester).boatArrivalMaxNotifier!.value, _inDays(65));
     });
+
+    testWidgets('brouillon restauré avec un délai de dépôt (J−7), départ '
+        'avancé : jamais une date limite passée', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: _boatDraft(
+            stepId: TripFormStep.trajet,
+            handoverLeadDays: 7,
+          ),
+        ),
+      );
+      expect(handover(tester), _inDays(29));
+
+      await setDeparture(tester, _inDays(3));
+      expect(handover(tester), _inDays(0));
+
+      // Départ assez loin : le délai s'applique tel quel.
+      await setDeparture(tester, _inDays(20));
+      expect(handover(tester), _inDays(13));
+    });
   });
 
   group('brouillon local', () {

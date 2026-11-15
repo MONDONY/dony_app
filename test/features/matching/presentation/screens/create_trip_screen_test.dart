@@ -1401,12 +1401,22 @@ void main() {
       (tester) async {
         await pumpWithTemplate(tester, fullTemplate);
 
+        // Départ relatif au jour : une date limite n'est jamais passée
+        // (bornée à aujourd'hui), une date figée vieillirait mal.
+        final now = DateTime.now();
         final step = tester.widget<TrajetStep>(find.byType(TrajetStep));
-        step.departureDateNotifier.value = DateTime(2026, 10, 20);
+        step.departureDateNotifier.value = DateTime(
+          now.year,
+          now.month,
+          now.day + 20,
+        );
         await tester.pump(const Duration(milliseconds: 300));
 
         // Le jour limite = départ - 2 jours (handoverLeadDays du modèle).
-        expect(handoverDeadlineOf(tester), DateTime(2026, 10, 18));
+        expect(
+          handoverDeadlineOf(tester),
+          DateTime(now.year, now.month, now.day + 18),
+        );
 
         await tester.pump(const Duration(seconds: 5));
       },

@@ -3459,14 +3459,15 @@ class _TripFormContentState extends State<_TripFormContent> {
       date.month,
       date.day,
     ).subtract(Duration(days: lead));
+    // Départ plus proche que le délai : jamais une date limite passée, le
+    // plus tôt possible reste aujourd'hui (le jour du départ, son heure).
+    // Vaut aussi pour un délai relu d'un brouillon ou d'un modèle.
+    final today = DateUtils.dateOnly(DateTime.now());
+    if (deadline.isBefore(today)) deadline = today;
     if (!_boatHandoverSuggested) {
       _handoverDeadlineNotifier.value = deadline;
       return;
     }
-    // Départ dans moins d'une semaine : jamais une date limite passée, le
-    // plus tôt possible reste aujourd'hui (le jour du départ, son heure).
-    final today = DateUtils.dateOnly(DateTime.now());
-    if (deadline.isBefore(today)) deadline = today;
     _withBoatSuggestion(() => _handoverDeadlineNotifier.value = deadline);
   }
 
