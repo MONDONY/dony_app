@@ -6746,6 +6746,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidPresenceSheetBody': (l) => l.bidPresenceSheetBody,
   'bidPresenceSheetBodyUntil': (l) => l.bidPresenceSheetBodyUntil(placeholderMarker('date'), placeholderMarker('time')),
   'bidPresenceSheetFinalNote': (l) => l.bidPresenceSheetFinalNote,
+  'bidDetailQrFullscreenOpen': (l) => l.bidDetailQrFullscreenOpen,
+  'bidDetailQrFullscreenHint': (l) => l.bidDetailQrFullscreenHint,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

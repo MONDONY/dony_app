@@ -25211,4 +25211,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidPresenceSheetFinalNote =>
       'Once confirmed, your presence can no longer be withdrawn in the app.';
+
+  @override
+  String get bidDetailQrFullscreenOpen => 'Show full screen';
+
+  @override
+  String get bidDetailQrFullscreenHint =>
+      'Show this QR code to the traveler so they can scan it.';
 }

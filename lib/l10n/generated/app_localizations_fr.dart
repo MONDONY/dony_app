@@ -25391,4 +25391,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidPresenceSheetFinalNote =>
       'Une fois confirmée, votre présence ne peut plus être annulée depuis l\'app.';
+
+  @override
+  String get bidDetailQrFullscreenOpen => 'Afficher en plein écran';
+
+  @override
+  String get bidDetailQrFullscreenHint =>
+      'Présentez ce QR au voyageur pour qu\'il le scanne.';
 }

@@ -13010,5 +13010,9 @@
   "bidPresenceSheetBodyUntil": "You commit to being there to collect this parcel from the sender, by {date} at {time} at the latest.",
   "@bidPresenceSheetBodyUntil": {"description": "Engagement rappelé dans la feuille de confirmation de présence, avec la date limite de remise. Neutre selon le mode de transport (presence_confirm_sheet.dart).", "placeholders": {"date": {"type": "String"}, "time": {"type": "String"}}},
   "bidPresenceSheetFinalNote": "Once confirmed, your presence can no longer be withdrawn in the app.",
-  "@bidPresenceSheetFinalNote": {"description": "Note de la feuille de confirmation de présence : la confirmation est définitive (presence_confirm_sheet.dart)."}
+  "@bidPresenceSheetFinalNote": {"description": "Note de la feuille de confirmation de présence : la confirmation est définitive (presence_confirm_sheet.dart)."},
+  "bidDetailQrFullscreenOpen": "Show full screen",
+  "@bidDetailQrFullscreenOpen": {"description": "Bouton et libellé d'accessibilité qui ouvrent le QR du colis en plein écran (qr_sheet.dart)."},
+  "bidDetailQrFullscreenHint": "Show this QR code to the traveler so they can scan it.",
+  "@bidDetailQrFullscreenHint": {"description": "Consigne sous le QR du colis en plein écran. Neutre selon le mode de transport (qr_fullscreen_view.dart)."}
 }

@@ -40570,6 +40570,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Une fois confirmée, votre présence ne peut plus être annulée depuis l\'app.'**
   String get bidPresenceSheetFinalNote;
+
+  /// Bouton et libellé d'accessibilité qui ouvrent le QR du colis en plein écran (qr_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher en plein écran'**
+  String get bidDetailQrFullscreenOpen;
+
+  /// Consigne sous le QR du colis en plein écran. Neutre selon le mode de transport (qr_fullscreen_view.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Présentez ce QR au voyageur pour qu\'il le scanne.'**
+  String get bidDetailQrFullscreenHint;
 }
 
 class _AppLocalizationsDelegate

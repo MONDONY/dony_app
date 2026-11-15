@@ -24783,5 +24783,9 @@
   "bidPresenceSheetBodyUntil": "Vous vous engagez à être présent pour récupérer ce colis auprès de l'expéditeur, au plus tard le {date} à {time}.",
   "@bidPresenceSheetBodyUntil": {"description": "Engagement rappelé dans la feuille de confirmation de présence, avec la date limite de remise. Neutre selon le mode de transport (presence_confirm_sheet.dart).", "placeholders": {"date": {"type": "String"}, "time": {"type": "String"}}},
   "bidPresenceSheetFinalNote": "Une fois confirmée, votre présence ne peut plus être annulée depuis l'app.",
-  "@bidPresenceSheetFinalNote": {"description": "Note de la feuille de confirmation de présence : la confirmation est définitive (presence_confirm_sheet.dart)."}
+  "@bidPresenceSheetFinalNote": {"description": "Note de la feuille de confirmation de présence : la confirmation est définitive (presence_confirm_sheet.dart)."},
+  "bidDetailQrFullscreenOpen": "Afficher en plein écran",
+  "@bidDetailQrFullscreenOpen": {"description": "Bouton et libellé d'accessibilité qui ouvrent le QR du colis en plein écran (qr_sheet.dart)."},
+  "bidDetailQrFullscreenHint": "Présentez ce QR au voyageur pour qu'il le scanne.",
+  "@bidDetailQrFullscreenHint": {"description": "Consigne sous le QR du colis en plein écran. Neutre selon le mode de transport (qr_fullscreen_view.dart)."}
 }

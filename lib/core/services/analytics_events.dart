@@ -1065,6 +1065,9 @@ abstract final class AnalyticsEvents {
   // Détail d'envoi (vue expéditeur)
   static const bidQrSheetOpened = 'bid_qr_sheet_opened';
   static const bidQrDownloaded = 'bid_qr_downloaded';
+
+  /// QR du colis ouvert en plein écran depuis sa feuille. Sans propriété.
+  static const bidQrFullscreenOpened = 'bid_qr_fullscreen_opened';
   static const bidRetraitCodeOpened = 'bid_retrait_code_opened';
 
   /// Code de retrait régénéré par l'expéditeur (propriété `after_block` :
