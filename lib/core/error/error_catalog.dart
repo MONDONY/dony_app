@@ -860,6 +860,16 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.price_change_outlined,
     ),
+    // Prix au m³ d'un trajet bateau hors des bornes dures réglées dans le
+    // back-office, converties dans la devise du trajet (création et
+    // modification). Code distinct du kilo ; le message donne la fourchette
+    // depuis `min`, `max` et `currency` du ProblemDetail.
+    'price-per-m3-out-of-bounds': _Entry(
+      title: (l) => l.errorPriceOutOfBoundsTitle,
+      message: (l) => l.errorPricePerM3OutOfBoundsMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.price_change_outlined,
+    ),
     // Article de grille sous 5 € ou au-dessus de 500 €, dans la devise du
     // profil (POST/PUT /travelers/me/price-grid).
     'price-grid/price-out-of-bounds': _Entry(
@@ -2245,6 +2255,14 @@ abstract final class ErrorCatalog {
             icon: p.icon,
           );
         }
+        if (error.code == 'price-per-m3-out-of-bounds') {
+          return ErrorPresentation(
+            title: p.title,
+            message: _pricePerM3OutOfBoundsMessage(error, l) ?? p.message,
+            severity: p.severity,
+            icon: p.icon,
+          );
+        }
         if (error.code == 'supplement-amount-out-of-range') {
           return ErrorPresentation(
             title: p.title,
@@ -2300,6 +2318,29 @@ abstract final class ErrorCatalog {
     );
     return l.errorBidBelowMinPriceMessage(
       CurrencyFormatter.format(amount, currency),
+    );
+  }
+
+  /// « Le prix par m³ doit être compris entre {min} et {max} », depuis les
+  /// propriétés `min`, `max` et `currency` du ProblemDetail (bornes déjà
+  /// converties par le serveur). `null` si elles manquent ou sont illisibles.
+  static String? _pricePerM3OutOfBoundsMessage(
+    AppException error,
+    AppLocalizations l,
+  ) {
+    if (error is! ValidationException) return null;
+    final ext = error.extensions;
+    double? read(Object? raw) =>
+        raw is num ? raw.toDouble() : double.tryParse('${raw ?? ''}');
+    final min = read(ext?['min']);
+    final max = read(ext?['max']);
+    if (min == null || max == null) return null;
+    final currency = SupportedCurrency.fromCodeOrDefault(
+      ext?['currency'] as String?,
+    );
+    return l.tripPublishBoatPriceOutOfRange(
+      CurrencyFormatter.format(min, currency, compact: true),
+      CurrencyFormatter.format(max, currency, compact: true),
     );
   }
 

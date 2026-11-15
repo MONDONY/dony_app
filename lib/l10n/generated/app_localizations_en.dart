@@ -24605,9 +24605,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter your price per m³ to see the estimate';
 
   @override
-  String tripPublishBoatPriceTooHigh(String max) {
-    return 'The price per m³ can\'t be higher than $max';
+  String tripPublishBoatPriceOutOfRange(String min, String max) {
+    return 'The price per m³ must be between $min and $max.';
   }
+
+  @override
+  String tripPublishBoatPriceLowWarning(String min) {
+    return 'Low price: most boat trips ask for at least $min per m³.';
+  }
+
+  @override
+  String tripPublishBoatPriceHighWarning(String max) {
+    return 'High price: above $max per m³, few senders book.';
+  }
+
+  @override
+  String tripPublishBoatPriceReference(String price) {
+    return 'Usual price: about $price/m³';
+  }
+
+  @override
+  String get errorPricePerM3OutOfBoundsMessage =>
+      'This price per m³ is outside the allowed range for the trip currency. Check the amount and the selected currency.';
 
   @override
   String tripPublishBoatPriceEstimateLine(String net, String total) {

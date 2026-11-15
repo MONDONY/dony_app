@@ -1,3 +1,4 @@
+import 'package:dony/core/config/boat_price_bounds.dart';
 import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/network/api_client.dart';
@@ -86,6 +87,17 @@ class ConfigDatasource {
   Future<TransportModesAvailability> getTransportModes() async {
     final response = await _client.dio.get('/config/transport-modes');
     return TransportModesAvailability.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
+  }
+
+  /// Bornes du prix au m³ d'un trajet bateau, en euros :
+  /// `{"hardMinEur", "hardMaxEur", "advisedMinEur", "advisedMaxEur",
+  /// "referenceEur"}`. Un 404 remonte en `DioException`, le repository le
+  /// traduit en bornes par défaut.
+  Future<BoatPriceBounds> getBoatPriceBounds() async {
+    final response = await _client.dio.get('/config/boat-price-bounds');
+    return BoatPriceBounds.fromJson(
       Map<String, dynamic>.from(response.data as Map),
     );
   }

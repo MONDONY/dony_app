@@ -88,6 +88,73 @@ void main() {
     }
   });
 
+  group('ErrorCatalog — price-per-m3-out-of-bounds (bateau)', () {
+    String norm(String s) => s.replaceAll(RegExp('[\u00A0\u202F]'), ' ');
+
+    test('bornes du serveur dans la devise du trajet (XOF)', () {
+      final p = ErrorCatalog.lookup(
+        const ValidationException(
+          'detail',
+          code: 'price-per-m3-out-of-bounds',
+          extensions: {
+            'reason': 'too-low',
+            'min': 65596,
+            'max': 393574,
+            'currency': 'XOF',
+          },
+        ),
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+
+      expect(p.title, 'Prix hors limites');
+      expect(
+        norm(p.message),
+        'Le prix par m³ doit être compris entre 65 596 F CFA et '
+        '393 574 F CFA.',
+      );
+      expect(p.severity, ErrorSeverity.warning);
+      expect(p.icon, Icons.price_change_outlined);
+    });
+
+    test('EUR, bornes en texte, en anglais', () {
+      final p = ErrorCatalog.lookup(
+        const ValidationException(
+          'detail',
+          code: 'price-per-m3-out-of-bounds',
+          extensions: {
+            'reason': 'too-high',
+            'min': '100',
+            'max': '600',
+            'currency': 'EUR',
+          },
+        ),
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(p.message, startsWith('The price per m³ must be between'));
+      expect(p.message, contains('600'));
+    });
+
+    test('bornes absentes ou illisibles : texte de repli au m³', () {
+      for (final error in [
+        const ValidationException('d', code: 'price-per-m3-out-of-bounds'),
+        const ValidationException(
+          'd',
+          code: 'price-per-m3-out-of-bounds',
+          extensions: {'min': 'abc', 'max': 600},
+        ),
+        const NetworkException('d', code: 'price-per-m3-out-of-bounds'),
+      ]) {
+        final p = ErrorCatalog.lookup(
+          error,
+          l10n: lookupAppLocalizations(AppL10n.fr),
+        );
+        expect(p.title, 'Prix hors limites');
+        expect(p.message, contains('prix par m³'));
+        expect(p.message, contains('devise du trajet'));
+      }
+    });
+  });
+
   test(
     'price-grid/price-out-of-bounds : article hors limites, 5 € au moins',
     () {

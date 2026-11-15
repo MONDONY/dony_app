@@ -141,14 +141,17 @@ class VolumeCapacityChanged extends AnnouncementFormEvent {
   List<Object?> get props => [m3];
 }
 
-/// Trajet bateau au m³ : prix net par m³, `null` tant que rien n'est saisi.
+/// Trajet bateau au m³ : prix net par m³, `null` tant que rien n'est saisi,
+/// dans la devise du trajet [currency] (qui convertit ses bornes ; `null` :
+/// la devise déjà connue du formulaire, sinon l'euro).
 class PricePerM3Changed extends AnnouncementFormEvent {
   final double? price;
+  final SupportedCurrency? currency;
 
-  const PricePerM3Changed(this.price);
+  const PricePerM3Changed(this.price, {this.currency});
 
   @override
-  List<Object?> get props => [price];
+  List<Object?> get props => [price, currency];
 }
 
 /// Le formulaire modifie un trajet publié : sa capacité est le reste à
@@ -156,13 +159,23 @@ class PricePerM3Changed extends AnnouncementFormEvent {
 ///
 /// [fromVolumeSale] : le trajet modifié était vendu au m³ et n'a donc aucun
 /// kilo (voir `AnnouncementFormState.editedFromVolumeSale`).
+///
+/// [pricePerM3] et [currencyCode] : prix au m³ et devise enregistrés du
+/// trajet, qui ne sont pas rejugés s'ils restent inchangés (voir
+/// `AnnouncementFormState.isPricePerM3Unchanged`).
 class EditingTripStarted extends AnnouncementFormEvent {
   final bool fromVolumeSale;
+  final double? pricePerM3;
+  final String? currencyCode;
 
-  const EditingTripStarted({this.fromVolumeSale = false});
+  const EditingTripStarted({
+    this.fromVolumeSale = false,
+    this.pricePerM3,
+    this.currencyCode,
+  });
 
   @override
-  List<Object?> get props => [fromVolumeSale];
+  List<Object?> get props => [fromVolumeSale, pricePerM3, currencyCode];
 }
 
 class PickupAddressChanged extends AnnouncementFormEvent {

@@ -39,14 +39,20 @@ class AnnouncementFormBloc
           emit(state.copyWith(volumeCapacityM3Getter: () => event.m3)),
     );
     on<PricePerM3Changed>(
-      (event, emit) =>
-          emit(state.copyWith(pricePerM3Getter: () => event.price)),
+      (event, emit) => emit(
+        state.copyWith(
+          pricePerM3Getter: () => event.price,
+          pricePerM3Currency: event.currency,
+        ),
+      ),
     );
     on<EditingTripStarted>(
       (event, emit) => emit(
         state.copyWith(
           isEditingTrip: true,
           editedFromVolumeSale: event.fromVolumeSale,
+          editOriginalPricePerM3: event.pricePerM3,
+          editOriginalCurrencyCode: event.currencyCode,
         ),
       ),
     );

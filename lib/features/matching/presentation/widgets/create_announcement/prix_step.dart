@@ -1257,9 +1257,12 @@ class _LockedAgreedPriceCard extends StatelessWidget {
   }
 }
 
-/// Prix net par m³ d'un trajet bateau au m³ : de 0,01 à 99 999 999,99 (règle
-/// du bloc, `isPricePerM3Valid`). L'estimation dit ce que touche le transporteur et ce que paie
-/// l'expéditeur, frais de service inclus, pour un m³.
+/// Prix net par m³ d'un trajet bateau au m³, dans les bornes dures de la
+/// devise du trajet (règle du bloc, `isPricePerM3Valid`) : hors bornes, le
+/// message donne la fourchette acceptée. Hors de la zone conseillée, un
+/// avertissement non bloquant. L'estimation dit ce que touche le transporteur
+/// et ce que paie l'expéditeur, frais de service inclus, pour un m³ ; le prix
+/// habituel sert de repère.
 class _BoatPricePerM3Section extends StatelessWidget {
   const _BoatPricePerM3Section({
     required this.controller,
@@ -1284,11 +1287,22 @@ class _BoatPricePerM3Section extends StatelessWidget {
         ),
         const SizedBox(height: DonySpacing.md),
         BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-          buildWhen: (p, c) => p.pricePerM3 != c.pricePerM3,
+          buildWhen: (p, c) =>
+              p.pricePerM3 != c.pricePerM3 ||
+              p.pricePerM3Currency != c.pricePerM3Currency ||
+              p.isEditingTrip != c.isEditingTrip,
           builder: (context, formState) {
             final net = formState.pricePerM3;
             final valid = formState.isPricePerM3Valid;
-            final tooHigh = formState.isPricePerM3TooHigh;
+            final outOfBounds = formState.pricePerM3HardBound != null;
+            final warning = formState.pricePerM3Warning;
+            final bounds = formState.pricePerM3Bounds;
+            final shown = currency ?? bounds.currency;
+            String format(double amount) =>
+                CurrencyFormatter.formatOrPlain(amount, shown);
+            // Bornes et repères : sans décimales quand elles sont rondes.
+            String bound(double amount) =>
+                CurrencyFormatter.formatOrPlain(amount, shown, compact: true);
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1317,28 +1331,41 @@ class _BoatPricePerM3Section extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.sm),
                 Text(
-                  tooHigh
-                      ? l.tripPublishBoatPriceTooHigh(
-                          CurrencyFormatter.formatOrPlain(
-                            maxPricePerM3,
-                            currency,
-                          ),
+                  outOfBounds
+                      ? l.tripPublishBoatPriceOutOfRange(
+                          bound(bounds.hardMin),
+                          bound(bounds.hardMax),
                         )
                       : valid
                       ? l.tripPublishBoatPriceEstimateLine(
-                          CurrencyFormatter.formatOrPlain(net!, currency),
-                          CurrencyFormatter.formatOrPlain(
-                            senderPriceForNet(net, currency?.code).gross,
-                            currency,
-                          ),
+                          format(net!),
+                          format(senderPriceForNet(net, shown.code).gross),
                         )
                       : l.tripPublishBoatPricePrompt,
                   key: const Key('boat-price-estimate'),
                   style: tt.bodySmall?.copyWith(
                     color: valid
                         ? cs.onSurfaceVariant
-                        : cs.error.withValues(alpha: tooHigh ? 1 : 0.7),
+                        : cs.error.withValues(alpha: outOfBounds ? 1 : 0.7),
                   ),
+                ),
+                if (warning != null) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  _BoatPriceWarning(
+                    message: warning == PriceWarning.tooLow
+                        ? l.tripPublishBoatPriceLowWarning(
+                            bound(bounds.advisedMin),
+                          )
+                        : l.tripPublishBoatPriceHighWarning(
+                            bound(bounds.advisedMax),
+                          ),
+                  ),
+                ],
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  l.tripPublishBoatPriceReference(bound(bounds.reference)),
+                  key: const Key('boat-price-reference'),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             );
@@ -1346,6 +1373,45 @@ class _BoatPricePerM3Section extends StatelessWidget {
         ),
       ],
     ).animate().fadeIn(delay: 100.ms);
+  }
+}
+
+/// Avertissement non bloquant d'un prix au m³ hors de la zone conseillée :
+/// icône et texte, jamais la seule couleur.
+class _BoatPriceWarning extends StatelessWidget {
+  const _BoatPriceWarning({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('boat-price-warning'),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.base,
+        vertical: DonySpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: cs.warningLight,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DonyIcon('triangle-alert', size: 16, color: cs.warning),
+          const SizedBox(width: DonySpacing.xs),
+          Expanded(
+            child: Text(
+              message,
+              style: tt.bodySmall?.copyWith(color: cs.onSurface),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

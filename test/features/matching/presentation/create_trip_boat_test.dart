@@ -184,41 +184,39 @@ Widget _app(Widget child, {required UserModel user, required Locale locale}) {
   );
 }
 
-AnnouncementModel _editedBoatTrip({double? maxParcelWeightKg = 30}) =>
-    AnnouncementModel(
-      id: 'boat-edit-1',
-      travelerId: 'user-boat-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: _inDays(30),
-      departureTime: '10:00',
-      arrivalDate: _inDays(50),
-      arrivalDateMax: _inDays(65),
-      availableKg: 0,
-      totalKg: 0,
-      status: 'ACTIVE',
-      bidsCount: 0,
-      createdAt: DateTime(2026),
-      updatedAt: DateTime(2026),
-      handoverDeadline: _inDays(29),
-      pickupAddress: const AddressData(
-        label: 'Entrepôt',
-        lat: 48.93,
-        lng: 2.29,
-      ),
-      deliveryAddress: const AddressData(
-        label: 'Port de Dakar',
-        lat: 14.67,
-        lng: -17.43,
-      ),
-      transportMode: TransportMode.boat,
-      acceptedPaymentMethods: const {BidPaymentMethod.cash},
-      capacityUnit: 'KG_EXACT',
-      volumeCapacityM3: 20,
-      availableVolumeM3: 20,
-      pricePerM3: 120,
-      maxParcelWeightKg: maxParcelWeightKg,
-    );
+AnnouncementModel _editedBoatTrip({
+  double? maxParcelWeightKg = 30,
+  double pricePerM3 = 120,
+}) => AnnouncementModel(
+  id: 'boat-edit-1',
+  travelerId: 'user-boat-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: _inDays(30),
+  departureTime: '10:00',
+  arrivalDate: _inDays(50),
+  arrivalDateMax: _inDays(65),
+  availableKg: 0,
+  totalKg: 0,
+  status: 'ACTIVE',
+  bidsCount: 0,
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+  handoverDeadline: _inDays(29),
+  pickupAddress: const AddressData(label: 'Entrepôt', lat: 48.93, lng: 2.29),
+  deliveryAddress: const AddressData(
+    label: 'Port de Dakar',
+    lat: 14.67,
+    lng: -17.43,
+  ),
+  transportMode: TransportMode.boat,
+  acceptedPaymentMethods: const {BidPaymentMethod.cash},
+  capacityUnit: 'KG_EXACT',
+  volumeCapacityM3: 20,
+  availableVolumeM3: 20,
+  pricePerM3: pricePerM3,
+  maxParcelWeightKg: maxParcelWeightKg,
+);
 
 DateTime _inDays(int days) {
   final now = DateTime.now();
@@ -237,11 +235,14 @@ TripFormDraft _boatDraft({
   double? pricePerM3 = 150,
   int priceOption = -1,
   bool modeChosen = true,
+  String currency = 'EUR',
+  int? handoverLeadDays,
 }) {
   final departure = _inDays(30);
   return TripFormDraft(
     stepId: stepId,
-    currency: 'EUR',
+    currency: currency,
+    handoverLeadDays: handoverLeadDays,
     departureCity: 'Paris',
     departureCountryCode: 'FR',
     arrivalCity: 'Dakar',
@@ -1005,8 +1006,18 @@ void main() {
       expectNoPlaneIcon(tester);
     });
 
-    testWidgets('prix au m³ : plafond 99 999 999,99, message et « Continuer » '
-        'grisé', (tester) async {
+    String norm(String text) => text.replaceAll(RegExp('[\u00A0\u202F]'), ' ');
+
+    String estimate(WidgetTester tester) => norm(
+      tester.widget<Text>(find.byKey(const Key('boat-price-estimate'))).data!,
+    );
+
+    String reference(WidgetTester tester) => norm(
+      tester.widget<Text>(find.byKey(const Key('boat-price-reference'))).data!,
+    );
+
+    testWidgets('prix au m³ en euros : bornes dures, avertissement et prix '
+        'habituel', (tester) async {
       await pumpScreen(
         tester,
         CreateTripArgs(
@@ -1014,24 +1025,94 @@ void main() {
         ),
       );
       final field = find.byKey(const Key('trip-price-per-m3'));
-      await tester.enterText(field, '99999999.99');
+      expect(reference(tester), 'Prix habituel : environ 240 €/m³');
+
+      await tester.enterText(field, '50');
       await tester.pump();
       await tester.pump();
+      expect(
+        estimate(tester),
+        'Le prix par m³ doit être compris entre 100 € et 600 €.',
+      );
+      expect(find.byKey(const Key('boat-price-warning')), findsNothing);
+      expect(continueButton(tester).onPressed, isNull);
+
+      await tester.enterText(field, '601');
+      await tester.pump();
+      await tester.pump();
+      expect(estimate(tester), contains('entre 100 € et 600 €'));
+      expect(continueButton(tester).onPressed, isNull);
+
+      // Hors zone conseillée : avertissement, jamais bloquant.
+      await tester.enterText(field, '120');
+      await tester.pump();
+      await tester.pump();
+      expect(estimate(tester), startsWith('Vous touchez 120'));
+      expect(
+        find.textContaining('Prix bas : la plupart des trajets bateau'),
+        findsOneWidget,
+      );
       expect(continueButton(tester).onPressed, isNotNull);
-      expect(find.textContaining('ne peut pas dépasser'), findsNothing);
 
-      await tester.enterText(field, '100000000');
+      await tester.enterText(field, '450');
       await tester.pump();
       await tester.pump();
-      expect(find.textContaining('ne peut pas dépasser'), findsOneWidget);
-      expect(find.textContaining('Vous touchez'), findsNothing);
+      expect(find.textContaining('Prix élevé : au-delà de'), findsOneWidget);
+      expect(continueButton(tester).onPressed, isNotNull);
+
+      await tester.enterText(field, '240');
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const Key('boat-price-warning')), findsNothing);
+      expect(continueButton(tester).onPressed, isNotNull);
+      expectNoPlaneIcon(tester);
+    });
+
+    testWidgets('prix au m³ en franc CFA : bornes converties au taux figé', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: _boatDraft(
+            stepId: TripFormStep.prix,
+            pricePerM3: null,
+            currency: 'XOF',
+          ),
+        ),
+      );
+      final field = find.byKey(const Key('trip-price-per-m3'));
+      expect(reference(tester), 'Prix habituel : environ 157 400 F CFA/m³');
+
+      await tester.enterText(field, '240');
+      await tester.pump();
+      await tester.pump();
+      expect(
+        estimate(tester),
+        'Le prix par m³ doit être compris entre 65 596 F CFA et '
+        '393 574 F CFA.',
+      );
       expect(continueButton(tester).onPressed, isNull);
 
-      await tester.enterText(field, '0.001');
+      await tester.enterText(field, '157000');
       await tester.pump();
       await tester.pump();
-      expect(continueButton(tester).onPressed, isNull);
-      expect(find.textContaining('ne peut pas dépasser'), findsNothing);
+      expect(estimate(tester), startsWith('Vous touchez'));
+      expect(find.byKey(const Key('boat-price-warning')), findsNothing);
+      expect(continueButton(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('prix au m³ : textes anglais', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: _boatDraft(stepId: TripFormStep.prix, pricePerM3: 120),
+        ),
+        locale: AppL10n.en,
+      );
+      expect(reference(tester), startsWith('Usual price: about'));
+      expect(find.textContaining('Low price: most boat trips'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('encadré « payé au dépôt » : absent pour un trajet bateau '
@@ -1334,6 +1415,49 @@ void main() {
       // Inchangé : absent du corps, jamais effacé par erreur.
       expect(sent.maxParcelWeightKg.isClear, isFalse);
       expect(sent.maxParcelWeightKg.value, isNull);
+    });
+  });
+
+  group('modification d\'un trajet bateau hors bornes', () {
+    testWidgets('prix et devise inchangés : les autres champs se modifient, '
+        'le PUT part', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(announcement: _editedBoatTrip(pricePerM3: 50)),
+      );
+      await goToStep(tester, TripFormStep.prix);
+      expect(find.textContaining('doit être compris entre'), findsNothing);
+      expect(continueButton(tester).onPressed, isNotNull);
+
+      await goToStep(tester, TripFormStep.conditions);
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      final sent = verify(
+        () => announcementBloc.add(captureAny()),
+      ).captured.whereType<AnnouncementUpdateRequested>().single;
+      expect(sent.pricePerM3, 50);
+    });
+
+    testWidgets('prix changé, toujours hors bornes : bloqué avec le message', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(announcement: _editedBoatTrip(pricePerM3: 50)),
+      );
+      await goToStep(tester, TripFormStep.prix);
+      await tester.enterText(find.byKey(const Key('trip-price-per-m3')), '60');
+      await tester.pump();
+      await tester.pump();
+      expect(find.textContaining('doit être compris entre'), findsOneWidget);
+      expect(continueButton(tester).onPressed, isNull);
+
+      // Retour au prix enregistré : de nouveau accepté.
+      await tester.enterText(find.byKey(const Key('trip-price-per-m3')), '50');
+      await tester.pump();
+      await tester.pump();
+      expect(continueButton(tester).onPressed, isNotNull);
     });
   });
 

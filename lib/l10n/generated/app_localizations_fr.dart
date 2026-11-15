@@ -24785,9 +24785,28 @@ class AppLocalizationsFr extends AppLocalizations {
       'Indiquez votre prix par m³ pour voir l\'estimation';
 
   @override
-  String tripPublishBoatPriceTooHigh(String max) {
-    return 'Le prix par m³ ne peut pas dépasser $max';
+  String tripPublishBoatPriceOutOfRange(String min, String max) {
+    return 'Le prix par m³ doit être compris entre $min et $max.';
   }
+
+  @override
+  String tripPublishBoatPriceLowWarning(String min) {
+    return 'Prix bas : la plupart des trajets bateau demandent au moins $min par m³.';
+  }
+
+  @override
+  String tripPublishBoatPriceHighWarning(String max) {
+    return 'Prix élevé : au-delà de $max par m³, peu d\'expéditeurs réservent.';
+  }
+
+  @override
+  String tripPublishBoatPriceReference(String price) {
+    return 'Prix habituel : environ $price/m³';
+  }
+
+  @override
+  String get errorPricePerM3OutOfBoundsMessage =>
+      'Ce prix par m³ est en dehors des limites autorisées dans la devise du trajet. Vérifiez le montant et la devise choisie.';
 
   @override
   String tripPublishBoatPriceEstimateLine(String net, String total) {

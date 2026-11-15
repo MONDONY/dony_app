@@ -1170,8 +1170,8 @@ class _TripFormContentState extends State<_TripFormContent> {
   //   8 XOF/kg saisis en croyant taper des euros (FLUTTER-GK).
   bool get _isPriceValid {
     if (_isLocked) return true;
-    // Bateau au m³ : la règle du bloc (0,01 à 99 999 999,99), appliquée à la
-    // saisie courante. Le bloc ne reçoit la saisie qu'un instant plus tard
+    // Bateau au m³ : la règle du bloc (bornes dures du prix au m³ dans la
+    // devise du trajet), appliquée à la saisie et à la devise courantes. Le bloc ne reçoit la saisie qu'un instant plus tard
     // (événement asynchrone) alors que la reprise d'un brouillon lit ce
     // résultat tout de suite : on évalue donc l'état avec le prix du champ.
     if (_isBoatPerM3) {
@@ -1180,6 +1180,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           .state
           .copyWith(
             pricePerM3Getter: () => parsePriceInput(_pricePerM3Ctrl.text),
+            pricePerM3Currency: _currency,
           )
           .isPricePerM3Valid;
     }
@@ -1349,7 +1350,13 @@ class _TripFormContentState extends State<_TripFormContent> {
         // trajet passe ensuite, sinon un trajet de deux valises, ou déjà
         // en partie réservé, s'enregistrait à une seule valise pleine.
         formBloc
-          ..add(EditingTripStarted(fromVolumeSale: a.isPricedPerM3))
+          ..add(
+            EditingTripStarted(
+              fromVolumeSale: a.isPricedPerM3,
+              pricePerM3: a.pricePerM3,
+              currencyCode: a.currency,
+            ),
+          )
           ..add(AvailableKgChanged(a.availableKg));
         // Taille (route) et poids max par colis (route, bateau) : relus tels
         // quels, renvoyés seulement si le voyageur les change (cf. _submit).
@@ -1367,7 +1374,12 @@ class _TripFormContentState extends State<_TripFormContent> {
         if (tripMode == TransportMode.boat) {
           formBloc
             ..add(VolumeCapacityChanged(a.volumeCapacityM3))
-            ..add(PricePerM3Changed(a.pricePerM3));
+            ..add(
+              PricePerM3Changed(
+                a.pricePerM3,
+                currency: SupportedCurrency.fromCodeOrDefault(a.currency),
+              ),
+            );
         }
 
         // Pas de grille en bateau.
@@ -1994,7 +2006,10 @@ class _TripFormContentState extends State<_TripFormContent> {
   void _syncPricePerM3ToFormBloc() {
     if (!mounted) return;
     context.read<AnnouncementFormBloc>().add(
-      PricePerM3Changed(parsePriceInput(_pricePerM3Ctrl.text)),
+      PricePerM3Changed(
+        parsePriceInput(_pricePerM3Ctrl.text),
+        currency: widget.currencyNotifier.value,
+      ),
     );
   }
 
@@ -2028,6 +2043,9 @@ class _TripFormContentState extends State<_TripFormContent> {
       _mobileMoneyEnabledNotifier.value = false;
     }
     _resetPricePerM3OnCurrencyChange();
+    // Les bornes du prix au m³ suivent la devise, même prix gardé (brouillon,
+    // modèle).
+    _syncPricePerM3ToFormBloc();
     _syncPriceToFormBloc();
   }
 
@@ -3277,7 +3295,20 @@ class _TripFormContentState extends State<_TripFormContent> {
                         if (unit != null) _boatPriceUnitNotifier.value = unit;
                         _markDirty();
                       },
-                      child: formChild,
+                      // Prix au m³ : sa validité dépend aussi d'états reçus
+                      // après la saisie (modification d'un trajet, devise).
+                      child:
+                          BlocListener<
+                            AnnouncementFormBloc,
+                            AnnouncementFormState
+                          >(
+                            listenWhen: (prev, curr) =>
+                                prev.isPricePerM3Valid !=
+                                    curr.isPricePerM3Valid ||
+                                prev.isEditingTrip != curr.isEditingTrip,
+                            listener: (_, _) => _syncCanSubmit(),
+                            child: formChild,
+                          ),
                     ),
               ),
             ),

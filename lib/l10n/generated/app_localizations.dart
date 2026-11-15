@@ -39666,11 +39666,35 @@ abstract class AppLocalizations {
   /// **'Indiquez votre prix par m³ pour voir l\'estimation'**
   String get tripPublishBoatPricePrompt;
 
-  /// Erreur sous le champ du prix au m³ au-dessus du plafond du serveur, montant déjà formaté dans la devise (prix_step.dart)
+  /// Prix au m³ hors des bornes dures de la devise du trajet (sous le champ, prix_step.dart, et refus 422 price-per-m3-out-of-bounds, error_catalog.dart). Montants déjà formatés dans la devise
   ///
   /// In fr, this message translates to:
-  /// **'Le prix par m³ ne peut pas dépasser {max}'**
-  String tripPublishBoatPriceTooHigh(String max);
+  /// **'Le prix par m³ doit être compris entre {min} et {max}.'**
+  String tripPublishBoatPriceOutOfRange(String min, String max);
+
+  /// Avertissement non bloquant, prix au m³ sous la zone conseillée, montant déjà formaté (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix bas : la plupart des trajets bateau demandent au moins {min} par m³.'**
+  String tripPublishBoatPriceLowWarning(String min);
+
+  /// Avertissement non bloquant, prix au m³ au-dessus de la zone conseillée, montant déjà formaté (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix élevé : au-delà de {max} par m³, peu d\'expéditeurs réservent.'**
+  String tripPublishBoatPriceHighWarning(String max);
+
+  /// Repère sous le champ du prix au m³ d'un trajet bateau, montant déjà formaté dans la devise (prix_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix habituel : environ {price}/m³'**
+  String tripPublishBoatPriceReference(String price);
+
+  /// Erreur price-per-m3-out-of-bounds sans bornes lisibles : prix au m³ hors limites (error_catalog.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce prix par m³ est en dehors des limites autorisées dans la devise du trajet. Vérifiez le montant et la devise choisie.'**
+  String get errorPricePerM3OutOfBoundsMessage;
 
   /// Estimation du prix au m³, montants déjà formatés dans la devise (prix_step.dart)
   ///

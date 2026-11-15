@@ -24048,14 +24048,48 @@
   "@tripPublishBoatPricePrompt": {
     "description": "Invite sous le champ du prix au m³ encore vide (prix_step.dart)"
   },
-  "tripPublishBoatPriceTooHigh": "Le prix par m³ ne peut pas dépasser {max}",
-  "@tripPublishBoatPriceTooHigh": {
-    "description": "Erreur sous le champ du prix au m³ au-dessus du plafond du serveur, montant déjà formaté dans la devise (prix_step.dart)",
+  "tripPublishBoatPriceOutOfRange": "Le prix par m³ doit être compris entre {min} et {max}.",
+  "@tripPublishBoatPriceOutOfRange": {
+    "description": "Prix au m³ hors des bornes dures de la devise du trajet (sous le champ, prix_step.dart, et refus 422 price-per-m3-out-of-bounds, error_catalog.dart). Montants déjà formatés dans la devise",
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishBoatPriceLowWarning": "Prix bas : la plupart des trajets bateau demandent au moins {min} par m³.",
+  "@tripPublishBoatPriceLowWarning": {
+    "description": "Avertissement non bloquant, prix au m³ sous la zone conseillée, montant déjà formaté (prix_step.dart)",
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishBoatPriceHighWarning": "Prix élevé : au-delà de {max} par m³, peu d'expéditeurs réservent.",
+  "@tripPublishBoatPriceHighWarning": {
+    "description": "Avertissement non bloquant, prix au m³ au-dessus de la zone conseillée, montant déjà formaté (prix_step.dart)",
     "placeholders": {
       "max": {
         "type": "String"
       }
     }
+  },
+  "tripPublishBoatPriceReference": "Prix habituel : environ {price}/m³",
+  "@tripPublishBoatPriceReference": {
+    "description": "Repère sous le champ du prix au m³ d'un trajet bateau, montant déjà formaté dans la devise (prix_step.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "errorPricePerM3OutOfBoundsMessage": "Ce prix par m³ est en dehors des limites autorisées dans la devise du trajet. Vérifiez le montant et la devise choisie.",
+  "@errorPricePerM3OutOfBoundsMessage": {
+    "description": "Erreur price-per-m3-out-of-bounds sans bornes lisibles : prix au m³ hors limites (error_catalog.dart)"
   },
   "tripPublishBoatPriceEstimateLine": "Vous touchez {net} par m³ · l'expéditeur paie {total}",
   "@tripPublishBoatPriceEstimateLine": {

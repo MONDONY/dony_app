@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/config/boat_price_bounds.dart';
 import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/config/transport_modes_flag.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -27,6 +28,10 @@ abstract class IConfigRepository {
   /// Modes de transport ouverts par le serveur. Jamais d'exception : un 404
   /// (back sans la route) ou toute erreur rend [TransportModesAvailability.planeOnly].
   Future<TransportModesAvailability> getTransportModes();
+
+  /// Bornes du prix au m³ d'un trajet bateau. Jamais d'exception : un 404
+  /// (back sans la route) ou toute erreur rend [BoatPriceBounds.defaults].
+  Future<BoatPriceBounds> getBoatPriceBounds();
 }
 
 class ConfigRepository implements IConfigRepository {
@@ -134,6 +139,15 @@ class ConfigRepository implements IConfigRepository {
       return await _datasource.getTransportModes();
     } catch (_) {
       return TransportModesAvailability.planeOnly;
+    }
+  }
+
+  @override
+  Future<BoatPriceBounds> getBoatPriceBounds() async {
+    try {
+      return await _datasource.getBoatPriceBounds();
+    } catch (_) {
+      return BoatPriceBounds.defaults;
     }
   }
 }

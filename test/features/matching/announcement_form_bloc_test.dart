@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/boat_price_bounds.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -1122,30 +1123,157 @@ void main() {
       );
     });
 
-    test('prix au m³ : de 0,01 à 99 999 999,99', () {
+    test('prix au m³ : bornes dures de la devise (EUR par défaut)', () {
       const s = AnnouncementFormState(transportMode: TransportMode.boat);
       expect(s.isPricePerM3Valid, isFalse);
-      expect(
-        s.copyWith(pricePerM3Getter: () => 0.001).isPricePerM3Valid,
-        isFalse,
-      );
-      expect(
-        s.copyWith(pricePerM3Getter: () => 0.01).isPricePerM3Valid,
-        isTrue,
-      );
-      expect(
-        s.copyWith(pricePerM3Getter: () => 25000000).isPricePerM3Valid,
-        isTrue,
-      );
-      expect(
-        s.copyWith(pricePerM3Getter: () => maxPricePerM3).isPricePerM3Valid,
-        isTrue,
-      );
-      final tooHigh = s.copyWith(pricePerM3Getter: () => 100000000);
-      expect(tooHigh.isPricePerM3Valid, isFalse);
-      expect(tooHigh.isPricePerM3TooHigh, isTrue);
-      expect(s.isPricePerM3TooHigh, isFalse);
+      expect(s.pricePerM3HardBound, isNull);
+      AnnouncementFormState at(double price) =>
+          s.copyWith(pricePerM3Getter: () => price);
+      expect(at(99.99).isPricePerM3Valid, isFalse);
+      expect(at(99.99).pricePerM3HardBound, BoatPriceBound.tooLow);
+      expect(at(100).isPricePerM3Valid, isTrue);
+      expect(at(600).isPricePerM3Valid, isTrue);
+      expect(at(600.01).pricePerM3HardBound, BoatPriceBound.tooHigh);
+      expect(at(600.01).isPricePerM3Valid, isFalse);
+      // Hors bornes dures : pas d'avertissement en plus.
+      expect(at(600.01).pricePerM3Warning, isNull);
     });
+
+    test('prix au m³ : zone conseillée, avertissement non bloquant', () {
+      const s = AnnouncementFormState(transportMode: TransportMode.boat);
+      AnnouncementFormState at(double price) =>
+          s.copyWith(pricePerM3Getter: () => price);
+      expect(at(120).pricePerM3Warning, PriceWarning.tooLow);
+      expect(at(120).isPricePerM3Valid, isTrue);
+      expect(at(450).pricePerM3Warning, PriceWarning.tooHigh);
+      expect(at(450).isPricePerM3Valid, isTrue);
+      expect(at(240).pricePerM3Warning, isNull);
+      expect(s.pricePerM3Warning, isNull);
+    });
+
+    test('prix au m³ : bornes du serveur chargées', () {
+      addTearDown(resetBoatPriceBoundsForTest);
+      setBoatPriceBounds(
+        const BoatPriceBounds(
+          hardMinEur: 50,
+          hardMaxEur: 800,
+          advisedMinEur: 100,
+          advisedMaxEur: 500,
+          referenceEur: 300,
+        ),
+      );
+      const s = AnnouncementFormState(
+        transportMode: TransportMode.boat,
+        pricePerM3: 700,
+      );
+      expect(s.isPricePerM3Valid, isTrue);
+      expect(s.pricePerM3Warning, PriceWarning.tooHigh);
+      expect(s.pricePerM3Bounds.reference, 300);
+    });
+
+    test('modification : prix et devise inchangés hors bornes acceptés', () {
+      const edited = AnnouncementFormState(
+        transportMode: TransportMode.boat,
+        isEditingTrip: true,
+        editOriginalPricePerM3: 900,
+        editOriginalCurrencyCode: 'EUR',
+        pricePerM3: 900,
+        pricePerM3Currency: SupportedCurrency.eur,
+      );
+      expect(edited.isPricePerM3Unchanged, isTrue);
+      expect(edited.isPricePerM3Valid, isTrue);
+      // Prix changé, toujours hors bornes : bloqué.
+      final changed = edited.copyWith(pricePerM3Getter: () => 850);
+      expect(changed.isPricePerM3Valid, isFalse);
+      // Même montant, autre devise : rejugé (900 F CFA < plancher).
+      final otherCurrency = edited.copyWith(
+        pricePerM3Currency: SupportedCurrency.xof,
+      );
+      expect(otherCurrency.isPricePerM3Unchanged, isFalse);
+      expect(otherCurrency.isPricePerM3Valid, isFalse);
+      // Hors modification : jamais « inchangé ».
+      const created = AnnouncementFormState(
+        transportMode: TransportMode.boat,
+        editOriginalPricePerM3: 900,
+        pricePerM3: 900,
+      );
+      expect(created.isPricePerM3Valid, isFalse);
+    });
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'EUR : 50 €/m³ invalide, 120 avertit, 240 ok',
+      build: () => _makeBloc(),
+      act: (b) => b
+        ..add(const PricePerM3Changed(50, currency: SupportedCurrency.eur))
+        ..add(const PricePerM3Changed(120))
+        ..add(const PricePerM3Changed(240)),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) =>
+              !s.isPricePerM3Valid &&
+              s.pricePerM3HardBound == BoatPriceBound.tooLow,
+        ),
+        predicate<AnnouncementFormState>(
+          (s) =>
+              s.isPricePerM3Valid &&
+              s.pricePerM3Warning == PriceWarning.tooLow &&
+              s.pricePerM3Currency == SupportedCurrency.eur,
+        ),
+        predicate<AnnouncementFormState>(
+          (s) => s.isPricePerM3Valid && s.pricePerM3Warning == null,
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'XOF : bornes converties au taux figé (65 596 à 393 574 F CFA)',
+      build: () => _makeBloc(),
+      act: (b) => b
+        ..add(const PricePerM3Changed(65595, currency: SupportedCurrency.xof))
+        ..add(const PricePerM3Changed(65596, currency: SupportedCurrency.xof))
+        ..add(const PricePerM3Changed(393574, currency: SupportedCurrency.xof))
+        ..add(const PricePerM3Changed(393575, currency: SupportedCurrency.xof))
+        ..add(const PricePerM3Changed(157000, currency: SupportedCurrency.xof)),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.pricePerM3HardBound == BoatPriceBound.tooLow,
+        ),
+        predicate<AnnouncementFormState>(
+          (s) =>
+              s.isPricePerM3Valid && s.pricePerM3Warning == PriceWarning.tooLow,
+        ),
+        predicate<AnnouncementFormState>(
+          (s) =>
+              s.isPricePerM3Valid &&
+              s.pricePerM3Warning == PriceWarning.tooHigh,
+        ),
+        predicate<AnnouncementFormState>(
+          (s) => s.pricePerM3HardBound == BoatPriceBound.tooHigh,
+        ),
+        predicate<AnnouncementFormState>(
+          (s) => s.isPricePerM3Valid && s.pricePerM3Warning == null,
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'modification : EditingTripStarted garde le prix et la devise enregistrés',
+      build: () => _makeBloc(),
+      act: (b) => b
+        ..add(
+          const EditingTripStarted(
+            fromVolumeSale: true,
+            pricePerM3: 50,
+            currencyCode: 'EUR',
+          ),
+        )
+        ..add(const PricePerM3Changed(50, currency: SupportedCurrency.eur)),
+      verify: (b) {
+        expect(b.state.editOriginalPricePerM3, 50);
+        expect(b.state.editOriginalCurrencyCode, 'EUR');
+        expect(b.state.isPricePerM3Valid, isTrue);
+      },
+    );
 
     test('bateau au kilo, ou sans unité (modèle) : règles du kilo', () {
       const kg = AnnouncementFormState(
@@ -1185,6 +1313,14 @@ void main() {
       );
       expect(const VolumeCapacityChanged(2), const VolumeCapacityChanged(2));
       expect(const PricePerM3Changed(9), isNot(const PricePerM3Changed(8)));
+      expect(
+        const PricePerM3Changed(9, currency: SupportedCurrency.xof),
+        isNot(const PricePerM3Changed(9)),
+      );
+      expect(
+        const EditingTripStarted(pricePerM3: 1, currencyCode: 'EUR'),
+        isNot(const EditingTripStarted(pricePerM3: 1, currencyCode: 'XOF')),
+      );
     });
   });
 }

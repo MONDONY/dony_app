@@ -1,3 +1,5 @@
+import 'package:dony/core/config/boat_price_bounds.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/boat_price_unit.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
@@ -11,11 +13,13 @@ enum PricingMode { kg, mixed }
 
 enum PriceWarning { tooLow, tooHigh }
 
-/// Plus petit prix au m³ accepté (miroir de `@DecimalMin 0.01` du back).
+/// Plus petit prix au m³ techniquement accepté (miroir de `@DecimalMin 0.01`
+/// du back). Les bornes métier ([BoatPriceBounds]) sont bien plus hautes.
 const double minPricePerM3 = 0.01;
 
-/// Plus grand prix au m³ accepté : le plafond technique du back
-/// (99 999 999,99). Au-delà, le serveur répond par un 422 sans détail.
+/// Plus grand prix au m³ techniquement accepté : le plafond technique du back
+/// (99 999 999,99). Les bornes métier ([BoatPriceBounds]) sont bien plus
+/// basses.
 const double maxPricePerM3 = 99999999.99;
 
 extension CapacityUnitWire on CapacityUnit {
@@ -143,6 +147,16 @@ class AnnouncementFormState extends Equatable {
   /// de service s'ajoutent pour l'expéditeur).
   final double? pricePerM3;
 
+  /// Devise du trajet, dans laquelle [pricePerM3] est saisi : elle convertit
+  /// les bornes du prix au m³. `null` : euro.
+  final SupportedCurrency? pricePerM3Currency;
+
+  /// Modification d'un trajet au m³ : prix et devise enregistrés. Inchangés,
+  /// ils ne sont pas rejugés (le serveur garde un trajet publié avant un
+  /// resserrement des bornes modifiable sur ses autres champs).
+  final double? editOriginalPricePerM3;
+  final String? editOriginalCurrencyCode;
+
   const AnnouncementFormState({
     this.departureCity,
     this.arrivalCity,
@@ -172,6 +186,9 @@ class AnnouncementFormState extends Equatable {
     this.boatPriceUnit,
     this.volumeCapacityM3,
     this.pricePerM3,
+    this.pricePerM3Currency,
+    this.editOriginalPricePerM3,
+    this.editOriginalCurrencyCode,
   });
 
   /// Trajet en bateau.
@@ -187,15 +204,45 @@ class AnnouncementFormState extends Equatable {
   /// Volume proposé dans les bornes (0,1 à 9 999 m³).
   bool get isVolumeValid => TripVolumeLimits.isValid(volumeCapacityM3);
 
-  /// Prix au m³ renseigné, de 0,01 à 99 999 999,99.
+  /// Bornes du prix au m³ dans la devise du trajet (dernières bornes
+  /// connues du serveur, sinon celles par défaut).
+  BoatPriceBoundsIn get pricePerM3Bounds =>
+      boatPriceBounds.inCurrency(pricePerM3Currency ?? SupportedCurrency.eur);
+
+  /// Modification : prix au m³ et devise tels qu'enregistrés (au centime,
+  /// comme la colonne du serveur).
+  bool get isPricePerM3Unchanged {
+    final original = editOriginalPricePerM3;
+    final price = pricePerM3;
+    if (!isEditingTrip || original == null || price == null) return false;
+    return (price * 100).round() == (original * 100).round() &&
+        (pricePerM3Currency ?? SupportedCurrency.eur).code ==
+            SupportedCurrency.fromCodeOrDefault(editOriginalCurrencyCode).code;
+  }
+
+  /// Borne dure franchie par le prix au m³ : le serveur refuserait le trajet
+  /// (422 `price-per-m3-out-of-bounds`). `null` sans prix, dans les bornes,
+  /// ou prix inchangé d'un trajet modifié.
+  BoatPriceBound? get pricePerM3HardBound =>
+      isPricePerM3Unchanged ? null : pricePerM3Bounds.hardBoundOf(pricePerM3);
+
+  /// Prix au m³ hors de la zone conseillée : avertissement, jamais bloquant.
+  PriceWarning? get pricePerM3Warning {
+    if (pricePerM3HardBound != null) return null;
+    return switch (pricePerM3Bounds.advisedBoundOf(pricePerM3)) {
+      BoatPriceBound.tooLow => PriceWarning.tooLow,
+      BoatPriceBound.tooHigh => PriceWarning.tooHigh,
+      null => null,
+    };
+  }
+
+  /// Prix au m³ renseigné, dans les bornes techniques et dans les bornes
+  /// dures de la devise (ou inchangé en modification).
   bool get isPricePerM3Valid =>
       pricePerM3 != null &&
       pricePerM3! >= minPricePerM3 &&
-      pricePerM3! <= maxPricePerM3;
-
-  /// Prix au m³ saisi au-dessus du plafond (message dédié sous le champ).
-  bool get isPricePerM3TooHigh =>
-      pricePerM3 != null && pricePerM3! > maxPricePerM3;
+      pricePerM3! <= maxPricePerM3 &&
+      pricePerM3HardBound == null;
 
   /// Capacité maximale saisissable pour le mode du trajet (avion par défaut
   /// tant qu'aucun mode n'est choisi).
@@ -307,6 +354,9 @@ class AnnouncementFormState extends Equatable {
     BoatPriceUnit? boatPriceUnit,
     double? Function()? volumeCapacityM3Getter,
     double? Function()? pricePerM3Getter,
+    SupportedCurrency? pricePerM3Currency,
+    double? editOriginalPricePerM3,
+    String? editOriginalCurrencyCode,
   }) {
     return AnnouncementFormState(
       departureCity: departureCity ?? this.departureCity,
@@ -359,6 +409,11 @@ class AnnouncementFormState extends Equatable {
           ? volumeCapacityM3Getter()
           : volumeCapacityM3,
       pricePerM3: pricePerM3Getter != null ? pricePerM3Getter() : pricePerM3,
+      pricePerM3Currency: pricePerM3Currency ?? this.pricePerM3Currency,
+      editOriginalPricePerM3:
+          editOriginalPricePerM3 ?? this.editOriginalPricePerM3,
+      editOriginalCurrencyCode:
+          editOriginalCurrencyCode ?? this.editOriginalCurrencyCode,
     );
   }
 
@@ -392,5 +447,8 @@ class AnnouncementFormState extends Equatable {
     boatPriceUnit,
     volumeCapacityM3,
     pricePerM3,
+    pricePerM3Currency,
+    editOriginalPricePerM3,
+    editOriginalCurrencyCode,
   ];
 }
