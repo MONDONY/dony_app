@@ -119,6 +119,74 @@ void main() {
             ).captured.single
             as Future<ScanPosition?>;
 
+    // Recette bateau : pendant l'envoi de la photo de dépôt, rien ne le
+    // montrait à l'écran et le bouton du colis revenait, prêt à renvoyer.
+    test('le délai écoulé, le colis est « en cours d\'envoi » jusqu\'à la '
+        'réponse, photo comprise', () {
+      fakeAsync((async) {
+        final response = Completer<SentScan?>();
+        stubSend((_) => response.future);
+        when(
+          () => queue.queueScan(
+            bidId: any(named: 'bidId'),
+            eventType: any(named: 'eventType'),
+            photoPath: any(named: 'photoPath'),
+            gpsLat: any(named: 'gpsLat'),
+            gpsLon: any(named: 'gpsLon'),
+            gpsLabel: any(named: 'gpsLabel'),
+            scanMethod: any(named: 'scanMethod'),
+            photoRequired: any(named: 'photoRequired'),
+            notBefore: any(named: 'notBefore'),
+          ),
+        ).thenAnswer((_) async => 7);
+        final c = build();
+        c.schedule(
+          bidId: 'bid-1',
+          step: 'DEPART',
+          parcelLabel: 'Madou',
+          method: ScanMethod.qr,
+          photoPath: '/tmp/depot.jpg',
+          position: _here,
+          photoRequired: true,
+          deposit: true,
+        );
+        expect(c.state.sendingBidIds, isEmpty);
+
+        async.elapse(const Duration(seconds: 5));
+        expect(c.state.pending, isEmpty);
+        expect(c.state.sendingBidIds, {'bid-1'});
+        expect(c.state.sending.single.photoPath, '/tmp/depot.jpg');
+        expect(c.state.sending.single.deposit, isTrue);
+        // Un second « Valider » du même colis pendant l'envoi ne part pas.
+        expect(
+          c.schedule(
+            bidId: 'bid-1',
+            step: 'DEPART',
+            parcelLabel: 'Madou',
+            method: ScanMethod.qr,
+          ),
+          isNull,
+        );
+
+        response.complete(SentScan(_event));
+        async.flushMicrotasks();
+        expect(c.state.sendingBidIds, isEmpty);
+        expect(c.state.outcome, isA<SuiviValidationSent>());
+      });
+    });
+
+    test('un envoi en échec quitte aussi l\'état « en cours d\'envoi »', () {
+      fakeAsync((async) {
+        stubSend((_) async => throw Exception('réseau'));
+        final c = build();
+        scheduleTransit(c);
+        async.elapse(const Duration(seconds: 5));
+        async.flushMicrotasks();
+        expect(c.state.sendingBidIds, isEmpty);
+        expect(c.state.outcome, isA<SuiviValidationFailed>());
+      });
+    });
+
     test('écrite dans la file dès « Valider », envoyée à la fin du délai', () {
       fakeAsync((async) {
         final c = build();

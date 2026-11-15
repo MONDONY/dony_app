@@ -25218,4 +25218,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidDetailQrFullscreenHint =>
       'Show this QR code to the traveler so they can scan it.';
+
+  @override
+  String suiviSendingToast(String photo, String parcel) {
+    String _temp0 = intl.Intl.selectLogic(photo, {
+      'yes': 'Sending the photo for $parcel…',
+      'other': 'Sending the step for $parcel…',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get suiviSendingButton => 'Sending…';
 }

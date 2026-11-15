@@ -9,6 +9,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
+import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
@@ -104,10 +105,14 @@ class SuiviValidateContent extends StatelessWidget {
             ),
           ],
           const SizedBox(height: DonySpacing.base),
-          _ParcelList(
-            bids: bids,
-            history: hub.scanHistory,
-            onValidateParcel: onValidateParcel,
+          BlocSelector<SuiviValidationCubit, SuiviValidationState, Set<String>>(
+            selector: (state) => state.sendingBidIds,
+            builder: (context, sending) => _ParcelList(
+              bids: bids,
+              history: hub.scanHistory,
+              sendingBidIds: sending,
+              onValidateParcel: onValidateParcel,
+            ),
           ),
           if (!isExpanded) ...[
             const SizedBox(height: DonySpacing.base),
@@ -414,11 +419,15 @@ class _ParcelList extends StatelessWidget {
   const _ParcelList({
     required this.bids,
     required this.history,
+    required this.sendingBidIds,
     required this.onValidateParcel,
   });
 
   final List<BidModel> bids;
   final List<TripScanHistoryEntryModel> history;
+
+  /// Colis dont l'étape part en ce moment (photo comprise).
+  final Set<String> sendingBidIds;
   final void Function(BidModel bid, String step) onValidateParcel;
 
   @override
@@ -466,6 +475,7 @@ class _ParcelList extends StatelessWidget {
                   SuiviParcelRow(
                     bid: bids[i],
                     lastScan: _lastScanOf(bids[i]),
+                    sending: sendingBidIds.contains(bids[i].id),
                     onValidate: onValidateParcel,
                   ),
                 ],
@@ -503,12 +513,17 @@ class SuiviParcelRow extends StatelessWidget {
     required this.bid,
     required this.lastScan,
     required this.onValidate,
+    this.sending = false,
     super.key,
   });
 
   final BidModel bid;
   final TripScanHistoryEntryModel? lastScan;
   final void Function(BidModel bid, String step) onValidate;
+
+  /// L'étape de ce colis part en ce moment (photo comprise) : le bouton
+  /// tourne et ne renvoie rien.
+  final bool sending;
 
   static const double _avatarRadius = 18;
 
@@ -597,6 +612,8 @@ class SuiviParcelRow extends StatelessWidget {
               )
             : LayoutBuilder(
                 builder: (context, constraints) {
+                  // Libellé le plus long des deux états : le bouton ne change
+                  // pas de place quand l'envoi commence.
                   final buttonLabel = l.suiviValidateStep(next);
                   final buttonWidth =
                       _labelWidth(context, buttonLabel, tt.labelLarge) +
@@ -649,26 +666,46 @@ class SuiviParcelRow extends StatelessWidget {
   ) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final label = Text(
+      sending ? context.l10n.suiviSendingButton : buttonLabel,
+      key: Key('suivi-validate-label-${bid.id}'),
+      textAlign: TextAlign.center,
+      maxLines: maxLines,
+      overflow: TextOverflow.ellipsis,
+      style: tt.labelLarge,
+    );
     return TextButton(
       key: Key('suivi-validate-${bid.id}'),
-      onPressed: () => onValidate(bid, next),
+      onPressed: sending ? null : () => onValidate(bid, next),
       style: TextButton.styleFrom(
         backgroundColor: cs.primary.withValues(alpha: 0.10),
         foregroundColor: cs.primary,
+        // En cours d'envoi : désactivé mais lisible, jamais grisé à blanc.
+        disabledBackgroundColor: cs.primary.withValues(alpha: 0.10),
+        disabledForegroundColor: cs.primary,
         minimumSize: const Size(44, 44),
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
         ),
       ),
-      child: Text(
-        buttonLabel,
-        key: Key('suivi-validate-label-${bid.id}'),
-        textAlign: TextAlign.center,
-        maxLines: maxLines,
-        overflow: TextOverflow.ellipsis,
-        style: tt.labelLarge,
-      ),
+      child: sending
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox.square(
+                  dimension: 16,
+                  child: CircularProgressIndicator(
+                    key: Key('suivi-validate-progress-${bid.id}'),
+                    strokeWidth: 2,
+                    color: cs.primary,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Flexible(child: label),
+              ],
+            )
+          : label,
     );
   }
 

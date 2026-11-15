@@ -69,6 +69,8 @@ void main() {
     required Locale locale,
     required double width,
     double textScale = 1,
+    bool sending = false,
+    void Function(BidModel, String)? onValidate,
   }) async {
     tester.view.physicalSize = Size(width, 800);
     tester.view.devicePixelRatio = 1;
@@ -91,7 +93,8 @@ void main() {
                   SuiviParcelRow(
                     bid: _bid(status),
                     lastScan: null,
-                    onValidate: (_, _) {},
+                    sending: sending,
+                    onValidate: onValidate ?? (_, _) {},
                   ),
                 ],
               ),
@@ -100,7 +103,8 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
   }
 
   // Régression recette bateau (Redmi, 360 dp) : « Valider la récupération »
@@ -159,5 +163,53 @@ void main() {
     );
     final name = tester.getRect(find.text('Awa'));
     expect(button.top, greaterThan(name.bottom));
+  });
+
+  // Recette bateau : pendant l'envoi de la photo de dépôt, aucun indicateur,
+  // et le bouton restait prêt à renvoyer.
+  group('envoi en cours', () {
+    testWidgets('le bouton tourne, dit « Envoi… » et ne renvoie rien', (
+      tester,
+    ) async {
+      final calls = <String>[];
+      await pump(
+        tester,
+        status: 'ACCEPTED',
+        locale: AppL10n.fr,
+        width: 360,
+        sending: true,
+        onValidate: (_, step) => calls.add(step),
+      );
+      await tester.pump();
+
+      expect(
+        find.byKey(const Key('suivi-validate-progress-bid-1')),
+        findsOneWidget,
+      );
+      expect(find.text('Envoi…'), findsOneWidget);
+      final button = tester.widget<TextButton>(
+        find.byKey(const Key('suivi-validate-bid-1')),
+      );
+      expect(button.onPressed, isNull);
+      expect(calls, isEmpty);
+    });
+
+    testWidgets('au repos, le bouton valide l\'étape', (tester) async {
+      final calls = <String>[];
+      await pump(
+        tester,
+        status: 'ACCEPTED',
+        locale: AppL10n.fr,
+        width: 360,
+        onValidate: (_, step) => calls.add(step),
+      );
+
+      expect(
+        find.byKey(const Key('suivi-validate-progress-bid-1')),
+        findsNothing,
+      );
+      await tester.tap(find.byKey(const Key('suivi-validate-bid-1')));
+      expect(calls, ['DEPART']);
+    });
   });
 }

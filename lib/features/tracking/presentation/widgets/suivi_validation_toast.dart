@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Bandeaux des validations rapides en attente d'envoi, du plus récent au
 /// plus ancien : « Transit de Madou validé », « Annuler » et le décompte.
+/// Le délai écoulé, le bandeau devient « Envoi… » jusqu'à la réponse du
+/// serveur : une photo peut mettre du temps à partir.
 class SuiviPendingValidations extends StatelessWidget {
   const SuiviPendingValidations({super.key});
 
@@ -16,9 +18,12 @@ class SuiviPendingValidations extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SuiviValidationCubit, SuiviValidationState>(
-      buildWhen: (a, b) => a.pending != b.pending,
+      buildWhen: (a, b) => a.pending != b.pending || a.sending != b.sending,
       builder: (context, state) {
         final visible = state.pending.reversed.take(maxVisible).toList();
+        final sending = state.sending.reversed
+            .take(maxVisible - visible.length)
+            .toList();
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -27,6 +32,12 @@ class SuiviPendingValidations extends StatelessWidget {
                 key: ValueKey<int>(pending.id),
                 padding: const EdgeInsets.only(bottom: DonySpacing.sm),
                 child: _ValidationToast(pending: pending),
+              ),
+            for (final item in sending)
+              Padding(
+                key: ValueKey<String>('sending-${item.id}'),
+                padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+                child: _SendingToast(sending: item),
               ),
           ],
         );
@@ -163,6 +174,71 @@ class _ValidationToastState extends State<_ValidationToast>
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+/// Validation partie, réponse du serveur attendue : ni décompte ni
+/// « Annuler », un indicateur d'envoi.
+class _SendingToast extends StatelessWidget {
+  const _SendingToast({required this.sending});
+
+  final PendingValidation sending;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    return Semantics(
+      liveRegion: true,
+      child: Material(
+        key: Key('suivi-sending-${sending.bidId}'),
+        color: cs.surface,
+        elevation: 8,
+        shadowColor: DonyColors.neutral900.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(DonyRadius.lg),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(DonySpacing.base),
+              child: Row(
+                children: [
+                  SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: cs.primary,
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.md),
+                  Expanded(
+                    child: Text(
+                      l.suiviSendingToast(
+                        sending.photoPath != null ? 'yes' : 'no',
+                        sending.parcelLabel,
+                      ),
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ExcludeSemantics(
+              child: LinearProgressIndicator(
+                minHeight: 3,
+                color: cs.primary,
+                backgroundColor: cs.outline.withValues(alpha: 0.4),
+              ),
+            ),
+          ],
         ),
       ),
     );

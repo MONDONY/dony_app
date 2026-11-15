@@ -40582,6 +40582,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Présentez ce QR au voyageur pour qu\'il le scanne.'**
   String get bidDetailQrFullscreenHint;
+
+  /// Onglet Suivi : bandeau d'une validation partie dont la réponse du serveur est attendue (photo comprise). Neutre selon le mode de transport (suivi_validation_toast.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{photo, select, yes{Envoi de la photo de {parcel}…} other{Envoi de l\'étape de {parcel}…}}'**
+  String suiviSendingToast(String photo, String parcel);
+
+  /// Onglet Suivi : libellé du bouton d'une ligne colis pendant l'envoi de son étape, bouton désactivé (suivi_validate_content.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi…'**
+  String get suiviSendingButton;
 }
 
 class _AppLocalizationsDelegate

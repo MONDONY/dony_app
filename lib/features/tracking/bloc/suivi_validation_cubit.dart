@@ -84,18 +84,26 @@ final class SuiviValidationFailed extends SuiviValidationOutcome {
 class SuiviValidationState {
   const SuiviValidationState({
     this.pending = const [],
+    this.sending = const [],
     this.outcome,
     this.outcomeId = 0,
   });
 
   /// Du plus ancien au plus récent.
   final List<PendingValidation> pending;
+
+  /// Validations dont le délai est écoulé et dont l'envoi (photo comprise)
+  /// attend la réponse du serveur. L'écran les montre en cours d'envoi et
+  /// bloque un second envoi du même colis.
+  final List<PendingValidation> sending;
   final SuiviValidationOutcome? outcome;
 
   /// Incrémenté à chaque [outcome] : l'écran n'écoute que ce compteur.
   final int outcomeId;
 
   Set<String> get pendingBidIds => {for (final p in pending) p.bidId};
+
+  Set<String> get sendingBidIds => {for (final p in sending) p.bidId};
 }
 
 /// Validation rapide de l'onglet Suivi : l'étape est affichée comme validée
@@ -260,7 +268,16 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     final position = _positions.remove(id)!;
     final key = _keys.remove(id)!;
     _sendingBids.add(pending.bidId);
-    if (!isClosed) emit(_copy(pending: _without(id)));
+    if (!isClosed) {
+      emit(
+        SuiviValidationState(
+          pending: _without(id),
+          sending: [...state.sending, pending],
+          outcome: state.outcome,
+          outcomeId: state.outcomeId,
+        ),
+      );
+    }
 
     SuiviValidationOutcome outcome;
     try {
@@ -301,6 +318,10 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
       emit(
         SuiviValidationState(
           pending: state.pending,
+          sending: [
+            for (final p in state.sending)
+              if (p.id != id) p,
+          ],
           outcome: outcome,
           outcomeId: state.outcomeId + 1,
         ),
@@ -331,6 +352,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
   SuiviValidationState _copy({required List<PendingValidation> pending}) =>
       SuiviValidationState(
         pending: pending,
+        sending: state.sending,
         outcome: state.outcome,
         outcomeId: state.outcomeId,
       );

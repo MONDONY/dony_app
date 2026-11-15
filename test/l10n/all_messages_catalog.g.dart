@@ -6748,6 +6748,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidPresenceSheetFinalNote': (l) => l.bidPresenceSheetFinalNote,
   'bidDetailQrFullscreenOpen': (l) => l.bidDetailQrFullscreenOpen,
   'bidDetailQrFullscreenHint': (l) => l.bidDetailQrFullscreenHint,
+  'suiviSendingToast': (l) => l.suiviSendingToast(placeholderMarker('photo'), placeholderMarker('parcel')),
+  'suiviSendingButton': (l) => l.suiviSendingButton,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7501,4 +7503,5 @@ const textParameters = <String, List<String>>{
   'amendmentTravelerParcelVolumeValue': ['from', 'to'],
   'amendmentSenderNotBroughtVolumeStatus': ['name'],
   'bidPresenceSheetBodyUntil': ['date', 'time'],
+  'suiviSendingToast': ['photo', 'parcel'],
 };

@@ -13014,5 +13014,9 @@
   "bidDetailQrFullscreenOpen": "Show full screen",
   "@bidDetailQrFullscreenOpen": {"description": "Bouton et libellé d'accessibilité qui ouvrent le QR du colis en plein écran (qr_sheet.dart)."},
   "bidDetailQrFullscreenHint": "Show this QR code to the traveler so they can scan it.",
-  "@bidDetailQrFullscreenHint": {"description": "Consigne sous le QR du colis en plein écran. Neutre selon le mode de transport (qr_fullscreen_view.dart)."}
+  "@bidDetailQrFullscreenHint": {"description": "Consigne sous le QR du colis en plein écran. Neutre selon le mode de transport (qr_fullscreen_view.dart)."},
+  "suiviSendingToast": "{photo, select, yes{Sending the photo for {parcel}…} other{Sending the step for {parcel}…}}",
+  "@suiviSendingToast": {"description": "Onglet Suivi : bandeau d'une validation partie dont la réponse du serveur est attendue (photo comprise). Neutre selon le mode de transport (suivi_validation_toast.dart).", "placeholders": {"photo": {"type": "String"}, "parcel": {"type": "String"}}},
+  "suiviSendingButton": "Sending…",
+  "@suiviSendingButton": {"description": "Onglet Suivi : libellé du bouton d'une ligne colis pendant l'envoi de son étape, bouton désactivé (suivi_validate_content.dart)."}
 }
