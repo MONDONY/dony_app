@@ -24724,6 +24724,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les expéditeurs voient une fourchette : les retards au port sont fréquents.';
 
   @override
+  String get tripPublishBoatArrivalSuggestedHint =>
+      'Dates proposées selon les délais habituels du bateau, à ajuster si besoin.';
+
+  @override
   String get tripPublishBoatArrivalRequired =>
       'Indiquez l\'arrivée au plus tôt et au plus tard';
 

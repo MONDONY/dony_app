@@ -23975,6 +23975,10 @@
   "@tripPublishBoatArrivalHelp": {
     "description": "Aide sous l'arrivée estimée d'un trajet bateau (trajet_step.dart)"
   },
+  "tripPublishBoatArrivalSuggestedHint": "Dates proposées selon les délais habituels du bateau, à ajuster si besoin.",
+  "@tripPublishBoatArrivalSuggestedHint": {
+    "description": "Mention sous l'arrivée estimée d'un trajet bateau tant que la fourchette est celle proposée d'office, à modifier librement (trajet_step.dart)"
+  },
   "tripPublishBoatArrivalRequired": "Indiquez l'arrivée au plus tôt et au plus tard",
   "@tripPublishBoatArrivalRequired": {
     "description": "Erreur : arrivée estimée d'un bateau incomplète (create_trip_screen.dart)"

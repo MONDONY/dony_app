@@ -991,6 +991,31 @@ class _TripFormContentState extends State<_TripFormContent> {
   final _boatArrivalMinNotifier = ValueNotifier<DateTime?>(null);
   final _boatArrivalMaxNotifier = ValueNotifier<DateTime?>(null);
 
+  /// Bateau, création libre : délais proposés d'office, modifiables. Date
+  /// limite de dépôt une semaine avant le départ, arrivée entre 5 et 8
+  /// semaines après (cœur du marché du groupage en conteneur).
+  static const _boatSuggestedHandoverLeadDays = 7;
+  static const _boatSuggestedArrivalMinDays = 35;
+  static const _boatSuggestedArrivalMaxDays = 56;
+
+  /// La date limite en attente ([_pendingHandoverLeadDays]) est celle
+  /// proposée pour le bateau, pas celle d'un modèle : bornée à aujourd'hui,
+  /// retirée si le voyageur quitte le bateau.
+  bool _boatHandoverSuggested = false;
+
+  /// Fourchette d'arrivée proposée pour le bateau. Elle suit le départ tant
+  /// que les dates affichées sont encore celles-ci (aucun choix manuel).
+  DateTime? _suggestedBoatArrivalMin;
+  DateTime? _suggestedBoatArrivalMax;
+
+  /// Vrai tant que la fourchette affichée est celle proposée : une mention
+  /// discrète le dit sous les deux dates.
+  final _boatArrivalSuggestedNotifier = ValueNotifier<bool>(false);
+
+  /// Écriture des délais proposés : ce n'est pas une saisie du voyageur,
+  /// l'étape Trajet ne passe pas en rouge pour autant.
+  bool _applyingBoatSuggestions = false;
+
   /// Bateau au m³ : prix net par m³ saisi (étape Prix). Recopié dans le bloc
   /// (aperçu) ; lu à l'envoi.
   final _pricePerM3Ctrl = TextEditingController();
@@ -1462,6 +1487,10 @@ class _TripFormContentState extends State<_TripFormContent> {
     // n'a pas choisi lui-même un jour limite (cf. _applyTemplate,
     // _applyPendingHandoverLead, _selectHandoverDeadline).
     _departureDateNotifier.addListener(_applyPendingHandoverLead);
+    _departureDateNotifier.addListener(_refreshSuggestedBoatArrival);
+    _boatArrivalMinNotifier.addListener(_syncBoatArrivalSuggested);
+    _boatArrivalMaxNotifier.addListener(_syncBoatArrivalSuggested);
+    _transportModeNotifier.addListener(_suggestBoatDates);
     _priceOptionNotifier.addListener(_syncPriceToFormBloc);
     _customPriceNotifier.addListener(_syncPriceToFormBloc);
     _availableKgNotifier.addListener(_syncKgToFormBloc);
@@ -1590,7 +1619,7 @@ class _TripFormContentState extends State<_TripFormContent> {
   ) => missing.contains(f) ? _step0FieldMessage(l10n, f) : null;
 
   void _markStep0Touched() {
-    if (_step0Touched) return;
+    if (_step0Touched || _applyingBoatSuggestions) return;
     _step0Touched = true;
     _refreshStep0Errors();
   }
@@ -2076,6 +2105,10 @@ class _TripFormContentState extends State<_TripFormContent> {
     _arrivalCityNotifier.removeListener(_syncCityToFormBloc);
     _departureDateNotifier.removeListener(_syncDateToFormBloc);
     _departureDateNotifier.removeListener(_applyPendingHandoverLead);
+    _departureDateNotifier.removeListener(_refreshSuggestedBoatArrival);
+    _boatArrivalMinNotifier.removeListener(_syncBoatArrivalSuggested);
+    _boatArrivalMaxNotifier.removeListener(_syncBoatArrivalSuggested);
+    _transportModeNotifier.removeListener(_suggestBoatDates);
     _priceOptionNotifier.removeListener(_syncPriceToFormBloc);
     _customPriceNotifier.removeListener(_syncPriceToFormBloc);
     _availableKgNotifier.removeListener(_syncKgToFormBloc);
@@ -2127,6 +2160,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _arrivalDayOffsetNotifier.dispose();
     _boatArrivalMinNotifier.dispose();
     _boatArrivalMaxNotifier.dispose();
+    _boatArrivalSuggestedNotifier.dispose();
     _handoverDeadlineNotifier.dispose();
     _availableKgNotifier.dispose();
     _priceOptionNotifier.dispose();
@@ -2943,6 +2977,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     // Choix manuel : annule le délai en attente d'un modèle appliqué, sinon
     // un prochain changement de date de départ écraserait ce choix.
     _pendingHandoverLeadDays = null;
+    _boatHandoverSuggested = false;
   }
 
   @override
@@ -3337,6 +3372,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         t.acceptedPaymentMethods.contains('MOBILE_MONEY');
 
     _pendingHandoverLeadDays = t.handoverLeadDays;
+    _boatHandoverSuggested = false;
     if (_pendingHandoverLeadDays == null) {
       // Champ nul = défaut du formulaire vierge : sans ce reset, la date
       // limite d'un modèle précédemment appliqué restait affichée alors que
@@ -3387,11 +3423,109 @@ class _TripFormContentState extends State<_TripFormContent> {
     final lead = _pendingHandoverLeadDays;
     final date = _departureDateNotifier.value;
     if (lead == null || date == null) return;
-    _handoverDeadlineNotifier.value = DateTime(
+    var deadline = DateTime(
       date.year,
       date.month,
       date.day,
     ).subtract(Duration(days: lead));
+    if (!_boatHandoverSuggested) {
+      _handoverDeadlineNotifier.value = deadline;
+      return;
+    }
+    // Départ dans moins d'une semaine : jamais une date limite passée, le
+    // plus tôt possible reste aujourd'hui (le jour du départ, son heure).
+    final today = DateUtils.dateOnly(DateTime.now());
+    if (deadline.isBefore(today)) deadline = today;
+    _withBoatSuggestion(() => _handoverDeadlineNotifier.value = deadline);
+  }
+
+  /// Création libre : propose les délais d'un bateau quand il est choisi,
+  /// sans rien écraser de déjà renseigné ; retire ceux encore proposés quand
+  /// le voyageur quitte le bateau. Jamais en modification ni en trajet dédié.
+  void _suggestBoatDates() {
+    if (_isEdit || _isLocked) return;
+    if (_isBoat) {
+      if (_handoverDeadlineNotifier.value == null &&
+          _pendingHandoverLeadDays == null) {
+        _pendingHandoverLeadDays = _boatSuggestedHandoverLeadDays;
+        _boatHandoverSuggested = true;
+        _applyPendingHandoverLead();
+      }
+      if (_boatArrivalMinNotifier.value == null &&
+          _boatArrivalMaxNotifier.value == null) {
+        _applySuggestedBoatArrival();
+      }
+      return;
+    }
+    if (_boatHandoverSuggested) {
+      _boatHandoverSuggested = false;
+      _pendingHandoverLeadDays = null;
+      _withBoatSuggestion(() => _handoverDeadlineNotifier.value = null);
+    }
+    if (_boatArrivalSuggestedNotifier.value) {
+      _withBoatSuggestion(() {
+        _boatArrivalMinNotifier.value = null;
+        _boatArrivalMaxNotifier.value = null;
+      });
+    }
+    _forgetBoatArrivalSuggestion();
+  }
+
+  /// Fourchette proposée à partir du départ (5 à 8 semaines, toujours dans
+  /// les 120 jours autorisés). Sans départ, rien n'est proposé.
+  void _applySuggestedBoatArrival() {
+    final departure = _departureDateNotifier.value;
+    if (departure == null) return;
+    final day = DateUtils.dateOnly(departure);
+    final limit = _boatArrivalLimit(day);
+    DateTime at(int days) {
+      final d = DateTime(day.year, day.month, day.day + days);
+      return d.isAfter(limit) ? limit : d;
+    }
+
+    _suggestedBoatArrivalMin = at(_boatSuggestedArrivalMinDays);
+    _suggestedBoatArrivalMax = at(_boatSuggestedArrivalMaxDays);
+    _withBoatSuggestion(() {
+      _boatArrivalMinNotifier.value = _suggestedBoatArrivalMin;
+      _boatArrivalMaxNotifier.value = _suggestedBoatArrivalMax;
+    });
+    _syncBoatArrivalSuggested();
+  }
+
+  /// Le départ change : la fourchette proposée le suit, une fourchette
+  /// choisie par le voyageur reste telle quelle.
+  void _refreshSuggestedBoatArrival() {
+    if (_isEdit || _isLocked || !_isBoat) return;
+    final untouched =
+        _boatArrivalMinNotifier.value == null &&
+        _boatArrivalMaxNotifier.value == null;
+    if (_boatArrivalSuggestedNotifier.value || untouched) {
+      _applySuggestedBoatArrival();
+    }
+  }
+
+  void _syncBoatArrivalSuggested() {
+    final min = _suggestedBoatArrivalMin;
+    _boatArrivalSuggestedNotifier.value =
+        min != null &&
+        _boatArrivalMinNotifier.value == min &&
+        _boatArrivalMaxNotifier.value == _suggestedBoatArrivalMax;
+  }
+
+  void _forgetBoatArrivalSuggestion() {
+    _suggestedBoatArrivalMin = null;
+    _suggestedBoatArrivalMax = null;
+    _syncBoatArrivalSuggested();
+  }
+
+  void _withBoatSuggestion(VoidCallback write) {
+    final previous = _applyingBoatSuggestions;
+    _applyingBoatSuggestions = true;
+    try {
+      write();
+    } finally {
+      _applyingBoatSuggestions = previous;
+    }
   }
 
   /// Saisie complète du formulaire, au format du brouillon local.
@@ -3483,6 +3617,10 @@ class _TripFormContentState extends State<_TripFormContent> {
     // Après la date : son listener réapplique un délai de modèle en attente.
     _pendingHandoverLeadDays = d.handoverLeadDays;
     _handoverDeadlineNotifier.value = d.handoverDeadline;
+    // Le brouillon garde ses dates : celles proposées au passage en bateau
+    // (changement de mode ci-dessus) sont oubliées.
+    _boatHandoverSuggested = false;
+    _forgetBoatArrivalSuggestion();
 
     final kg = d.availableKg;
     if (kg != null) _availableKgNotifier.value = kg;
@@ -3687,6 +3825,9 @@ class _TripFormContentState extends State<_TripFormContent> {
           onSelectBoatArrivalMin: () => _selectBoatArrival(latest: false),
           onSelectBoatArrivalMax: () => _selectBoatArrival(latest: true),
           boatArrivalError: _boatArrivalMessage(context.l10n),
+          boatArrivalSuggested: _isEdit || _isLocked
+              ? null
+              : _boatArrivalSuggestedNotifier,
           // Corridor verrouillé en modification (Q1) ET en trajet dédié (lockContext).
           // Date verrouillée seulement en modification ; le dédié la garde éditable
           // dans la fenêtre de tolérance.

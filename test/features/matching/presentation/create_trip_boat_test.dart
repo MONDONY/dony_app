@@ -1421,6 +1421,192 @@ void main() {
     }
   });
 
+  group('dates proposées en bateau', () {
+    State<StatefulWidget> content(WidgetTester tester) =>
+        tester.state<State<StatefulWidget>>(
+          find.byKey(const Key('trip-form-content')),
+        );
+
+    DateTime? handover(WidgetTester tester) =>
+        (content(tester) as dynamic).handoverDeadlineForTest.value as DateTime?;
+
+    Finder hint() => find.byKey(
+      const Key('boat-arrival-suggested-hint'),
+      skipOffstage: false,
+    );
+
+    Future<void> chooseMode(WidgetTester tester, String group) async {
+      await tester.tap(find.byKey(Key('mode-card-$group')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+    }
+
+    Future<void> setDeparture(WidgetTester tester, DateTime day) async {
+      trajet(tester).departureDateNotifier.value = day;
+      await tester.pump();
+    }
+
+    testWidgets('bateau puis départ : dépôt à J−7, arrivée à 5 et 8 semaines, '
+        'mention affichée', (tester) async {
+      await pumpScreen(tester, null);
+      await chooseMode(tester, 'boat');
+      await goToStep(tester, TripFormStep.trajet);
+      expect(handover(tester), isNull);
+      expect(trajet(tester).boatArrivalMinNotifier!.value, isNull);
+
+      await setDeparture(tester, _inDays(30));
+
+      expect(handover(tester), _inDays(23));
+      expect(trajet(tester).boatArrivalMinNotifier!.value, _inDays(65));
+      expect(trajet(tester).boatArrivalMaxNotifier!.value, _inDays(86));
+      expect(
+        find.text(
+          'Dates proposées selon les délais habituels du bateau, à ajuster '
+          'si besoin.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('départ déjà saisi puis bateau : pré-rempli au choix du mode', (
+      tester,
+    ) async {
+      await pumpScreen(tester, null);
+      await setDeparture(tester, _inDays(40));
+      await chooseMode(tester, 'boat');
+
+      expect(handover(tester), _inDays(33));
+      expect(trajet(tester).boatArrivalMinNotifier!.value, _inDays(75));
+      expect(trajet(tester).boatArrivalMaxNotifier!.value, _inDays(96));
+    });
+
+    testWidgets('le départ change : les dates proposées suivent', (
+      tester,
+    ) async {
+      await pumpScreen(tester, null);
+      await chooseMode(tester, 'boat');
+      await setDeparture(tester, _inDays(30));
+      await setDeparture(tester, _inDays(45));
+
+      expect(handover(tester), _inDays(38));
+      expect(trajet(tester).boatArrivalMinNotifier!.value, _inDays(80));
+      expect(trajet(tester).boatArrivalMaxNotifier!.value, _inDays(101));
+    });
+
+    testWidgets('départ dans moins d\'une semaine : jamais une date limite '
+        'passée', (tester) async {
+      await pumpScreen(tester, null);
+      await chooseMode(tester, 'boat');
+      await setDeparture(tester, _inDays(3));
+
+      expect(handover(tester), _inDays(0));
+    });
+
+    testWidgets('fourchette choisie par le voyageur : gardée quand le départ '
+        'change, mention retirée', (tester) async {
+      await pumpScreen(tester, null);
+      await chooseMode(tester, 'boat');
+      await goToStep(tester, TripFormStep.trajet);
+      await setDeparture(tester, _inDays(30));
+      trajet(tester).boatArrivalMinNotifier!.value = _inDays(50);
+      trajet(tester).boatArrivalMaxNotifier!.value = _inDays(70);
+      await tester.pump();
+      expect(hint(), findsNothing);
+
+      await setDeparture(tester, _inDays(35));
+
+      expect(trajet(tester).boatArrivalMinNotifier!.value, _inDays(50));
+      expect(trajet(tester).boatArrivalMaxNotifier!.value, _inDays(70));
+      expect(hint(), findsNothing);
+    });
+
+    testWidgets('date limite choisie par le voyageur : gardée quand le départ '
+        'change', (tester) async {
+      await pumpScreen(tester, null, locale: AppL10n.en);
+      await chooseMode(tester, 'boat');
+      await goToStep(tester, TripFormStep.trajet);
+      await setDeparture(tester, _inDays(30));
+
+      // Le jour proposé confirmé à la main, heure annulée : choix manuel.
+      final row = find.byKey(const Key('sheet-handover-deadline-row'));
+      await tester.ensureVisible(row);
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(row);
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.text('OK'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.text('Cancel'));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(handover(tester), _inDays(23));
+
+      await setDeparture(tester, _inDays(40));
+
+      expect(handover(tester), _inDays(23));
+      expect(trajet(tester).boatArrivalMinNotifier!.value, _inDays(75));
+      expect(
+        find.text(
+          'Suggested dates based on usual shipping times. Adjust them if '
+          'needed.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('bateau puis avion : les dates proposées sont retirées', (
+      tester,
+    ) async {
+      await pumpScreen(tester, null);
+      await chooseMode(tester, 'boat');
+      await setDeparture(tester, _inDays(30));
+      await chooseMode(tester, 'plane');
+
+      expect(handover(tester), isNull);
+      expect(trajet(tester).boatArrivalMinNotifier!.value, isNull);
+      expect(trajet(tester).boatArrivalMaxNotifier!.value, isNull);
+
+      await setDeparture(tester, _inDays(40));
+      expect(handover(tester), isNull);
+    });
+
+    testWidgets('avion : rien n\'est proposé', (tester) async {
+      await pumpScreen(tester, null);
+      await chooseMode(tester, 'plane');
+      await setDeparture(tester, _inDays(30));
+
+      expect(handover(tester), isNull);
+      expect(trajet(tester).boatArrivalMinNotifier!.value, isNull);
+      expect(hint(), findsNothing);
+    });
+
+    testWidgets('modification : les dates du trajet restent', (tester) async {
+      await pumpScreen(tester, CreateTripArgs(announcement: _editedBoatTrip()));
+      await setDeparture(tester, _inDays(32));
+
+      expect(handover(tester), DateUtils.dateOnly(_inDays(29)));
+      expect(trajet(tester).boatArrivalMinNotifier!.value, _inDays(50));
+      expect(trajet(tester).boatArrivalMaxNotifier!.value, _inDays(65));
+      expect(hint(), findsNothing);
+    });
+
+    testWidgets('brouillon restauré : ses dates restent, même si le départ '
+        'change', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(resumeDraft: _boatDraft(stepId: TripFormStep.trajet)),
+      );
+      expect(handover(tester), _inDays(29));
+      expect(trajet(tester).boatArrivalMinNotifier!.value, _inDays(50));
+      expect(trajet(tester).boatArrivalMaxNotifier!.value, _inDays(65));
+      expect(hint(), findsNothing);
+
+      await setDeparture(tester, _inDays(32));
+
+      expect(handover(tester), _inDays(29));
+      expect(trajet(tester).boatArrivalMinNotifier!.value, _inDays(50));
+      expect(trajet(tester).boatArrivalMaxNotifier!.value, _inDays(65));
+    });
+  });
+
   group('brouillon local', () {
     test('boatDraft_roundTrip : clés bateau relues telles quelles', () {
       final draft = _boatDraft();

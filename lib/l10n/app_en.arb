@@ -12203,6 +12203,10 @@
   "@tripPublishBoatArrivalHelp": {
     "description": "Aide sous l'arrivée estimée d'un trajet bateau (trajet_step.dart)"
   },
+  "tripPublishBoatArrivalSuggestedHint": "Suggested dates based on usual shipping times. Adjust them if needed.",
+  "@tripPublishBoatArrivalSuggestedHint": {
+    "description": "Mention sous l'arrivée estimée d'un trajet bateau tant que la fourchette est celle proposée d'office, à modifier librement (trajet_step.dart)"
+  },
   "tripPublishBoatArrivalRequired": "Enter the earliest and the latest arrival",
   "@tripPublishBoatArrivalRequired": {
     "description": "Erreur : arrivée estimée d'un bateau incomplète (create_trip_screen.dart)"

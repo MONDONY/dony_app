@@ -24544,6 +24544,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Senders see a date range: delays at port are common.';
 
   @override
+  String get tripPublishBoatArrivalSuggestedHint =>
+      'Suggested dates based on usual shipping times. Adjust them if needed.';
+
+  @override
   String get tripPublishBoatArrivalRequired =>
       'Enter the earliest and the latest arrival';
 

@@ -39564,6 +39564,12 @@ abstract class AppLocalizations {
   /// **'Les expéditeurs voient une fourchette : les retards au port sont fréquents.'**
   String get tripPublishBoatArrivalHelp;
 
+  /// Mention sous l'arrivée estimée d'un trajet bateau tant que la fourchette est celle proposée d'office, à modifier librement (trajet_step.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dates proposées selon les délais habituels du bateau, à ajuster si besoin.'**
+  String get tripPublishBoatArrivalSuggestedHint;
+
   /// Erreur : arrivée estimée d'un bateau incomplète (create_trip_screen.dart)
   ///
   /// In fr, this message translates to:

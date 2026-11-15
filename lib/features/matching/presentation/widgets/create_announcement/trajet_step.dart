@@ -15,6 +15,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/stops_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/transport_mode_row.dart';
 import 'package:dony/l10n/l10n.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -99,6 +100,10 @@ class TrajetStep extends StatelessWidget {
   /// Message de l'arrivée estimée d'un bateau (incomplète ou incohérente).
   final String? boatArrivalError;
 
+  /// Vrai tant que la fourchette affichée est celle proposée d'office : une
+  /// mention discrète le dit. Null : jamais de mention.
+  final ValueListenable<bool>? boatArrivalSuggested;
+
   const TrajetStep({
     super.key,
     required this.departureCityNotifier,
@@ -129,6 +134,7 @@ class TrajetStep extends StatelessWidget {
     this.onSelectBoatArrivalMin,
     this.onSelectBoatArrivalMax,
     this.boatArrivalError,
+    this.boatArrivalSuggested,
   });
 
   @override
@@ -524,6 +530,7 @@ class TrajetStep extends StatelessWidget {
                   onSelectMin: onSelectBoatArrivalMin,
                   onSelectMax: onSelectBoatArrivalMax,
                   error: boatArrivalError,
+                  suggested: boatArrivalSuggested,
                 ),
               ],
             ],
@@ -557,6 +564,7 @@ class _BoatArrivalRange extends StatelessWidget {
     required this.onSelectMin,
     required this.onSelectMax,
     required this.error,
+    this.suggested,
   });
 
   final ValueNotifier<DateTime?> minNotifier;
@@ -564,6 +572,7 @@ class _BoatArrivalRange extends StatelessWidget {
   final Future<void> Function()? onSelectMin;
   final Future<void> Function()? onSelectMax;
   final String? error;
+  final ValueListenable<bool>? suggested;
 
   @override
   Widget build(BuildContext context) {
@@ -615,6 +624,20 @@ class _BoatArrivalRange extends StatelessWidget {
           key: const Key('boat-arrival-help'),
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
+        if (suggested case final suggested?)
+          ValueListenableBuilder<bool>(
+            valueListenable: suggested,
+            builder: (context, isSuggested, _) => isSuggested
+                ? Padding(
+                    padding: const EdgeInsets.only(top: DonySpacing.xs),
+                    child: Text(
+                      l.tripPublishBoatArrivalSuggestedHint,
+                      key: const Key('boat-arrival-suggested-hint'),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
       ],
     );
   }
