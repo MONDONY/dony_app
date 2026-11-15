@@ -15073,6 +15073,50 @@
   "@supportContactCta": {
     "description": "Bouton d'accueil support et titre de la sheet de création de ticket (support_home_screen.dart, même texte deux usages)."
   },
+  "supportWhatsappTitle": "Une question ? Écrivez-nous",
+  "@supportWhatsappTitle": {
+    "description": "Titre de la carte WhatsApp en tête de l'écran Support (support_whatsapp_card.dart)."
+  },
+  "supportWhatsappFaqTitle": "Besoin d'un humain ?",
+  "@supportWhatsappFaqTitle": {
+    "description": "Titre de la carte WhatsApp en tête du Centre d'aide (support_whatsapp_card.dart)."
+  },
+  "supportWhatsappSubtitle": "Réponse rapide de l'équipe Yadony sur WhatsApp",
+  "@supportWhatsappSubtitle": {
+    "description": "Sous-titre de la carte WhatsApp du support."
+  },
+  "supportWhatsappCta": "Écrire sur WhatsApp",
+  "@supportWhatsappCta": {
+    "description": "Bouton de la carte WhatsApp : ouvre la conversation avec l'équipe Yadony. Doit tenir sur une ligne."
+  },
+  "supportWhatsappMessage": "Bonjour Yadony, j'ai besoin d'aide.",
+  "@supportWhatsappMessage": {
+    "description": "Message pré-rempli dans WhatsApp ou le SMS vers l'équipe Yadony. Sans donnée personnelle."
+  },
+  "supportContactSheetTitle": "Contacter Yadony",
+  "@supportContactSheetTitle": {
+    "description": "Titre de la feuille de repli quand WhatsApp ne s'ouvre pas."
+  },
+  "supportContactSheetBody": "WhatsApp n'est pas disponible sur ce téléphone. Appelez ou écrivez directement au numéro.",
+  "@supportContactSheetBody": {
+    "description": "Texte de la feuille de repli du contact support."
+  },
+  "supportContactCall": "Appeler",
+  "@supportContactCall": {
+    "description": "Bouton de la feuille de repli : ouvre le composeur téléphonique."
+  },
+  "supportContactSms": "Envoyer un SMS",
+  "@supportContactSms": {
+    "description": "Bouton de la feuille de repli : ouvre la messagerie SMS."
+  },
+  "supportContactCopied": "Numéro copié",
+  "@supportContactCopied": {
+    "description": "Confirmation après la copie du numéro du support."
+  },
+  "supportContactOpenError": "Impossible d'ouvrir l'application. Copiez le numéro pour le saisir vous-même.",
+  "@supportContactOpenError": {
+    "description": "Erreur quand le composeur ou les SMS ne s'ouvrent pas depuis la feuille de repli."
+  },
   "supportNewRequestCta": "Nouvelle demande",
   "@supportNewRequestCta": {
     "description": "Bouton fixé en bas de l'écran support quand l'utilisateur a déjà des conversations : ouvre la sheet de création d'un nouveau ticket (support_home_screen.dart)."

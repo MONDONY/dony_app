@@ -73,6 +73,16 @@ class ConfigDatasource {
     );
   }
 
+  /// Numéro WhatsApp de l'équipe : `{"whatsappNumber": "+33…"}`, clé absente
+  /// tant qu'aucun numéro n'est réglé dans l'admin (`null` : pas de carte).
+  Future<String?> getSupportWhatsappNumber() async {
+    final response = await _client.dio.get('/config/support-contact');
+    final data = response.data as Map<String, dynamic>;
+    final number = data['whatsappNumber'];
+    if (number is! String || number.trim().isEmpty) return null;
+    return number.trim();
+  }
+
   /// Drapeaux des moyens de la feuille de paiement. Champ absent : faux.
   Future<PaymentMethodFlags> getPaymentMethods() async {
     final response = await _client.dio.get('/config/payment-methods');

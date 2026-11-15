@@ -15,6 +15,7 @@ import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/currency_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
+import '../../../../helpers/support_contact_test_helpers.dart';
 
 const _emptyConfigJson = '''
 {
@@ -107,7 +108,32 @@ Widget _wrap({
 }
 
 void main() {
+  setUp(registerSupportContactCubit);
   tearDown(() => setDonyReimbursementCap(kDonyReimbursementCapDefault));
+
+  testWidgets('carte WhatsApp en tête, avant la recherche et les questions', (
+    tester,
+  ) async {
+    registerSupportContactCubit(number: '+33612345678');
+    await tester.pumpWidget(_wrap());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Besoin d\'un humain ?'), findsOneWidget);
+    final whatsapp = tester.getTopLeft(find.text('Écrire sur WhatsApp'));
+    final search = tester.getTopLeft(find.byKey(const Key('faq-search-field')));
+    final section = tester.getTopLeft(find.text('Compte & identité'));
+    expect(whatsapp.dy, lessThan(search.dy));
+    expect(whatsapp.dy, lessThan(section.dy));
+  });
+
+  testWidgets('sans numéro réglé : pas de carte WhatsApp dans le FAQ', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Écrire sur WhatsApp'), findsNothing);
+  });
 
   testWidgets('renders title and all section headers', (tester) async {
     await tester.pumpWidget(_wrap());

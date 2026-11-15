@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/support_contact_test_helpers.dart';
 
 class MockSupportBloc extends MockBloc<SupportEvent, SupportState>
     implements SupportBloc {}
@@ -55,6 +56,7 @@ void main() {
 
   setUp(() {
     bloc = MockSupportBloc();
+    registerSupportContactCubit();
   });
 
   void stubState(SupportState state) {
@@ -84,6 +86,35 @@ void main() {
       find.text('Vous etes debite quand le voyageur accepte votre offre.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('carte WhatsApp affichée en premier, avant les questions', (
+    tester,
+  ) async {
+    registerSupportContactCubit(number: '+33612345678');
+    stubState(
+      const SupportState(
+        homeStatus: SupportViewStatus.ready,
+        replies: [_reply],
+      ),
+    );
+
+    await tester.pumpWidget(_harness(bloc));
+    await tester.pumpAndSettle();
+
+    final whatsapp = tester.getTopLeft(find.text('Écrire sur WhatsApp'));
+    final faq = tester.getTopLeft(find.text('Questions fréquentes'));
+    expect(whatsapp.dy, lessThan(faq.dy));
+    expect(find.text('Une question ? Écrivez-nous'), findsOneWidget);
+  });
+
+  testWidgets('sans numéro réglé : pas de carte WhatsApp', (tester) async {
+    stubState(const SupportState(homeStatus: SupportViewStatus.ready));
+
+    await tester.pumpWidget(_harness(bloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Écrire sur WhatsApp'), findsNothing);
   });
 
   testWidgets('affiche le CTA de contact et ouvre la sheet de création', (

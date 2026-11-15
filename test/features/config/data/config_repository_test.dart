@@ -500,4 +500,68 @@ void main() {
       expect(await repository.getCommissionGridById('inconnue'), isNull);
     });
   });
+  group('Numéro WhatsApp du support (GET /config/support-contact)', () {
+    Response<dynamic> body(Map<String, dynamic> data) => Response(
+      requestOptions: RequestOptions(path: '/config/support-contact'),
+      statusCode: 200,
+      data: data,
+    );
+
+    test('rend le numéro servi, sans espaces autour', () async {
+      when(
+        () => mockDio.get('/config/support-contact'),
+      ).thenAnswer((_) async => body({'whatsappNumber': ' +33612345678 '}));
+
+      expect(await repository.getSupportWhatsappNumber(), '+33612345678');
+    });
+
+    test('clé absente (numéro non réglé) : null', () async {
+      when(
+        () => mockDio.get('/config/support-contact'),
+      ).thenAnswer((_) async => body(<String, dynamic>{}));
+
+      expect(await repository.getSupportWhatsappNumber(), isNull);
+    });
+
+    test('valeur vide ou non texte : null', () async {
+      when(
+        () => mockDio.get('/config/support-contact'),
+      ).thenAnswer((_) async => body({'whatsappNumber': '  '}));
+      expect(await repository.getSupportWhatsappNumber(), isNull);
+
+      when(
+        () => mockDio.get('/config/support-contact'),
+      ).thenAnswer((_) async => body({'whatsappNumber': 33612345678}));
+      expect(await repository.getSupportWhatsappNumber(), isNull);
+    });
+
+    test('404 (back sans la route) : null, pas d\'erreur', () async {
+      when(() => mockDio.get('/config/support-contact')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/config/support-contact'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/config/support-contact'),
+            statusCode: 404,
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
+
+      expect(await repository.getSupportWhatsappNumber(), isNull);
+    });
+
+    test('autre erreur réseau : remonte en AppException', () async {
+      when(() => mockDio.get('/config/support-contact')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/config/support-contact'),
+          type: DioExceptionType.connectionTimeout,
+        ),
+      );
+
+      expect(
+        repository.getSupportWhatsappNumber(),
+        throwsA(isA<AppException>()),
+      );
+    });
+  });
 }

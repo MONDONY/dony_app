@@ -13661,6 +13661,42 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportContactCta => 'Contacter le support';
 
   @override
+  String get supportWhatsappTitle => 'Une question ? Écrivez-nous';
+
+  @override
+  String get supportWhatsappFaqTitle => 'Besoin d\'un humain ?';
+
+  @override
+  String get supportWhatsappSubtitle =>
+      'Réponse rapide de l\'équipe Yadony sur WhatsApp';
+
+  @override
+  String get supportWhatsappCta => 'Écrire sur WhatsApp';
+
+  @override
+  String get supportWhatsappMessage => 'Bonjour Yadony, j\'ai besoin d\'aide.';
+
+  @override
+  String get supportContactSheetTitle => 'Contacter Yadony';
+
+  @override
+  String get supportContactSheetBody =>
+      'WhatsApp n\'est pas disponible sur ce téléphone. Appelez ou écrivez directement au numéro.';
+
+  @override
+  String get supportContactCall => 'Appeler';
+
+  @override
+  String get supportContactSms => 'Envoyer un SMS';
+
+  @override
+  String get supportContactCopied => 'Numéro copié';
+
+  @override
+  String get supportContactOpenError =>
+      'Impossible d\'ouvrir l\'application. Copiez le numéro pour le saisir vous-même.';
+
+  @override
   String get supportNewRequestCta => 'Nouvelle demande';
 
   @override

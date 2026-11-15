@@ -319,6 +319,7 @@ import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_remote_datasource.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
+import 'package:dony/features/support/bloc/support_contact_cubit.dart';
 import 'package:dony/features/support/bloc/support_summary_cubit.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/data/support_live_events.dart';
@@ -1248,6 +1249,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<SupportRepository>(),
       getIt<AnalyticsService>(),
       incomingMessages: getIt<SupportLiveEvents>().messages,
+    ),
+  );
+  getIt.registerFactory<SupportContactCubit>(
+    () => SupportContactCubit(
+      getIt<IConfigRepository>(),
+      getIt<AnalyticsService>(),
     ),
   );
   // Singletons : le badge de l'onglet, la ligne épinglée et l'écran de détail

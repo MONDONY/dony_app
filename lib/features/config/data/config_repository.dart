@@ -22,6 +22,10 @@ abstract class IConfigRepository {
   Future<CommissionGrid?> getCommissionGridById(String id);
 
   Future<PaymentMethodFlags> getPaymentMethods();
+
+  /// Numéro WhatsApp du support, `null` s'il n'est pas réglé ou si le back ne
+  /// connaît pas encore la route (404) : la carte WhatsApp reste alors masquée.
+  Future<String?> getSupportWhatsappNumber();
 }
 
 class ConfigRepository implements IConfigRepository {
@@ -119,6 +123,16 @@ class ConfigRepository implements IConfigRepository {
     try {
       return await _datasource.getPaymentMethods();
     } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  @override
+  Future<String?> getSupportWhatsappNumber() async {
+    try {
+      return await _datasource.getSupportWhatsappNumber();
+    } catch (e) {
+      if (e is DioException && e.response?.statusCode == 404) return null;
       throw unwrapDioError(e);
     }
   }

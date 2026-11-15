@@ -6,6 +6,7 @@ import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/presentation/widgets/support_conversation_tile.dart'
     show supportPreviewText;
+import 'package:dony/features/support/presentation/widgets/support_whatsapp_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -224,6 +225,7 @@ class _AssistantFirstBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
       children: [
+        const SupportWhatsAppCard(source: 'support'),
         if (state.replies.isNotEmpty) ...[
           _AssistantSection(replies: state.replies),
           const SizedBox(height: 24),
@@ -274,6 +276,7 @@ class _ConversationsFirstBody extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             children: [
+              const SupportWhatsAppCard(source: 'support'),
               Text(
                 l.supportHomeMyTicketsTitle,
                 style: Theme.of(context).textTheme.titleMedium,
