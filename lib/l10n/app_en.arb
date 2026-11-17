@@ -10615,6 +10615,7 @@
   "assistantUnavailable": "The assistant isn't available right now. You can write to the team.",
   "assistantHintTitle": "A question about the app?",
   "assistantHintBody": "I'll guide you to the right screen. Drag me anywhere.",
+  "assistantMascotteGreeting": "How can I help?",
   "maintenanceTitle": "Yadony is under maintenance",
   "maintenanceDefaultMessage": "We're improving the app. Please come back a little later: your parcels, trips and payments are safe.",
   "maintenanceEstimatedEnd": "Expected back around {time}",

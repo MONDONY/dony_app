@@ -57,3 +57,9 @@ class AssistantBubbleReset extends AppPreferencesEvent {
 class AssistantHintDismissed extends AppPreferencesEvent {
   const AssistantHintDismissed();
 }
+
+/// Première question posée à l'assistant : la mascotte de la bulle cesse de
+/// sortir. Sans effet si c'est déjà noté (pas de réécriture dans Hive).
+class AssistantFirstQuestionAsked extends AppPreferencesEvent {
+  const AssistantFirstQuestionAsked();
+}

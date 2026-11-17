@@ -681,6 +681,38 @@ void main() {
   );
 
   blocTest<AssistantBloc, AssistantState>(
+    'mascotte : passage et toucher mesurés, sans changer l’état',
+    build: build,
+    act: (b) {
+      b.add(const AssistantMascotteShown(1));
+      b.add(const AssistantMascotteShown(2));
+      b.add(const AssistantMascotteTapped());
+    },
+    expect: () => <AssistantState>[],
+    verify: (_) {
+      verify(
+        () => backend.capture(AnalyticsEvents.assistantMascotteShown, {
+          'count': 1,
+        }),
+      ).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.assistantMascotteShown, {
+          'count': 2,
+        }),
+      ).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.assistantMascotteTapped, null),
+      ).called(1);
+    },
+  );
+
+  test('les événements de la mascotte exposent leurs props', () {
+    expect(const AssistantMascotteShown(3).props, [3]);
+    expect(const AssistantMascotteShown(3), const AssistantMascotteShown(3));
+    expect(const AssistantMascotteTapped().props, isEmpty);
+  });
+
+  blocTest<AssistantBloc, AssistantState>(
     'une réponse réussie remet le quota à false',
     build: () {
       answers(_answer);

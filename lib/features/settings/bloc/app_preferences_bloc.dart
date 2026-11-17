@@ -22,6 +22,7 @@ class AppPreferencesBloc
     on<AssistantBubbleMoved>(_onAssistantBubbleMoved);
     on<AssistantBubbleReset>(_onAssistantBubbleReset);
     on<AssistantHintDismissed>(_onAssistantHintDismissed);
+    on<AssistantFirstQuestionAsked>(_onAssistantFirstQuestionAsked);
   }
 
   void _onThemeChanged(ThemeChanged event, Emitter<AppPreferencesState> emit) {
@@ -108,6 +109,16 @@ class AppPreferencesBloc
     Emitter<AppPreferencesState> emit,
   ) {
     final updated = state.preferences.copyWith(assistantHintSeen: true);
+    updated.writeToHive(_box);
+    emit(AppPreferencesState(preferences: updated));
+  }
+
+  void _onAssistantFirstQuestionAsked(
+    AssistantFirstQuestionAsked event,
+    Emitter<AppPreferencesState> emit,
+  ) {
+    if (state.preferences.assistantQuestionAsked) return;
+    final updated = state.preferences.copyWith(assistantQuestionAsked: true);
     updated.writeToHive(_box);
     emit(AppPreferencesState(preferences: updated));
   }

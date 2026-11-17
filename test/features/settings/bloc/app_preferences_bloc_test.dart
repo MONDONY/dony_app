@@ -344,6 +344,59 @@ void main() {
         ],
       );
 
+      test('première question : faux par défaut', () {
+        final bloc = AppPreferencesBloc(mockBox);
+        expect(bloc.state.preferences.assistantQuestionAsked, isFalse);
+        bloc.close();
+      });
+
+      blocTest<AppPreferencesBloc, AppPreferencesState>(
+        'première question posée : noté et écrit dans Hive une seule fois',
+        build: () => AppPreferencesBloc(mockBox),
+        act: (bloc) => bloc
+          ..add(const AssistantFirstQuestionAsked())
+          ..add(const AssistantFirstQuestionAsked()),
+        expect: () => [
+          isA<AppPreferencesState>().having(
+            (s) => s.preferences.assistantQuestionAsked,
+            'asked',
+            true,
+          ),
+        ],
+        verify: (_) => verify(
+          () => mockBox.put(HiveService.kAssistantQuestionAsked, true),
+        ).called(1),
+      );
+
+      blocTest<AppPreferencesBloc, AppPreferencesState>(
+        'déjà noté : aucune émission ni écriture',
+        build: () => AppPreferencesBloc(mockBox),
+        seed: () => const AppPreferencesState(
+          preferences: UserPreferencesModel(assistantQuestionAsked: true),
+        ),
+        act: (bloc) => bloc.add(const AssistantFirstQuestionAsked()),
+        expect: () => <AppPreferencesState>[],
+        verify: (_) => verifyNever(
+          () => mockBox.put(HiveService.kAssistantQuestionAsked, any()),
+        ),
+      );
+
+      test('les autres préférences gardent la mention en la recopiant', () {
+        const prefs = UserPreferencesModel(assistantQuestionAsked: true);
+        expect(
+          prefs.copyWith(themeMode: 'dark').assistantQuestionAsked,
+          isTrue,
+        );
+        expect(
+          prefs.copyWith(assistantQuestionAsked: false).assistantQuestionAsked,
+          isFalse,
+        );
+        prefs.writeToHive(mockBox);
+        verify(
+          () => mockBox.put(HiveService.kAssistantQuestionAsked, true),
+        ).called(1);
+      });
+
       test('les événements de bulle exposent leurs props', () {
         const moved = AssistantBubbleMoved('left', 0.2);
         expect(moved.props, equals(['left', 0.2]));
@@ -412,6 +465,19 @@ void main() {
           expect(
             UserPreferencesModel.fromHive(mockBox).assistantHintSeen,
             isFalse,
+          );
+          stubGet(HiveService.kAssistantQuestionAsked, 'oui');
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantQuestionAsked,
+            isFalse,
+          );
+        });
+
+        test('première question lue depuis Hive', () {
+          stubGet(HiveService.kAssistantQuestionAsked, true);
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantQuestionAsked,
+            isTrue,
           );
         });
       });

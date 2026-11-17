@@ -40,6 +40,19 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
     on<AssistantScreenOpened>(_onScreenOpened);
     on<AssistantEscalationRequested>(_onEscalation);
     on<AssistantSessionEnded>(_onSessionEnded);
+    on<AssistantMascotteShown>(
+      (event, _) => unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.assistantMascotteShown,
+          properties: {'count': event.count},
+        ),
+      ),
+    );
+    on<AssistantMascotteTapped>(
+      (_, _) => unawaited(
+        _analytics.logEvent(AnalyticsEvents.assistantMascotteTapped),
+      ),
+    );
     on<AssistantEscalationHandled>(
       (_, emit) => emit(
         state.copyWith(

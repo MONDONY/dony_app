@@ -822,4 +822,146 @@ void main() {
       );
     });
   });
+
+  group('mascotte de la bulle', () {
+    const mascotteKey = ValueKey('assistant-mascotte');
+
+    void hintSeen({bool questionAsked = false}) =>
+        when(() => prefsBloc.state).thenReturn(
+          AppPreferencesState(
+            preferences: UserPreferencesModel(
+              assistantHintSeen: true,
+              assistantQuestionAsked: questionAsked,
+            ),
+          ),
+        );
+
+    Future<void> play(WidgetTester tester, Duration d) async {
+      var left = d;
+      while (left > Duration.zero) {
+        const step = Duration(milliseconds: 100);
+        final next = left < step ? left : step;
+        await tester.pump(next);
+        left -= next;
+      }
+    }
+
+    testWidgets('elle sort après le premier délai et le passage est mesuré', (
+      tester,
+    ) async {
+      hintSeen();
+      await pump(tester);
+      await play(tester, const Duration(seconds: 5));
+      expect(find.byKey(mascotteKey), findsNothing);
+      verifyNever(
+        () => assistantBloc.add(any(that: isA<AssistantMascotteShown>())),
+      );
+      await play(tester, const Duration(milliseconds: 3500));
+      expect(find.byKey(mascotteKey), findsOneWidget);
+      expect(find.text('Comment puis-je t\'aider ?'), findsOneWidget);
+      verify(
+        () => assistantBloc.add(const AssistantMascotteShown(1)),
+      ).called(1);
+    });
+
+    testWidgets('toucher la mascotte ouvre l’assistant et le mesure', (
+      tester,
+    ) async {
+      hintSeen();
+      await pump(tester);
+      await play(tester, const Duration(milliseconds: 9500));
+      await tester.tapAt(tester.getRect(find.byKey(mascotteKey)).center);
+      await tester.pumpAndSettle();
+      verify(
+        () => assistantBloc.add(const AssistantMascotteTapped()),
+      ).called(1);
+      expect(find.text('assistant'), findsOneWidget);
+      expect(_assistantSource, 'bubble');
+    });
+
+    testWidgets('toucher la phrase ouvre aussi l’assistant', (tester) async {
+      hintSeen();
+      await pump(tester);
+      await play(tester, const Duration(milliseconds: 9500));
+      await tester.tap(find.text('Comment puis-je t\'aider ?'));
+      await tester.pumpAndSettle();
+      verify(
+        () => assistantBloc.add(const AssistantMascotteTapped()),
+      ).called(1);
+      expect(find.text('assistant'), findsOneWidget);
+    });
+
+    testWidgets('première question déjà posée : elle ne sort plus', (
+      tester,
+    ) async {
+      hintSeen(questionAsked: true);
+      await pump(tester);
+      await play(tester, const Duration(seconds: 80));
+      expect(find.byKey(mascotteKey), findsNothing);
+      verifyNever(
+        () => assistantBloc.add(any(that: isA<AssistantMascotteShown>())),
+      );
+    });
+
+    testWidgets('l’aide de première fois passe avant la mascotte', (
+      tester,
+    ) async {
+      await pump(tester);
+      expect(find.textContaining('Une question sur l'), findsOneWidget);
+      await play(tester, const Duration(seconds: 7));
+      expect(find.byKey(mascotteKey), findsNothing);
+    });
+
+    testWidgets('la première question de l’utilisateur est notée', (
+      tester,
+    ) async {
+      hintSeen();
+      whenListen(
+        assistantBloc,
+        Stream.fromIterable([
+          const AssistantState(
+            available: true,
+            messages: [
+              AssistantMessage(
+                id: 1,
+                author: AssistantAuthor.user,
+                text: 'Où est mon colis ?',
+              ),
+            ],
+          ),
+        ]),
+        initialState: const AssistantState(available: true),
+      );
+      await pump(tester);
+      await tester.pump();
+      verify(
+        () => prefsBloc.add(const AssistantFirstQuestionAsked()),
+      ).called(1);
+    });
+
+    testWidgets('l’explication d’écran de l’assistant n’est pas une question', (
+      tester,
+    ) async {
+      hintSeen();
+      whenListen(
+        assistantBloc,
+        Stream.fromIterable([
+          const AssistantState(
+            available: true,
+            messages: [
+              AssistantMessage(
+                id: 1,
+                author: AssistantAuthor.assistant,
+                text: 'Voici cet écran.',
+              ),
+            ],
+          ),
+        ]),
+        initialState: const AssistantState(available: true),
+      );
+      await pump(tester);
+      await tester.pump();
+      verifyNever(() => prefsBloc.add(const AssistantFirstQuestionAsked()));
+    });
+  });
 }

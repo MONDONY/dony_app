@@ -31,6 +31,10 @@ class UserPreferencesModel {
   final double assistantBubbleY;
   final bool assistantHintSeen;
 
+  /// L'utilisateur a déjà posé une question à l'assistant : la mascotte de la
+  /// bulle ne sort plus.
+  final bool assistantQuestionAsked;
+
   const UserPreferencesModel({
     // Thème clair par défaut : le sombre reste accessible, mais il se choisit
     // explicitement dans Réglages (« Système » y compris).
@@ -46,6 +50,7 @@ class UserPreferencesModel {
     this.assistantBubbleSide = kBubbleSideRight,
     this.assistantBubbleY = kDefaultAssistantBubbleY,
     this.assistantHintSeen = false,
+    this.assistantQuestionAsked = false,
   });
 
   UserPreferencesModel copyWith({
@@ -61,6 +66,7 @@ class UserPreferencesModel {
     String? assistantBubbleSide,
     double? assistantBubbleY,
     bool? assistantHintSeen,
+    bool? assistantQuestionAsked,
   }) => UserPreferencesModel(
     themeMode: themeMode ?? this.themeMode,
     languageCode: languageCode ?? this.languageCode,
@@ -76,6 +82,8 @@ class UserPreferencesModel {
     assistantBubbleSide: assistantBubbleSide ?? this.assistantBubbleSide,
     assistantBubbleY: assistantBubbleY ?? this.assistantBubbleY,
     assistantHintSeen: assistantHintSeen ?? this.assistantHintSeen,
+    assistantQuestionAsked:
+        assistantQuestionAsked ?? this.assistantQuestionAsked,
   );
 
   factory UserPreferencesModel.fromHive(Box box) => UserPreferencesModel(
@@ -112,6 +120,11 @@ class UserPreferencesModel {
       HiveService.kAssistantHintSeen,
       defaultValue: false,
     ),
+    assistantQuestionAsked: _readBool(
+      box,
+      HiveService.kAssistantQuestionAsked,
+      defaultValue: false,
+    ),
   );
 
   void writeToHive(Box box) {
@@ -127,6 +140,7 @@ class UserPreferencesModel {
     box.put(HiveService.kAssistantBubbleSide, assistantBubbleSide);
     box.put(HiveService.kAssistantBubbleY, assistantBubbleY);
     box.put(HiveService.kAssistantHintSeen, assistantHintSeen);
+    box.put(HiveService.kAssistantQuestionAsked, assistantQuestionAsked);
   }
 
   /// Côté de la bulle : seule la valeur `'left'` garde la gauche, tout le
