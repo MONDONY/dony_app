@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
+import 'package:dony/features/support/bloc/support_contact_cubit.dart';
 import 'package:dony/features/support/data/support_attachment.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/presentation/screens/support_ticket_detail_screen.dart';
@@ -16,6 +17,25 @@ import '../../../helpers/l10n_test_helpers.dart';
 
 class _MockSupportBloc extends MockBloc<SupportEvent, SupportState>
     implements SupportBloc {}
+
+class MockSupportContactCubit extends MockCubit<SupportContactState>
+    implements SupportContactCubit {}
+
+/// Cubit du numéro WhatsApp : masqué par défaut (aucun numéro réglé).
+MockSupportContactCubit _contactCubit([
+  SupportContactState state = const SupportContactState(
+    status: SupportContactStatus.hidden,
+  ),
+]) {
+  final cubit = MockSupportContactCubit();
+  whenListen(
+    cubit,
+    const Stream<SupportContactState>.empty(),
+    initialState: state,
+  );
+  when(cubit.close).thenAnswer((_) async {});
+  return cubit;
+}
 
 const _ticket = SupportTicket(
   id: 'ticket-1',
@@ -83,7 +103,8 @@ void main() {
           builder: (_, state) => BlocProvider<SupportBloc>.value(
             value: bloc,
             child: SupportTicketDetailScreen(
-              ticketId: state.pathParameters['id']!,
+              ticketId: state.pathParameters['id'],
+              contactCubit: _contactCubit(),
             ),
           ),
         ),
@@ -250,7 +271,7 @@ void main() {
       const SupportState(detailStatus: SupportViewStatus.ready),
     );
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(find.text('Support ticket'), findsOneWidget);
+    expect(find.text('Yadony Support'), findsOneWidget);
   });
 
   group('visionneuse des images', () {

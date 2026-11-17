@@ -32,8 +32,8 @@ Widget _routed(Widget tile) {
         builder: (_, _) => Scaffold(body: tile),
       ),
       GoRoute(
-        path: '/support',
-        builder: (_, _) => const Scaffold(body: Text('liste-support')),
+        path: '/support/thread',
+        builder: (_, _) => const Scaffold(body: Text('fil-neuf')),
       ),
       GoRoute(
         path: '/support/tickets/:id',
@@ -181,18 +181,26 @@ void main() {
     expect(find.text('You: Hello'), findsOneWidget);
   });
 
+  testWidgets('affiche le logo Yadony à la place de l icône d aide', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(const SupportConversationTile(unreadCount: 0)),
+    );
+
+    expect(find.byKey(const Key('support-yadony-logo')), findsOneWidget);
+    expect(find.byType(Image), findsOneWidget);
+  });
+
   group('tap', () {
-    // La tuile ouvre toujours l écran Support : c est là que l utilisateur
-    // retrouve ses conversations ET le bouton « Nouvelle demande ». L ouverture
-    // directe du fil (PR #430) le privait d un nouveau sujet dès qu il avait
-    // une conversation ouverte. Seules les notifications ouvrent le fil.
-    testWidgets('avec un résumé et des non-lus : ouvre l écran Support', (
-      tester,
-    ) async {
+    // La tuile ouvre directement la discussion : le fil de la conversation non
+    // résolue, sinon un fil neuf dont le premier message crée la demande.
+    testWidgets('conversation ouverte : ouvre son fil', (tester) async {
       await tester.pumpWidget(
         _routed(
           SupportConversationTile(
             unreadCount: 1,
+            openTicketCount: 2,
             latestTicket: _latest(id: 'abc', unread: 1),
           ),
         ),
@@ -201,11 +209,11 @@ void main() {
       await tester.tap(find.byType(SupportConversationTile));
       await tester.pumpAndSettle();
 
-      expect(find.text('liste-support'), findsOneWidget);
-      expect(find.text('fil-abc'), findsNothing);
+      expect(find.text('fil-abc'), findsOneWidget);
+      expect(find.text('fil-neuf'), findsNothing);
     });
 
-    testWidgets('avec un résumé sans non-lu : ouvre l écran Support', (
+    testWidgets('dernière conversation résolue : ouvre un fil neuf', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -217,10 +225,13 @@ void main() {
       await tester.tap(find.byType(SupportConversationTile));
       await tester.pumpAndSettle();
 
-      expect(find.text('liste-support'), findsOneWidget);
+      expect(find.text('fil-neuf'), findsOneWidget);
+      expect(find.text('fil-ticket-1'), findsNothing);
     });
 
-    testWidgets('ancien back (sans résumé) : ouvre la liste', (tester) async {
+    testWidgets('aucune conversation (ou ancien back) : ouvre un fil neuf', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _routed(const SupportConversationTile(unreadCount: 0)),
       );
@@ -228,7 +239,7 @@ void main() {
       await tester.tap(find.byType(SupportConversationTile));
       await tester.pumpAndSettle();
 
-      expect(find.text('liste-support'), findsOneWidget);
+      expect(find.text('fil-neuf'), findsOneWidget);
     });
 
     testWidgets('au retour, prévient l appelant pour rafraîchir', (
@@ -245,7 +256,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(returned, 0);
 
-      GoRouter.of(tester.element(find.text('liste-support'))).pop();
+      GoRouter.of(tester.element(find.text('fil-neuf'))).pop();
       await tester.pumpAndSettle();
 
       expect(returned, 1);

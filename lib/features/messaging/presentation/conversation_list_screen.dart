@@ -258,6 +258,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
                 return SupportConversationTile(
                   unreadCount: supportUnread,
                   latestTicket: summary?.latestTicket,
+                  openTicketCount: summary?.openTicketCount ?? 0,
                   onReturned: () => getIt<SupportUnreadCubit>().refresh(),
                 );
               },

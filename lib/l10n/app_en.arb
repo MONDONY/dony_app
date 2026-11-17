@@ -7621,7 +7621,7 @@
   "supportBrandName": "Yadony Support",
   "supportViewImageLabel": "View image fullscreen",
   "supportPhotoIndex": "Photo {index} of {count}",
-  "supportResolvedBannerMessage": "This ticket is resolved. Another issue? Open a new ticket from the Support page.",
+  "supportResolvedBannerMessage": "This request is resolved. Another issue? Start a new request.",
   "supportMessageHint": "Your message",
 
   "supportRemoveAttachmentLabel": "Remove this image",

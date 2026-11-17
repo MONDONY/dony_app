@@ -62,16 +62,11 @@ class _SupportWhatsAppCardBody extends StatelessWidget {
   final String source;
   final bool faqVariant;
 
-  Future<void> _open(BuildContext context) async {
-    final cubit = context.read<SupportContactCubit>();
-    final l = context.l10n;
-    final opened = await cubit.openWhatsApp(
-      message: l.supportWhatsappMessage,
-      source: source,
-    );
-    if (opened || !context.mounted) return;
-    await _showFallbackSheet(context, cubit);
-  }
+  Future<void> _open(BuildContext context) => openSupportWhatsApp(
+    context,
+    context.read<SupportContactCubit>(),
+    source: source,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -178,6 +173,24 @@ class _SupportWhatsAppCardBody extends StatelessWidget {
       },
     );
   }
+}
+
+/// Ouvre WhatsApp sur la conversation avec l'équipe (message pré-rempli) ;
+/// si WhatsApp ne s'ouvre pas (pas installé), ouvre la feuille de repli avec le
+/// numéro, Appeler, SMS et Copier. Partagé par la carte et l'en-tête de la
+/// discussion Support Yadony.
+Future<void> openSupportWhatsApp(
+  BuildContext context,
+  SupportContactCubit cubit, {
+  required String source,
+}) async {
+  final l = context.l10n;
+  final opened = await cubit.openWhatsApp(
+    message: l.supportWhatsappMessage,
+    source: source,
+  );
+  if (opened || !context.mounted) return;
+  await _showFallbackSheet(context, cubit);
 }
 
 /// Feuille de repli : le numéro en clair, puis Appeler, SMS et Copier, empilés

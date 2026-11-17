@@ -155,6 +155,9 @@ void main() {
           createStatus: SupportActionStatus.success,
           createdTicketId: 'ticket-1',
           tickets: [_ticket],
+          // Le fil créé est affiché tel quel, sans second chargement.
+          detailStatus: SupportViewStatus.ready,
+          ticket: _ticket,
         ),
       ],
     );

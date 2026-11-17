@@ -2263,6 +2263,15 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
     GoRoute(
+      // Fil neuf « Support Yadony » : le premier message crée la demande.
+      // Déclaré avant `/support/tickets/:id` (pas de collision de segment).
+      path: '/support/thread',
+      builder: (_, _) => BlocProvider(
+        create: (_) => getIt<SupportBloc>(),
+        child: const SupportTicketDetailScreen(),
+      ),
+    ),
+    GoRoute(
       path: '/support/tickets/:id',
       builder: (_, state) {
         final ticketId = state.pathParameters['id']!;

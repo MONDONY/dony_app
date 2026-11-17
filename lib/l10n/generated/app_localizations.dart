@@ -22696,7 +22696,7 @@ abstract class AppLocalizations {
   /// Bandeau affiché à la place du champ de réponse quand le ticket est résolu (support_ticket_detail_screen.dart, _ResolvedBanner).
   ///
   /// In fr, this message translates to:
-  /// **'Ce ticket est résolu. Un autre problème ? Ouvrez un nouveau ticket depuis la page Support.'**
+  /// **'Cette demande est résolue. Un autre problème ? Démarrez une nouvelle demande.'**
   String get supportResolvedBannerMessage;
 
   /// Texte d'indication du champ de réponse d'un ticket (support_ticket_detail_screen.dart).

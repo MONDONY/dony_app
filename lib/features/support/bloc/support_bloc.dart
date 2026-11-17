@@ -150,6 +150,10 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
           createStatus: SupportActionStatus.success,
           createdTicketId: ticket.id,
           tickets: [ticket, ...state.tickets],
+          // La réponse porte déjà le fil : la discussion « fil neuf » l'affiche
+          // sans repasser par un chargement.
+          detailStatus: SupportViewStatus.ready,
+          ticket: ticket,
         ),
       );
     } catch (e) {

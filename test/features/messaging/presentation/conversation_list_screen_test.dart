@@ -97,8 +97,8 @@ GoRouter _buildRouter(ConversationListBloc bloc) => GoRouter(
       ),
     ),
     GoRoute(
-      path: '/support',
-      builder: (_, _) => const Scaffold(body: Text('ecran-support')),
+      path: '/support/thread',
+      builder: (_, _) => const Scaffold(body: Text('fil-neuf')),
     ),
     GoRoute(
       path: '/messages/archives',
@@ -869,13 +869,12 @@ void main() {
     verify(() => mockSupportRepository.loadUnreadCount()).called(1);
   });
 
-  // L ouverture directe du fil (PR #430) privait l utilisateur d une
-  // conversation ouverte du bouton « Nouvelle demande » : quel que soit le
-  // nombre de conversations, la ligne ouvre l écran Support.
-  for (final openCount in [0, 1, 2]) {
+  // La ligne Support ouvre directement la discussion : le fil de la
+  // conversation ouverte, sinon un fil neuf (le premier message crée la demande).
+  for (final openCount in [1, 2]) {
     testWidgets(
       'tap sur la ligne Support avec $openCount conversation(s) ouverte(s) : '
-      'ouvre l écran Support',
+      'ouvre le fil',
       (tester) async {
         when(() => mockSupportRepository.getSummary()).thenAnswer(
           (_) async => SupportSummary(
@@ -895,11 +894,31 @@ void main() {
         await tester.tap(find.byType(SupportConversationTile));
         await tester.pumpAndSettle();
 
-        expect(find.text('ecran-support'), findsOneWidget);
-        expect(find.text('fil-ticket-1'), findsNothing);
+        expect(find.text('fil-ticket-1'), findsOneWidget);
+        expect(find.text('fil-neuf'), findsNothing);
       },
     );
   }
+
+  testWidgets('tap sur la ligne Support sans conversation ouverte : fil neuf', (
+    tester,
+  ) async {
+    when(() => mockSupportRepository.getSummary()).thenAnswer(
+      (_) async => const SupportSummary(
+        unreadCount: 0,
+        openTicketCount: 0,
+        latestTicket: SupportSummaryTicket(id: 'ticket-1'),
+      ),
+    );
+    when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
+    await _pump(tester, bloc);
+
+    await tester.tap(find.byType(SupportConversationTile));
+    await tester.pumpAndSettle();
+
+    expect(find.text('fil-neuf'), findsOneWidget);
+    expect(find.text('fil-ticket-1'), findsNothing);
+  });
 
   group('sourdine depuis le volet glissant (FLUTTER-CM)', () {
     Future<void> swipeRight(WidgetTester tester) async {

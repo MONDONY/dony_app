@@ -13638,7 +13638,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportResolvedBannerMessage =>
-      'This ticket is resolved. Another issue? Open a new ticket from the Support page.';
+      'This request is resolved. Another issue? Start a new request.';
 
   @override
   String get supportMessageHint => 'Your message';
