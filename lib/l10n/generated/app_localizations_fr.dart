@@ -13733,7 +13733,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportResolvedBannerMessage =>
-      'Ce ticket est résolu. Un autre problème ? Ouvrez un nouveau ticket depuis la page Support.';
+      'Cette demande est résolue. Un autre problème ? Démarrez une nouvelle demande.';
 
   @override
   String get supportMessageHint => 'Votre message';

@@ -1,23 +1,39 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
+import 'package:dony/features/support/bloc/support_contact_cubit.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/data/support_attachment.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/presentation/screens/support_home_screen.dart';
 import 'package:dony/features/support/presentation/widgets/support_attachment_picker.dart';
+import 'package:dony/features/support/presentation/widgets/support_whatsapp_card.dart';
+import 'package:dony/features/support/presentation/widgets/support_yadony_logo.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
-/// Fil d'un ticket support. Lecture seule quand le ticket est résolu : un
-/// nouveau problème passe par un nouveau ticket.
+/// Discussion « Support Yadony » : le fil d'un ticket, ou un fil neuf quand
+/// [ticketId] est `null` (le premier message crée alors la demande). Lecture
+/// seule quand le ticket est résolu, avec « Nouvelle demande » pour repartir
+/// sur un fil neuf. L'en-tête porte l'icône WhatsApp de l'équipe.
 class SupportTicketDetailScreen extends StatefulWidget {
-  const SupportTicketDetailScreen({required this.ticketId, super.key});
+  const SupportTicketDetailScreen({
+    this.ticketId,
+    this.contactCubit,
+    super.key,
+  });
 
-  final String ticketId;
+  /// `null` : fil neuf, aucun ticket tant que rien n'est envoyé.
+  final String? ticketId;
+
+  /// Cubit du numéro WhatsApp fourni par l'appelant (tests) ; sinon créé et
+  /// fermé par l'écran.
+  final SupportContactCubit? contactCubit;
 
   @override
   State<SupportTicketDetailScreen> createState() =>
@@ -26,6 +42,7 @@ class SupportTicketDetailScreen extends StatefulWidget {
 
 class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
   final _messageController = TextEditingController();
+  late final SupportContactCubit _contact;
 
   /// Garde-fou : le décrément de la pastille ne s'exécute qu'une seule fois
   /// par instance d'écran, même si le BLoC émet plusieurs états `ready`
@@ -33,8 +50,17 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
   bool _unreadDeducted = false;
 
   @override
+  void initState() {
+    super.initState();
+    _contact =
+        widget.contactCubit ??
+        (getIt<SupportContactCubit>()..load(source: 'support_chat'));
+  }
+
+  @override
   void dispose() {
     _messageController.dispose();
+    if (widget.contactCubit == null) _contact.close();
     super.dispose();
   }
 
@@ -43,12 +69,24 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        actions: const [DonyFeedbackButton()],
+        titleSpacing: 0,
+        actions: [
+          _WhatsAppAction(cubit: _contact),
+          const DonyFeedbackButton(),
+        ],
         leading: const DonyAppBarBackButton(),
-        title: BlocBuilder<SupportBloc, SupportState>(
-          builder: (context, state) => Text(
-            state.ticket?.subject ?? context.l10n.supportTicketFallbackTitle,
-          ),
+        title: Row(
+          children: [
+            const SupportYadonyLogo(size: 34),
+            const SizedBox(width: DonySpacing.sm),
+            Expanded(
+              child: Text(
+                context.l10n.supportBrandName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
       body: BlocListener<SupportBloc, SupportState>(
@@ -60,7 +98,8 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
         listener: (_, _) => getIt<SupportUnreadCubit>().refresh(),
         child: BlocConsumer<SupportBloc, SupportState>(
           listener: (context, state) {
-            if (state.sendStatus == SupportActionStatus.failure) {
+            if (state.sendStatus == SupportActionStatus.failure ||
+                state.createStatus == SupportActionStatus.failure) {
               final message = supportErrorMessage(context.l10n, state);
               if (message != null) {
                 DonySnackbar.show(
@@ -70,7 +109,8 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                 );
               }
             }
-            if (state.sendStatus == SupportActionStatus.success) {
+            if (state.sendStatus == SupportActionStatus.success ||
+                state.createStatus == SupportActionStatus.success) {
               _messageController.clear();
             }
             // À l'ouverture du fil, éteindre la pastille sans attendre le
@@ -88,35 +128,105 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
               );
             }
           },
-          builder: (context, state) => switch (state.detailStatus) {
-            SupportViewStatus.initial || SupportViewStatus.loading =>
-              const Center(child: CircularProgressIndicator()),
-            SupportViewStatus.failure => DonyEmptyState(
-              type: DonyEmptyStateType.error,
-              title: context.l10n.supportTicketNotFoundTitle,
-              // `state.failure` est toujours renseigné dans cette branche :
-              // `supportErrorMessage` n'y rend jamais `null` (relecture finale
-              // H, Mineur #8). Pas de repli.
-              description: supportErrorMessage(context.l10n, state),
-              actionLabel: context.l10n.commonRetry,
-              onAction: () => context.read<SupportBloc>().add(
-                SupportTicketDetailRequested(widget.ticketId),
+          builder: (context, state) {
+            // Fil neuf : rien à charger, la discussion s'ouvre vide.
+            final isNewThread =
+                widget.ticketId == null &&
+                state.detailStatus == SupportViewStatus.initial;
+            if (isNewThread) {
+              return _TicketThread(
+                ticket: null,
+                controller: _messageController,
+                sending: state.createStatus == SupportActionStatus.submitting,
+              );
+            }
+            return switch (state.detailStatus) {
+              SupportViewStatus.initial || SupportViewStatus.loading =>
+                const Center(child: CircularProgressIndicator()),
+              SupportViewStatus.failure => DonyEmptyState(
+                type: DonyEmptyStateType.error,
+                title: context.l10n.supportTicketNotFoundTitle,
+                // `state.failure` est toujours renseigné dans cette branche :
+                // `supportErrorMessage` n'y rend jamais `null` (relecture
+                // finale H, Mineur #8). Pas de repli.
+                description: supportErrorMessage(context.l10n, state),
+                actionLabel: context.l10n.commonRetry,
+                onAction: () => context.read<SupportBloc>().add(
+                  SupportTicketDetailRequested(widget.ticketId!),
+                ),
               ),
-            ),
-            // `ready` n'est émis qu'avec un ticket chargé, mais le repli évite
-            // qu'une transition ajoutée plus tard ne fasse planter l'écran.
-            SupportViewStatus.ready =>
-              state.ticket == null
-                  ? const Center(child: CircularProgressIndicator())
-                  : _TicketThread(
-                      ticket: state.ticket!,
-                      controller: _messageController,
-                      sending:
-                          state.sendStatus == SupportActionStatus.submitting,
-                    ),
+              // `ready` n'est émis qu'avec un ticket chargé, mais le repli
+              // évite qu'une transition ajoutée plus tard ne fasse planter
+              // l'écran.
+              SupportViewStatus.ready =>
+                state.ticket == null
+                    ? const Center(child: CircularProgressIndicator())
+                    : _TicketThread(
+                        ticket: state.ticket,
+                        controller: _messageController,
+                        sending:
+                            state.sendStatus == SupportActionStatus.submitting,
+                      ),
+            };
           },
         ),
       ),
+    );
+  }
+}
+
+/// Icône WhatsApp de l'en-tête : ouvre la conversation avec l'équipe. Absente
+/// tant que le numéro n'est pas réglé dans l'admin (ou illisible).
+class _WhatsAppAction extends StatelessWidget {
+  const _WhatsAppAction({required this.cubit});
+
+  final SupportContactCubit cubit;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<SupportContactCubit, SupportContactState>(
+      bloc: cubit,
+      builder: (context, state) {
+        if (state.status != SupportContactStatus.ready) {
+          return const SizedBox.shrink();
+        }
+        return Semantics(
+          button: true,
+          label: context.l10n.supportWhatsappCta,
+          excludeSemantics: true,
+          child: GestureDetector(
+            key: const Key('support-chat-whatsapp'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () =>
+                openSupportWhatsApp(context, cubit, source: 'support_chat'),
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: Center(
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: kWhatsAppGreen,
+                    borderRadius: BorderRadius.circular(DonyRadius.sm),
+                  ),
+                  child: Center(
+                    child: SvgPicture.asset(
+                      'assets/logos/social/whatsapp.svg',
+                      width: 20,
+                      height: 20,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -128,43 +238,47 @@ class _TicketThread extends StatelessWidget {
     required this.sending,
   });
 
-  final SupportTicket ticket;
+  /// `null` : fil neuf, aucun message ni statut à afficher.
+  final SupportTicket? ticket;
   final TextEditingController controller;
   final bool sending;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ticket = this.ticket;
+    final messages = ticket?.messages ?? const <SupportMessage>[];
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-          child: Row(
-            children: [
-              DonyBadge(
-                label: SupportLabels.status(context.l10n, ticket.status),
-                type: SupportLabels.statusBadge(ticket.status),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  SupportLabels.category(context.l10n, ticket.category),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        if (ticket != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: Row(
+              children: [
+                DonyBadge(
+                  label: SupportLabels.status(context.l10n, ticket.status),
+                  type: SupportLabels.statusBadge(ticket.status),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    SupportLabels.category(context.l10n, ticket.category),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-            itemCount: ticket.messages.length,
+            itemCount: messages.length,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
-              final message = ticket.messages[index];
-              final previous = index == 0 ? null : ticket.messages[index - 1];
+              final message = messages[index];
+              final previous = index == 0 ? null : messages[index - 1];
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -176,11 +290,11 @@ class _TicketThread extends StatelessWidget {
             },
           ),
         ),
-        if (ticket.isResolved)
+        if (ticket != null && ticket.isResolved)
           const _ResolvedBanner()
         else
           _MessageComposer(
-            ticketId: ticket.id,
+            ticketId: ticket?.id,
             controller: controller,
             sending: sending,
           ),
@@ -544,12 +658,24 @@ class _ResolvedBanner extends StatelessWidget {
           color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(
-          context.l10n.supportResolvedBannerMessage,
-          textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              context.l10n.supportResolvedBannerMessage,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 12),
+            DonyButton(
+              key: const Key('support-thread-new-request'),
+              label: context.l10n.supportNewRequestCta,
+              // Remplace ce fil résolu par un fil neuf (nouveau bloc).
+              onPressed: () => context.pushReplacement('/support/thread'),
+            ),
+          ],
         ),
       ),
     );
@@ -563,15 +689,38 @@ class _MessageComposer extends StatelessWidget {
     required this.sending,
   });
 
-  final String ticketId;
+  /// `null` : fil neuf, le premier message crée la demande.
+  final String? ticketId;
   final TextEditingController controller;
   final bool sending;
+
+  /// Catégorie des demandes ouvertes depuis la discussion (pas de choix de
+  /// catégorie : un seul fil d'échange avec l'équipe).
+  static const _newThreadCategory = 'OTHER';
+  static const _maxSubjectLength = 200;
 
   void _send(BuildContext context, SupportState state) {
     final draft = controller.text;
     if (!state.canSendWith(draft) || sending) return;
+    final id = ticketId;
+    final content = draft.trim();
+    if (id == null) {
+      // Fil neuf : l'objet est la première ligne du message, tronquée.
+      final firstLine = content.split('\n').first.trim();
+      final subject = firstLine.length > _maxSubjectLength
+          ? firstLine.substring(0, _maxSubjectLength)
+          : firstLine;
+      context.read<SupportBloc>().add(
+        SupportTicketCreateRequested(
+          category: _newThreadCategory,
+          subject: subject.isEmpty ? context.l10n.supportBrandName : subject,
+          message: content,
+        ),
+      );
+      return;
+    }
     context.read<SupportBloc>().add(
-      SupportMessageSendRequested(ticketId: ticketId, content: draft.trim()),
+      SupportMessageSendRequested(ticketId: id, content: content),
     );
   }
 
@@ -580,7 +729,8 @@ class _MessageComposer extends StatelessWidget {
     return BlocBuilder<SupportBloc, SupportState>(
       buildWhen: (prev, curr) =>
           prev.pendingAttachments != curr.pendingAttachments ||
-          prev.sendStatus != curr.sendStatus,
+          prev.sendStatus != curr.sendStatus ||
+          prev.createStatus != curr.createStatus,
       builder: (context, state) {
         final atQuota =
             state.pendingAttachments.length >= SupportAttachmentActions.max;
@@ -598,9 +748,10 @@ class _MessageComposer extends StatelessWidget {
             onPlus: () => SupportAttachmentActions.showSourceSheet(context),
             onCamera: () =>
                 SupportAttachmentActions.pick(context, ImageSource.camera),
-            // Quota atteint : « + » et appareil photo grisés, sans action.
+            // Quota atteint, ou fil neuf (la demande part avec le texte seul) :
+            // « + » et appareil photo grisés, sans action.
             onLocked: () {},
-            locked: atQuota,
+            locked: atQuota || ticketId == null,
           ),
         );
       },

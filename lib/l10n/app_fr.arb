@@ -15170,7 +15170,7 @@
       }
     }
   },
-  "supportResolvedBannerMessage": "Ce ticket est résolu. Un autre problème ? Ouvrez un nouveau ticket depuis la page Support.",
+  "supportResolvedBannerMessage": "Cette demande est résolue. Un autre problème ? Démarrez une nouvelle demande.",
   "@supportResolvedBannerMessage": {
     "description": "Bandeau affiché à la place du champ de réponse quand le ticket est résolu (support_ticket_detail_screen.dart, _ResolvedBanner)."
   },

@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
+import 'package:dony/features/support/bloc/support_contact_cubit.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/data/support_attachment.dart';
 import 'package:dony/features/support/data/support_models.dart';
@@ -19,6 +20,25 @@ import '../../../helpers/l10n_test_helpers.dart';
 
 class MockSupportBloc extends MockBloc<SupportEvent, SupportState>
     implements SupportBloc {}
+
+class MockSupportContactCubit extends MockCubit<SupportContactState>
+    implements SupportContactCubit {}
+
+/// Cubit du numéro WhatsApp : masqué par défaut (aucun numéro réglé).
+MockSupportContactCubit _contactCubit([
+  SupportContactState state = const SupportContactState(
+    status: SupportContactStatus.hidden,
+  ),
+]) {
+  final cubit = MockSupportContactCubit();
+  whenListen(
+    cubit,
+    const Stream<SupportContactState>.empty(),
+    initialState: state,
+  );
+  when(cubit.close).thenAnswer((_) async {});
+  return cubit;
+}
 
 class MockSupportRepository extends Mock implements SupportRepository {}
 
@@ -117,7 +137,7 @@ bool _sendEnabled(WidgetTester tester) {
   return tester.widget<GestureDetector>(tap.first).onTap != null;
 }
 
-Widget _harness(SupportBloc bloc) {
+Widget _harness(SupportBloc bloc, {SupportContactCubit? contact}) {
   final router = GoRouter(
     initialLocation: '/support/tickets/ticket-1',
     routes: [
@@ -126,7 +146,8 @@ Widget _harness(SupportBloc bloc) {
         builder: (_, state) => BlocProvider<SupportBloc>.value(
           value: bloc,
           child: SupportTicketDetailScreen(
-            ticketId: state.pathParameters['id']!,
+            ticketId: state.pathParameters['id'],
+            contactCubit: contact ?? _contactCubit(),
           ),
         ),
       ),
@@ -137,6 +158,10 @@ Widget _harness(SupportBloc bloc) {
 
 void main() {
   late MockSupportBloc bloc;
+
+  setUpAll(
+    () => registerFallbackValue(const SupportTicketDetailRequested('x')),
+  );
 
   setUp(() {
     bloc = MockSupportBloc();
@@ -291,10 +316,12 @@ void main() {
     await tester.pumpWidget(_harness(bloc));
     await tester.pumpAndSettle();
 
-    expect(find.text('Paiement bloque'), findsOneWidget); // titre app bar
     expect(find.text('Bonjour, mon paiement est bloque.'), findsOneWidget);
     expect(find.text('Bonjour, on regarde ca tout de suite.'), findsOneWidget);
-    expect(find.text('Support Yadony'), findsOneWidget);
+    // Titre de l'app bar + étiquette de la bulle de l'équipe.
+    expect(find.text('Support Yadony'), findsNWidgets(2));
+    // L'objet du ticket n'est plus le titre de l'écran.
+    expect(find.text('Paiement bloque'), findsNothing);
   });
 
   testWidgets('propose le champ de réponse quand le ticket est ouvert', (
@@ -327,7 +354,7 @@ void main() {
 
     expect(find.text('Votre message'), findsNothing);
     expect(find.byKey(const Key('chat-send-button')), findsNothing);
-    expect(find.textContaining('Ce ticket est résolu'), findsOneWidget);
+    expect(find.textContaining('Cette demande est résolue'), findsOneWidget);
     // DonyBadge rend son libellé en majuscules.
     expect(find.text('RÉSOLU'), findsOneWidget);
   });
@@ -724,11 +751,11 @@ void main() {
       await tester.pumpWidget(_harness(bloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('Paiement bloque'), findsOneWidget); // titre app bar
       // DonyBadge rend son libellé en majuscules.
       expect(find.text('REPLY RECEIVED'), findsOneWidget);
       expect(find.text('Payment'), findsOneWidget);
-      expect(find.text('Yadony Support'), findsOneWidget);
+      // Titre de l'app bar + étiquette de la bulle de l'équipe.
+      expect(find.text('Yadony Support'), findsNWidgets(2));
       expect(find.text('Your message'), findsOneWidget);
       expect(find.byKey(const Key('chat-attach-button')), findsOneWidget);
       expect(find.byKey(const Key('chat-send-button')), findsOneWidget);
@@ -747,7 +774,7 @@ void main() {
     await tester.pumpWidget(_harness(bloc));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('This ticket is resolved'), findsOneWidget);
+    expect(find.textContaining('This request is resolved'), findsOneWidget);
     // DonyBadge rend son libellé en majuscules.
     expect(find.text('RESOLVED'), findsOneWidget);
   });
@@ -766,5 +793,277 @@ void main() {
 
     expect(find.text('Ticket not found'), findsOneWidget);
     expect(find.text('Try again'), findsOneWidget);
+  });
+
+  group('discussion Support Yadony', () {
+    const ready = SupportContactState(
+      status: SupportContactStatus.ready,
+      whatsappNumber: '+33612345678',
+    );
+
+    testWidgets('numéro réglé : l icône WhatsApp est dans l en-tête', (
+      tester,
+    ) async {
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc, contact: _contactCubit(ready)));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('support-chat-whatsapp')), findsOneWidget);
+      expect(find.byKey(const Key('support-yadony-logo')), findsOneWidget);
+    });
+
+    testWidgets('aucun numéro : pas d icône WhatsApp', (tester) async {
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('support-chat-whatsapp')), findsNothing);
+    });
+
+    testWidgets('un tap sur l icône ouvre WhatsApp avec le message type', (
+      tester,
+    ) async {
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+        ),
+      );
+      final contact = _contactCubit(ready);
+      when(
+        () => contact.openWhatsApp(
+          message: any(named: 'message'),
+          source: any(named: 'source'),
+        ),
+      ).thenAnswer((_) async => true);
+      await tester.pumpWidget(_harness(bloc, contact: contact));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('support-chat-whatsapp')));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => contact.openWhatsApp(
+          message: "Bonjour Yadony, j'ai besoin d'aide.",
+          source: 'support_chat',
+        ),
+      ).called(1);
+    });
+
+    testWidgets('WhatsApp ne s ouvre pas : la feuille de repli s affiche', (
+      tester,
+    ) async {
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+        ),
+      );
+      final contact = _contactCubit(ready);
+      when(
+        () => contact.openWhatsApp(
+          message: any(named: 'message'),
+          source: any(named: 'source'),
+        ),
+      ).thenAnswer((_) async => false);
+      await tester.pumpWidget(_harness(bloc, contact: contact));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('support-chat-whatsapp')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('+33612345678'), findsOneWidget);
+    });
+
+    testWidgets('ticket résolu : « Nouvelle demande » ouvre un fil neuf', (
+      tester,
+    ) async {
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _resolvedTicket,
+        ),
+      );
+      final router = GoRouter(
+        initialLocation: '/support/tickets/ticket-1',
+        routes: [
+          GoRoute(
+            path: '/support/tickets/:id',
+            builder: (_, state) => BlocProvider<SupportBloc>.value(
+              value: bloc,
+              child: SupportTicketDetailScreen(
+                ticketId: state.pathParameters['id'],
+                contactCubit: _contactCubit(),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/support/thread',
+            builder: (_, _) => const Scaffold(body: Text('fil-neuf')),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('support-thread-new-request')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('fil-neuf'), findsOneWidget);
+    });
+
+    group('fil neuf', () {
+      Widget newThread({SupportContactCubit? contact}) {
+        final router = GoRouter(
+          initialLocation: '/support/thread',
+          routes: [
+            GoRoute(
+              path: '/support/thread',
+              builder: (_, _) => BlocProvider<SupportBloc>.value(
+                value: bloc,
+                child: SupportTicketDetailScreen(
+                  contactCubit: contact ?? _contactCubit(),
+                ),
+              ),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+        return MaterialApp.router(routerConfig: router);
+      }
+
+      testWidgets('s ouvre vide avec le champ de saisie, sans spinner', (
+        tester,
+      ) async {
+        stubState(const SupportState());
+        await tester.pumpWidget(newThread());
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(find.text('Support Yadony'), findsOneWidget);
+        expect(find.text('Votre message'), findsOneWidget);
+        expect(find.byKey(const Key('chat-send-button')), findsOneWidget);
+      });
+
+      testWidgets('le premier envoi crée la demande (objet = 1re ligne)', (
+        tester,
+      ) async {
+        stubState(const SupportState());
+        await tester.pumpWidget(newThread());
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byType(TextField),
+          '  Mon colis est bloque\nDetails ici  ',
+        );
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('chat-send-button')));
+        await tester.pump();
+
+        final captured = verify(() => bloc.add(captureAny())).captured;
+        expect(captured, [
+          const SupportTicketCreateRequested(
+            category: 'OTHER',
+            subject: 'Mon colis est bloque',
+            message: 'Mon colis est bloque\nDetails ici',
+          ),
+        ]);
+      });
+
+      testWidgets('un premier message très long : objet tronqué à 200', (
+        tester,
+      ) async {
+        stubState(const SupportState());
+        await tester.pumpWidget(newThread());
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(TextField), 'a' * 300);
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('chat-send-button')));
+        await tester.pump();
+
+        final event =
+            verify(() => bloc.add(captureAny())).captured.single
+                as SupportTicketCreateRequested;
+        expect(event.subject.length, 200);
+        expect(event.message.length, 300);
+      });
+
+      testWidgets('après création, le fil créé s affiche et le champ se vide', (
+        tester,
+      ) async {
+        final controller = StreamController<SupportState>();
+        whenListen(bloc, controller.stream, initialState: const SupportState());
+        await tester.pumpWidget(newThread());
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField), 'Bonjour');
+        await tester.pump();
+
+        controller.add(
+          const SupportState(
+            createStatus: SupportActionStatus.success,
+            createdTicketId: 'ticket-1',
+            detailStatus: SupportViewStatus.ready,
+            ticket: _openTicket,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Bonjour, mon paiement est bloque.'), findsOneWidget);
+        expect(
+          tester.widget<TextField>(find.byType(TextField)).controller?.text,
+          isEmpty,
+        );
+        await controller.close();
+      });
+
+      testWidgets('échec de création : message d erreur affiché', (
+        tester,
+      ) async {
+        final controller = StreamController<SupportState>();
+        whenListen(bloc, controller.stream, initialState: const SupportState());
+        useEnglish();
+        DonySnackbar.clearDedup();
+        await tester.pumpWidget(newThread());
+        await tester.pumpAndSettle();
+
+        controller.add(
+          const SupportState(
+            createStatus: SupportActionStatus.failure,
+            failure: SupportFailure.generic,
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.text('Something went wrong. Try again.'), findsOneWidget);
+        await tester.pump(const Duration(seconds: 10));
+        await controller.close();
+      });
+
+      testWidgets('les pièces jointes sont grisées (texte seul)', (
+        tester,
+      ) async {
+        stubState(const SupportState());
+        await tester.pumpWidget(newThread());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('chat-attach-button')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Prendre une photo'), findsNothing);
+      });
+    });
   });
 }

@@ -1,8 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/messaging/presentation/widgets/conversation_tile.dart'
     show formatConversationTime;
 import 'package:dony/features/support/data/support_models.dart';
+import 'package:dony/features/support/presentation/widgets/support_yadony_logo.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -29,19 +29,25 @@ String supportPreviewText(
 /// sans résumé (back antérieur), elle garde l'invitation. Le badge ne
 /// s'affiche qu'à partir de 1.
 ///
-/// Un tap ouvre toujours l'écran `/support`, même avec une seule
-/// conversation : c'est là que l'utilisateur retrouve ses fils ET le bouton
-/// « Nouvelle demande ». Ouvrir directement le fil (PR #430) l'empêchait
-/// d'ouvrir un nouveau sujet. Seules les notifications mènent au fil.
+/// Un tap ouvre directement la discussion avec l'équipe : le fil de la
+/// conversation non résolue ([openTicketCount] > 0 et [latestTicket]), sinon
+/// un fil neuf (`/support/thread`) dont le premier message crée la demande.
+/// Un fil résolu propose lui-même « Nouvelle demande ». La liste des demandes
+/// reste joignable par Moi › Contacter le support (`/support`).
 class SupportConversationTile extends StatelessWidget {
   const SupportConversationTile({
     super.key,
     required this.unreadCount,
     this.latestTicket,
+    this.openTicketCount = 0,
     this.onReturned,
   });
 
   final int unreadCount;
+
+  /// Conversations non résolues : le résumé choisit en priorité une
+  /// conversation ouverte, donc [latestTicket] n'est ouvert que s'il y en a.
+  final int openTicketCount;
 
   /// Dernière conversation résumée par le back, null sans conversation ou
   /// sur un back antérieur au résumé.
@@ -81,7 +87,12 @@ class SupportConversationTile extends StatelessWidget {
             : cs.surface,
         child: InkWell(
           onTap: () async {
-            await context.push('/support');
+            final open = latest;
+            await context.push(
+              open != null && openTicketCount > 0
+                  ? '/support/tickets/${open.id}'
+                  : '/support/thread',
+            );
             onReturned?.call();
           },
           child: Padding(
@@ -91,8 +102,8 @@ class SupportConversationTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                // Icône d'aide distincte, à la place de l'avatar utilisateur
-                _SupportAvatar(cs: cs),
+                // Logo Yadony, à la place de l'avatar utilisateur
+                const SupportYadonyLogo(),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: Column(
@@ -163,28 +174,6 @@ class SupportConversationTile extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ── Avatar icône support ───────────────────────────────────────────────────────
-
-class _SupportAvatar extends StatelessWidget {
-  const _SupportAvatar({required this.cs});
-  final ColorScheme cs;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: cs.primaryContainer,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-      ),
-      child: Center(
-        child: DonyIcon('circle-help', size: 22, color: cs.onPrimaryContainer),
       ),
     );
   }
