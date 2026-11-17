@@ -155,7 +155,7 @@ void main() {
       await _play(tester, const Duration(milliseconds: 2500));
       expect(_mascotte, findsOneWidget);
       expect(_tip, findsOneWidget);
-      expect(find.text('Comment puis-je t\'aider ?'), findsOneWidget);
+      expect(find.text('Comment puis-je vous aider ?'), findsOneWidget);
     });
 
     testWidgets('phrase en anglais', (tester) async {
@@ -319,7 +319,7 @@ void main() {
         tester,
         kAssistantMascotteFirstDelay + const Duration(milliseconds: 2500),
       );
-      await tester.tap(find.text('Comment puis-je t\'aider ?'));
+      await tester.tap(find.text('Comment puis-je vous aider ?'));
       expect(mascotte, 1);
     });
 
@@ -343,10 +343,10 @@ void main() {
       );
       expect(
         tester.getSemantics(
-          find.bySemanticsLabel('Comment puis-je t\'aider ?'),
+          find.bySemanticsLabel('Comment puis-je vous aider ?'),
         ),
         matchesSemantics(
-          label: 'Comment puis-je t\'aider ?',
+          label: 'Comment puis-je vous aider ?',
           isButton: true,
           hasTapAction: true,
         ),
@@ -483,7 +483,7 @@ void main() {
       final during = tester.getRect(_mascotte);
       await _play(tester, const Duration(milliseconds: 1500));
       expect(tester.getRect(_mascotte), during);
-      expect(find.text('Comment puis-je t\'aider ?'), findsOneWidget);
+      expect(find.text('Comment puis-je vous aider ?'), findsOneWidget);
       final opacity = tester.widget<Opacity>(
         find.descendant(of: _mascotte, matching: find.byType(Opacity)).first,
       );

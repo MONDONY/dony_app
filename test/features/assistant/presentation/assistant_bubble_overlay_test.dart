@@ -858,7 +858,7 @@ void main() {
       );
       await play(tester, const Duration(milliseconds: 3500));
       expect(find.byKey(mascotteKey), findsOneWidget);
-      expect(find.text('Comment puis-je t\'aider ?'), findsOneWidget);
+      expect(find.text('Comment puis-je vous aider ?'), findsOneWidget);
       verify(
         () => assistantBloc.add(const AssistantMascotteShown(1)),
       ).called(1);
@@ -883,7 +883,7 @@ void main() {
       hintSeen();
       await pump(tester);
       await play(tester, const Duration(milliseconds: 9500));
-      await tester.tap(find.text('Comment puis-je t\'aider ?'));
+      await tester.tap(find.text('Comment puis-je vous aider ?'));
       await tester.pumpAndSettle();
       verify(
         () => assistantBloc.add(const AssistantMascotteTapped()),

@@ -148,7 +148,7 @@ double assistantMascotteBubbleScaleAt(double ms) => _at(_bubbleKeys, ms);
 double assistantMascotteCalmOpacityAt(double ms) => _at(_calmKeys, ms);
 
 /// Mascotte qui jaillit de la bulle de l'assistant, fait coucou et demande
-/// « Comment puis-je t'aider ? », puis rentre dans la bulle.
+/// « Comment puis-je vous aider ? », puis rentre dans la bulle.
 ///
 /// À placer dans le `Stack` de la bulle, avant elle : la mascotte passe
 /// derrière. Elle revient tant que le parent la monte, toutes les

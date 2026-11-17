@@ -21647,7 +21647,7 @@
   "@assistantHintTitle": {"description": "Titre de la bulle d'aide montrée une seule fois à côté de la bulle flottante de l'assistant."},
   "assistantHintBody": "Je vous guide jusqu'au bon écran. Glissez-moi où vous voulez.",
   "@assistantHintBody": {"description": "Texte de la bulle d'aide de la bulle flottante : elle guide et peut être déplacée."},
-  "assistantMascotteGreeting": "Comment puis-je t'aider ?",
+  "assistantMascotteGreeting": "Comment puis-je vous aider ?",
   "@assistantMascotteGreeting": {"description": "Phrase de la mascotte qui sort de la bulle flottante de l'assistant pour faire coucou, tant que l'utilisateur n'a posé aucune question. Toucher la mascotte ou la phrase ouvre l'assistant."},
   "maintenanceTitle": "Yadony est en maintenance",
   "@maintenanceTitle": {"description": "Titre de l'écran de maintenance, affiché quand l'administrateur active le mode maintenance (maintenance_screen.dart)."},

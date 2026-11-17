@@ -33459,7 +33459,7 @@ abstract class AppLocalizations {
   /// Phrase de la mascotte qui sort de la bulle flottante de l'assistant pour faire coucou, tant que l'utilisateur n'a posé aucune question. Toucher la mascotte ou la phrase ouvre l'assistant.
   ///
   /// In fr, this message translates to:
-  /// **'Comment puis-je t\'aider ?'**
+  /// **'Comment puis-je vous aider ?'**
   String get assistantMascotteGreeting;
 
   /// Titre de l'écran de maintenance, affiché quand l'administrateur active le mode maintenance (maintenance_screen.dart).

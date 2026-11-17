@@ -20750,7 +20750,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Je vous guide jusqu\'au bon écran. Glissez-moi où vous voulez.';
 
   @override
-  String get assistantMascotteGreeting => 'Comment puis-je t\'aider ?';
+  String get assistantMascotteGreeting => 'Comment puis-je vous aider ?';
 
   @override
   String get maintenanceTitle => 'Yadony est en maintenance';
