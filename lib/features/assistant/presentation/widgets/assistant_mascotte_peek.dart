@@ -22,7 +22,7 @@ const double _tipMaxWidth = 148;
 const Duration kAssistantMascotteFirstDelay = Duration(seconds: 6);
 
 /// Délai entre la fin d'un passage et le suivant.
-const Duration kAssistantMascotteInterval = Duration(seconds: 60);
+const Duration kAssistantMascotteInterval = Duration(minutes: 3);
 
 /// Durée d'un passage : jaillit, salue, parle, rentre.
 const Duration kAssistantMascotteShow = Duration(milliseconds: 6700);
