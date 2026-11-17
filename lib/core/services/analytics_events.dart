@@ -791,6 +791,13 @@ abstract final class AnalyticsEvents {
   /// `enabled`).
   static const assistantBubbleToggled = 'assistant_bubble_toggled';
 
+  /// Mascotte sortie de la bulle pour saluer (propriété `count` : numéro du
+  /// passage depuis le début, de 1 à 5).
+  static const assistantMascotteShown = 'assistant_mascotte_shown';
+
+  /// Mascotte ou sa phrase touchée : l'assistant s'ouvre.
+  static const assistantMascotteTapped = 'assistant_mascotte_tapped';
+
   // ── Formulaires remplis par l'IA (trajet, demande d'envoi) ─────────────────
   // Propriété `kind` sur chacun : `trip` ou `package_request`. Jamais le texte
   // saisi ou dicté.

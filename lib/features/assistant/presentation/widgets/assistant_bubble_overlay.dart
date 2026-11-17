@@ -7,6 +7,7 @@ import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/assistant/presentation/assistant_bubble_visibility.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_bubble.dart';
+import 'package:dony/features/assistant/presentation/widgets/assistant_mascotte_peek.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
@@ -166,6 +167,11 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
     prefs.add(const AssistantHintDismissed());
   }
 
+  /// La conversation contient une question de l'utilisateur. L'explication
+  /// d'écran que l'assistant ajoute en s'ouvrant n'en est pas une.
+  static bool _hasUserMessage(AssistantState state) =>
+      state.messages.any((m) => m.author == AssistantAuthor.user);
+
   @override
   Widget build(BuildContext context) {
     final router = widget.router ?? appRouter;
@@ -173,18 +179,28 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
     return Positioned.fill(
       child: BlocProvider<AssistantBloc>.value(
         value: _assistant,
-        child: ValueListenableBuilder<bool>(
-          valueListenable: _signedIn,
-          builder: (context, signedIn, _) => ListenableBuilder(
-            // La bulle est hors de tout écran : le chemin courant vient du
-            // routeur. Lecture seule, jamais de `go`/`push` pendant la
-            // notification (le `push` part d'un toucher).
-            listenable: Listenable.merge([
-              router.routerDelegate,
-              blockers.active,
-            ]),
-            builder: (context, _) =>
-                _buildBubble(context, router, blockers, signedIn),
+        // Première question posée : la mascotte de la bulle ne sort plus. Au
+        // niveau de la couche (et non de la bulle) : l'écran de l'assistant,
+        // où la question se pose, masque la bulle.
+        child: BlocListener<AssistantBloc, AssistantState>(
+          listenWhen: (previous, current) =>
+              !_hasUserMessage(previous) && _hasUserMessage(current),
+          listener: (context, _) => context.read<AppPreferencesBloc>().add(
+            const AssistantFirstQuestionAsked(),
+          ),
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _signedIn,
+            builder: (context, signedIn, _) => ListenableBuilder(
+              // La bulle est hors de tout écran : le chemin courant vient du
+              // routeur. Lecture seule, jamais de `go`/`push` pendant la
+              // notification (le `push` part d'un toucher).
+              listenable: Listenable.merge([
+                router.routerDelegate,
+                blockers.active,
+              ]),
+              builder: (context, _) =>
+                  _buildBubble(context, router, blockers, signedIn),
+            ),
           ),
         ),
       ),
@@ -198,14 +214,18 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
     bool signedIn,
   ) {
     final path = visibleRoutePath(router);
-    final (enabled, side, y, hintSeen) = context
-        .select<AppPreferencesBloc, (bool, String, double, bool)>((bloc) {
+    final (enabled, side, y, hintSeen, questionAsked, passes) = context
+        .select<AppPreferencesBloc, (bool, String, double, bool, bool, int)>((
+          bloc,
+        ) {
           final p = bloc.state.preferences;
           return (
             p.assistantBubbleEnabled,
             p.assistantBubbleSide,
             p.assistantBubbleY,
             p.assistantHintSeen,
+            p.assistantQuestionAsked,
+            p.assistantMascottePasses,
           );
         });
     final disabled = context.select<AssistantBloc, bool>(
@@ -241,20 +261,37 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
 
     final showHint = !hintSeen && !_hintClosed && !(routeChanged && _hintShown);
     _hintShown = showHint;
+
+    void open() {
+      if (!hintSeen) _closeHint(prefs);
+      // `AssistantOpened('bubble')` part de l'écran lui-même, à partir de
+      // `?source=` : l'envoyer ici doublerait l'événement
+      // `assistant_opened`.
+      unawaited(router.push(assistantLocationFrom(router)));
+    }
+
     return AssistantBubble(
       side: side,
       yFraction: y,
       bottomInset: MainShell.navBarContentHeight,
       showHint: showHint,
-      onTap: () {
-        if (!hintSeen) _closeHint(prefs);
-        // `AssistantOpened('bubble')` part de l'écran lui-même, à partir de
-        // `?source=` : l'envoyer ici doublerait l'événement
-        // `assistant_opened`.
-        unawaited(router.push(assistantLocationFrom(router)));
-      },
+      onTap: open,
       onMoved: (side, y) => prefs.add(AssistantBubbleMoved(side, y)),
       onHintDismissed: () => _closeHint(prefs),
+      // Elle s'arrête à la première question, ou après cinq passages vus en
+      // entier sans question : le compteur est écrit à la fin d'un passage,
+      // jamais pendant, pour ne pas la démonter en pleine sortie.
+      showMascotte: !questionAsked && passes < kAssistantMascotteMaxPasses,
+      // Numéro du passage depuis le début (1 à 5), pas depuis le montage de la
+      // bulle qui repart de zéro à chaque retour sur un écran.
+      onMascotteShown: (_) =>
+          _assistant.add(AssistantMascotteShown(passes + 1)),
+      onMascotteCompleted: () =>
+          prefs.add(const AssistantMascottePassCompleted()),
+      onMascotteTap: () {
+        _assistant.add(const AssistantMascotteTapped());
+        open();
+      },
     );
   }
 }

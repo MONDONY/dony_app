@@ -57,3 +57,15 @@ class AssistantBubbleReset extends AppPreferencesEvent {
 class AssistantHintDismissed extends AppPreferencesEvent {
   const AssistantHintDismissed();
 }
+
+/// Première question posée à l'assistant : la mascotte de la bulle cesse de
+/// sortir. Sans effet si c'est déjà noté (pas de réécriture dans Hive).
+class AssistantFirstQuestionAsked extends AppPreferencesEvent {
+  const AssistantFirstQuestionAsked();
+}
+
+/// Un passage de la mascotte de la bulle est terminé (elle est rentrée) : le
+/// compteur monte de un. Au-delà du seuil, la bulle ne la monte plus.
+class AssistantMascottePassCompleted extends AppPreferencesEvent {
+  const AssistantMascottePassCompleted();
+}

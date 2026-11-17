@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:dony/features/assistant/presentation/widgets/assistant_mascotte_peek.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 
-/// Diamètre de la bulle (cible tactile de 56 px, au-delà du minimum de 44).
-const double kAssistantBubbleSize = 56;
+/// Diamètre de la bulle : le minimum tactile de 44 px (elle faisait 56 px
+/// avant la mascotte, jugée trop grande).
+const double kAssistantBubbleSize = 44;
 
 /// Distance entre la bulle posée et le bord de l'écran.
 const double kAssistantBubbleMargin = 12;
@@ -119,6 +121,10 @@ class AssistantBubble extends StatefulWidget {
     required this.onTap,
     required this.onMoved,
     required this.onHintDismissed,
+    this.showMascotte = false,
+    this.onMascotteShown,
+    this.onMascotteCompleted,
+    this.onMascotteTap,
   });
 
   /// `left` ou `right`.
@@ -135,6 +141,20 @@ class AssistantBubble extends StatefulWidget {
   final void Function(String side, double yFraction) onMoved;
   final VoidCallback onHintDismissed;
 
+  /// La mascotte sort de la bulle pour faire coucou, périodiquement
+  /// (voir [AssistantMascottePeek]). Faux : elle n'est pas montée.
+  final bool showMascotte;
+
+  /// Début d'un passage de la mascotte (numéro du passage).
+  final void Function(int count)? onMascotteShown;
+
+  /// Fin d'un passage de la mascotte, vu en entier (le parent compte les
+  /// passages pour arrêter après [kAssistantMascotteMaxPasses]).
+  final VoidCallback? onMascotteCompleted;
+
+  /// Mascotte ou sa phrase touchée ; [onTap] par défaut.
+  final VoidCallback? onMascotteTap;
+
   @override
   State<AssistantBubble> createState() => _AssistantBubbleState();
 }
@@ -145,6 +165,10 @@ class _AssistantBubbleState extends State<AssistantBubble>
   /// `null` au repos, où elle se déduit de [_side] et [_y].
   final ValueNotifier<Offset?> _moving = ValueNotifier<Offset?>(null);
   final ValueNotifier<bool> _pressed = ValueNotifier<bool>(false);
+
+  /// Échelle de la bulle pendant un passage de la mascotte (elle se tasse puis
+  /// reprend sa forme) ; écrite par [AssistantMascottePeek], 1 au repos.
+  final ValueNotifier<double> _mascotteScale = ValueNotifier<double>(1);
   late final AnimationController _spring;
 
   /// Pose au repos. Écrite au lâcher puis relue quand [_moving] repasse à
@@ -203,6 +227,7 @@ class _AssistantBubbleState extends State<AssistantBubble>
     _spring.dispose();
     _moving.dispose();
     _pressed.dispose();
+    _mascotteScale.dispose();
     super.dispose();
   }
 
@@ -292,6 +317,22 @@ class _AssistantBubbleState extends State<AssistantBubble>
             children: [
               if (widget.showHint && moving == null)
                 _buildHint(context, constraints.biggest, position),
+              // Avant la bulle dans le `Stack` : la mascotte passe derrière
+              // elle, d'où elle a l'air de jaillir.
+              if (widget.showMascotte)
+                AssistantMascottePeek(
+                  key: const ValueKey('assistant-mascotte-peek'),
+                  bubble: position,
+                  bubbleSize: kAssistantBubbleSize,
+                  area: constraints.biggest,
+                  side: zone.sideFor(position, constraints.maxWidth),
+                  topInset: MediaQuery.paddingOf(context).top,
+                  bubbleScale: _mascotteScale,
+                  suspended: moving != null || widget.showHint,
+                  onTap: widget.onMascotteTap ?? widget.onTap,
+                  onShown: widget.onMascotteShown ?? (_) {},
+                  onCompleted: widget.onMascotteCompleted ?? () {},
+                ),
               // Clé : sans elle, l'aide qui disparaît au début du glissement
               // décale la bulle d'un rang dans le `Stack`, son sous-arbre est
               // reconstruit et le geste en cours est perdu.
@@ -348,16 +389,25 @@ class _AssistantBubbleState extends State<AssistantBubble>
               curve: Curves.easeOutCubic,
               child: child,
             ),
-            child: Material(
-              color: cs.primary,
-              elevation: 6,
-              shadowColor: cs.shadow.withValues(alpha: 0.35),
-              shape: const CircleBorder(),
-              child: Center(
-                child: Icon(
-                  Icons.auto_awesome_rounded,
-                  color: cs.onPrimary,
-                  size: 26,
+            // La bulle se tasse puis reprend sa forme quand la mascotte
+            // sort ou rentre ; sans mascotte, l'échelle reste à 1.
+            child: ValueListenableBuilder<double>(
+              valueListenable: _mascotteScale,
+              builder: (context, scale, child) => Transform.scale(
+                scale: widget.showMascotte ? scale : 1,
+                child: child,
+              ),
+              child: Material(
+                color: cs.primary,
+                elevation: 6,
+                shadowColor: cs.shadow.withValues(alpha: 0.35),
+                shape: const CircleBorder(),
+                child: Center(
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    color: cs.onPrimary,
+                    size: 22,
+                  ),
                 ),
               ),
             ),

@@ -20610,6 +20610,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'I\'ll guide you to the right screen. Drag me anywhere.';
 
   @override
+  String get assistantMascotteGreeting => 'How can I help?';
+
+  @override
   String get maintenanceTitle => 'Yadony is under maintenance';
 
   @override

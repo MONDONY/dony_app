@@ -135,7 +135,10 @@ void main() {
     testWidgets('collée à droite au départ', (tester) async {
       await _pumpBubble(tester);
       expect(_rect(tester).right, closeTo(390 - kAssistantBubbleMargin, 0.5));
-      expect(_rect(tester).size, const Size(56, 56));
+      expect(
+        _rect(tester).size,
+        const Size(kAssistantBubbleSize, kAssistantBubbleSize),
+      );
     });
 
     testWidgets('collée à gauche quand on le demande', (tester) async {
@@ -237,7 +240,7 @@ void main() {
       await tester.drag(_bubble, const Offset(0, 150));
       await tester.pumpAndSettle();
       const zoneTop = 8.0;
-      const zoneBottom = 844 - 84 - 8 - 56.0;
+      const zoneBottom = 844 - 84 - 8 - kAssistantBubbleSize;
       expect(
         y,
         closeTo((_rect(tester).top - zoneTop) / (zoneBottom - zoneTop), 0.01),
@@ -445,7 +448,10 @@ void main() {
           expect(card.bottom, lessThanOrEqualTo(844), reason: '$side $y');
           expect(card.left, greaterThanOrEqualTo(0), reason: '$side $y');
           expect(card.right, lessThanOrEqualTo(390), reason: '$side $y');
-          expect(_rect(tester).size, const Size(56, 56));
+          expect(
+            _rect(tester).size,
+            const Size(kAssistantBubbleSize, kAssistantBubbleSize),
+          );
         }
       }
     });

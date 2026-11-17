@@ -344,6 +344,106 @@ void main() {
         ],
       );
 
+      test('première question : faux par défaut', () {
+        final bloc = AppPreferencesBloc(mockBox);
+        expect(bloc.state.preferences.assistantQuestionAsked, isFalse);
+        bloc.close();
+      });
+
+      blocTest<AppPreferencesBloc, AppPreferencesState>(
+        'première question posée : noté et écrit dans Hive une seule fois',
+        build: () => AppPreferencesBloc(mockBox),
+        act: (bloc) => bloc
+          ..add(const AssistantFirstQuestionAsked())
+          ..add(const AssistantFirstQuestionAsked()),
+        expect: () => [
+          isA<AppPreferencesState>().having(
+            (s) => s.preferences.assistantQuestionAsked,
+            'asked',
+            true,
+          ),
+        ],
+        verify: (_) => verify(
+          () => mockBox.put(HiveService.kAssistantQuestionAsked, true),
+        ).called(1),
+      );
+
+      blocTest<AppPreferencesBloc, AppPreferencesState>(
+        'déjà noté : aucune émission ni écriture',
+        build: () => AppPreferencesBloc(mockBox),
+        seed: () => const AppPreferencesState(
+          preferences: UserPreferencesModel(assistantQuestionAsked: true),
+        ),
+        act: (bloc) => bloc.add(const AssistantFirstQuestionAsked()),
+        expect: () => <AppPreferencesState>[],
+        verify: (_) => verifyNever(
+          () => mockBox.put(HiveService.kAssistantQuestionAsked, any()),
+        ),
+      );
+
+      test('passages de la mascotte : zéro par défaut', () {
+        final bloc = AppPreferencesBloc(mockBox);
+        expect(bloc.state.preferences.assistantMascottePasses, 0);
+        bloc.close();
+      });
+
+      blocTest<AppPreferencesBloc, AppPreferencesState>(
+        'un passage terminé monte le compteur et l’écrit dans Hive',
+        build: () => AppPreferencesBloc(mockBox),
+        act: (bloc) => bloc
+          ..add(const AssistantMascottePassCompleted())
+          ..add(const AssistantMascottePassCompleted()),
+        expect: () => [
+          isA<AppPreferencesState>().having(
+            (s) => s.preferences.assistantMascottePasses,
+            'passes',
+            1,
+          ),
+          isA<AppPreferencesState>().having(
+            (s) => s.preferences.assistantMascottePasses,
+            'passes',
+            2,
+          ),
+        ],
+        verify: (_) {
+          verify(
+            () => mockBox.put(HiveService.kAssistantMascottePasses, 1),
+          ).called(1);
+          verify(
+            () => mockBox.put(HiveService.kAssistantMascottePasses, 2),
+          ).called(1);
+        },
+      );
+
+      test('compteur recopié par copyWith et écrit par writeToHive', () {
+        const prefs = UserPreferencesModel(assistantMascottePasses: 4);
+        expect(prefs.copyWith(themeMode: 'dark').assistantMascottePasses, 4);
+        expect(
+          prefs.copyWith(assistantMascottePasses: 5).assistantMascottePasses,
+          5,
+        );
+        prefs.writeToHive(mockBox);
+        verify(
+          () => mockBox.put(HiveService.kAssistantMascottePasses, 4),
+        ).called(1);
+      });
+
+      test('les autres préférences gardent la mention en la recopiant', () {
+        const prefs = UserPreferencesModel(assistantQuestionAsked: true);
+        expect(
+          prefs.copyWith(themeMode: 'dark').assistantQuestionAsked,
+          isTrue,
+        );
+        expect(
+          prefs.copyWith(assistantQuestionAsked: false).assistantQuestionAsked,
+          isFalse,
+        );
+        prefs.writeToHive(mockBox);
+        verify(
+          () => mockBox.put(HiveService.kAssistantQuestionAsked, true),
+        ).called(1);
+      });
+
       test('les événements de bulle exposent leurs props', () {
         const moved = AssistantBubbleMoved('left', 0.2);
         expect(moved.props, equals(['left', 0.2]));
@@ -412,6 +512,42 @@ void main() {
           expect(
             UserPreferencesModel.fromHive(mockBox).assistantHintSeen,
             isFalse,
+          );
+          stubGet(HiveService.kAssistantQuestionAsked, 'oui');
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantQuestionAsked,
+            isFalse,
+          );
+        });
+
+        test('compteur de passages : lu, sinon zéro sans lever', () {
+          stubGet(HiveService.kAssistantMascottePasses, 3);
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantMascottePasses,
+            3,
+          );
+          stubGet(HiveService.kAssistantMascottePasses, -2);
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantMascottePasses,
+            0,
+          );
+          stubGet(HiveService.kAssistantMascottePasses, 'trois');
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantMascottePasses,
+            0,
+          );
+          stubGet(HiveService.kAssistantMascottePasses, 2.5);
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantMascottePasses,
+            0,
+          );
+        });
+
+        test('première question lue depuis Hive', () {
+          stubGet(HiveService.kAssistantQuestionAsked, true);
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantQuestionAsked,
+            isTrue,
           );
         });
       });

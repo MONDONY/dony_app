@@ -31,6 +31,14 @@ class UserPreferencesModel {
   final double assistantBubbleY;
   final bool assistantHintSeen;
 
+  /// L'utilisateur a déjà posé une question à l'assistant : la mascotte de la
+  /// bulle ne sort plus.
+  final bool assistantQuestionAsked;
+
+  /// Passages terminés de la mascotte de la bulle ; au-delà d'un seuil (voir
+  /// `kAssistantMascotteMaxPasses`) elle ne sort plus, pour ne pas agacer.
+  final int assistantMascottePasses;
+
   const UserPreferencesModel({
     // Thème clair par défaut : le sombre reste accessible, mais il se choisit
     // explicitement dans Réglages (« Système » y compris).
@@ -46,6 +54,8 @@ class UserPreferencesModel {
     this.assistantBubbleSide = kBubbleSideRight,
     this.assistantBubbleY = kDefaultAssistantBubbleY,
     this.assistantHintSeen = false,
+    this.assistantQuestionAsked = false,
+    this.assistantMascottePasses = 0,
   });
 
   UserPreferencesModel copyWith({
@@ -61,6 +71,8 @@ class UserPreferencesModel {
     String? assistantBubbleSide,
     double? assistantBubbleY,
     bool? assistantHintSeen,
+    bool? assistantQuestionAsked,
+    int? assistantMascottePasses,
   }) => UserPreferencesModel(
     themeMode: themeMode ?? this.themeMode,
     languageCode: languageCode ?? this.languageCode,
@@ -76,6 +88,10 @@ class UserPreferencesModel {
     assistantBubbleSide: assistantBubbleSide ?? this.assistantBubbleSide,
     assistantBubbleY: assistantBubbleY ?? this.assistantBubbleY,
     assistantHintSeen: assistantHintSeen ?? this.assistantHintSeen,
+    assistantQuestionAsked:
+        assistantQuestionAsked ?? this.assistantQuestionAsked,
+    assistantMascottePasses:
+        assistantMascottePasses ?? this.assistantMascottePasses,
   );
 
   factory UserPreferencesModel.fromHive(Box box) => UserPreferencesModel(
@@ -112,6 +128,15 @@ class UserPreferencesModel {
       HiveService.kAssistantHintSeen,
       defaultValue: false,
     ),
+    assistantQuestionAsked: _readBool(
+      box,
+      HiveService.kAssistantQuestionAsked,
+      defaultValue: false,
+    ),
+    assistantMascottePasses: _readCount(
+      box,
+      HiveService.kAssistantMascottePasses,
+    ),
   );
 
   void writeToHive(Box box) {
@@ -127,6 +152,8 @@ class UserPreferencesModel {
     box.put(HiveService.kAssistantBubbleSide, assistantBubbleSide);
     box.put(HiveService.kAssistantBubbleY, assistantBubbleY);
     box.put(HiveService.kAssistantHintSeen, assistantHintSeen);
+    box.put(HiveService.kAssistantQuestionAsked, assistantQuestionAsked);
+    box.put(HiveService.kAssistantMascottePasses, assistantMascottePasses);
   }
 
   /// Côté de la bulle : seule la valeur `'left'` garde la gauche, tout le
@@ -152,6 +179,13 @@ class UserPreferencesModel {
     return raw is String && _languageCodes.contains(raw)
         ? raw
         : kLanguageSystem;
+  }
+
+  /// Compteur lu sans lever : un entier négatif, absent ou d'un autre type
+  /// vaut 0.
+  static int _readCount(Box box, String key) {
+    final raw = box.get(key, defaultValue: 0);
+    return raw is int && raw > 0 ? raw : 0;
   }
 
   static bool _readBool(Box box, String key, {required bool defaultValue}) {

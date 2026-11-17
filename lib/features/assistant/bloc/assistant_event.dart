@@ -142,6 +142,24 @@ final class AssistantStatusRequested extends AssistantEvent {
   List<Object?> get props => [force];
 }
 
+/// La mascotte est sortie de la bulle pour faire coucou. [count] : numéro du
+/// passage depuis le début (1 à 5, compteur Hive), pour mesurer la
+/// lassitude. Analytics seulement.
+final class AssistantMascotteShown extends AssistantEvent {
+  const AssistantMascotteShown(this.count);
+
+  final int count;
+
+  @override
+  List<Object?> get props => [count];
+}
+
+/// Mascotte ou phrase de la mascotte touchée : l'assistant s'ouvre.
+/// Analytics seulement (l'ouverture elle-même est faite par la bulle).
+final class AssistantMascotteTapped extends AssistantEvent {
+  const AssistantMascotteTapped();
+}
+
 /// Fin de la session du compte (déconnexion, compte supprimé, session invitée,
 /// changement de compte) : la conversation, une réponse ou une escalade en vol
 /// et le résultat de la sonde ne passent jamais au compte suivant. Pas envoyé
