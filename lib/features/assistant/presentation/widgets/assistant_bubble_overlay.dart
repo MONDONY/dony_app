@@ -7,6 +7,7 @@ import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/assistant/presentation/assistant_bubble_visibility.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_bubble.dart';
+import 'package:dony/features/assistant/presentation/widgets/assistant_mascotte_peek.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
@@ -213,8 +214,10 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
     bool signedIn,
   ) {
     final path = visibleRoutePath(router);
-    final (enabled, side, y, hintSeen, questionAsked) = context
-        .select<AppPreferencesBloc, (bool, String, double, bool, bool)>((bloc) {
+    final (enabled, side, y, hintSeen, questionAsked, passes) = context
+        .select<AppPreferencesBloc, (bool, String, double, bool, bool, int)>((
+          bloc,
+        ) {
           final p = bloc.state.preferences;
           return (
             p.assistantBubbleEnabled,
@@ -222,6 +225,7 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
             p.assistantBubbleY,
             p.assistantHintSeen,
             p.assistantQuestionAsked,
+            p.assistantMascottePasses,
           );
         });
     final disabled = context.select<AssistantBloc, bool>(
@@ -274,8 +278,16 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
       onTap: open,
       onMoved: (side, y) => prefs.add(AssistantBubbleMoved(side, y)),
       onHintDismissed: () => _closeHint(prefs),
-      showMascotte: !questionAsked,
-      onMascotteShown: (count) => _assistant.add(AssistantMascotteShown(count)),
+      // Elle s'arrête à la première question, ou après cinq passages vus en
+      // entier sans question : le compteur est écrit à la fin d'un passage,
+      // jamais pendant, pour ne pas la démonter en pleine sortie.
+      showMascotte: !questionAsked && passes < kAssistantMascotteMaxPasses,
+      // Numéro du passage depuis le début (1 à 5), pas depuis le montage de la
+      // bulle qui repart de zéro à chaque retour sur un écran.
+      onMascotteShown: (_) =>
+          _assistant.add(AssistantMascotteShown(passes + 1)),
+      onMascotteCompleted: () =>
+          prefs.add(const AssistantMascottePassCompleted()),
       onMascotteTap: () {
         _assistant.add(const AssistantMascotteTapped());
         open();

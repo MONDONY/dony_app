@@ -792,7 +792,7 @@ abstract final class AnalyticsEvents {
   static const assistantBubbleToggled = 'assistant_bubble_toggled';
 
   /// Mascotte sortie de la bulle pour saluer (propriété `count` : numéro du
-  /// passage depuis l'affichage de la bulle).
+  /// passage depuis le début, de 1 à 5).
   static const assistantMascotteShown = 'assistant_mascotte_shown';
 
   /// Mascotte ou sa phrase touchée : l'assistant s'ouvre.

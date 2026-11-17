@@ -21,6 +21,7 @@ Future<void> _pump(
   Locale locale = const Locale('fr'),
   bool disableAnimations = false,
   void Function(int)? onShown,
+  VoidCallback? onCompleted,
   VoidCallback? onTap,
   VoidCallback? onMascotteTap,
 }) async {
@@ -50,6 +51,7 @@ Future<void> _pump(
             onHintDismissed: () {},
             showMascotte: showMascotte,
             onMascotteShown: onShown,
+            onMascotteCompleted: onCompleted,
             onMascotteTap: onMascotteTap,
           ),
         ],
@@ -186,6 +188,36 @@ void main() {
       expect(counts, [1, 2]);
       await _play(tester, const Duration(milliseconds: 2500));
       expect(_mascotte, findsOneWidget);
+    });
+
+    testWidgets('la fin d’un passage est signalée une fois par passage', (
+      tester,
+    ) async {
+      var completed = 0;
+      await _pump(tester, onCompleted: () => completed++);
+      await _play(tester, kAssistantMascotteFirstDelay);
+      await _play(tester, const Duration(milliseconds: 2000));
+      expect(completed, 0, reason: 'en plein passage');
+      await _play(tester, kAssistantMascotteShow);
+      expect(completed, 1);
+      await _play(tester, kAssistantMascotteInterval);
+      await _play(tester, kAssistantMascotteShow);
+      expect(completed, 2);
+    });
+
+    testWidgets('un passage interrompu n’est pas compté', (tester) async {
+      var completed = 0;
+      await _pump(tester, onCompleted: () => completed++);
+      await _play(
+        tester,
+        kAssistantMascotteFirstDelay + const Duration(milliseconds: 2000),
+      );
+      final gesture = await tester.startGesture(_bubbleRect(tester).center);
+      await gesture.moveBy(const Offset(-30, -30));
+      await tester.pump();
+      await gesture.up();
+      await _play(tester, const Duration(seconds: 10));
+      expect(completed, 0);
     });
 
     testWidgets('showMascotte faux : jamais de passage', (tester) async {

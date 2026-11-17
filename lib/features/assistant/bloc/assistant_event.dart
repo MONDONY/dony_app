@@ -143,7 +143,7 @@ final class AssistantStatusRequested extends AssistantEvent {
 }
 
 /// La mascotte est sortie de la bulle pour faire coucou. [count] : numéro du
-/// passage depuis l'affichage de la bulle (1 au premier), pour mesurer la
+/// passage depuis le début (1 à 5, compteur Hive), pour mesurer la
 /// lassitude. Analytics seulement.
 final class AssistantMascotteShown extends AssistantEvent {
   const AssistantMascotteShown(this.count);

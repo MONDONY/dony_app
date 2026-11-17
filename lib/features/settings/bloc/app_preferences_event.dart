@@ -63,3 +63,9 @@ class AssistantHintDismissed extends AppPreferencesEvent {
 class AssistantFirstQuestionAsked extends AppPreferencesEvent {
   const AssistantFirstQuestionAsked();
 }
+
+/// Un passage de la mascotte de la bulle est terminé (elle est rentrée) : le
+/// compteur monte de un. Au-delà du seuil, la bulle ne la monte plus.
+class AssistantMascottePassCompleted extends AppPreferencesEvent {
+  const AssistantMascottePassCompleted();
+}

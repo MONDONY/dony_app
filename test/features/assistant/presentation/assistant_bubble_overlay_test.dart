@@ -903,6 +903,48 @@ void main() {
       );
     });
 
+    testWidgets('cinq passages terminés : elle ne sort plus', (tester) async {
+      when(() => prefsBloc.state).thenReturn(
+        const AppPreferencesState(
+          preferences: UserPreferencesModel(
+            assistantHintSeen: true,
+            assistantMascottePasses: 5,
+          ),
+        ),
+      );
+      await pump(tester);
+      await play(tester, const Duration(seconds: 80));
+      expect(find.byKey(mascotteKey), findsNothing);
+      verifyNever(
+        () => assistantBloc.add(any(that: isA<AssistantMascotteShown>())),
+      );
+    });
+
+    testWidgets('le cinquième passage est mesuré puis compté à sa fin', (
+      tester,
+    ) async {
+      when(() => prefsBloc.state).thenReturn(
+        const AppPreferencesState(
+          preferences: UserPreferencesModel(
+            assistantHintSeen: true,
+            assistantMascottePasses: 4,
+          ),
+        ),
+      );
+      await pump(tester);
+      await play(tester, const Duration(milliseconds: 9500));
+      expect(find.byKey(mascotteKey), findsOneWidget);
+      // Numéro du passage depuis le début, pas depuis le montage de la bulle.
+      verify(
+        () => assistantBloc.add(const AssistantMascotteShown(5)),
+      ).called(1);
+      verifyNever(() => prefsBloc.add(const AssistantMascottePassCompleted()));
+      await play(tester, const Duration(seconds: 6));
+      verify(
+        () => prefsBloc.add(const AssistantMascottePassCompleted()),
+      ).called(1);
+    });
+
     testWidgets('l’aide de première fois passe avant la mascotte', (
       tester,
     ) async {

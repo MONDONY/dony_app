@@ -123,6 +123,7 @@ class AssistantBubble extends StatefulWidget {
     required this.onHintDismissed,
     this.showMascotte = false,
     this.onMascotteShown,
+    this.onMascotteCompleted,
     this.onMascotteTap,
   });
 
@@ -146,6 +147,10 @@ class AssistantBubble extends StatefulWidget {
 
   /// Début d'un passage de la mascotte (numéro du passage).
   final void Function(int count)? onMascotteShown;
+
+  /// Fin d'un passage de la mascotte, vu en entier (le parent compte les
+  /// passages pour arrêter après [kAssistantMascotteMaxPasses]).
+  final VoidCallback? onMascotteCompleted;
 
   /// Mascotte ou sa phrase touchée ; [onTap] par défaut.
   final VoidCallback? onMascotteTap;
@@ -326,6 +331,7 @@ class _AssistantBubbleState extends State<AssistantBubble>
                   suspended: moving != null || widget.showHint,
                   onTap: widget.onMascotteTap ?? widget.onTap,
                   onShown: widget.onMascotteShown ?? (_) {},
+                  onCompleted: widget.onMascotteCompleted ?? () {},
                 ),
               // Clé : sans elle, l'aide qui disparaît au début du glissement
               // décale la bulle d'un rang dans le `Stack`, son sous-arbre est

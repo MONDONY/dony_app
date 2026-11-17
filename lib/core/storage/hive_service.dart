@@ -113,6 +113,9 @@ class HiveService {
   // saluer pour de bon (voir `AssistantMascottePeek`).
   static const String kAssistantQuestionAsked =
       'assistant_question_asked'; // bool
+  // Passages terminés de la mascotte : au bout de cinq, elle ne sort plus.
+  static const String kAssistantMascottePasses =
+      'assistant_mascotte_passes'; // int
   // Accord pour l'envoi de questions et de textes dictés à un fournisseur d'IA
   // tiers (Apple 5.1.2(i)). Vidé avec la box à la déconnexion : chaque compte
   // donne le sien.

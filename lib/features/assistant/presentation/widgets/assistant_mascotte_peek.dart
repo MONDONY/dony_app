@@ -27,6 +27,10 @@ const Duration kAssistantMascotteInterval = Duration(minutes: 3);
 /// Durée d'un passage : jaillit, salue, parle, rentre.
 const Duration kAssistantMascotteShow = Duration(milliseconds: 6700);
 
+/// Nombre de passages terminés après lesquels la mascotte ne sort plus : sans
+/// question posée à l'assistant, la relancer encore agacerait.
+const int kAssistantMascotteMaxPasses = 5;
+
 /// Nouvel essai quand un passage tombe pendant un glissement ou l'aide.
 const Duration _retryDelay = Duration(seconds: 5);
 
@@ -167,6 +171,7 @@ class AssistantMascottePeek extends StatefulWidget {
     required this.suspended,
     required this.onTap,
     required this.onShown,
+    required this.onCompleted,
     this.firstDelay = kAssistantMascotteFirstDelay,
     this.interval = kAssistantMascotteInterval,
   });
@@ -192,6 +197,11 @@ class AssistantMascottePeek extends StatefulWidget {
 
   /// Début d'un passage ; reçoit son numéro depuis le montage (1 au premier).
   final void Function(int count) onShown;
+
+  /// Le passage est allé jusqu'au bout (la mascotte est rentrée). Pas appelé
+  /// quand il est interrompu (glissement, démontage) : seuls les passages vus
+  /// en entier comptent pour le seuil [kAssistantMascotteMaxPasses].
+  final VoidCallback onCompleted;
 
   final Duration firstDelay;
   final Duration interval;
@@ -273,6 +283,7 @@ class _AssistantMascottePeekState extends State<AssistantMascottePeek>
     _controller.value = 0;
     widget.bubbleScale.value = 1;
     _arm(widget.interval);
+    widget.onCompleted();
   }
 
   /// Vers le haut tant qu'il y a la place au-dessus de la bulle, sinon vers
