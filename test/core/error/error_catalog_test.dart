@@ -336,6 +336,67 @@ void main() {
     });
   });
 
+  group('ErrorCatalog — annulation d\'un trajet qui porte des colis', () {
+    const error = ConflictException(
+      'Ce trajet a des colis. Annule d\'abord les colis, puis le trajet.',
+      code: 'trip-has-parcels',
+    );
+
+    test('trip-has-parcels : catalogue FR, plus le 409 générique', () {
+      final p = ErrorCatalog.lookup(error);
+      expect(p.title, 'Annulation impossible');
+      expect(
+        p.message,
+        'Ce trajet a des colis. Annulez d\'abord les colis, puis le voyage.',
+      );
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('trip-has-parcels : catalogue EN', () {
+      useEnglish();
+      final p = ErrorCatalog.lookup(error);
+      expect(p.title, "Can't cancel");
+      expect(
+        p.message,
+        'This trip has parcels. Cancel the parcels first, then the trip.',
+      );
+    });
+
+    test('deletion-impossible : dit d\'annuler d\'abord les colis', () {
+      const e = ConflictException('x', code: 'deletion-impossible');
+      expect(
+        ErrorCatalog.lookup(e).message,
+        'Ce trajet a des colis. Annulez d\'abord les colis, puis le voyage.',
+      );
+      useEnglish();
+      expect(
+        ErrorCatalog.lookup(e).message,
+        'This trip has parcels. Cancel the parcels first, then the trip.',
+      );
+    });
+
+    test('deposit-paid-no-refund : le detail du serveur est relayé', () {
+      const detail =
+          'Le dépôt est déjà payé : ce colis ne peut pas être annulé.';
+      const e = ConflictException(detail, code: 'deposit-paid-no-refund');
+      final p = ErrorCatalog.lookup(e);
+      expect(p.title, 'Annulation impossible');
+      expect(p.message, detail);
+    });
+
+    test('deposit-paid-no-refund : repli FR et EN sans detail utilisable', () {
+      const e = ConflictException('', code: 'deposit-paid-no-refund');
+      expect(
+        ErrorCatalog.lookup(e).message,
+        "Cette annulation n'est pas possible pour ce colis.",
+      );
+      useEnglish();
+      final p = ErrorCatalog.lookup(e);
+      expect(p.title, "Can't cancel");
+      expect(p.message, "This cancellation isn't possible for this parcel.");
+    });
+  });
+
   group('ErrorCatalog — sms-otp-disabled', () {
     // Le backend renvoie 503 quand app.sms.enabled=false en prod alors que
     // l'écran de connexion par téléphone reste accessible (build client

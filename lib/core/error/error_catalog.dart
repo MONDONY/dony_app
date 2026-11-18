@@ -831,6 +831,24 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.critical,
       icon: Icons.event_busy_rounded,
     ),
+    // 409 de l'annulation d'un trajet qui porte un colis engagé (ACCEPTED,
+    // HANDED_OVER, IN_TRANSIT, ARRIVED) : il faut annuler les colis d'abord.
+    // Texte fixe du catalogue, traduit FR/EN avec l'app.
+    'trip-has-parcels': _Entry(
+      title: (l) => l.errorTripHasParcelsTitle,
+      message: (l) => l.errorTripHasParcelsMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.inventory_2_outlined,
+    ),
+    // 409 de l'annulation d'un colis dont le dépôt est payé sans remboursement
+    // possible : le motif exact vient du back (`_serverDetailCodes`), le texte
+    // fixe ne sert qu'en repli, sans règle de remboursement inventée.
+    'deposit-paid-no-refund': _Entry(
+      title: (l) => l.errorDepositPaidNoRefundTitle,
+      message: (l) => l.errorDepositPaidNoRefundMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
     // Suppression de compte bloquée par un escrow actif (RequestDeletion /
     // ConfirmImmediateDeletion, account_deletion_bloc.dart) : cette entrée
     // n'atteint l'utilisateur que si `AccountDeletionError` parvient jusqu'à
@@ -1995,6 +2013,10 @@ abstract final class ErrorCatalog {
     // à ajouter au profil après une inscription par e-mail, Google ou Apple).
     // Bien plus précis que le texte fixe, qui reste le repli.
     'sms-otp-disabled',
+    // Annulation d'un colis refusée parce que le dépôt est payé : le back
+    // rédige le motif (traduit selon Accept-Language), l'app n'invente pas de
+    // texte sur les remboursements.
+    'deposit-paid-no-refund',
     // `commission/confirm-failed` EXCLU (relecture finale du lot K) :
     // `ConfirmAcceptanceResponse.fail(...)` (`CashCommissionService`, back)
     // rédige une phrase ("PaymentIntent status: ...", "Erreur Stripe : ...")

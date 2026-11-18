@@ -695,8 +695,32 @@ abstract class AppLocalizations {
   /// No description provided for @errorDeletionImpossibleMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Un colis est déjà accepté sur ce trajet. Annulez le voyage à la place : l\'expéditeur sera remboursé.'**
+  /// **'Ce trajet a des colis. Annulez d\'abord les colis, puis le voyage.'**
   String get errorDeletionImpossibleMessage;
+
+  /// No description provided for @errorTripHasParcelsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulation impossible'**
+  String get errorTripHasParcelsTitle;
+
+  /// No description provided for @errorTripHasParcelsMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet a des colis. Annulez d\'abord les colis, puis le voyage.'**
+  String get errorTripHasParcelsMessage;
+
+  /// No description provided for @errorDepositPaidNoRefundTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulation impossible'**
+  String get errorDepositPaidNoRefundTitle;
+
+  /// No description provided for @errorDepositPaidNoRefundMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette annulation n\'est pas possible pour ce colis.'**
+  String get errorDepositPaidNoRefundMessage;
 
   /// No description provided for @errorProLimitReachedTitle.
   ///
@@ -14455,8 +14479,20 @@ abstract class AppLocalizations {
   /// Message du dialogue de suppression bloquée (trip_owner_detail_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Un colis est déjà accepté sur ce trajet. Pour le retirer, vous devez d\'abord annuler le voyage : l\'expéditeur sera remboursé automatiquement.'**
+  /// **'Un colis est engagé sur ce trajet. Annulez d\'abord les colis, un par un, puis le voyage.'**
   String get tripOwnerDeleteBlockedMessage;
+
+  /// confirmLabel du dialogue de suppression bloquée : ouvre la liste des colis du trajet (trip_owner_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les colis'**
+  String get tripOwnerDeleteBlockedAction;
+
+  /// Raison affichée sous l'entrée « Annuler le voyage » du menu du trajet, verrouillée tant qu'un colis est engagé (trip_owner_options_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulez d\'abord les colis'**
+  String get tripMenuCancelBlockedSubtitle;
 
   /// confirmLabel du dialogue de suppression bloquée (trip_owner_detail_screen.dart).
   ///
@@ -18102,18 +18138,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Trajet annulé'**
   String get cancellationTripCanceledSnackbar;
-
-  /// Bandeau de cancellation_bottom_sheet.dart quand le trajet porte des colis déjà remis (HANDED_OVER, IN_TRANSIT, ARRIVED) : leur retour s'ouvre à l'annulation (FLUTTER-FH).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{Un colis vous a déjà été remis : vous devrez le rendre à son expéditeur sous 3 jours, contre son code de retour.} other{{count} colis vous ont déjà été remis : vous devrez les rendre à leurs expéditeurs sous 3 jours, contre leur code de retour.}}'**
-  String cancellationHandedOverParcelsNotice(int count);
-
-  /// Message du dialogue de confirmation finale (cancellation_bottom_sheet.dart) quand des colis sont déjà remis (FLUTTER-FH).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{Cette action annulera votre trajet et remboursera intégralement tous les expéditeurs concernés. Le colis déjà remis devra être rendu à son expéditeur sous 3 jours.} other{Cette action annulera votre trajet et remboursera intégralement tous les expéditeurs concernés. Les {count} colis déjà remis devront être rendus à leurs expéditeurs sous 3 jours.}}'**
-  String cancellationConfirmDialogMessageWithReturns(int count);
 
   /// Snackbar de succès de l'annulation du trajet (trip_owner_detail_screen.dart) quand le back signale des colis à restituer (parcelsToReturnCount > 0).
   ///

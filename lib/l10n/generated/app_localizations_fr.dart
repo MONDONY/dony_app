@@ -361,7 +361,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorDeletionImpossibleMessage =>
-      'Un colis est déjà accepté sur ce trajet. Annulez le voyage à la place : l\'expéditeur sera remboursé.';
+      'Ce trajet a des colis. Annulez d\'abord les colis, puis le voyage.';
+
+  @override
+  String get errorTripHasParcelsTitle => 'Annulation impossible';
+
+  @override
+  String get errorTripHasParcelsMessage =>
+      'Ce trajet a des colis. Annulez d\'abord les colis, puis le voyage.';
+
+  @override
+  String get errorDepositPaidNoRefundTitle => 'Annulation impossible';
+
+  @override
+  String get errorDepositPaidNoRefundMessage =>
+      'Cette annulation n\'est pas possible pour ce colis.';
 
   @override
   String get errorProLimitReachedTitle => 'Limite mensuelle atteinte';
@@ -8736,7 +8750,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripOwnerDeleteBlockedMessage =>
-      'Un colis est déjà accepté sur ce trajet. Pour le retirer, vous devez d\'abord annuler le voyage : l\'expéditeur sera remboursé automatiquement.';
+      'Un colis est engagé sur ce trajet. Annulez d\'abord les colis, un par un, puis le voyage.';
+
+  @override
+  String get tripOwnerDeleteBlockedAction => 'Voir les colis';
+
+  @override
+  String get tripMenuCancelBlockedSubtitle => 'Annulez d\'abord les colis';
 
   @override
   String get tripOwnerCancelTripButton => 'Annuler le voyage';
@@ -10997,32 +11017,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cancellationTripCanceledSnackbar => 'Trajet annulé';
-
-  @override
-  String cancellationHandedOverParcelsNotice(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          '$count colis vous ont déjà été remis : vous devrez les rendre à leurs expéditeurs sous 3 jours, contre leur code de retour.',
-      one:
-          'Un colis vous a déjà été remis : vous devrez le rendre à son expéditeur sous 3 jours, contre son code de retour.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String cancellationConfirmDialogMessageWithReturns(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          'Cette action annulera votre trajet et remboursera intégralement tous les expéditeurs concernés. Les $count colis déjà remis devront être rendus à leurs expéditeurs sous 3 jours.',
-      one:
-          'Cette action annulera votre trajet et remboursera intégralement tous les expéditeurs concernés. Le colis déjà remis devra être rendu à son expéditeur sous 3 jours.',
-    );
-    return '$_temp0';
-  }
 
   @override
   String cancellationTripCanceledWithReturnsSnackbar(int count) {

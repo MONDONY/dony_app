@@ -157,41 +157,15 @@ void main() {
     expect(event.reason, 'Vol annulé');
   });
 
-  testWidgets('sans colis remis : pas de bandeau de retour', (tester) async {
-    await tester.pumpWidget(
-      _wrap(
-        Builder(
-          builder: (ctx) => TextButton(
-            onPressed: () =>
-                CancellationBottomSheet.show(ctx, announcementId: 'ann-1'),
-            child: const Text('Ouvrir'),
-          ),
-        ),
-        bloc,
-      ),
-    );
-
-    await tester.tap(find.text('Ouvrir'));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.byKey(const Key('cancellation-handed-over-notice')),
-      findsNothing,
-    );
-  });
-
   testWidgets(
-    'colis déjà remis : la feuille et la confirmation annoncent leur retour',
+    'aucun bandeau de colis remis : l\'annulation est refusée avec des colis engagés',
     (tester) async {
       await tester.pumpWidget(
-        _wrapWithRouter(
+        _wrap(
           Builder(
             builder: (ctx) => TextButton(
-              onPressed: () => CancellationBottomSheet.show(
-                ctx,
-                announcementId: 'ann-1',
-                handedOverParcels: 2,
-              ),
+              onPressed: () =>
+                  CancellationBottomSheet.show(ctx, announcementId: 'ann-1'),
               child: const Text('Ouvrir'),
             ),
           ),
@@ -203,56 +177,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text(
-          '2 colis vous ont déjà été remis : vous devrez les rendre à leurs '
-          'expéditeurs sous 3 jours, contre leur code de retour.',
-        ),
-        findsOneWidget,
-      );
-
-      await tester.tap(find.text('Vol annulé'));
-      await tester.pump();
-      await tester.tap(find.text("Confirmer l'annulation"));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text(
-          'Cette action annulera votre trajet et remboursera intégralement '
-          'tous les expéditeurs concernés. Les 2 colis déjà remis devront '
-          'être rendus à leurs expéditeurs sous 3 jours.',
-        ),
-        findsOneWidget,
+        find.byKey(const Key('cancellation-handed-over-notice')),
+        findsNothing,
       );
     },
   );
-
-  testWidgets('un seul colis remis, en anglais', (tester) async {
-    useEnglish();
-    await tester.pumpWidget(
-      _wrap(
-        Builder(
-          builder: (ctx) => TextButton(
-            onPressed: () => CancellationBottomSheet.show(
-              ctx,
-              announcementId: 'ann-1',
-              handedOverParcels: 1,
-            ),
-            child: const Text('Open'),
-          ),
-        ),
-        bloc,
-      ),
-    );
-
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text(
-        "A parcel was already handed to you: you'll need to return it to its "
-        'sender within 3 days, against its return code.',
-      ),
-      findsOneWidget,
-    );
-  });
 }

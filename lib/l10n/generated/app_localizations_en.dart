@@ -358,7 +358,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorDeletionImpossibleMessage =>
-      'A parcel has already been accepted on this trip. Cancel the trip instead: the sender will get a refund.';
+      'This trip has parcels. Cancel the parcels first, then the trip.';
+
+  @override
+  String get errorTripHasParcelsTitle => 'Can\'t cancel';
+
+  @override
+  String get errorTripHasParcelsMessage =>
+      'This trip has parcels. Cancel the parcels first, then the trip.';
+
+  @override
+  String get errorDepositPaidNoRefundTitle => 'Can\'t cancel';
+
+  @override
+  String get errorDepositPaidNoRefundMessage =>
+      'This cancellation isn\'t possible for this parcel.';
 
   @override
   String get errorProLimitReachedTitle => 'Monthly limit reached';
@@ -8683,7 +8697,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripOwnerDeleteBlockedMessage =>
-      'A parcel has already been accepted on this trip. To remove it, you must first cancel the trip: the sender will be automatically refunded.';
+      'A parcel is committed to this trip. Cancel the parcels first, one by one, then the trip.';
+
+  @override
+  String get tripOwnerDeleteBlockedAction => 'See parcels';
+
+  @override
+  String get tripMenuCancelBlockedSubtitle => 'Cancel the parcels first';
 
   @override
   String get tripOwnerCancelTripButton => 'Cancel the trip';
@@ -10920,32 +10940,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancellationTripCanceledSnackbar => 'Trip canceled';
-
-  @override
-  String cancellationHandedOverParcelsNotice(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          '$count parcels were already handed to you: you\'ll need to return them to their senders within 3 days, against their return code.',
-      one:
-          'A parcel was already handed to you: you\'ll need to return it to its sender within 3 days, against its return code.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String cancellationConfirmDialogMessageWithReturns(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          'This will cancel your trip and fully refund all affected senders. The $count parcels already handed over must be returned to their senders within 3 days.',
-      one:
-          'This will cancel your trip and fully refund all affected senders. The parcel already handed over must be returned to its sender within 3 days.',
-    );
-    return '$_temp0';
-  }
 
   @override
   String cancellationTripCanceledWithReturnsSnackbar(int count) {

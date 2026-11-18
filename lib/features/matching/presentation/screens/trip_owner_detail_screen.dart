@@ -29,7 +29,6 @@ import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/live_trip.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_bid_answer.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_body.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_options_sheet.dart';
@@ -539,17 +538,9 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
     }
   }
 
-  /// Colis du trajet déjà remis au voyageur : leur retour s'ouvre à
-  /// l'annulation, la feuille d'annulation le signale.
-  int _handedOverParcels(BuildContext context) {
-    final state = context.read<BidBloc>().state;
-    return tripHandedOverParcelCount(
-      state is BidListLoaded ? state.bids : null,
-    );
-  }
-
-  /// Suppression bloquée par un colis déjà accepté — propose l'annulation du
-  /// voyage.
+  /// Suppression bloquée par un colis engagé : annuler le voyage est refusé
+  /// aussi (409 `trip-has-parcels`), le dialogue dit donc d'annuler d'abord
+  /// les colis et mène à la liste des colis du trajet.
   Future<void> _onDeleteBlocked(
     BuildContext context,
     String announcementId,
@@ -559,17 +550,12 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
       context,
       title: l.tripOwnerDeleteBlockedTitle,
       message: l.tripOwnerDeleteBlockedMessage,
-      confirmLabel: l.tripOwnerCancelTripButton,
+      confirmLabel: l.tripOwnerDeleteBlockedAction,
       cancelLabel: l.commonClose,
-      variant: DonyDialogVariant.destructive,
-      iconAsset: 'calendar-x',
+      iconAsset: 'package',
     );
     if (confirmed == true && context.mounted) {
-      await CancellationBottomSheet.show(
-        context,
-        announcementId: announcementId,
-        handedOverParcels: _handedOverParcels(context),
-      );
+      await openTripParcelsList(context, announcementId);
     }
   }
 

@@ -37,7 +37,8 @@ const _reusableStatuses = {'ACTIVE', 'COMPLETED'};
 /// Entrées du menu ⋮ de [trip], dans l'ordre du menu. Fonction pure : une
 /// entrée n'apparaît que si son action est possible, plutôt que grisée avec
 /// un message qui ne s'applique pas (seul « Reporter » reste affiché
-/// verrouillé, avec la vraie raison, [tripRescheduleBlockFor]).
+/// verrouillé, avec la vraie raison, [tripRescheduleBlockFor], et « Annuler le
+/// voyage », verrouillé tant qu'un colis est engagé).
 ///
 /// - `edit` : trajet modifiable ([canEditTrip]) ;
 /// - `reschedule` : trajet reportable ([tripCanReschedule]) ;
@@ -49,7 +50,8 @@ const _reusableStatuses = {'ACTIVE', 'COMPLETED'};
 ///   `series-multi-leg-trip`) ACTIVE ou COMPLETED ;
 /// - `saveTemplate` : ACTIVE ou COMPLETED ;
 /// - `cancelTrip` : ACTIVE avec des demandes (jamais FULL : le back n'annule
-///   qu'un trajet ACTIVE) ;
+///   qu'un trajet ACTIVE). Verrouillée, avec la raison « Annulez d'abord les
+///   colis », tant qu'un colis est engagé ([tripHasCommittedParcel]) ;
 /// - `delete` : trajet modifiable, ou annulé.
 ///
 /// [bids] : colis chargés par l'écran, `null` tant que la liste n'a pas
@@ -127,7 +129,7 @@ class TripOwnerOptionsButton extends StatelessWidget {
 /// - Modifier : [openTripEdit] ; Reporter : `TripRescheduleBottomSheet` ;
 ///   Dépublier, Supprimer : [confirmTripUnpublish], [confirmTripDelete]
 ///   (confirmation, étapes suivantes d'un voyage) ; Annuler le voyage :
-///   [openTripCancellation] (colis déjà remis annoncés) ; Partager
+///   [openTripCancellation] ; Partager
 ///   l'affiche : [openTripPoster] ;
 /// - Instructions de retrait : le sheet de la tuile `arrival`
 ///   ([openTripTileSheet], `source: menu`, qui émet `bid_detail_tile_opened`) ;
@@ -220,6 +222,8 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
     final block = entry == TripMenuEntry.reschedule
         ? tripRescheduleBlockFor(trip, bids)
         : null;
+    final cancelBlocked =
+        entry == TripMenuEntry.cancelTrip && tripHasCommittedParcel(trip, bids);
     final (icon, label, subtitle) = switch (entry) {
       TripMenuEntry.edit => (
         'square-pen',
@@ -267,7 +271,9 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
       TripMenuEntry.cancelTrip => (
         'circle-x',
         l.tripOwnerCancelTripButton,
-        l.cancellationIrreversibleSubtitle,
+        cancelBlocked
+            ? l.tripMenuCancelBlockedSubtitle
+            : l.cancellationIrreversibleSubtitle,
       ),
       TripMenuEntry.delete => (
         'trash-2',
@@ -282,7 +288,7 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
       iconBg: danger ? cs.errorLight : cs.primaryContainer,
       label: label,
       subtitle: subtitle,
-      onTap: block != null
+      onTap: block != null || cancelBlocked
           ? null
           : () {
               Navigator.of(context).pop();
@@ -318,7 +324,7 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
       case TripMenuEntry.saveTemplate:
         unawaited(_withSeriesCubit(ctx, TripSeriesFlow.saveTemplate));
       case TripMenuEntry.cancelTrip:
-        unawaited(openTripCancellation(ctx, trip, bids));
+        unawaited(openTripCancellation(ctx, trip));
       case TripMenuEntry.delete:
         unawaited(confirmTripDelete(ctx, trip));
     }

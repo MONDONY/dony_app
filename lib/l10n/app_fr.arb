@@ -115,7 +115,11 @@
   "errorCountryUnsupportedTitle": "Pays non desservi",
   "errorCountryUnsupportedMessage": "Yadony ne dessert pas encore ce pays. Choisissez-en un autre.",
   "errorDeletionImpossibleTitle": "Suppression impossible",
-  "errorDeletionImpossibleMessage": "Un colis est déjà accepté sur ce trajet. Annulez le voyage à la place : l'expéditeur sera remboursé.",
+  "errorDeletionImpossibleMessage": "Ce trajet a des colis. Annulez d'abord les colis, puis le voyage.",
+  "errorTripHasParcelsTitle": "Annulation impossible",
+  "errorTripHasParcelsMessage": "Ce trajet a des colis. Annulez d'abord les colis, puis le voyage.",
+  "errorDepositPaidNoRefundTitle": "Annulation impossible",
+  "errorDepositPaidNoRefundMessage": "Cette annulation n'est pas possible pour ce colis.",
   "errorProLimitReachedTitle": "Limite mensuelle atteinte",
   "errorProLimitReachedMessage": "Vous avez atteint votre limite d'annonces ce mois-ci. Passez en PRO pour publier sans limite.",
   "errorDraftLimitReachedTitle": "Limite de brouillons atteinte",
@@ -9119,9 +9123,17 @@
   "@tripOwnerDeleteBlockedTitle": {
     "description": "Titre du dialogue de suppression bloquée par un colis accepté (trip_owner_detail_screen.dart)."
   },
-  "tripOwnerDeleteBlockedMessage": "Un colis est déjà accepté sur ce trajet. Pour le retirer, vous devez d'abord annuler le voyage : l'expéditeur sera remboursé automatiquement.",
+  "tripOwnerDeleteBlockedMessage": "Un colis est engagé sur ce trajet. Annulez d'abord les colis, un par un, puis le voyage.",
   "@tripOwnerDeleteBlockedMessage": {
     "description": "Message du dialogue de suppression bloquée (trip_owner_detail_screen.dart)."
+  },
+  "tripOwnerDeleteBlockedAction": "Voir les colis",
+  "@tripOwnerDeleteBlockedAction": {
+    "description": "confirmLabel du dialogue de suppression bloquée : ouvre la liste des colis du trajet (trip_owner_detail_screen.dart)."
+  },
+  "tripMenuCancelBlockedSubtitle": "Annulez d'abord les colis",
+  "@tripMenuCancelBlockedSubtitle": {
+    "description": "Raison affichée sous l'entrée « Annuler le voyage » du menu du trajet, verrouillée tant qu'un colis est engagé (trip_owner_options_sheet.dart)."
   },
   "tripOwnerCancelTripButton": "Annuler le voyage",
   "@tripOwnerCancelTripButton": {
@@ -11905,24 +11917,6 @@
   "cancellationTripCanceledSnackbar": "Trajet annulé",
   "@cancellationTripCanceledSnackbar": {
     "description": "Snackbar de succès de l'annulation du trajet (trip_owner_detail_screen.dart), sans colis à restituer."
-  },
-  "cancellationHandedOverParcelsNotice": "{count, plural, =1{Un colis vous a déjà été remis : vous devrez le rendre à son expéditeur sous 3 jours, contre son code de retour.} other{{count} colis vous ont déjà été remis : vous devrez les rendre à leurs expéditeurs sous 3 jours, contre leur code de retour.}}",
-  "@cancellationHandedOverParcelsNotice": {
-    "description": "Bandeau de cancellation_bottom_sheet.dart quand le trajet porte des colis déjà remis (HANDED_OVER, IN_TRANSIT, ARRIVED) : leur retour s'ouvre à l'annulation (FLUTTER-FH).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "cancellationConfirmDialogMessageWithReturns": "{count, plural, =1{Cette action annulera votre trajet et remboursera intégralement tous les expéditeurs concernés. Le colis déjà remis devra être rendu à son expéditeur sous 3 jours.} other{Cette action annulera votre trajet et remboursera intégralement tous les expéditeurs concernés. Les {count} colis déjà remis devront être rendus à leurs expéditeurs sous 3 jours.}}",
-  "@cancellationConfirmDialogMessageWithReturns": {
-    "description": "Message du dialogue de confirmation finale (cancellation_bottom_sheet.dart) quand des colis sont déjà remis (FLUTTER-FH).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "cancellationTripCanceledWithReturnsSnackbar": "{count, plural, =1{Trajet annulé. Rendez le colis remis : son expéditeur a reçu le code de retour.} other{Trajet annulé. Rendez les {count} colis remis : leurs expéditeurs ont reçu le code de retour.}}",
   "@cancellationTripCanceledWithReturnsSnackbar": {

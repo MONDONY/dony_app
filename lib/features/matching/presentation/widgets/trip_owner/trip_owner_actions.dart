@@ -8,7 +8,6 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_arrival.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +17,26 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 // le contexte de l'écran : il porte l'`AnnouncementBloc`, le `BidBloc` et le
 // `CancellationBloc` de la route, dont les écouteurs de l'écran tirent les
 // suites (snackbar, rechargement, sortie de l'écran).
+
+/// Statuts de colis engagés : le back refuse d'annuler un trajet qui en porte
+/// un (409 `trip-has-parcels`) ; les colis s'annulent d'abord, un par un.
+const _cancelBlockingStatuses = {
+  'ACCEPTED',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'ARRIVED',
+};
+
+/// Le trajet porte-t-il un colis engagé (accepté, remis, en transit ou
+/// arrivé) ? Colis chargés par l'écran quand la liste a répondu ([bids] non
+/// nul), sinon les compteurs du détail : `confirmedParcelCount` (accepté,
+/// remis, en transit) et `parcelsSummary` (remis, en transit, arrivé), comme
+/// [tripEditAcceptedByBack]. Les simples demandes en attente ne comptent pas :
+/// le back les ferme avec remboursement à l'annulation.
+bool tripHasCommittedParcel(AnnouncementModel trip, List<BidModel>? bids) =>
+    bids != null
+    ? bids.any((b) => _cancelBlockingStatuses.contains(b.status))
+    : trip.confirmedParcelCount > 0 || trip.parcelsSummary != null;
 
 /// Statuts de colis qui interdisent de reporter le trajet.
 const _rescheduleBlockingStatuses = {'IN_TRANSIT', 'ARRIVED', 'COMPLETED'};
@@ -112,20 +131,14 @@ Future<void> confirmTripDelete(
   );
 }
 
-/// « Annuler le voyage » : feuille d'annulation, avec le nombre de colis déjà
-/// remis ([tripHandedOverParcelCount]) pour qu'elle annonce leur retour
-/// (piège n°6 de l'inventaire : l'ancienne grille d'actions ne le passait
-/// pas).
+/// « Annuler le voyage » : feuille d'annulation. Le menu ne la propose que
+/// sans colis engagé ([tripHasCommittedParcel]) : le back refuse sinon
+/// (409 `trip-has-parcels`), les colis s'annulent un par un d'abord.
 /// L'écran écoute le `CancellationBloc` (snackbar, relecture, FLUTTER-FH).
 Future<void> openTripCancellation(
   BuildContext context,
   AnnouncementModel trip,
-  List<BidModel>? bids,
-) => CancellationBottomSheet.show(
-  context,
-  announcementId: trip.id,
-  handedOverParcels: tripHandedOverParcelCount(bids),
-);
+) => CancellationBottomSheet.show(context, announcementId: trip.id);
 
 /// Attente bornée des étapes du voyage avant la question des étapes
 /// suivantes ([askCancelFollowingLegs]) : au-delà, la question se pose sur ce
