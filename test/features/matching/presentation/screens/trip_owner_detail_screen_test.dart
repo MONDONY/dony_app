@@ -20,6 +20,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -1601,7 +1602,7 @@ void main() {
     });
 
     testWidgets(
-      'suppression bloquée : la feuille d\'annulation annonce le colis remis',
+      'suppression bloquée : « annulez d\'abord les colis », sans annuler le voyage',
       (tester) async {
         final annCtrl = StreamController<AnnouncementState>.broadcast();
         addTearDown(annCtrl.close);
@@ -1641,21 +1642,24 @@ void main() {
         annCtrl.add(AnnouncementDeleteBlockedByAcceptedBid('ann-trip-001'));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 500));
-        await tester.tap(find.text('Annuler le voyage'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 800));
-
-        expect(
-          find.byKey(const Key('cancellation-handed-over-notice')),
-          findsOneWidget,
-        );
+        expect(find.text('Suppression impossible'), findsOneWidget);
         expect(
           find.text(
-            'Un colis vous a déjà été remis : vous devrez le rendre à son '
-            'expéditeur sous 3 jours, contre son code de retour.',
+            'Un colis est engagé sur ce trajet. Annulez d\'abord les colis, '
+            'un par un, puis le voyage.',
           ),
           findsOneWidget,
         );
+        // Annuler le voyage mène à un refus du back : plus proposé.
+        expect(find.text('Annuler le voyage'), findsNothing);
+        expect(find.text('Fermer'), findsOneWidget);
+
+        await tester.tap(find.text('Voir les colis'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 800));
+
+        expect(find.text('PARCELS:ann-trip-001'), findsOneWidget);
+        expect(find.byType(CancellationBottomSheet), findsNothing);
       },
     );
   });

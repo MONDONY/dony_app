@@ -155,6 +155,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorCountryUnsupportedMessage': (l) => l.errorCountryUnsupportedMessage,
   'errorDeletionImpossibleTitle': (l) => l.errorDeletionImpossibleTitle,
   'errorDeletionImpossibleMessage': (l) => l.errorDeletionImpossibleMessage,
+  'errorTripHasParcelsTitle': (l) => l.errorTripHasParcelsTitle,
+  'errorTripHasParcelsMessage': (l) => l.errorTripHasParcelsMessage,
+  'errorDepositPaidNoRefundTitle': (l) => l.errorDepositPaidNoRefundTitle,
+  'errorDepositPaidNoRefundMessage': (l) => l.errorDepositPaidNoRefundMessage,
   'errorProLimitReachedTitle': (l) => l.errorProLimitReachedTitle,
   'errorProLimitReachedMessage': (l) => l.errorProLimitReachedMessage,
   'errorDraftLimitReachedTitle': (l) => l.errorDraftLimitReachedTitle,
@@ -3202,6 +3206,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripOwnerMarkArrivedButton': (l) => l.tripOwnerMarkArrivedButton,
   'tripOwnerDeleteBlockedTitle': (l) => l.tripOwnerDeleteBlockedTitle,
   'tripOwnerDeleteBlockedMessage': (l) => l.tripOwnerDeleteBlockedMessage,
+  'tripOwnerDeleteBlockedAction': (l) => l.tripOwnerDeleteBlockedAction,
+  'tripMenuCancelBlockedSubtitle': (l) => l.tripMenuCancelBlockedSubtitle,
   'tripOwnerCancelTripButton': (l) => l.tripOwnerCancelTripButton,
   'tripOwnerProLimitTitle': (l) => l.tripOwnerProLimitTitle,
   'bidListCardAmountLabel': (l) => l.bidListCardAmountLabel,
@@ -3957,10 +3963,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'cancellationSpecifyReasonError': (l) => l.cancellationSpecifyReasonError,
   'cancellationConfirmDialogMessage': (l) => l.cancellationConfirmDialogMessage,
   'cancellationTripCanceledSnackbar': (l) => l.cancellationTripCanceledSnackbar,
-  'cancellationHandedOverParcelsNotice': (l) =>
-      l.cancellationHandedOverParcelsNotice(intPlaceholderValue),
-  'cancellationConfirmDialogMessageWithReturns': (l) =>
-      l.cancellationConfirmDialogMessageWithReturns(intPlaceholderValue),
   'cancellationTripCanceledWithReturnsSnackbar': (l) =>
       l.cancellationTripCanceledWithReturnsSnackbar(intPlaceholderValue),
   'bidDetailReturnContactSenderHint': (l) => l.bidDetailReturnContactSenderHint,
@@ -4846,6 +4848,17 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'supportHomeMyTicketsTitle': (l) => l.supportHomeMyTicketsTitle,
   'supportHomeNoTicketsMessage': (l) => l.supportHomeNoTicketsMessage,
   'supportContactCta': (l) => l.supportContactCta,
+  'supportWhatsappTitle': (l) => l.supportWhatsappTitle,
+  'supportWhatsappFaqTitle': (l) => l.supportWhatsappFaqTitle,
+  'supportWhatsappSubtitle': (l) => l.supportWhatsappSubtitle,
+  'supportWhatsappCta': (l) => l.supportWhatsappCta,
+  'supportWhatsappMessage': (l) => l.supportWhatsappMessage,
+  'supportContactSheetTitle': (l) => l.supportContactSheetTitle,
+  'supportContactSheetBody': (l) => l.supportContactSheetBody,
+  'supportContactCall': (l) => l.supportContactCall,
+  'supportContactSms': (l) => l.supportContactSms,
+  'supportContactCopied': (l) => l.supportContactCopied,
+  'supportContactOpenError': (l) => l.supportContactOpenError,
   'supportNewRequestCta': (l) => l.supportNewRequestCta,
   'supportCreateTicketCategoryLabel': (l) => l.supportCreateTicketCategoryLabel,
   'supportCreateTicketSubjectLabel': (l) => l.supportCreateTicketSubjectLabel,
@@ -7073,6 +7086,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripSeriesErrorDraftLimit': (l) => l.tripSeriesErrorDraftLimit,
   'tripSeriesErrorKyc': (l) => l.tripSeriesErrorKyc,
   'tripSeriesErrorProLimit': (l) => l.tripSeriesErrorProLimit,
+  'tripSeriesErrorGpProPending': (l) => l.tripSeriesErrorGpProPending,
   'tripSeriesErrorStripe': (l) => l.tripSeriesErrorStripe,
   'tripSeriesErrorGeneric': (l) => l.tripSeriesErrorGeneric,
   'tripSeriesBadgePublished': (l) =>
@@ -7170,6 +7184,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'assistantUnavailable': (l) => l.assistantUnavailable,
   'assistantHintTitle': (l) => l.assistantHintTitle,
   'assistantHintBody': (l) => l.assistantHintBody,
+  'assistantMascotteGreeting': (l) => l.assistantMascotteGreeting,
   'maintenanceTitle': (l) => l.maintenanceTitle,
   'maintenanceDefaultMessage': (l) => l.maintenanceDefaultMessage,
   'maintenanceEstimatedEnd': (l) =>
@@ -8353,6 +8368,20 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'taxInfoBannerResidenceBody': (l) => l.taxInfoBannerResidenceBody,
   'taxInfoNothingNew': (l) => l.taxInfoNothingNew,
   'taxInfoVatWillBeErased': (l) => l.taxInfoVatWillBeErased,
+  'inquiryAskTileTitle': (l) => l.inquiryAskTileTitle,
+  'inquiryAskTileSubtitle': (l) =>
+      l.inquiryAskTileSubtitle(placeholderMarker('name')),
+  'inquiryAskUnavailable': (l) => l.inquiryAskUnavailable,
+  'inquiryAskNotYetAvailable': (l) => l.inquiryAskNotYetAvailable,
+  'inquiryAskTileBadge': (l) => l.inquiryAskTileBadge(intPlaceholderValue),
+  'inquiryQuotaRemaining': (l) => l.inquiryQuotaRemaining(intPlaceholderValue),
+  'inquiryIntroNote': (l) =>
+      l.inquiryIntroNote(intPlaceholderValue, placeholderMarker('name')),
+  'inquiryLimitReachedNote': (l) => l.inquiryLimitReachedNote,
+  'inquiryLockedBarMessage': (l) =>
+      l.inquiryLockedBarMessage(intPlaceholderValue, placeholderMarker('name')),
+  'inquiryBookingCardTitle': (l) => l.inquiryBookingCardTitle,
+  'inquirySendLimitError': (l) => l.inquirySendLimitError,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -9048,4 +9077,7 @@ const textParameters = <String, List<String>>{
   'publishBlockedResumeOnFirst': ['month'],
   'taxInfoCollectMissing': ['fields'],
   'taxInfoAddressCountry': ['country'],
+  'inquiryAskTileSubtitle': ['name'],
+  'inquiryIntroNote': ['name'],
+  'inquiryLockedBarMessage': ['name'],
 };

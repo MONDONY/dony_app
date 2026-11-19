@@ -28,21 +28,16 @@ class CancellationBottomSheet extends StatefulWidget {
   const CancellationBottomSheet({
     super.key,
     required this.announcementId,
-    this.handedOverParcels = 0,
     this.onSubmitReady,
   });
 
   final String announcementId;
 
-  /// Colis déjà remis au voyageur (HANDED_OVER, IN_TRANSIT, ARRIVED) : leur
-  /// retour s'ouvre à l'annulation, la feuille et la confirmation le disent.
-  final int handedOverParcels;
   final void Function(VoidCallback)? onSubmitReady;
 
   static Future<void> show(
     BuildContext context, {
     required String announcementId,
-    int handedOverParcels = 0,
   }) {
     final cancellationBloc = context.read<CancellationBloc>();
     final l = context.l10n;
@@ -65,7 +60,6 @@ class CancellationBottomSheet extends StatefulWidget {
       ),
       child: CancellationBottomSheet(
         announcementId: announcementId,
-        handedOverParcels: handedOverParcels,
         onSubmitReady: (fn) => submit = fn,
       ),
     );
@@ -124,11 +118,7 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
     DonyDialog.show(
       context,
       title: l.cancellationConfirmAction,
-      message: widget.handedOverParcels > 0
-          ? l.cancellationConfirmDialogMessageWithReturns(
-              widget.handedOverParcels,
-            )
-          : l.cancellationConfirmDialogMessage,
+      message: l.cancellationConfirmDialogMessage,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'triangle-alert',
     ).then((confirmed) {
@@ -173,33 +163,6 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
             ],
           ),
         ),
-        if (widget.handedOverParcels > 0) ...[
-          const SizedBox(height: DonySpacing.sm),
-          Container(
-            key: const Key('cancellation-handed-over-notice'),
-            padding: const EdgeInsets.all(DonySpacing.base),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(color: cs.outline),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DonyIcon('package', color: cs.onSurfaceVariant, size: 18),
-                const SizedBox(width: DonySpacing.sm),
-                Expanded(
-                  child: Text(
-                    l.cancellationHandedOverParcelsNotice(
-                      widget.handedOverParcels,
-                    ),
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
         const SizedBox(height: DonySpacing.base),
 
         // Radio group label

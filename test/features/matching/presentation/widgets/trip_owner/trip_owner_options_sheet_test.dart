@@ -22,6 +22,7 @@ import 'package:dony/features/matching/bloc/trip_series_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
+import 'package:dony/features/matching/data/models/trip_parcels_summary.dart';
 import 'package:dony/features/matching/data/models/trip_series_result.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
@@ -228,6 +229,71 @@ void main() {
           isEmpty,
         );
       }
+    });
+  });
+
+  group('tripHasCommittedParcel', () {
+    test('colis engagés : accepté, remis, en transit, arrivé', () {
+      for (final s in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+        expect(
+          tripHasCommittedParcel(ownerTrip(), [ownerBid('b1', s)]),
+          isTrue,
+          reason: s,
+        );
+      }
+    });
+
+    test(
+      'demandes en attente, refusées, annulées, livrées : ne bloquent pas',
+      () {
+        for (final s in [
+          'PENDING',
+          'PAYMENT_ESCROWED',
+          'REJECTED',
+          'CANCELLED',
+          'COMPLETED',
+        ]) {
+          expect(
+            tripHasCommittedParcel(ownerTrip(), [ownerBid('b1', s)]),
+            isFalse,
+            reason: s,
+          );
+        }
+        expect(tripHasCommittedParcel(ownerTrip(), const []), isFalse);
+      },
+    );
+
+    test('liste chargée : elle prime sur les compteurs du modèle', () {
+      expect(
+        tripHasCommittedParcel(ownerTrip(confirmedParcelCount: 2), const []),
+        isFalse,
+      );
+    });
+
+    test('liste pas chargée : compteurs du modèle', () {
+      expect(tripHasCommittedParcel(ownerTrip(), null), isFalse);
+      expect(
+        tripHasCommittedParcel(ownerTrip(pendingBidCount: 3), null),
+        isFalse,
+      );
+      expect(
+        tripHasCommittedParcel(ownerTrip(confirmedParcelCount: 1), null),
+        isTrue,
+      );
+      expect(
+        tripHasCommittedParcel(
+          ownerTrip(
+            parcelsSummary: const TripParcelsSummary(
+              count: 1,
+              totalKg: 2,
+              netAmount: 10,
+              currency: 'EUR',
+            ),
+          ),
+          null,
+        ),
+        isTrue,
+      );
     });
   });
 
@@ -649,33 +715,95 @@ void main() {
       verifyNever(() => annBloc.add(any()));
     });
 
-    testWidgets('Annuler le voyage : feuille nommée, colis remis passés', (
+    testWidgets('Annuler le voyage, demandes seules : feuille nommée', (
       tester,
     ) async {
       await openMenu(
         tester,
         trip: ownerTrip(),
-        bids: [
-          ownerBid('b1', 'HANDED_OVER'),
-          ownerBid('b2', 'IN_TRANSIT'),
-          ownerBid('b3', 'ACCEPTED'),
-          ownerBid('b4', 'PENDING'),
-        ],
+        bids: [ownerBid('b1', 'PENDING'), ownerBid('b2', 'PAYMENT_ESCROWED')],
       );
       await tester.tap(entry(TripMenuEntry.cancelTrip));
       await tester.pumpAndSettle();
       final sheet = find.byType(CancellationBottomSheet);
       expect(sheet, findsOneWidget);
       expect(
-        tester.widget<CancellationBottomSheet>(sheet).handedOverParcels,
-        2,
-      );
-      expect(
         find.byKey(const Key('cancellation-handed-over-notice')),
-        findsOneWidget,
+        findsNothing,
       );
       expect(sheetRouteName(tester, sheet), '/sheet/trip-owner/cancel');
     });
+
+    for (final status in const [
+      'ACCEPTED',
+      'HANDED_OVER',
+      'IN_TRANSIT',
+      'ARRIVED',
+    ]) {
+      testWidgets('Annuler le voyage verrouillé par un colis $status (FR)', (
+        tester,
+      ) async {
+        await openMenu(
+          tester,
+          trip: ownerTrip(),
+          bids: [ownerBid('b1', status), ownerBid('b2', 'PENDING')],
+        );
+        expect(
+          find.descendant(
+            of: entry(TripMenuEntry.cancelTrip),
+            matching: find.text("Annulez d'abord les colis"),
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Cette action est irréversible'), findsNothing);
+        await tester.tap(entry(TripMenuEntry.cancelTrip));
+        await tester.pumpAndSettle();
+        expect(entry(TripMenuEntry.cancelTrip), findsOneWidget);
+        expect(find.byType(CancellationBottomSheet), findsNothing);
+      });
+    }
+
+    testWidgets('Annuler le voyage verrouillé, EN et sémantique', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await openMenu(
+        tester,
+        trip: ownerTrip(),
+        bids: [ownerBid('b1', 'ACCEPTED')],
+        locale: const Locale('en'),
+      );
+      expect(
+        find.descendant(
+          of: entry(TripMenuEntry.cancelTrip),
+          matching: find.text('Cancel the parcels first'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getSemantics(entry(TripMenuEntry.cancelTrip)),
+        matchesSemantics(
+          label: 'Cancel the trip\nCancel the parcels first',
+          isButton: true,
+          hasEnabledState: true,
+        ),
+      );
+      handle.dispose();
+    });
+
+    testWidgets(
+      'colis pas chargés : les compteurs verrouillent l\'annulation',
+      (tester) async {
+        await openMenu(
+          tester,
+          trip: ownerTrip(confirmedParcelCount: 1),
+          bids: null,
+        );
+        await tester.tap(entry(TripMenuEntry.cancelTrip));
+        await tester.pumpAndSettle();
+        expect(find.byType(CancellationBottomSheet), findsNothing);
+      },
+    );
 
     testWidgets('Instructions de retrait : sheet « Arrivée », source menu', (
       tester,
