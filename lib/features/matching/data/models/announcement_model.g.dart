@@ -121,6 +121,7 @@ AnnouncementModel _$AnnouncementModelFromJson(
   currencyEditable: json['currencyEditable'] as bool?,
   departureTimezone: json['departureTimezone'] as String?,
   trackingActive: json['trackingActive'] as bool? ?? false,
+  hidden: json['hidden'] as bool? ?? false,
   parcelsSummary: TripParcelsSummary.fromJsonOrNull(json['parcelsSummary']),
 );
 
@@ -185,6 +186,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'currencyEditable': instance.currencyEditable,
       'departureTimezone': instance.departureTimezone,
       'trackingActive': instance.trackingActive,
+      'hidden': instance.hidden,
       'parcelsSummary': _parcelsSummaryToJson(instance.parcelsSummary),
     };
 

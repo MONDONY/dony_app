@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/trip_bids_events_service.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -53,7 +54,16 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     ],
   );
 
-  BidBloc(this._repository, this._analytics) : super(BidInitial()) {
+  /// Prévient l'écran du trajet qu'une demande a été acceptée, refusée ou un
+  /// colis annulé. Facultatif : absent dans les tests unitaires.
+  final TripBidsEventsService? _tripBidsEvents;
+
+  BidBloc(
+    this._repository,
+    this._analytics, {
+    TripBidsEventsService? tripBidsEvents,
+  }) : _tripBidsEvents = tripBidsEvents,
+       super(BidInitial()) {
     on<BidCheckoutRequested>(_onCheckoutRequested);
     on<BidCreateRequested>(_onCreateRequested);
     on<BidListRequested>(_onListRequested);
@@ -227,6 +237,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bid = await _repository.acceptBid(event.bidId);
       emit(BidAccepted(bid));
+      _tripBidsEvents?.notifyChanged(bid.announcementId);
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.bidAccepted,
@@ -249,6 +260,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bid = await _repository.acceptMobileMoneyBid(event.bidId);
       emit(BidAccepted(bid));
+      _tripBidsEvents?.notifyChanged(bid.announcementId);
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.bidAccepted,
@@ -271,6 +283,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         reason: event.reason,
       );
       emit(BidRejected(bid));
+      _tripBidsEvents?.notifyChanged(bid.announcementId);
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.bidRejected,
@@ -378,6 +391,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         reason: event.reason,
       );
       emit(BidCancelled(bid));
+      _tripBidsEvents?.notifyChanged(bid.announcementId);
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.bidCancelled,
@@ -417,6 +431,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final already = await _repository.cancelBeforePayment(event.bidId);
       emit(BidCancelledBeforePayment(alreadyCancelled: already));
+      _tripBidsEvents?.notifyChanged();
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.bidCancelledBeforePayment,

@@ -83,7 +83,7 @@ String tripRescheduleBlockMessage(
   TripRescheduleBlock.limitReached => l.tripRescheduleLimitReachedMessage,
 };
 
-/// « Dépublier » : confirmation, puis `AnnouncementUnpublishRequested`. Le
+/// « Mettre en brouillon » (ex-« Dépublier ») : confirmation, puis `AnnouncementUnpublishRequested`. Le
 /// trajet relu (`AnnouncementUpdated`) est repris par l'écran.
 Future<void> confirmTripUnpublish(
   BuildContext context,
@@ -101,6 +101,43 @@ Future<void> confirmTripUnpublish(
     context.read<AnnouncementBloc>().add(
       AnnouncementUnpublishRequested(trip.id),
     );
+  }
+}
+
+/// « Cacher le trajet » : confirmation, puis `AnnouncementHideRequested`. Le
+/// trajet relu (`AnnouncementUpdated`, `hidden`) est repris par l'écran.
+Future<void> confirmTripHide(
+  BuildContext context,
+  AnnouncementModel trip,
+) async {
+  final l = context.l10n;
+  final confirmed = await DonyDialog.show(
+    context,
+    title: l.tripOwnerHideDialogTitle,
+    message: l.tripOwnerHideDialogMessage,
+    confirmLabel: l.tripOwnerHideTile,
+    iconAsset: 'eye-off',
+  );
+  if (confirmed == true && context.mounted) {
+    context.read<AnnouncementBloc>().add(AnnouncementHideRequested(trip.id));
+  }
+}
+
+/// « Afficher le trajet » : confirmation, puis `AnnouncementShowRequested`.
+Future<void> confirmTripShow(
+  BuildContext context,
+  AnnouncementModel trip,
+) async {
+  final l = context.l10n;
+  final confirmed = await DonyDialog.show(
+    context,
+    title: l.tripOwnerShowDialogTitle,
+    message: l.tripOwnerShowDialogMessage,
+    confirmLabel: l.tripOwnerShowTile,
+    iconAsset: 'eye',
+  );
+  if (confirmed == true && context.mounted) {
+    context.read<AnnouncementBloc>().add(AnnouncementShowRequested(trip.id));
   }
 }
 

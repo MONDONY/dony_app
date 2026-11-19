@@ -7,6 +7,7 @@ import 'package:dony/features/favorites/presentation/widgets/favorite_heart_butt
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_header.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -393,6 +394,10 @@ class _ActiveCardContent extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.sm),
               _StatusBadge(badge: badge),
+              if (announcement.hidden) ...[
+                const SizedBox(width: DonySpacing.xs),
+                const TripHiddenBadge(),
+              ],
               if (pinButton case final pin?) ...[
                 const SizedBox(width: DonySpacing.xs),
                 pin,
@@ -610,6 +615,10 @@ class _PastCardContent extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.sm),
           _StatusBadge(badge: badge),
+          if (announcement.hidden) ...[
+            const SizedBox(width: DonySpacing.xs),
+            const TripHiddenBadge(),
+          ],
           if (pinButton case final pin?) ...[
             const SizedBox(width: DonySpacing.xs),
             pin,

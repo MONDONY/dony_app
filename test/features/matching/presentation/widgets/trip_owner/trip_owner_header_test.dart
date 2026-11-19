@@ -502,4 +502,78 @@ void main() {
       }
     }
   });
+
+  group('badge « Caché »', () {
+    Future<void> pumpHeader(
+      WidgetTester tester,
+      AnnouncementModel a, {
+      Locale locale = const Locale('fr'),
+    }) async {
+      tester.view.physicalSize = const Size(360, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: TripOwnerHeader(a: a, todoCount: 3),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    AnnouncementModel trip({required bool hidden, String status = 'ACTIVE'}) =>
+        AnnouncementModel(
+          id: 'h1',
+          travelerId: 't1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2026, 9, 2),
+          availableKg: 5,
+          totalKg: 10,
+          pricePerKg: 7,
+          status: status,
+          hidden: hidden,
+          createdAt: DateTime(2026, 7),
+          updatedAt: DateTime(2026, 7),
+          acceptedPaymentMethods: const <BidPaymentMethod>{},
+        );
+
+    setUpAll(() async {
+      await initializeDateFormatting('en');
+      await loadAppFonts();
+    });
+
+    testWidgets('trajet caché : « Caché » à côté du statut (FR)', (
+      tester,
+    ) async {
+      await pumpHeader(tester, trip(hidden: true));
+      expect(find.byKey(const Key('trip-hidden-badge')), findsOneWidget);
+      expect(find.text('Caché'), findsOneWidget);
+      expect(find.text('● ACTIF'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('trajet caché : « Hidden » (EN) à 360 dp', (tester) async {
+      await pumpHeader(
+        tester,
+        trip(hidden: true, status: 'FULL'),
+        locale: const Locale('en'),
+      );
+      expect(find.text('Hidden'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('trajet visible : pas de badge', (tester) async {
+      await pumpHeader(tester, trip(hidden: false));
+      expect(find.byKey(const Key('trip-hidden-badge')), findsNothing);
+    });
+  });
 }

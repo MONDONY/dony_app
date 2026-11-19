@@ -339,6 +339,39 @@ void main() {
     );
   });
 
+  // ── hideAnnouncement / showAnnouncement ──────────────────────────────────────
+
+  group('hideAnnouncement / showAnnouncement', () {
+    test('hide : POST /announcements/{id}/hide, hidden lu', () async {
+      when(() => mockDio.post('/announcements/ann-001/hide')).thenAnswer(
+        (_) async => _ok({
+          ..._announcementJson,
+          'hidden': true,
+        }, '/announcements/ann-001/hide'),
+      );
+
+      final result = await datasource.hideAnnouncement('ann-001');
+
+      expect(result.id, 'ann-001');
+      expect(result.hidden, isTrue);
+      verify(() => mockDio.post('/announcements/ann-001/hide')).called(1);
+    });
+
+    test(
+      'show : POST /announcements/{id}/show, hidden absent = false',
+      () async {
+        when(() => mockDio.post('/announcements/ann-001/show')).thenAnswer(
+          (_) async => _ok(_announcementJson, '/announcements/ann-001/show'),
+        );
+
+        final result = await datasource.showAnnouncement('ann-001');
+
+        expect(result.hidden, isFalse);
+        verify(() => mockDio.post('/announcements/ann-001/show')).called(1);
+      },
+    );
+  });
+
   // ── markTripArrived ──────────────────────────────────────────────────────────
 
   group('markTripArrived', () {

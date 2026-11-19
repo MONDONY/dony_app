@@ -128,6 +128,19 @@ class AnnouncementRemoteDatasource {
     return AnnouncementModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// Cache le trajet de la recherche (ACTIVE ou FULL), sans toucher à son
+  /// statut ni à ses colis. Idempotent.
+  Future<AnnouncementModel> hideAnnouncement(String id) async {
+    final response = await _apiClient.dio.post('/announcements/$id/hide');
+    return AnnouncementModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Réaffiche un trajet caché. Idempotent.
+  Future<AnnouncementModel> showAnnouncement(String id) async {
+    final response = await _apiClient.dio.post('/announcements/$id/show');
+    return AnnouncementModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<AnnouncementModel> markTripArrived({
     required String announcementId,
     String? arrivalInstructions,

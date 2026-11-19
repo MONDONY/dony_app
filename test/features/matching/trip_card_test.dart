@@ -24,9 +24,11 @@ AnnouncementModel _announcement({
   String currency = 'EUR',
   DateTime? departureDate,
   int? stopsCount,
+  bool? hidden,
 }) {
   return AnnouncementModel.fromJson({
     'stopsCount': ?stopsCount,
+    'hidden': ?hidden,
     'id': 'a1',
     'travelerId': 't1',
     'departureCity': departureCity,
@@ -55,6 +57,35 @@ Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));
+
+  testWidgets('trajet caché : pastille « Caché » sur la carte', (tester) async {
+    await tester.pumpWidget(
+      localizedApp(
+        Scaffold(
+          body: TripCard(
+            announcement: _announcement(hidden: true),
+            onTap: () {},
+            index: 0,
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byKey(const Key('trip-hidden-badge')), findsOneWidget);
+    expect(find.text('Caché'), findsOneWidget);
+  });
+
+  testWidgets('trajet visible : pas de pastille « Caché »', (tester) async {
+    await tester.pumpWidget(
+      localizedApp(
+        Scaffold(
+          body: TripCard(announcement: _announcement(), onTap: () {}, index: 0),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byKey(const Key('trip-hidden-badge')), findsNothing);
+  });
 
   // FLUTTER-GE : badge d'escales sur la carte de « Mes trajets » et favoris.
   testWidgets('badge d\'escales seulement si renseigné', (tester) async {

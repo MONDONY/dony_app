@@ -8764,14 +8764,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripOwnerPublishTile => 'Post';
 
   @override
-  String get tripOwnerUnpublishTile => 'Unpublish';
+  String get tripOwnerUnpublishTile => 'Move to drafts';
 
   @override
-  String get tripOwnerUnpublishDialogTitle => 'Unpublish this trip?';
+  String get tripOwnerUnpublishDialogTitle => 'Move this trip to drafts?';
 
   @override
   String get tripOwnerUnpublishDialogMessage =>
-      'The trip will no longer be visible and will stay in your drafts.';
+      'The trip will go back to drafts and will no longer be visible. You can publish it again.';
+
+  @override
+  String get tripOwnerHideTile => 'Hide trip';
+
+  @override
+  String get tripOwnerHideDialogTitle => 'Hide this trip?';
+
+  @override
+  String get tripOwnerHideDialogMessage =>
+      'The trip will no longer appear in searches. Your current parcels are not affected.';
+
+  @override
+  String get tripOwnerShowTile => 'Show trip';
+
+  @override
+  String get tripOwnerShowDialogTitle => 'Show this trip?';
+
+  @override
+  String get tripOwnerShowDialogMessage =>
+      'The trip will appear in searches again.';
+
+  @override
+  String get tripHiddenBadge => 'Hidden';
 
   @override
   String get tripOwnerParcelsTile => 'Parcels';

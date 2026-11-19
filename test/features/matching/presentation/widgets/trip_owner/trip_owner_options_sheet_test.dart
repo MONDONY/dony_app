@@ -1,5 +1,5 @@
 // Menu ⋮ de l'écran du trajet vu par son voyageur : entrées par état (table
-// explicite), verrou du report, actions (dialogues Dépublier et Supprimer
+// explicite), verrou du report, actions (dialogues Mettre en brouillon et Supprimer
 // confirmés, annulation avec les colis remis, instructions de retrait,
 // trajet récurrent et modèle), bouton de la barre d'application, FR / EN,
 // 360 dp × 1,3.
@@ -61,6 +61,8 @@ void main() {
     const edit = TripMenuEntry.edit;
     const reschedule = TripMenuEntry.reschedule;
     const unpublish = TripMenuEntry.unpublish;
+    const hide = TripMenuEntry.hide;
+    const show = TripMenuEntry.show;
     const poster = TripMenuEntry.sharePoster;
     const arrival = TripMenuEntry.arrivalInstructions;
     const recurring = TripMenuEntry.makeRecurring;
@@ -99,51 +101,93 @@ void main() {
         'ACTIVE avec une demande',
         ownerTrip(),
         pending,
-        [reschedule, poster, recurring, template, cancel],
+        [reschedule, hide, poster, recurring, template, cancel],
       ),
       (
         'ACTIVE avec un colis accepté',
         ownerTrip(),
         accepted,
-        [reschedule, poster, recurring, template, cancel],
+        [reschedule, hide, poster, recurring, template, cancel],
       ),
       (
         'ACTIVE avec un colis remis',
         ownerTrip(),
         handedOver,
-        [reschedule, poster, recurring, template, cancel],
+        [reschedule, hide, poster, recurring, template, cancel],
       ),
       (
         'ACTIVE avec un colis arrivé',
         ownerTrip(),
         arrived,
-        [reschedule, poster, arrival, recurring, template, cancel],
+        [reschedule, hide, poster, arrival, recurring, template, cancel],
       ),
       (
         'ACTIVE, colis pas chargés, demande au modèle',
         ownerTrip(pendingBidCount: 1),
         null,
-        [reschedule, poster, recurring, template, cancel],
+        [reschedule, hide, poster, recurring, template, cancel],
       ),
       (
         'ACTIVE, colis pas chargés, bidsCount au modèle',
         ownerTrip(bidsCount: 2),
         null,
-        [reschedule, poster, recurring, template, cancel],
+        [reschedule, hide, poster, recurring, template, cancel],
       ),
       (
         'FULL avec un colis accepté',
         ownerTrip(status: 'FULL'),
         accepted,
-        [reschedule],
+        [reschedule, hide],
       ),
       (
         'FULL avec un colis arrivé',
         ownerTrip(status: 'FULL'),
         arrived,
-        [reschedule, arrival],
+        [reschedule, hide, arrival],
       ),
       ('FULL sans colis', ownerTrip(status: 'FULL'), const [], const []),
+      (
+        'ACTIVE caché sans colis : Afficher, jamais avec Mettre en brouillon',
+        ownerTrip(hidden: true),
+        const [],
+        [edit, show, poster, recurring, template, delete],
+      ),
+      (
+        'ACTIVE caché avec un colis : Afficher, plus Cacher',
+        ownerTrip(hidden: true),
+        accepted,
+        [reschedule, show, poster, recurring, template, cancel],
+      ),
+      (
+        'FULL caché avec un colis : Afficher',
+        ownerTrip(status: 'FULL', hidden: true),
+        accepted,
+        [reschedule, show],
+      ),
+      (
+        'FULL caché, colis pas chargés : Afficher',
+        ownerTrip(status: 'FULL', hidden: true),
+        null,
+        [show],
+      ),
+      (
+        'IN_PROGRESS avec colis : ni Cacher ni Afficher',
+        ownerTrip(status: 'IN_PROGRESS', hidden: true),
+        handedOver,
+        [reschedule],
+      ),
+      (
+        'COMPLETED avec colis, caché : ni Cacher ni Afficher',
+        ownerTrip(status: 'COMPLETED', hidden: true),
+        delivered,
+        [recurring, template],
+      ),
+      (
+        'DRAFT avec demande : ni Cacher ni Afficher',
+        ownerTrip(status: 'DRAFT'),
+        pending,
+        const [],
+      ),
       (
         'IN_PROGRESS avec un colis remis',
         ownerTrip(status: 'IN_PROGRESS'),
@@ -220,6 +264,41 @@ void main() {
         expect(entries, isNot(contains(cancel)));
         expect(entries, isNot(contains(delete)));
       }
+    });
+
+    test('Mettre en brouillon, Cacher et Afficher ne coexistent jamais', () {
+      final bidSets = <List<BidModel>?>[
+        null,
+        const [],
+        pending,
+        accepted,
+        handedOver,
+        arrived,
+        delivered,
+      ];
+      for (final status in kTripStatuses) {
+        for (final hidden in [false, true]) {
+          for (final bids in bidSets) {
+            final entries = _entries(
+              ownerTrip(status: status, hidden: hidden),
+              bids,
+            );
+            final shown = [unpublish, hide, show].where(entries.contains);
+            expect(
+              shown.length,
+              lessThanOrEqualTo(1),
+              reason: '$status hidden=$hidden bids=${bids?.length}: $shown',
+            );
+          }
+        }
+      }
+    });
+
+    test('un colis accepté retire Mettre en brouillon au profit de Cacher', () {
+      expect(_entries(ownerTrip(), const []), contains(unpublish));
+      final after = _entries(ownerTrip(), accepted);
+      expect(after, isNot(contains(unpublish)));
+      expect(after, contains(hide));
     });
 
     test('visiteur : aucune entrée', () {
@@ -449,8 +528,9 @@ void main() {
           'Villes, dates, kilos, prix et conditions',
         ),
         TripMenuEntry.unpublish: (
-          'Dépublier',
-          'Le trajet ne sera plus visible et restera dans vos brouillons.',
+          'Mettre en brouillon',
+          'Le trajet repassera en brouillon : il ne sera plus visible. '
+              'Vous pourrez le republier.',
         ),
         TripMenuEntry.sharePoster: ("Partager l'affiche", 'Partager le trajet'),
         TripMenuEntry.makeRecurring: (
@@ -643,26 +723,27 @@ void main() {
       expect(pushed.single.location, '/announcements/trip-1/affiche');
     });
 
-    testWidgets('Dépublier : confirmé, AnnouncementUnpublishRequested', (
-      tester,
-    ) async {
-      await openMenu(tester, trip: ownerTrip());
-      await tester.tap(entry(TripMenuEntry.unpublish));
-      await tester.pumpAndSettle();
-      expect(find.text('Dépublier ce trajet ?'), findsOneWidget);
-      await tester.tap(
-        find.descendant(
-          of: find.byType(Dialog),
-          matching: find.text('Dépublier'),
-        ),
-      );
-      await tester.pumpAndSettle();
-      final added = verify(() => annBloc.add(captureAny())).captured;
-      expect(added.single, isA<AnnouncementUnpublishRequested>());
-      expect((added.single as AnnouncementUnpublishRequested).id, 'trip-1');
-    });
+    testWidgets(
+      'Mettre en brouillon : confirmé, AnnouncementUnpublishRequested',
+      (tester) async {
+        await openMenu(tester, trip: ownerTrip());
+        await tester.tap(entry(TripMenuEntry.unpublish));
+        await tester.pumpAndSettle();
+        expect(find.text('Mettre ce trajet en brouillon ?'), findsOneWidget);
+        await tester.tap(
+          find.descendant(
+            of: find.byType(Dialog),
+            matching: find.text('Mettre en brouillon'),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final added = verify(() => annBloc.add(captureAny())).captured;
+        expect(added.single, isA<AnnouncementUnpublishRequested>());
+        expect((added.single as AnnouncementUnpublishRequested).id, 'trip-1');
+      },
+    );
 
-    testWidgets('Dépublier : renoncer ne fait rien', (tester) async {
+    testWidgets('Mettre en brouillon : renoncer ne fait rien', (tester) async {
       await openMenu(tester, trip: ownerTrip());
       await tester.tap(entry(TripMenuEntry.unpublish));
       await tester.pumpAndSettle();
@@ -670,6 +751,215 @@ void main() {
       await tester.pumpAndSettle();
       verifyNever(() => annBloc.add(any()));
     });
+
+    testWidgets('Cacher : libellé, sous-titre, confirmation, HideRequested', (
+      tester,
+    ) async {
+      await openMenu(
+        tester,
+        trip: ownerTrip(),
+        bids: [ownerBid('b1', 'ACCEPTED')],
+      );
+      expect(entry(TripMenuEntry.unpublish), findsNothing);
+      expect(
+        find.descendant(
+          of: entry(TripMenuEntry.hide),
+          matching: find.text('Cacher le trajet'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: entry(TripMenuEntry.hide),
+          matching: find.text(
+            'Le trajet n’apparaîtra plus dans les recherches. '
+            'Vos colis en cours ne changent pas.',
+          ),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(entry(TripMenuEntry.hide));
+      await tester.pumpAndSettle();
+      expect(find.text('Cacher ce trajet ?'), findsOneWidget);
+      verifyNever(() => annBloc.add(any()));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text('Cacher le trajet'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final added = verify(() => annBloc.add(captureAny())).captured;
+      expect(added.single, isA<AnnouncementHideRequested>());
+      expect((added.single as AnnouncementHideRequested).id, 'trip-1');
+    });
+
+    testWidgets('Cacher : renoncer ne fait rien', (tester) async {
+      await openMenu(
+        tester,
+        trip: ownerTrip(status: 'FULL'),
+        bids: [ownerBid('b1', 'ACCEPTED')],
+      );
+      await tester.tap(entry(TripMenuEntry.hide));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+      verifyNever(() => annBloc.add(any()));
+    });
+
+    testWidgets('Afficher : confirmation, ShowRequested', (tester) async {
+      await openMenu(
+        tester,
+        trip: ownerTrip(hidden: true),
+        bids: [ownerBid('b1', 'ACCEPTED')],
+      );
+      expect(entry(TripMenuEntry.hide), findsNothing);
+      expect(
+        find.descendant(
+          of: entry(TripMenuEntry.show),
+          matching: find.text('Le trajet réapparaîtra dans les recherches.'),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(entry(TripMenuEntry.show));
+      await tester.pumpAndSettle();
+      expect(find.text('Afficher ce trajet ?'), findsOneWidget);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text('Afficher le trajet'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final added = verify(() => annBloc.add(captureAny())).captured;
+      expect(added.single, isA<AnnouncementShowRequested>());
+      expect((added.single as AnnouncementShowRequested).id, 'trip-1');
+    });
+
+    testWidgets('Afficher : renoncer ne fait rien', (tester) async {
+      await openMenu(tester, trip: ownerTrip(hidden: true));
+      await tester.tap(entry(TripMenuEntry.show));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+      verifyNever(() => annBloc.add(any()));
+    });
+
+    testWidgets('Cacher et Afficher en anglais', (tester) async {
+      await openMenu(
+        tester,
+        trip: ownerTrip(),
+        bids: [ownerBid('b1', 'ACCEPTED')],
+        locale: const Locale('en'),
+      );
+      expect(
+        find.descendant(
+          of: entry(TripMenuEntry.hide),
+          matching: find.text('Hide trip'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: entry(TripMenuEntry.hide),
+          matching: find.text(
+            'The trip will no longer appear in searches. '
+            'Your current parcels are not affected.',
+          ),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(entry(TripMenuEntry.hide));
+      await tester.pumpAndSettle();
+      expect(find.text('Hide this trip?'), findsOneWidget);
+    });
+
+    testWidgets('Afficher en anglais', (tester) async {
+      await openMenu(
+        tester,
+        trip: ownerTrip(hidden: true),
+        locale: const Locale('en'),
+      );
+      expect(
+        find.descendant(
+          of: entry(TripMenuEntry.show),
+          matching: find.text('Show trip'),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(entry(TripMenuEntry.show));
+      await tester.pumpAndSettle();
+      expect(find.text('Show this trip?'), findsOneWidget);
+      expect(
+        find.text('The trip will appear in searches again.'),
+        findsWidgets,
+      );
+    });
+
+    for (final locale in const [Locale('fr'), Locale('en')]) {
+      for (final hidden in [false, true]) {
+        testWidgets('Cacher / Afficher à 360 dp × 1,3 (${locale.languageCode}, '
+            'hidden=$hidden)', (tester) async {
+          await openMenu(
+            tester,
+            trip: ownerTrip(hidden: hidden),
+            bids: [ownerBid('b1', 'ACCEPTED')],
+            locale: locale,
+            textScale: 1.3,
+            size: const Size(360, 640),
+          );
+          expect(tester.takeException(), isNull);
+          final e = entry(hidden ? TripMenuEntry.show : TripMenuEntry.hide);
+          expect(e, findsOneWidget);
+          // Le libellé tient sur une ligne : hauteur du texte du libellé.
+          final label = find.descendant(
+            of: e,
+            matching: find.text(
+              hidden
+                  ? (locale.languageCode == 'fr'
+                        ? 'Afficher le trajet'
+                        : 'Show trip')
+                  : (locale.languageCode == 'fr'
+                        ? 'Cacher le trajet'
+                        : 'Hide trip'),
+            ),
+          );
+          expect(label, findsOneWidget);
+          final lineHeight = tester.getSize(label).height;
+          expect(lineHeight, lessThan(32));
+        });
+      }
+    }
+
+    for (final locale in const [Locale('fr'), Locale('en')]) {
+      testWidgets('Mettre en brouillon : menu et confirmation à 360 dp × 1,3 '
+          '(${locale.languageCode})', (tester) async {
+        await openMenu(
+          tester,
+          trip: ownerTrip(),
+          locale: locale,
+          textScale: 1.3,
+          size: const Size(360, 640),
+        );
+        final fr = locale.languageCode == 'fr';
+        final label = fr ? 'Mettre en brouillon' : 'Move to drafts';
+        final tile = find.descendant(
+          of: entry(TripMenuEntry.unpublish),
+          matching: find.text(label),
+        );
+        expect(tile, findsOneWidget);
+        expect(tester.getSize(tile).height, lessThan(32));
+        await tester.tap(entry(TripMenuEntry.unpublish));
+        await tester.pumpAndSettle();
+        final button = find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text(label),
+        );
+        expect(button, findsOneWidget);
+        expect(tester.getSize(button).height, lessThan(32));
+        expect(tester.takeException(), isNull);
+      });
+    }
 
     for (final (status, message) in const [
       (

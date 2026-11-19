@@ -12,6 +12,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/trip_bids_events_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -2140,6 +2141,124 @@ void main() {
               as AnnouncementDetailRequested;
       expect(event.id, 'ann-trip-001');
       expect(event.silent, isFalse);
+    });
+  });
+
+  // Colis accepté depuis un autre écran (Demandes, fiche du colis) : l'écran
+  // du trajet, resté dessous dans la pile, se relit et son menu suit.
+  group('réponse donnée depuis un autre écran', () {
+    late TripBidsEventsService events;
+    late StreamController<BidState> bidCtrl;
+
+    setUpAll(() {
+      registerFallbackValue(AnnouncementDetailRequested('fallback'));
+    });
+
+    setUp(() {
+      events = TripBidsEventsService();
+      if (getIt.isRegistered<TripBidsEventsService>()) {
+        getIt.unregister<TripBidsEventsService>();
+      }
+      getIt.registerSingleton<TripBidsEventsService>(events);
+      bidCtrl = StreamController<BidState>.broadcast();
+    });
+
+    tearDown(() async {
+      await bidCtrl.close();
+      if (getIt.isRegistered<TripBidsEventsService>()) {
+        getIt.unregister<TripBidsEventsService>();
+      }
+      await events.dispose();
+    });
+
+    Future<void> pumpOwner(WidgetTester tester) async {
+      final a = _makeAnnouncement();
+      when(() => annBloc.state).thenReturn(AnnouncementDetailLoaded(a));
+      whenListen(
+        annBloc,
+        const Stream<AnnouncementState>.empty(),
+        initialState: AnnouncementDetailLoaded(a),
+      );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+      when(() => bidBloc.state).thenReturn(BidListLoaded(const []));
+      whenListen(
+        bidBloc,
+        bidCtrl.stream,
+        initialState: BidListLoaded(const []),
+      );
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('changement du trajet : détail et colis relus en silence', (
+      tester,
+    ) async {
+      await pumpOwner(tester);
+      events.notifyChanged('ann-trip-001');
+      await tester.pump();
+
+      final ann = verify(() => annBloc.add(captureAny())).captured;
+      final detail = ann.whereType<AnnouncementDetailRequested>().last;
+      expect(detail.id, 'ann-trip-001');
+      expect(detail.silent, isTrue);
+      final bids = verify(() => bidBloc.add(captureAny())).captured;
+      final list = bids.whereType<BidListRequested>().last;
+      expect(list.silent, isTrue);
+    });
+
+    testWidgets('identifiant inconnu de l\u2019émetteur : relu par prudence', (
+      tester,
+    ) async {
+      await pumpOwner(tester);
+      clearInteractions(annBloc);
+      events.notifyChanged();
+      await tester.pump();
+      verify(
+        () => annBloc.add(any(that: isA<AnnouncementDetailRequested>())),
+      ).called(1);
+    });
+
+    testWidgets('autre trajet : aucune relecture', (tester) async {
+      await pumpOwner(tester);
+      clearInteractions(annBloc);
+      clearInteractions(bidBloc);
+      events.notifyChanged('autre-trajet');
+      await tester.pump();
+      verifyNever(() => annBloc.add(any()));
+      verifyNever(() => bidBloc.add(any()));
+    });
+
+    testWidgets('colis accepté ailleurs puis retour : « Mettre en brouillon » '
+        'remplacé par « Cacher le trajet »', (tester) async {
+      await pumpOwner(tester);
+      await tester.tap(find.byKey(const Key('trip-owner-menu-button')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('trip-menu-unpublish')), findsOneWidget);
+      expect(find.byKey(const Key('trip-menu-hide')), findsNothing);
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+
+      // La liste relue après l'acceptation porte le colis accepté.
+      events.notifyChanged('ann-trip-001');
+      bidCtrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('trip-owner-menu-button')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('trip-menu-unpublish')), findsNothing);
+      expect(find.byKey(const Key('trip-menu-hide')), findsOneWidget);
+      expect(find.text('Cacher le trajet'), findsOneWidget);
     });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -51,6 +53,7 @@ const kTestDeliveryAddress = AddressData(
 AnnouncementModel buildAnnouncement({
   String id = 'ann-001',
   String status = 'ACTIVE',
+  bool hidden = false,
 }) => AnnouncementModel(
   id: id,
   travelerId: 'traveler-001',
@@ -61,6 +64,7 @@ AnnouncementModel buildAnnouncement({
   totalKg: 20.0,
   pricePerKg: 5.0,
   status: status,
+  hidden: hidden,
   createdAt: DateTime.now(),
   updatedAt: DateTime.now(),
 );
@@ -817,6 +821,148 @@ void main() {
       },
       act: (bloc) => bloc.add(AnnouncementUnpublishRequested('a1')),
       expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
+    );
+  });
+
+  group('AnnouncementHideRequested / AnnouncementShowRequested', () {
+    late MockAnalyticsBackend backend;
+
+    AnnouncementBloc buildTracked() {
+      backend = MockAnalyticsBackend();
+      final analytics = makeEnabledAnalytics(backend);
+      analytics.onConfigured();
+      return AnnouncementBloc(mockRepo, analytics);
+    }
+
+    DioException notFound() => DioException(
+      requestOptions: RequestOptions(path: '/announcements/a1/hide'),
+      response: Response(
+        requestOptions: RequestOptions(path: '/announcements/a1/hide'),
+        statusCode: 404,
+      ),
+      type: DioExceptionType.badResponse,
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'cacher réussi : [Loading, Updated(hidden)] et trip_hidden',
+      build: () {
+        when(
+          () => mockRepo.hideAnnouncement('a1'),
+        ).thenAnswer((_) async => buildAnnouncement(hidden: true));
+        return buildTracked();
+      },
+      act: (bloc) => bloc.add(AnnouncementHideRequested('a1')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementUpdated>().having(
+          (s) => s.announcement.hidden,
+          'hidden',
+          isTrue,
+        ),
+      ],
+      verify: (_) => verify(
+        () => backend.capture(AnalyticsEvents.tripHidden, any()),
+      ).called(1),
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'afficher réussi : [Loading, Updated(visible)] et trip_shown',
+      build: () {
+        when(
+          () => mockRepo.showAnnouncement('a1'),
+        ).thenAnswer((_) async => buildAnnouncement());
+        return buildTracked();
+      },
+      act: (bloc) => bloc.add(AnnouncementShowRequested('a1')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementUpdated>().having(
+          (s) => s.announcement.hidden,
+          'hidden',
+          isFalse,
+        ),
+      ],
+      verify: (_) => verify(
+        () => backend.capture(AnalyticsEvents.tripShown, any()),
+      ).called(1),
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'cacher en erreur réseau : [Loading, Error], aucun événement',
+      build: () {
+        when(
+          () => mockRepo.hideAnnouncement('a1'),
+        ).thenThrow(Exception('network'));
+        return buildTracked();
+      },
+      act: (bloc) => bloc.add(AnnouncementHideRequested('a1')),
+      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
+      verify: (_) =>
+          verifyNever(() => backend.capture(AnalyticsEvents.tripHidden, any())),
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'afficher en erreur réseau : [Loading, Error], aucun événement',
+      build: () {
+        when(
+          () => mockRepo.showAnnouncement('a1'),
+        ).thenThrow(Exception('network'));
+        return buildTracked();
+      },
+      act: (bloc) => bloc.add(AnnouncementShowRequested('a1')),
+      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
+      verify: (_) =>
+          verifyNever(() => backend.capture(AnalyticsEvents.tripShown, any())),
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'ancien back, route absente (404) : erreur générique, pas de plantage',
+      build: () {
+        when(() => mockRepo.hideAnnouncement('a1')).thenThrow(notFound());
+        return buildTracked();
+      },
+      act: (bloc) => bloc.add(AnnouncementHideRequested('a1')),
+      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'ancien back, afficher sur route absente (405) : erreur générique',
+      build: () {
+        final req = RequestOptions(path: '/announcements/a1/show');
+        when(() => mockRepo.showAnnouncement('a1')).thenThrow(
+          DioException(
+            requestOptions: req,
+            response: Response(requestOptions: req, statusCode: 405),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        return buildTracked();
+      },
+      act: (bloc) => bloc.add(AnnouncementShowRequested('a1')),
+      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'déjà en chargement : ignoré',
+      build: () {
+        final gate = Completer<AnnouncementModel>();
+        when(
+          () => mockRepo.hideAnnouncement('a1'),
+        ).thenAnswer((_) => gate.future);
+        Future<void>.delayed(
+          const Duration(milliseconds: 50),
+          () => gate.complete(buildAnnouncement(hidden: true)),
+        );
+        return buildTracked();
+      },
+      act: (bloc) async {
+        bloc.add(AnnouncementHideRequested('a1'));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        bloc.add(AnnouncementHideRequested('a1'));
+      },
+      wait: const Duration(milliseconds: 100),
+      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementUpdated>()],
+      verify: (_) => verify(() => mockRepo.hideAnnouncement('a1')).called(1),
     );
   });
 

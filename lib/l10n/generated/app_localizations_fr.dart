@@ -8817,14 +8817,37 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripOwnerPublishTile => 'Publier';
 
   @override
-  String get tripOwnerUnpublishTile => 'Dépublier';
+  String get tripOwnerUnpublishTile => 'Mettre en brouillon';
 
   @override
-  String get tripOwnerUnpublishDialogTitle => 'Dépublier ce trajet ?';
+  String get tripOwnerUnpublishDialogTitle => 'Mettre ce trajet en brouillon ?';
 
   @override
   String get tripOwnerUnpublishDialogMessage =>
-      'Le trajet ne sera plus visible et restera dans vos brouillons.';
+      'Le trajet repassera en brouillon : il ne sera plus visible. Vous pourrez le republier.';
+
+  @override
+  String get tripOwnerHideTile => 'Cacher le trajet';
+
+  @override
+  String get tripOwnerHideDialogTitle => 'Cacher ce trajet ?';
+
+  @override
+  String get tripOwnerHideDialogMessage =>
+      'Le trajet n’apparaîtra plus dans les recherches. Vos colis en cours ne changent pas.';
+
+  @override
+  String get tripOwnerShowTile => 'Afficher le trajet';
+
+  @override
+  String get tripOwnerShowDialogTitle => 'Afficher ce trajet ?';
+
+  @override
+  String get tripOwnerShowDialogMessage =>
+      'Le trajet réapparaîtra dans les recherches.';
+
+  @override
+  String get tripHiddenBadge => 'Caché';
 
   @override
   String get tripOwnerParcelsTile => 'Colis';

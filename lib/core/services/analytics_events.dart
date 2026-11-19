@@ -122,6 +122,8 @@ abstract final class AnalyticsEvents {
 
   /// Voyage à plusieurs étapes (FLUTTER-4D) : étape ajoutée au formulaire.
   static const tripLegAdded = 'trip_leg_added';
+  static const tripHidden = 'trip_hidden';
+  static const tripShown = 'trip_shown';
 
   /// Voyage à plusieurs étapes publié (toutes les étapes en une fois).
   static const tripGroupCreated = 'trip_group_created';

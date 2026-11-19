@@ -51,6 +51,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     on<AnnouncementTripCreateRequested>(_onTripCreateRequested);
     on<AnnouncementPublishRequested>(_onPublishRequested);
     on<AnnouncementUnpublishRequested>(_onUnpublishRequested);
+    on<AnnouncementHideRequested>(_onHideRequested);
+    on<AnnouncementShowRequested>(_onShowRequested);
     on<AnnouncementListRequested>(_onListRequested);
     on<AnnouncementDetailRequested>(_onDetailRequested);
     on<AnnouncementUpdateRequested>(_onUpdateRequested);
@@ -213,6 +215,36 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     emit(AnnouncementLoading());
     try {
       final announcement = await _repository.unpublishAnnouncement(event.id);
+      emit(AnnouncementUpdated(announcement));
+    } catch (e) {
+      emit(AnnouncementError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onHideRequested(
+    AnnouncementHideRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    if (state is AnnouncementLoading) return;
+    emit(AnnouncementLoading());
+    try {
+      final announcement = await _repository.hideAnnouncement(event.id);
+      unawaited(_analytics.logEvent(AnalyticsEvents.tripHidden));
+      emit(AnnouncementUpdated(announcement));
+    } catch (e) {
+      emit(AnnouncementError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onShowRequested(
+    AnnouncementShowRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    if (state is AnnouncementLoading) return;
+    emit(AnnouncementLoading());
+    try {
+      final announcement = await _repository.showAnnouncement(event.id);
+      unawaited(_analytics.logEvent(AnalyticsEvents.tripShown));
       emit(AnnouncementUpdated(announcement));
     } catch (e) {
       emit(AnnouncementError(unwrapDioError(e)));
