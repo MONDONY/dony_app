@@ -302,6 +302,12 @@ class AnnouncementModel {
   @JsonKey(defaultValue: false)
   final bool trackingActive;
 
+  /// Trajet caché par son voyageur (`POST /announcements/{id}/hide`) : absent
+  /// de la recherche, mais statut et colis intacts. Défaut `false` : un back
+  /// sans la fonction n'envoie pas le champ.
+  @JsonKey(defaultValue: false)
+  final bool hidden;
+
   /// Colis portés (nombre, kilos, net estimé). Servi au seul voyageur par le
   /// détail du trajet ; `null` sans colis ou sur un back antérieur.
   @JsonKey(
@@ -366,6 +372,7 @@ class AnnouncementModel {
     this.currencyEditable,
     this.departureTimezone,
     this.trackingActive = false,
+    this.hidden = false,
     this.parcelsSummary,
   });
 

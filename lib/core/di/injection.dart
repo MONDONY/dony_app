@@ -30,6 +30,7 @@ import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/core/services/screen_feedback_sender.dart';
 import 'package:dony/core/services/store_review_service.dart';
 import 'package:dony/core/services/trip_arrival_events_service.dart';
+import 'package:dony/core/services/trip_bids_events_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -784,7 +785,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => BidRepository(getIt<BidRemoteDatasource>()),
   );
   getIt.registerFactory<BidBloc>(
-    () => BidBloc(getIt<BidRepository>(), getIt<AnalyticsService>()),
+    () => BidBloc(
+      getIt<BidRepository>(),
+      getIt<AnalyticsService>(),
+      tripBidsEvents: getIt<TripBidsEventsService>(),
+    ),
   );
 
   // Matching — négociation du prix d'un trajet
@@ -872,6 +877,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<BidRepository>(),
       Stripe.instance,
       getIt<AnalyticsService>(),
+      getIt<TripBidsEventsService>(),
     ),
   );
   getIt.registerFactory<BidListFilterCubit>(() => BidListFilterCubit());
@@ -981,6 +987,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CancellationBloc(
       getIt<CancellationRepository>(),
       getIt<AnalyticsService>(),
+      tripBidsEvents: getIt<TripBidsEventsService>(),
     ),
   );
   getIt.registerFactory<DeliveryNoShowProcedureCubit>(
@@ -1353,6 +1360,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<TripArrivalEventsService>(
     TripArrivalEventsService.new,
   );
+  // Singleton : demande acceptée ou refusée, colis annulé, relus par l'écran
+  // du trajet resté sous l'écran où la réponse a été donnée.
+  getIt.registerLazySingleton<TripBidsEventsService>(TripBidsEventsService.new);
   getIt.registerLazySingleton<BlockedUsersDatasource>(
     () => BlockedUsersDatasource(getIt<ApiClient>()),
   );

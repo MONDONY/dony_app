@@ -7,6 +7,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/trip_bids_events_service.dart';
 import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -112,10 +113,37 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   /// Consentement au suivi demandé à l'ouverture (au plus une fois par écran).
   bool _askedTrackingConsent = false;
 
+  /// Réponses données aux demandes (acceptées, refusées, colis annulé) depuis
+  /// un autre écran, resté au-dessus de celui-ci dans la pile : le trajet et
+  /// ses colis se relisent, sinon les compteurs et le menu restent périmés.
+  StreamSubscription<String?>? _bidsChangesSub;
+
+  void _reloadAfterBidsChange(String? changedId) {
+    if (!mounted || (changedId != null && changedId != widget.announcementId)) {
+      return;
+    }
+    final id = widget.announcementId;
+    maybeRead<AnnouncementBloc>(
+      context,
+    )?.add(AnnouncementDetailRequested(id, silent: true));
+    maybeRead<BidBloc>(context)?.add(BidListRequested(id, silent: true));
+  }
+
+  @override
+  void dispose() {
+    unawaited(_bidsChangesSub?.cancel());
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
     _current = widget.initial;
+    if (getIt.isRegistered<TripBidsEventsService>()) {
+      _bidsChangesSub = getIt<TripBidsEventsService>().changes.listen(
+        _reloadAfterBidsChange,
+      );
+    }
     // Étapes du voyage (FLUTTER-4D) lues dès l'ouverture : le cubit de la
     // route est paresseux, et la carte des étapes qui le créait a rejoint le
     // sheet « Itinéraire et lieux ». Sans cette lecture, « Supprimer » ne

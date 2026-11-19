@@ -43,6 +43,7 @@ AnnouncementModel ownerTrip({
   String? tripGroupId,
   Set<BidPaymentMethod> methods = const {BidPaymentMethod.stripe},
   bool trackingActive = false,
+  bool hidden = false,
   TripParcelsSummary? parcelsSummary,
 }) => AnnouncementModel(
   id: 'trip-1',
@@ -62,6 +63,7 @@ AnnouncementModel ownerTrip({
   tripGroupId: tripGroupId,
   acceptedPaymentMethods: methods,
   trackingActive: trackingActive,
+  hidden: hidden,
   parcelsSummary: parcelsSummary,
   createdAt: DateTime(2026, 10),
   updatedAt: DateTime(2026, 10),

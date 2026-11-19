@@ -63,6 +63,7 @@ class TripOwnerHeader extends StatelessWidget {
                   if (a.isUrgent) const DonyUrgentBadge(),
                   if (todoCount > 0) TripTodoBadge(count: todoCount),
                   _StatusBadge(status: a.status),
+                  if (a.hidden) const TripHiddenBadge(),
                 ],
               ),
             ),
@@ -144,6 +145,43 @@ class TripOwnerHeader extends StatelessWidget {
 }
 
 // ── Widgets helpers du corps de détail ────────────────────────────────────────
+
+/// Pastille « Caché » d'un trajet que son voyageur a retiré de la recherche
+/// (statut et colis inchangés). Même gabarit que le badge d'état, teinte
+/// neutre ; écran du trajet et carte de « Mes trajets ».
+class TripHiddenBadge extends StatelessWidget {
+  const TripHiddenBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('trip-hidden-badge'),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyIcon('eye-off', size: 12, color: cs.onSurfaceVariant),
+          const SizedBox(width: 4),
+          Text(
+            context.l10n.tripHiddenBadge,
+            maxLines: 1,
+            softWrap: false,
+            style: TextStyle(
+              color: cs.onSurfaceVariant,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _StatusBadge extends StatelessWidget {
   final String status;

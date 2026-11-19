@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/trip_bids_events_service.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
@@ -12,8 +13,15 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
   final CancellationRepository _repository;
   final AnalyticsService _analytics;
 
-  CancellationBloc(this._repository, this._analytics)
-    : super(CancellationInitial()) {
+  /// Prévient l'écran du trajet qu'un colis ou le trajet a été annulé.
+  final TripBidsEventsService? _tripBidsEvents;
+
+  CancellationBloc(
+    this._repository,
+    this._analytics, {
+    TripBidsEventsService? tripBidsEvents,
+  }) : _tripBidsEvents = tripBidsEvents,
+       super(CancellationInitial()) {
     on<CancellationTripRequested>(_onTripCancellationRequested);
     on<RematchSuggestionsRequested>(_onRematchRequested);
     on<NoShowReportRequested>(_onNoShowReport);
@@ -40,6 +48,7 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
         reason: event.reason,
       );
       emit(CancellationSuccess(result));
+      _tripBidsEvents?.notifyChanged(event.announcementId);
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.cancellationInitiated,
@@ -177,6 +186,7 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     try {
       await _repository.cancelAfterHandover(event.bidId);
       emit(CancelledAfterHandover());
+      _tripBidsEvents?.notifyChanged();
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.cancelAfterHandoverInitiated,

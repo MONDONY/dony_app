@@ -3,6 +3,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/trip_bids_events_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
@@ -15,8 +16,15 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
   final Stripe _stripe;
   final AnalyticsService? _analytics;
 
-  BidAcceptanceBloc(this._repo, this._stripe, [this._analytics])
-    : super(BidAcceptanceInitial()) {
+  /// Prévient l'écran du trajet qu'une demande vient d'être acceptée.
+  final TripBidsEventsService? _tripBidsEvents;
+
+  BidAcceptanceBloc(
+    this._repo,
+    this._stripe, [
+    this._analytics,
+    this._tripBidsEvents,
+  ]) : super(BidAcceptanceInitial()) {
     on<BidAcceptRequested>(_accept);
     on<BidAcceptWithCardRequested>(_acceptWithCard);
     on<BidAcceptanceRefusalsCleared>((_, _) => _refusals.clear());
@@ -188,6 +196,7 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
       case AcceptanceStatus.accepted:
         _commissionCurrency ??= r.currency;
         emit(BidAccepted());
+        _tripBidsEvents?.notifyChanged();
         _logAccepted(bidId);
         return;
       case AcceptanceStatus.requires3ds:
@@ -204,6 +213,7 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
                   ),
           );
           if (c.accepted) {
+            _tripBidsEvents?.notifyChanged();
             _logAccepted(bidId);
           } else {
             _logAcceptFailed(

@@ -85,6 +85,19 @@ class AnnouncementUnpublishRequested extends AnnouncementEvent {
   AnnouncementUnpublishRequested(this.id);
 }
 
+/// « Cacher le trajet » : le trajet (avec colis) quitte la recherche sans
+/// changer de statut.
+class AnnouncementHideRequested extends AnnouncementEvent {
+  final String id;
+  AnnouncementHideRequested(this.id);
+}
+
+/// « Afficher le trajet » : un trajet caché réapparaît dans la recherche.
+class AnnouncementShowRequested extends AnnouncementEvent {
+  final String id;
+  AnnouncementShowRequested(this.id);
+}
+
 class AnnouncementListRequested extends AnnouncementEvent {}
 
 class AnnouncementDetailRequested extends AnnouncementEvent {

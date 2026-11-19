@@ -23,6 +23,8 @@ enum TripMenuEntry {
   edit,
   reschedule,
   unpublish,
+  hide,
+  show,
   sharePoster,
   arrivalInstructions,
   makeRecurring,
@@ -42,7 +44,11 @@ const _reusableStatuses = {'ACTIVE', 'COMPLETED'};
 ///
 /// - `edit` : trajet modifiable ([canEditTrip]) ;
 /// - `reschedule` : trajet reportable ([tripCanReschedule]) ;
-/// - `unpublish` : ACTIVE sans demande ;
+/// - `unpublish` (« Mettre en brouillon ») : ACTIVE sans colis ni demande,
+///   pas caché (jamais avec `hide` ni `show`) ;
+/// - `hide` : ACTIVE ou FULL avec colis ou demandes, pas encore caché
+///   (il quitte la recherche, statut et colis inchangés) ;
+/// - `show` : trajet caché (`hidden`), pour le réafficher ;
 /// - `sharePoster` : ACTIVE ([canShareTripPoster]) ;
 /// - `arrivalInstructions` : instructions de retrait ou colis arrivé (la
 ///   tuile `arrival` de « Votre trajet », [tripTilesFor]) ;
@@ -66,11 +72,14 @@ List<TripMenuEntry> tripMenuEntriesFor({
   final hasBids = tripHasBids(trip, bids);
   final canEdit = canEditTrip(trip, hasBids);
   final active = trip.status == 'ACTIVE';
+  final hideable = active || trip.status == 'FULL';
   final reusable = _reusableStatuses.contains(trip.status);
   return [
     if (canEdit) TripMenuEntry.edit,
     if (tripCanReschedule(trip, hasBids)) TripMenuEntry.reschedule,
-    if (active && !hasBids) TripMenuEntry.unpublish,
+    if (active && !hasBids && !trip.hidden) TripMenuEntry.unpublish,
+    if (hasBids && hideable && !trip.hidden) TripMenuEntry.hide,
+    if (trip.hidden && hideable) TripMenuEntry.show,
     if (canShareTripPoster(trip)) TripMenuEntry.sharePoster,
     if (tripTilesFor(
       trip: trip,
@@ -127,7 +136,7 @@ class TripOwnerOptionsButton extends StatelessWidget {
 /// depuis [context], le contexte de l'écran, qui porte ses blocs et en écoute
 /// les suites :
 /// - Modifier : [openTripEdit] ; Reporter : `TripRescheduleBottomSheet` ;
-///   Dépublier, Supprimer : [confirmTripUnpublish], [confirmTripDelete]
+///   Mettre en brouillon, Supprimer : [confirmTripUnpublish], [confirmTripDelete]
 ///   (confirmation, étapes suivantes d'un voyage) ; Annuler le voyage :
 ///   [openTripCancellation] ; Partager
 ///   l'affiche : [openTripPoster] ;
@@ -242,6 +251,16 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
         l.tripOwnerUnpublishTile,
         l.tripOwnerUnpublishDialogMessage,
       ),
+      TripMenuEntry.hide => (
+        'eye-off',
+        l.tripOwnerHideTile,
+        l.tripOwnerHideDialogMessage,
+      ),
+      TripMenuEntry.show => (
+        'eye',
+        l.tripOwnerShowTile,
+        l.tripOwnerShowDialogMessage,
+      ),
       TripMenuEntry.sharePoster => (
         'share-2',
         l.tripPosterShareButton,
@@ -307,6 +326,10 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
         unawaited(TripRescheduleBottomSheet.show(ctx, announcement: trip));
       case TripMenuEntry.unpublish:
         unawaited(confirmTripUnpublish(ctx, trip));
+      case TripMenuEntry.hide:
+        unawaited(confirmTripHide(ctx, trip));
+      case TripMenuEntry.show:
+        unawaited(confirmTripShow(ctx, trip));
       case TripMenuEntry.sharePoster:
         openTripPoster(ctx, trip);
       case TripMenuEntry.arrivalInstructions:

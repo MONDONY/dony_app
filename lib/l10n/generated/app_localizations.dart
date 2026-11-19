@@ -14602,23 +14602,65 @@ abstract class AppLocalizations {
   /// **'Publier'**
   String get tripOwnerPublishTile;
 
-  /// Tuile + confirmLabel « Dépublier » (écran du trajet, ex-grille d’actions).
+  /// Tuile + confirmLabel « Mettre en brouillon » (trajet sans colis ni demande : il repasse en brouillon).
   ///
   /// In fr, this message translates to:
-  /// **'Dépublier'**
+  /// **'Mettre en brouillon'**
   String get tripOwnerUnpublishTile;
 
-  /// Titre du dialogue de dépublication (écran du trajet, ex-grille d’actions).
+  /// Titre du dialogue « Mettre en brouillon » (écran du trajet).
   ///
   /// In fr, this message translates to:
-  /// **'Dépublier ce trajet ?'**
+  /// **'Mettre ce trajet en brouillon ?'**
   String get tripOwnerUnpublishDialogTitle;
 
-  /// Message du dialogue de dépublication (écran du trajet, ex-grille d’actions).
+  /// Message du dialogue « Mettre en brouillon » (écran du trajet), repris en sous-titre de la tuile du menu.
   ///
   /// In fr, this message translates to:
-  /// **'Le trajet ne sera plus visible et restera dans vos brouillons.'**
+  /// **'Le trajet repassera en brouillon : il ne sera plus visible. Vous pourrez le republier.'**
   String get tripOwnerUnpublishDialogMessage;
+
+  /// Tuile du menu et bouton de confirmation « Cacher le trajet » (trajet avec colis ou demandes : il quitte la recherche, statut et colis inchangés).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cacher le trajet'**
+  String get tripOwnerHideTile;
+
+  /// Titre du dialogue pour cacher un trajet de la recherche.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cacher ce trajet ?'**
+  String get tripOwnerHideDialogTitle;
+
+  /// Message du dialogue pour cacher un trajet, repris en sous-titre de la tuile du menu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le trajet n’apparaîtra plus dans les recherches. Vos colis en cours ne changent pas.'**
+  String get tripOwnerHideDialogMessage;
+
+  /// Tuile du menu et bouton de confirmation « Afficher le trajet » (un trajet caché réapparaît dans la recherche).
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher le trajet'**
+  String get tripOwnerShowTile;
+
+  /// Titre du dialogue pour réafficher un trajet caché.
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher ce trajet ?'**
+  String get tripOwnerShowDialogTitle;
+
+  /// Message du dialogue pour réafficher un trajet caché, repris en sous-titre de la tuile du menu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le trajet réapparaîtra dans les recherches.'**
+  String get tripOwnerShowDialogMessage;
+
+  /// Pastille d’un trajet caché de la recherche (écran du trajet et carte de Mes trajets).
+  ///
+  /// In fr, this message translates to:
+  /// **'Caché'**
+  String get tripHiddenBadge;
 
   /// Tuile « Colis » (écran du trajet, ex-grille d’actions), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur).
   ///

@@ -176,6 +176,24 @@ void main() {
     verify(() => mockDs.publishAnnouncement('a1')).called(1);
   });
 
+  test(
+    'hideAnnouncement et showAnnouncement délèguent au datasource',
+    () async {
+      final testAnnouncement = _ann();
+      when(
+        () => mockDs.hideAnnouncement('a1'),
+      ).thenAnswer((_) async => testAnnouncement);
+      when(
+        () => mockDs.showAnnouncement('a1'),
+      ).thenAnswer((_) async => testAnnouncement);
+
+      expect(await repo.hideAnnouncement('a1'), same(testAnnouncement));
+      expect(await repo.showAnnouncement('a1'), same(testAnnouncement));
+      verify(() => mockDs.hideAnnouncement('a1')).called(1);
+      verify(() => mockDs.showAnnouncement('a1')).called(1);
+    },
+  );
+
   test('unpublishAnnouncement délègue au datasource', () async {
     final testAnnouncement = _ann();
     when(

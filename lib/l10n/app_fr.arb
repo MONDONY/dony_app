@@ -9212,17 +9212,45 @@
   "@tripOwnerPublishTile": {
     "description": "Tuile « Publier » (écran du trajet, ex-grille d’actions)."
   },
-  "tripOwnerUnpublishTile": "Dépublier",
+  "tripOwnerUnpublishTile": "Mettre en brouillon",
   "@tripOwnerUnpublishTile": {
-    "description": "Tuile + confirmLabel « Dépublier » (écran du trajet, ex-grille d’actions)."
+    "description": "Tuile + confirmLabel « Mettre en brouillon » (trajet sans colis ni demande : il repasse en brouillon)."
   },
-  "tripOwnerUnpublishDialogTitle": "Dépublier ce trajet ?",
+  "tripOwnerUnpublishDialogTitle": "Mettre ce trajet en brouillon ?",
   "@tripOwnerUnpublishDialogTitle": {
-    "description": "Titre du dialogue de dépublication (écran du trajet, ex-grille d’actions)."
+    "description": "Titre du dialogue « Mettre en brouillon » (écran du trajet)."
   },
-  "tripOwnerUnpublishDialogMessage": "Le trajet ne sera plus visible et restera dans vos brouillons.",
+  "tripOwnerUnpublishDialogMessage": "Le trajet repassera en brouillon : il ne sera plus visible. Vous pourrez le republier.",
   "@tripOwnerUnpublishDialogMessage": {
-    "description": "Message du dialogue de dépublication (écran du trajet, ex-grille d’actions)."
+    "description": "Message du dialogue « Mettre en brouillon » (écran du trajet), repris en sous-titre de la tuile du menu."
+  },
+  "tripOwnerHideTile": "Cacher le trajet",
+  "@tripOwnerHideTile": {
+    "description": "Tuile du menu et bouton de confirmation « Cacher le trajet » (trajet avec colis ou demandes : il quitte la recherche, statut et colis inchangés)."
+  },
+  "tripOwnerHideDialogTitle": "Cacher ce trajet ?",
+  "@tripOwnerHideDialogTitle": {
+    "description": "Titre du dialogue pour cacher un trajet de la recherche."
+  },
+  "tripOwnerHideDialogMessage": "Le trajet n’apparaîtra plus dans les recherches. Vos colis en cours ne changent pas.",
+  "@tripOwnerHideDialogMessage": {
+    "description": "Message du dialogue pour cacher un trajet, repris en sous-titre de la tuile du menu."
+  },
+  "tripOwnerShowTile": "Afficher le trajet",
+  "@tripOwnerShowTile": {
+    "description": "Tuile du menu et bouton de confirmation « Afficher le trajet » (un trajet caché réapparaît dans la recherche)."
+  },
+  "tripOwnerShowDialogTitle": "Afficher ce trajet ?",
+  "@tripOwnerShowDialogTitle": {
+    "description": "Titre du dialogue pour réafficher un trajet caché."
+  },
+  "tripOwnerShowDialogMessage": "Le trajet réapparaîtra dans les recherches.",
+  "@tripOwnerShowDialogMessage": {
+    "description": "Message du dialogue pour réafficher un trajet caché, repris en sous-titre de la tuile du menu."
+  },
+  "tripHiddenBadge": "Caché",
+  "@tripHiddenBadge": {
+    "description": "Pastille d’un trajet caché de la recherche (écran du trajet et carte de Mes trajets)."
   },
   "tripOwnerParcelsTile": "Colis",
   "@tripOwnerParcelsTile": {
