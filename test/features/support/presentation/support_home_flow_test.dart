@@ -155,7 +155,7 @@ void main() {
     );
     expect(
       find.text(
-        'This ticket could not be removed right now. Please try again later.',
+        'This ticket could not be deleted right now. Please try again later.',
       ),
       findsOneWidget,
     );

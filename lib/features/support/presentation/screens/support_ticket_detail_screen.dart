@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/bloc/support_contact_cubit.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
@@ -71,6 +72,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
       appBar: AppBar(
         titleSpacing: 0,
         actions: [
+          const _CloseTicketMenu(),
           _WhatsAppAction(cubit: _contact),
           const DonyFeedbackButton(),
         ],
@@ -107,6 +109,37 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                   message: message,
                   type: DonySnackbarType.error,
                 );
+              }
+            }
+            if (state.closeStatus == SupportActionStatus.success) {
+              DonySnackbar.show(
+                context,
+                message: context.l10n.supportTicketCloseSuccess,
+                type: DonySnackbarType.success,
+              );
+            }
+            if (state.closeStatus == SupportActionStatus.failure) {
+              DonySnackbar.show(
+                context,
+                message: context.l10n.supportTicketCloseError,
+                type: DonySnackbarType.error,
+              );
+            }
+            if (state.hideStatus == SupportActionStatus.failure) {
+              DonySnackbar.show(
+                context,
+                message: state.failure == SupportFailure.hideNotResolved
+                    ? context.l10n.supportTicketHideNotResolvedError
+                    : context.l10n.supportTicketHideError,
+                type: DonySnackbarType.error,
+              );
+            }
+            // Ticket supprimé : retour à la liste, qui se recharge.
+            if (state.hideStatus == SupportActionStatus.success) {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/support');
               }
             }
             if (state.sendStatus == SupportActionStatus.success ||
@@ -171,6 +204,59 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+/// Menu de l'en-tête : « Fermer la demande », seulement tant que le ticket
+/// n'est pas résolu (un ticket résolu est définitif). Confirmation avant
+/// l'appel : plus aucun message ne pourra être envoyé.
+class _CloseTicketMenu extends StatelessWidget {
+  const _CloseTicketMenu();
+
+  Future<void> _confirmClose(BuildContext context, String ticketId) async {
+    final l = context.l10n;
+    final bloc = context.read<SupportBloc>();
+    final confirmed = await DonyDialog.show(
+      context,
+      title: l.supportTicketCloseConfirmTitle,
+      message: l.supportTicketCloseConfirmMessage,
+      confirmLabel: l.supportTicketCloseConfirmAction,
+      variant: DonyDialogVariant.destructive,
+    );
+    if (confirmed ?? false) bloc.add(SupportTicketCloseRequested(ticketId));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<SupportBloc, SupportState>(
+      buildWhen: (p, c) =>
+          p.ticket?.status != c.ticket?.status ||
+          p.ticket?.id != c.ticket?.id ||
+          p.closeStatus != c.closeStatus,
+      builder: (context, state) {
+        final ticket = state.ticket;
+        if (ticket == null ||
+            ticket.isResolved ||
+            state.detailStatus != SupportViewStatus.ready) {
+          return const SizedBox.shrink();
+        }
+        return PopupMenuButton<void>(
+          key: const Key('support-ticket-menu'),
+          enabled: state.closeStatus != SupportActionStatus.submitting,
+          itemBuilder: (_) => [
+            PopupMenuItem<void>(
+              key: const Key('support-ticket-close'),
+              onTap: () => _confirmClose(context, ticket.id),
+              child: Text(
+                context.l10n.supportTicketCloseAction,
+                maxLines: 1,
+                softWrap: false,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -291,7 +377,7 @@ class _TicketThread extends StatelessWidget {
           ),
         ),
         if (ticket != null && ticket.isResolved)
-          const _ResolvedBanner()
+          _ResolvedBanner(ticket: ticket)
         else
           _MessageComposer(
             ticketId: ticket?.id,
@@ -643,7 +729,9 @@ class _SupportImageViewerState extends State<_SupportImageViewer> {
 }
 
 class _ResolvedBanner extends StatelessWidget {
-  const _ResolvedBanner();
+  const _ResolvedBanner({required this.ticket});
+
+  final SupportTicket? ticket;
 
   @override
   Widget build(BuildContext context) {
@@ -675,6 +763,21 @@ class _ResolvedBanner extends StatelessWidget {
               // Remplace ce fil résolu par un fil neuf (nouveau bloc).
               onPressed: () => context.pushReplacement('/support/thread'),
             ),
+            if (ticket != null)
+              TextButton.icon(
+                key: const Key('support-thread-delete'),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size.fromHeight(44),
+                  foregroundColor: cs.error,
+                ),
+                onPressed: () => confirmHideSupportTicket(context, ticket!),
+                icon: DonyIcon('trash-2', size: 18, color: cs.error),
+                label: Text(
+                  context.l10n.supportTicketHideTooltip,
+                  maxLines: 1,
+                  softWrap: false,
+                ),
+              ),
           ],
         ),
       ),

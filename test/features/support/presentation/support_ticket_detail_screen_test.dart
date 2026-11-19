@@ -762,6 +762,306 @@ void main() {
     },
   );
 
+  group('fermer / supprimer la demande', () {
+    Future<void> openMenu(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('support-ticket-menu')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('ticket ouvert : « Fermer la demande » dans le menu', (
+      tester,
+    ) async {
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      await openMenu(tester);
+      expect(find.text('Fermer la demande'), findsOneWidget);
+      // Pas de « Supprimer » tant que le ticket n'est pas résolu.
+      expect(find.byKey(const Key('support-thread-delete')), findsNothing);
+    });
+
+    testWidgets('ticket résolu : ni menu de fermeture, mais « Supprimer »', (
+      tester,
+    ) async {
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _resolvedTicket,
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('support-ticket-menu')), findsNothing);
+      expect(find.byKey(const Key('support-thread-delete')), findsOneWidget);
+    });
+
+    testWidgets('confirmation puis événement de fermeture', (tester) async {
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      await openMenu(tester);
+      await tester.tap(find.byKey(const Key('support-ticket-close')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Fermer cette demande ?'), findsOneWidget);
+      expect(
+        find.textContaining('Vous ne pourrez plus envoyer de message'),
+        findsOneWidget,
+      );
+      verifyNever(
+        () => bloc.add(const SupportTicketCloseRequested('ticket-1')),
+      );
+
+      await tester.tap(find.text('Fermer'));
+      await tester.pumpAndSettle();
+      verify(
+        () => bloc.add(const SupportTicketCloseRequested('ticket-1')),
+      ).called(1);
+    });
+
+    testWidgets('annuler la confirmation : aucun événement', (tester) async {
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      await openMenu(tester);
+      await tester.tap(find.byKey(const Key('support-ticket-close')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Annuler'));
+      await tester.pumpAndSettle();
+
+      verifyNever(
+        () => bloc.add(const SupportTicketCloseRequested('ticket-1')),
+      );
+    });
+
+    testWidgets('succès : Résolu, saisie masquée, snackbar de confirmation', (
+      tester,
+    ) async {
+      whenListen(
+        bloc,
+        Stream.fromIterable([
+          const SupportState(
+            detailStatus: SupportViewStatus.ready,
+            ticket: _resolvedTicket,
+            closeStatus: SupportActionStatus.success,
+          ),
+        ]),
+        initialState: const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Demande fermée.'), findsOneWidget);
+      expect(find.text('RÉSOLU'), findsOneWidget);
+      expect(find.byKey(const Key('chat-send-button')), findsNothing);
+      expect(find.byKey(const Key('support-ticket-menu')), findsNothing);
+      await tester.pumpAndSettle(const Duration(seconds: 6));
+    });
+
+    testWidgets('erreur de fermeture : message, le ticket reste ouvert', (
+      tester,
+    ) async {
+      whenListen(
+        bloc,
+        Stream.fromIterable([
+          const SupportState(
+            detailStatus: SupportViewStatus.ready,
+            ticket: _openTicket,
+            closeStatus: SupportActionStatus.failure,
+            failure: SupportFailure.closeFailed,
+          ),
+        ]),
+        initialState: const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.text(
+          'Impossible de fermer la demande pour le moment. Réessayez plus tard.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('chat-send-button')), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 6));
+    });
+
+    testWidgets(
+      '« Supprimer » sur un fil résolu : confirmation puis événement',
+      (tester) async {
+        stubState(
+          const SupportState(
+            detailStatus: SupportViewStatus.ready,
+            ticket: _resolvedTicket,
+          ),
+        );
+        await tester.pumpWidget(_harness(bloc));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('support-thread-delete')));
+        await tester.pumpAndSettle();
+        expect(
+          find.textContaining('Ce ticket disparaîtra de votre liste'),
+          findsOneWidget,
+        );
+        await tester.tap(find.text('Supprimer').last);
+        await tester.pumpAndSettle();
+
+        verify(
+          () => bloc.add(const SupportTicketHideRequested('ticket-1')),
+        ).called(1);
+      },
+    );
+
+    testWidgets('409 sur la suppression : « Fermez d\'abord la demande »', (
+      tester,
+    ) async {
+      whenListen(
+        bloc,
+        Stream.fromIterable([
+          const SupportState(
+            detailStatus: SupportViewStatus.ready,
+            ticket: _openTicket,
+            hideStatus: SupportActionStatus.failure,
+            failure: SupportFailure.hideNotResolved,
+          ),
+        ]),
+        initialState: const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _resolvedTicket,
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.text('Fermez d’abord la demande, puis vous pourrez la supprimer.'),
+        findsOneWidget,
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 6));
+    });
+
+    testWidgets('suppression réussie : retour à la liste', (tester) async {
+      whenListen(
+        bloc,
+        Stream.fromIterable([
+          const SupportState(
+            detailStatus: SupportViewStatus.ready,
+            ticket: _resolvedTicket,
+            hideStatus: SupportActionStatus.success,
+          ),
+        ]),
+        initialState: const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _resolvedTicket,
+        ),
+      );
+      final router = GoRouter(
+        initialLocation: '/support/tickets/ticket-1',
+        routes: [
+          GoRoute(
+            path: '/support',
+            builder: (_, _) => const Scaffold(body: Text('liste-tickets')),
+          ),
+          GoRoute(
+            path: '/support/tickets/:id',
+            builder: (_, state) => BlocProvider<SupportBloc>.value(
+              value: bloc,
+              child: SupportTicketDetailScreen(
+                ticketId: state.pathParameters['id'],
+                contactCubit: _contactCubit(),
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+
+      expect(find.text('liste-tickets'), findsOneWidget);
+    });
+
+    for (final english in [false, true]) {
+      testWidgets(
+        'libellés sur une ligne à 360 dp (${english ? 'EN' : 'FR'})',
+        (tester) async {
+          if (english) useEnglish();
+          tester.view.physicalSize = const Size(1080, 2400);
+          tester.view.devicePixelRatio = 3;
+          addTearDown(tester.view.reset);
+          stubState(
+            const SupportState(
+              detailStatus: SupportViewStatus.ready,
+              ticket: _openTicket,
+            ),
+          );
+          await tester.pumpWidget(_harness(bloc));
+          await tester.pumpAndSettle();
+          await openMenu(tester);
+          final close = find.text(
+            english ? 'Close request' : 'Fermer la demande',
+          );
+          expect(close, findsOneWidget);
+          expect(tester.getSize(close).height, lessThan(24));
+          expect(tester.takeException(), isNull);
+        },
+      );
+
+      testWidgets('bandeau résolu : Supprimer sur une ligne à 360 dp '
+          '(${english ? 'EN' : 'FR'})', (tester) async {
+        if (english) useEnglish();
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 3;
+        addTearDown(tester.view.reset);
+        stubState(
+          const SupportState(
+            detailStatus: SupportViewStatus.ready,
+            ticket: _resolvedTicket,
+          ),
+        );
+        await tester.pumpWidget(_harness(bloc));
+        await tester.pumpAndSettle();
+
+        final label = find.descendant(
+          of: find.byKey(const Key('support-thread-delete')),
+          matching: find.text(english ? 'Delete' : 'Supprimer'),
+        );
+        expect(label, findsOneWidget);
+        expect(tester.getSize(label).height, lessThan(24));
+        expect(tester.takeException(), isNull);
+      });
+    }
+  });
+
   testWidgets('anglais : bandeau ticket résolu traduit', (tester) async {
     useEnglish();
     stubState(

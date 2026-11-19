@@ -13615,21 +13615,45 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportGenericError => 'Une erreur est survenue. Réessayez.';
 
   @override
-  String get supportTicketHideTooltip => 'Retirer de la liste';
+  String get supportTicketHideTooltip => 'Supprimer';
 
   @override
-  String get supportTicketHideConfirmTitle => 'Retirer ce ticket ?';
+  String get supportTicketHideConfirmTitle => 'Supprimer ce ticket ?';
 
   @override
   String get supportTicketHideConfirmMessage =>
-      'Il disparaîtra de votre liste. L’équipe Yadony garde l’historique de l’échange.';
+      'Ce ticket disparaîtra de votre liste. L’équipe Yadony garde l’historique de l’échange.';
 
   @override
-  String get supportTicketHideConfirmAction => 'Retirer';
+  String get supportTicketHideConfirmAction => 'Supprimer';
 
   @override
   String get supportTicketHideError =>
-      'Impossible de retirer ce ticket pour le moment. Réessayez plus tard.';
+      'Impossible de supprimer ce ticket pour le moment. Réessayez plus tard.';
+
+  @override
+  String get supportTicketHideNotResolvedError =>
+      'Fermez d’abord la demande, puis vous pourrez la supprimer.';
+
+  @override
+  String get supportTicketCloseAction => 'Fermer la demande';
+
+  @override
+  String get supportTicketCloseConfirmTitle => 'Fermer cette demande ?';
+
+  @override
+  String get supportTicketCloseConfirmMessage =>
+      'Vous ne pourrez plus envoyer de message sur cette demande. Pour un nouveau problème, ouvrez une nouvelle demande.';
+
+  @override
+  String get supportTicketCloseConfirmAction => 'Fermer';
+
+  @override
+  String get supportTicketCloseSuccess => 'Demande fermée.';
+
+  @override
+  String get supportTicketCloseError =>
+      'Impossible de fermer la demande pour le moment. Réessayez plus tard.';
 
   @override
   String get supportScreenTitle => 'Support';

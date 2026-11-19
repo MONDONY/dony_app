@@ -36,6 +36,7 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
     on<SupportAttachmentRemoved>(_onAttachmentRemoved);
     on<SupportTicketLiveRefreshRequested>(_onLiveRefreshRequested);
     on<SupportTicketHideRequested>(_onHideRequested);
+    on<SupportTicketCloseRequested>(_onCloseRequested);
     _incomingSub = incomingMessages?.listen((ticketId) {
       final ticket = state.ticket;
       if (ticket != null &&
@@ -87,13 +88,18 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
   }
 
   /// Retire aussitôt le ticket de la liste, puis le confirme au back ; en
-  /// cas d'échec, la liste revient telle qu'elle était (FLUTTER-9W).
+  /// cas d'échec, la liste revient telle qu'elle était (FLUTTER-9W). Le
+  /// ticket vient de la liste (écran d'accueil) ou du fil ouvert (écran de
+  /// détail, dont le bloc n'a pas de liste). Un 409 signale un ticket
+  /// réouvert entre-temps : il faut d'abord fermer la demande.
   Future<void> _onHideRequested(
     SupportTicketHideRequested event,
     Emitter<SupportState> emit,
   ) async {
     final before = state.tickets;
-    final ticket = before.where((t) => t.id == event.ticketId).firstOrNull;
+    final ticket =
+        before.where((t) => t.id == event.ticketId).firstOrNull ??
+        (state.ticket?.id == event.ticketId ? state.ticket : null);
     // Règle appliquée avant tout appel : seul un ticket résolu se retire.
     if (ticket == null || !ticket.isResolved) return;
     emit(
@@ -104,13 +110,55 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
     try {
       await _repository.hideTicket(event.ticketId);
       unawaited(_analytics.logEvent(AnalyticsEvents.supportTicketHidden));
+      emit(state.copyWith(hideStatus: SupportActionStatus.success));
     } catch (e) {
+      final notResolved = e is DioException && e.response?.statusCode == 409;
       emit(
         state.copyWith(
           tickets: before,
           hideStatus: SupportActionStatus.failure,
-          failure: SupportFailure.hideFailed,
-          serverDetail: _serverDetail(e),
+          failure: notResolved
+              ? SupportFailure.hideNotResolved
+              : SupportFailure.hideFailed,
+          serverDetail: notResolved ? null : _serverDetail(e),
+        ),
+      );
+    }
+  }
+
+  /// Ferme la demande côté serveur, puis la marque RESOLVED dans le fil
+  /// affiché ET dans la liste. Échec : rien ne change, message générique
+  /// (un back antérieur répond 404/405, son detail n'est jamais relayé).
+  Future<void> _onCloseRequested(
+    SupportTicketCloseRequested event,
+    Emitter<SupportState> emit,
+  ) async {
+    final current = state.ticket;
+    if (current != null && current.id == event.ticketId && current.isResolved) {
+      return;
+    }
+    emit(state.copyWith(closeStatus: SupportActionStatus.submitting));
+    try {
+      await _repository.closeTicket(event.ticketId);
+      unawaited(_analytics.logEvent(AnalyticsEvents.supportTicketClosed));
+      final now = DateTime.now();
+      emit(
+        state.copyWith(
+          closeStatus: SupportActionStatus.success,
+          ticket: current != null && current.id == event.ticketId
+              ? current.asResolved(now)
+              : current,
+          tickets: [
+            for (final t in state.tickets)
+              t.id == event.ticketId ? t.asResolved(now) : t,
+          ],
+        ),
+      );
+    } catch (_) {
+      emit(
+        state.copyWith(
+          closeStatus: SupportActionStatus.failure,
+          failure: SupportFailure.closeFailed,
         ),
       );
     }

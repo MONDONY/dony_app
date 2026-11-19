@@ -13520,21 +13520,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportGenericError => 'Something went wrong. Try again.';
 
   @override
-  String get supportTicketHideTooltip => 'Remove from list';
+  String get supportTicketHideTooltip => 'Delete';
 
   @override
-  String get supportTicketHideConfirmTitle => 'Remove this ticket?';
+  String get supportTicketHideConfirmTitle => 'Delete this ticket?';
 
   @override
   String get supportTicketHideConfirmMessage =>
-      'It will disappear from your list. The Yadony team keeps the conversation history.';
+      'This ticket will disappear from your list. The Yadony team keeps the conversation history.';
 
   @override
-  String get supportTicketHideConfirmAction => 'Remove';
+  String get supportTicketHideConfirmAction => 'Delete';
 
   @override
   String get supportTicketHideError =>
-      'This ticket could not be removed right now. Please try again later.';
+      'This ticket could not be deleted right now. Please try again later.';
+
+  @override
+  String get supportTicketHideNotResolvedError =>
+      'Close the request first, then you can delete it.';
+
+  @override
+  String get supportTicketCloseAction => 'Close request';
+
+  @override
+  String get supportTicketCloseConfirmTitle => 'Close this request?';
+
+  @override
+  String get supportTicketCloseConfirmMessage =>
+      'You won\'t be able to send messages on this request anymore. For a new problem, open a new request.';
+
+  @override
+  String get supportTicketCloseConfirmAction => 'Close';
+
+  @override
+  String get supportTicketCloseSuccess => 'Request closed.';
+
+  @override
+  String get supportTicketCloseError =>
+      'The request could not be closed right now. Please try again later.';
 
   @override
   String get supportScreenTitle => 'Support';

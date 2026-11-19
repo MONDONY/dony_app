@@ -102,6 +102,16 @@ final class SupportTicketHideRequested extends SupportEvent {
   List<Object?> get props => [ticketId];
 }
 
+/// Ferme la demande : le ticket passe à RESOLVED, définitivement.
+final class SupportTicketCloseRequested extends SupportEvent {
+  const SupportTicketCloseRequested(this.ticketId);
+
+  final String ticketId;
+
+  @override
+  List<Object?> get props => [ticketId];
+}
+
 final class SupportTicketLiveRefreshRequested extends SupportEvent {
   const SupportTicketLiveRefreshRequested(this.ticketId);
 

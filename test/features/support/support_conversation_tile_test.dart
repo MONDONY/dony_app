@@ -32,6 +32,10 @@ Widget _routed(Widget tile) {
         builder: (_, _) => Scaffold(body: tile),
       ),
       GoRoute(
+        path: '/support',
+        builder: (_, _) => const Scaffold(body: Text('liste-tickets')),
+      ),
+      GoRoute(
         path: '/support/thread',
         builder: (_, _) => const Scaffold(body: Text('fil-neuf')),
       ),
@@ -193,14 +197,14 @@ void main() {
   });
 
   group('tap', () {
-    // La tuile ouvre directement la discussion : le fil de la conversation non
-    // résolue, sinon un fil neuf dont le premier message crée la demande.
-    testWidgets('conversation ouverte : ouvre son fil', (tester) async {
+    // La tuile ouvre toujours la liste des tickets, jamais un fil.
+    testWidgets('conversation ouverte : ouvre la liste, pas le fil', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _routed(
           SupportConversationTile(
             unreadCount: 1,
-            openTicketCount: 2,
             latestTicket: _latest(id: 'abc', unread: 1),
           ),
         ),
@@ -209,11 +213,12 @@ void main() {
       await tester.tap(find.byType(SupportConversationTile));
       await tester.pumpAndSettle();
 
-      expect(find.text('fil-abc'), findsOneWidget);
+      expect(find.text('liste-tickets'), findsOneWidget);
+      expect(find.text('fil-abc'), findsNothing);
       expect(find.text('fil-neuf'), findsNothing);
     });
 
-    testWidgets('dernière conversation résolue : ouvre un fil neuf', (
+    testWidgets('dernière conversation résolue : ouvre la liste', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -225,11 +230,11 @@ void main() {
       await tester.tap(find.byType(SupportConversationTile));
       await tester.pumpAndSettle();
 
-      expect(find.text('fil-neuf'), findsOneWidget);
-      expect(find.text('fil-ticket-1'), findsNothing);
+      expect(find.text('liste-tickets'), findsOneWidget);
+      expect(find.text('fil-neuf'), findsNothing);
     });
 
-    testWidgets('aucune conversation (ou ancien back) : ouvre un fil neuf', (
+    testWidgets('aucune conversation (ou ancien back) : ouvre la liste', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -239,7 +244,7 @@ void main() {
       await tester.tap(find.byType(SupportConversationTile));
       await tester.pumpAndSettle();
 
-      expect(find.text('fil-neuf'), findsOneWidget);
+      expect(find.text('liste-tickets'), findsOneWidget);
     });
 
     testWidgets('au retour, prévient l appelant pour rafraîchir', (
@@ -256,7 +261,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(returned, 0);
 
-      GoRouter.of(tester.element(find.text('fil-neuf'))).pop();
+      GoRouter.of(tester.element(find.text('liste-tickets'))).pop();
       await tester.pumpAndSettle();
 
       expect(returned, 1);
