@@ -200,6 +200,36 @@ void main() {
     expect(captured['content'], 'Voici');
   });
 
+  group('closeTicket', () {
+    test('POST /support/tickets/{id}/close (204)', () async {
+      when(() => mockDio.post('/support/tickets/t1/close')).thenAnswer(
+        (_) async => Response(
+          statusCode: 204,
+          requestOptions: RequestOptions(path: '/support/tickets/t1/close'),
+        ),
+      );
+
+      await repository.closeTicket('t1');
+
+      verify(() => mockDio.post('/support/tickets/t1/close')).called(1);
+    });
+
+    for (final code in [404, 405]) {
+      test('$code (ticket inconnu ou ancien back) : l\'erreur remonte', () {
+        final options = RequestOptions(path: '/support/tickets/t1/close');
+        when(() => mockDio.post('/support/tickets/t1/close')).thenThrow(
+          DioException(
+            requestOptions: options,
+            response: Response(statusCode: code, requestOptions: options),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+
+        expect(repository.closeTicket('t1'), throwsA(isA<DioException>()));
+      });
+    }
+  });
+
   group('getSummary', () {
     test('200 : désérialise le résumé et son dernier ticket', () async {
       when(() => mockDio.get('/support/summary')).thenAnswer(

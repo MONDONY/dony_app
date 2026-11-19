@@ -60,10 +60,16 @@ abstract final class SupportLabels {
 /// l'échec. `null` hors échec.
 String? supportErrorMessage(AppLocalizations l, SupportState state) {
   final detail = state.serverDetail;
-  if (detail != null) return detail; // i18n-ignore
+  if (detail != null &&
+      state.failure != SupportFailure.hideNotResolved &&
+      state.failure != SupportFailure.closeFailed) {
+    return detail; // i18n-ignore
+  }
   return switch (state.failure) {
     SupportFailure.ticketResolved => l.supportTicketResolvedError,
     SupportFailure.hideFailed => l.supportTicketHideError,
+    SupportFailure.hideNotResolved => l.supportTicketHideNotResolvedError,
+    SupportFailure.closeFailed => l.supportTicketCloseError,
     SupportFailure.generic => l.supportGenericError,
     null => null,
   };
@@ -113,9 +119,15 @@ class SupportHomeScreen extends StatelessWidget {
           if (state.hideStatus == SupportActionStatus.failure) {
             DonySnackbar.show(
               context,
-              message: context.l10n.supportTicketHideError,
+              message: state.failure == SupportFailure.hideNotResolved
+                  ? context.l10n.supportTicketHideNotResolvedError
+                  : context.l10n.supportTicketHideError,
               type: DonySnackbarType.error,
             );
+          }
+          if (state.failure == SupportFailure.hideNotResolved) {
+            // Ticket réouvert entre-temps : la liste se recale sur le serveur.
+            context.read<SupportBloc>().add(const SupportHomeRequested());
           }
           if (state.createStatus == SupportActionStatus.success &&
               state.createdTicketId != null) {
@@ -433,20 +445,6 @@ class _TicketCard extends StatelessWidget {
                 label: SupportLabels.status(context.l10n, ticket.status),
                 type: SupportLabels.statusBadge(ticket.status),
               ),
-              // Un ticket résolu se retire de la liste (FLUTTER-9W). Un
-              // échange en cours, non : le support attend une réponse.
-              if (ticket.isResolved)
-                IconButton(
-                  key: ValueKey('support-ticket-hide-${ticket.id}'),
-                  tooltip: context.l10n.supportTicketHideTooltip,
-                  style: IconButton.styleFrom(minimumSize: const Size(44, 44)),
-                  onPressed: () => _confirmHide(context, ticket),
-                  icon: DonyIcon(
-                    'trash-2',
-                    size: 18,
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
             ],
           ),
           if (_hasPreview) ...[
@@ -454,11 +452,35 @@ class _TicketCard extends StatelessWidget {
             _TicketPreviewLine(ticket: ticket),
           ],
           const SizedBox(height: 6),
-          Text(
-            SupportLabels.category(context.l10n, ticket.category),
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  SupportLabels.category(context.l10n, ticket.category),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ),
+              // Un ticket résolu se supprime de la liste (FLUTTER-9W), action
+              // nommée et visible. Un échange en cours se ferme d'abord depuis
+              // son fil : le support attend peut-être une réponse.
+              if (ticket.isResolved)
+                TextButton.icon(
+                  key: ValueKey('support-ticket-hide-${ticket.id}'),
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(44, 44),
+                    foregroundColor: cs.error,
+                  ),
+                  onPressed: () => confirmHideSupportTicket(context, ticket),
+                  icon: DonyIcon('trash-2', size: 18, color: cs.error),
+                  label: Text(
+                    context.l10n.supportTicketHideTooltip,
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -688,7 +710,11 @@ class _CreateTicketFormState extends State<_CreateTicketForm> {
   }
 }
 
-Future<void> _confirmHide(BuildContext context, SupportTicket ticket) async {
+/// Confirmation puis suppression d'un ticket résolu (liste et fil).
+Future<void> confirmHideSupportTicket(
+  BuildContext context,
+  SupportTicket ticket,
+) async {
   final l = context.l10n;
   final bloc = context.read<SupportBloc>();
   final confirmed = await DonyDialog.show(

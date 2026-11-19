@@ -15040,11 +15040,42 @@
   "@supportGenericError": {
     "description": "Repli générique affiché quand un échec support n'a pas de detail serveur (support_home_screen.dart, supportErrorMessage ; SupportState.failure == generic)."
   },
-  "supportTicketHideTooltip": "Retirer de la liste",
-  "supportTicketHideConfirmTitle": "Retirer ce ticket ?",
-  "supportTicketHideConfirmMessage": "Il disparaîtra de votre liste. L’équipe Yadony garde l’historique de l’échange.",
-  "supportTicketHideConfirmAction": "Retirer",
-  "supportTicketHideError": "Impossible de retirer ce ticket pour le moment. Réessayez plus tard.",
+  "supportTicketHideTooltip": "Supprimer",
+  "@supportTicketHideTooltip": {
+    "description": "Action « Supprimer » d'un ticket résolu : texte du bouton de la liste /support et du fil résolu (support_home_screen.dart, support_ticket_detail_screen.dart). Un libellé court tient sur une ligne à 360 dp."
+  },
+  "supportTicketHideConfirmTitle": "Supprimer ce ticket ?",
+  "supportTicketHideConfirmMessage": "Ce ticket disparaîtra de votre liste. L’équipe Yadony garde l’historique de l’échange.",
+  "supportTicketHideConfirmAction": "Supprimer",
+  "supportTicketHideError": "Impossible de supprimer ce ticket pour le moment. Réessayez plus tard.",
+  "supportTicketHideNotResolvedError": "Fermez d’abord la demande, puis vous pourrez la supprimer.",
+  "@supportTicketHideNotResolvedError": {
+    "description": "Snackbar quand le back refuse la suppression (409 support-ticket-not-resolved) : le ticket a été rouvert entre-temps."
+  },
+  "supportTicketCloseAction": "Fermer la demande",
+  "@supportTicketCloseAction": {
+    "description": "Entrée du menu de l'écran d'un ticket non résolu : ferme la demande (support_ticket_detail_screen.dart). Une ligne, sans parenthèse."
+  },
+  "supportTicketCloseConfirmTitle": "Fermer cette demande ?",
+  "@supportTicketCloseConfirmTitle": {
+    "description": "Titre de la confirmation de fermeture d'un ticket support."
+  },
+  "supportTicketCloseConfirmMessage": "Vous ne pourrez plus envoyer de message sur cette demande. Pour un nouveau problème, ouvrez une nouvelle demande.",
+  "@supportTicketCloseConfirmMessage": {
+    "description": "Corps de la confirmation de fermeture : un ticket résolu est définitif, pas de réouverture."
+  },
+  "supportTicketCloseConfirmAction": "Fermer",
+  "@supportTicketCloseConfirmAction": {
+    "description": "Bouton de confirmation de la fermeture d'un ticket support."
+  },
+  "supportTicketCloseSuccess": "Demande fermée.",
+  "@supportTicketCloseSuccess": {
+    "description": "Snackbar de succès après la fermeture d'un ticket support."
+  },
+  "supportTicketCloseError": "Impossible de fermer la demande pour le moment. Réessayez plus tard.",
+  "@supportTicketCloseError": {
+    "description": "Snackbar d'échec de fermeture (réseau, ou back antérieur sans la route). Jamais le detail brut du serveur."
+  },
   "supportScreenTitle": "Support",
   "@supportScreenTitle": {
     "description": "Titre de l'app bar de l'accueil support (support_home_screen.dart). Identique en anglais : _sameInBothLanguages."

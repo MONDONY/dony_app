@@ -22489,35 +22489,77 @@ abstract class AppLocalizations {
   /// **'Une erreur est survenue. Réessayez.'**
   String get supportGenericError;
 
-  /// No description provided for @supportTicketHideTooltip.
+  /// Action « Supprimer » d'un ticket résolu : texte du bouton de la liste /support et du fil résolu (support_home_screen.dart, support_ticket_detail_screen.dart). Un libellé court tient sur une ligne à 360 dp.
   ///
   /// In fr, this message translates to:
-  /// **'Retirer de la liste'**
+  /// **'Supprimer'**
   String get supportTicketHideTooltip;
 
   /// No description provided for @supportTicketHideConfirmTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Retirer ce ticket ?'**
+  /// **'Supprimer ce ticket ?'**
   String get supportTicketHideConfirmTitle;
 
   /// No description provided for @supportTicketHideConfirmMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Il disparaîtra de votre liste. L’équipe Yadony garde l’historique de l’échange.'**
+  /// **'Ce ticket disparaîtra de votre liste. L’équipe Yadony garde l’historique de l’échange.'**
   String get supportTicketHideConfirmMessage;
 
   /// No description provided for @supportTicketHideConfirmAction.
   ///
   /// In fr, this message translates to:
-  /// **'Retirer'**
+  /// **'Supprimer'**
   String get supportTicketHideConfirmAction;
 
   /// No description provided for @supportTicketHideError.
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de retirer ce ticket pour le moment. Réessayez plus tard.'**
+  /// **'Impossible de supprimer ce ticket pour le moment. Réessayez plus tard.'**
   String get supportTicketHideError;
+
+  /// Snackbar quand le back refuse la suppression (409 support-ticket-not-resolved) : le ticket a été rouvert entre-temps.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermez d’abord la demande, puis vous pourrez la supprimer.'**
+  String get supportTicketHideNotResolvedError;
+
+  /// Entrée du menu de l'écran d'un ticket non résolu : ferme la demande (support_ticket_detail_screen.dart). Une ligne, sans parenthèse.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer la demande'**
+  String get supportTicketCloseAction;
+
+  /// Titre de la confirmation de fermeture d'un ticket support.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer cette demande ?'**
+  String get supportTicketCloseConfirmTitle;
+
+  /// Corps de la confirmation de fermeture : un ticket résolu est définitif, pas de réouverture.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne pourrez plus envoyer de message sur cette demande. Pour un nouveau problème, ouvrez une nouvelle demande.'**
+  String get supportTicketCloseConfirmMessage;
+
+  /// Bouton de confirmation de la fermeture d'un ticket support.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer'**
+  String get supportTicketCloseConfirmAction;
+
+  /// Snackbar de succès après la fermeture d'un ticket support.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande fermée.'**
+  String get supportTicketCloseSuccess;
+
+  /// Snackbar d'échec de fermeture (réseau, ou back antérieur sans la route). Jamais le detail brut du serveur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de fermer la demande pour le moment. Réessayez plus tard.'**
+  String get supportTicketCloseError;
 
   /// Titre de l'app bar de l'accueil support (support_home_screen.dart). Identique en anglais : _sameInBothLanguages.
   ///

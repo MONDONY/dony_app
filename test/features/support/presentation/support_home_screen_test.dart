@@ -501,7 +501,7 @@ void main() {
     );
 
     testWidgets(
-      'seul un ticket résolu propose « Retirer », après confirmation',
+      'seul un ticket résolu propose « Supprimer », après confirmation',
       (tester) async {
         stubState(
           const SupportState(
@@ -520,9 +520,13 @@ void main() {
           find.byKey(const ValueKey('support-ticket-hide-ticket-9')),
         );
         await tester.pumpAndSettle();
-        expect(find.text('Retirer ce ticket ?'), findsOneWidget);
+        expect(find.text('Supprimer ce ticket ?'), findsOneWidget);
+        expect(
+          find.textContaining('Ce ticket disparaîtra de votre liste'),
+          findsOneWidget,
+        );
 
-        await tester.tap(find.text('Retirer'));
+        await tester.tap(find.text('Supprimer').last);
         await tester.pumpAndSettle();
         verify(
           () => bloc.add(const SupportTicketHideRequested('ticket-9')),
@@ -551,8 +555,92 @@ void main() {
 
       expect(
         find.text(
-          'Impossible de retirer ce ticket pour le moment. Réessayez plus tard.',
+          'Impossible de supprimer ce ticket pour le moment. Réessayez plus tard.',
         ),
+        findsOneWidget,
+      );
+    });
+  });
+  group('supprimer : libellé visible et 409', () {
+    const resolved = SupportTicket(
+      id: 'ticket-9',
+      category: 'DELIVERY',
+      subject: 'Colis en retard',
+      status: SupportTicketStatuses.resolved,
+    );
+
+    for (final english in [false, true]) {
+      testWidgets(
+        'le libellé « ${english ? 'Delete' : 'Supprimer'} » tient sur une '
+        'ligne à 360 dp (${english ? 'EN' : 'FR'})',
+        (tester) async {
+          if (english) useEnglish();
+          tester.view.physicalSize = const Size(1080, 2400);
+          tester.view.devicePixelRatio = 3;
+          addTearDown(tester.view.reset);
+          stubState(
+            const SupportState(
+              homeStatus: SupportViewStatus.ready,
+              tickets: [resolved],
+            ),
+          );
+          await tester.pumpWidget(_harness(bloc));
+          await tester.pumpAndSettle();
+
+          final label = find.descendant(
+            of: find.byKey(const ValueKey('support-ticket-hide-ticket-9')),
+            matching: find.text(english ? 'Delete' : 'Supprimer'),
+          );
+          expect(label, findsOneWidget);
+          expect(tester.getSize(label).height, lessThan(24));
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+
+    testWidgets('409 : « Fermez d\'abord la demande » et rechargement', (
+      tester,
+    ) async {
+      whenListen(
+        bloc,
+        Stream.fromIterable([
+          const SupportState(
+            homeStatus: SupportViewStatus.ready,
+            tickets: [resolved],
+            hideStatus: SupportActionStatus.failure,
+            failure: SupportFailure.hideNotResolved,
+          ),
+        ]),
+        initialState: const SupportState(
+          homeStatus: SupportViewStatus.ready,
+          tickets: [resolved],
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Fermez d’abord la demande, puis vous pourrez la supprimer.'),
+        findsOneWidget,
+      );
+      verify(() => bloc.add(const SupportHomeRequested())).called(1);
+    });
+
+    testWidgets('un ticket fermé apparaît « Résolu » avec Supprimer', (
+      tester,
+    ) async {
+      stubState(
+        const SupportState(
+          homeStatus: SupportViewStatus.ready,
+          tickets: [resolved],
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('RÉSOLU'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('support-ticket-hide-ticket-9')),
         findsOneWidget,
       );
     });

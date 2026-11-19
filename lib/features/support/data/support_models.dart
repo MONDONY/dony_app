@@ -117,6 +117,22 @@ class SupportTicket extends Equatable {
 
   bool get isResolved => status == SupportTicketStatuses.resolved;
 
+  /// Copie portant le statut RESOLVED, pour refléter une fermeture confirmée
+  /// par le serveur sans recharger le fil.
+  SupportTicket asResolved(DateTime at) => SupportTicket(
+    id: id,
+    category: category,
+    subject: subject,
+    status: SupportTicketStatuses.resolved,
+    createdAt: createdAt,
+    lastMessageAt: lastMessageAt,
+    resolvedAt: at,
+    messages: messages,
+    unreadCount: unreadCount,
+    lastMessagePreview: lastMessagePreview,
+    lastMessageFromAdmin: lastMessageFromAdmin,
+  );
+
   factory SupportTicket.fromJson(Map<String, dynamic> json) {
     final rawMessages = json['messages'] as List<dynamic>? ?? const [];
     return SupportTicket(

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
@@ -770,6 +771,11 @@ void main() {
           homeStatus: SupportViewStatus.ready,
           tickets: [_ticket],
         ),
+        const SupportState(
+          homeStatus: SupportViewStatus.ready,
+          tickets: [_ticket],
+          hideStatus: SupportActionStatus.success,
+        ),
       ],
       verify: (_) {
         verify(() => repository.hideTicket('ticket-2')).called(1);
@@ -812,6 +818,168 @@ void main() {
       act: (bloc) => bloc.add(const SupportTicketHideRequested('ticket-1')),
       expect: () => <SupportState>[],
       verify: (_) => verifyNever(() => repository.hideTicket(any())),
+    );
+  });
+
+  group('SupportTicketHideRequested depuis le fil (écran de détail)', () {
+    blocTest<SupportBloc, SupportState>(
+      'ticket résolu du fil : suppression confirmée, hideStatus success',
+      build: () {
+        when(() => repository.hideTicket('ticket-2')).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      seed: () => const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _resolvedTicket,
+      ),
+      act: (bloc) => bloc.add(const SupportTicketHideRequested('ticket-2')),
+      expect: () => [
+        isA<SupportState>().having(
+          (s) => s.hideStatus,
+          'hideStatus',
+          SupportActionStatus.success,
+        ),
+      ],
+      verify: (_) => verify(() => repository.hideTicket('ticket-2')).called(1),
+    );
+
+    blocTest<SupportBloc, SupportState>(
+      '409 (ticket réouvert) : message « fermer d\'abord », liste restaurée',
+      build: () {
+        final options = RequestOptions(path: '/support/tickets/ticket-2');
+        when(() => repository.hideTicket('ticket-2')).thenThrow(
+          DioException(
+            requestOptions: options,
+            response: Response(
+              statusCode: 409,
+              data: {'detail': 'texte serveur'},
+              requestOptions: options,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        return buildBloc();
+      },
+      seed: () => const SupportState(
+        homeStatus: SupportViewStatus.ready,
+        tickets: [_ticket, _resolvedTicket],
+      ),
+      act: (bloc) => bloc.add(const SupportTicketHideRequested('ticket-2')),
+      skip: 1,
+      expect: () => [
+        isA<SupportState>()
+            .having((s) => s.tickets, 'tickets', [_ticket, _resolvedTicket])
+            .having((s) => s.failure, 'failure', SupportFailure.hideNotResolved)
+            .having((s) => s.serverDetail, 'serverDetail', isNull),
+      ],
+    );
+  });
+
+  group('SupportTicketCloseRequested', () {
+    blocTest<SupportBloc, SupportState>(
+      'succès : le fil ET la liste passent à Résolu, analytics émis',
+      build: () {
+        when(() => repository.closeTicket('ticket-1')).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      seed: () => const SupportState(
+        homeStatus: SupportViewStatus.ready,
+        detailStatus: SupportViewStatus.ready,
+        tickets: [_ticket],
+        ticket: _ticket,
+      ),
+      act: (bloc) => bloc.add(const SupportTicketCloseRequested('ticket-1')),
+      expect: () => [
+        isA<SupportState>().having(
+          (s) => s.closeStatus,
+          'closeStatus',
+          SupportActionStatus.submitting,
+        ),
+        isA<SupportState>()
+            .having(
+              (s) => s.closeStatus,
+              'closeStatus',
+              SupportActionStatus.success,
+            )
+            .having((s) => s.ticket!.isResolved, 'fil résolu', isTrue)
+            .having(
+              (s) => s.tickets.single.isResolved,
+              'liste résolue',
+              isTrue,
+            ),
+      ],
+      verify: (_) {
+        verify(() => repository.closeTicket('ticket-1')).called(1);
+        verify(
+          () => backend.capture(AnalyticsEvents.supportTicketClosed, null),
+        ).called(1);
+      },
+    );
+
+    blocTest<SupportBloc, SupportState>(
+      'erreur réseau : rien ne change, échec signalé',
+      build: () {
+        when(
+          () => repository.closeTicket('ticket-1'),
+        ).thenThrow(Exception('réseau'));
+        return buildBloc();
+      },
+      seed: () => const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _ticket,
+      ),
+      act: (bloc) => bloc.add(const SupportTicketCloseRequested('ticket-1')),
+      skip: 1,
+      expect: () => [
+        isA<SupportState>()
+            .having(
+              (s) => s.closeStatus,
+              'closeStatus',
+              SupportActionStatus.failure,
+            )
+            .having((s) => s.failure, 'failure', SupportFailure.closeFailed)
+            .having((s) => s.ticket!.isResolved, 'fil résolu', isFalse),
+      ],
+    );
+
+    blocTest<SupportBloc, SupportState>(
+      'ancien back (404 avec detail technique) : detail jamais relayé',
+      build: () {
+        final options = RequestOptions(path: '/support/tickets/ticket-1/close');
+        when(() => repository.closeTicket('ticket-1')).thenThrow(
+          DioException(
+            requestOptions: options,
+            response: Response(
+              statusCode: 404,
+              data: {'detail': 'No static resource'},
+              requestOptions: options,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        return buildBloc();
+      },
+      seed: () => const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _ticket,
+      ),
+      act: (bloc) => bloc.add(const SupportTicketCloseRequested('ticket-1')),
+      skip: 1,
+      expect: () => [
+        isA<SupportState>().having((s) => s.serverDetail, 'detail', isNull),
+      ],
+    );
+
+    blocTest<SupportBloc, SupportState>(
+      'ticket déjà résolu : aucun appel',
+      build: buildBloc,
+      seed: () => const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _resolvedTicket,
+      ),
+      act: (bloc) => bloc.add(const SupportTicketCloseRequested('ticket-2')),
+      expect: () => <SupportState>[],
+      verify: (_) => verifyNever(() => repository.closeTicket(any())),
     );
   });
 }

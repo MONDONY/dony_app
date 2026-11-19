@@ -71,6 +71,13 @@ class SupportRepository {
     await _api.dio.delete('/support/tickets/$ticketId');
   }
 
+  /// Ferme la demande (`POST /support/tickets/{id}/close`, 204, idempotent).
+  /// Un ticket RESOLVED est définitif : plus aucun message. Sur un back
+  /// antérieur la route manque (404/405) : l'erreur est propagée telle quelle.
+  Future<void> closeTicket(String ticketId) async {
+    await _api.dio.post('/support/tickets/$ticketId/close');
+  }
+
   Future<void> markRead(String ticketId) async {
     await _api.dio.post('/support/tickets/$ticketId/read');
   }

@@ -29,25 +29,20 @@ String supportPreviewText(
 /// sans résumé (back antérieur), elle garde l'invitation. Le badge ne
 /// s'affiche qu'à partir de 1.
 ///
-/// Un tap ouvre directement la discussion avec l'équipe : le fil de la
-/// conversation non résolue ([openTicketCount] > 0 et [latestTicket]), sinon
-/// un fil neuf (`/support/thread`) dont le premier message crée la demande.
-/// Un fil résolu propose lui-même « Nouvelle demande ». La liste des demandes
-/// reste joignable par Moi › Contacter le support (`/support`).
+/// Un tap ouvre toujours la LISTE des demandes (`/support`), jamais un fil :
+/// l'utilisateur peut avoir plusieurs tickets et doit les voir d'abord, avec
+/// « Nouvelle demande » (fil neuf) et, dans chaque fil, « Fermer la demande ».
+/// L'aperçu, l'heure et le badge viennent du résumé ([latestTicket]) ; ils ne
+/// décident plus de la destination. Seules les notifications ouvrent un fil.
 class SupportConversationTile extends StatelessWidget {
   const SupportConversationTile({
     super.key,
     required this.unreadCount,
     this.latestTicket,
-    this.openTicketCount = 0,
     this.onReturned,
   });
 
   final int unreadCount;
-
-  /// Conversations non résolues : le résumé choisit en priorité une
-  /// conversation ouverte, donc [latestTicket] n'est ouvert que s'il y en a.
-  final int openTicketCount;
 
   /// Dernière conversation résumée par le back, null sans conversation ou
   /// sur un back antérieur au résumé.
@@ -87,12 +82,7 @@ class SupportConversationTile extends StatelessWidget {
             : cs.surface,
         child: InkWell(
           onTap: () async {
-            final open = latest;
-            await context.push(
-              open != null && openTicketCount > 0
-                  ? '/support/tickets/${open.id}'
-                  : '/support/thread',
-            );
+            await context.push('/support');
             onReturned?.call();
           },
           child: Padding(

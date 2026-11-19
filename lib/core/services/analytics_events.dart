@@ -742,6 +742,10 @@ abstract final class AnalyticsEvents {
   static const supportTicketMessageSent = 'support_ticket_message_sent';
   static const supportTicketHidden = 'support_ticket_hidden';
 
+  /// Demande fermée par l'utilisateur, confirmée par le serveur. Aucune
+  /// propriété.
+  static const supportTicketClosed = 'support_ticket_closed';
+
   /// Image jointe à un message support uploadée avec succès. Aucune propriété
   /// (ni chemin, ni taille, ni contenu — PII).
   static const supportAttachmentAdded = 'support_attachment_added';

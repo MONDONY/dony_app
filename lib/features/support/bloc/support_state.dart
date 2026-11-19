@@ -15,6 +15,14 @@ enum SupportFailure {
   /// Le ticket n'a pas pu être retiré de la liste (FLUTTER-9W).
   hideFailed,
 
+  /// Retrait refusé (409 `support-ticket-not-resolved`) : le ticket n'est
+  /// plus résolu, il faut d'abord fermer la demande.
+  hideNotResolved,
+
+  /// La demande n'a pas pu être fermée (réseau, route absente d'un back
+  /// antérieur) : message générique, jamais le detail brut du serveur.
+  closeFailed,
+
   /// Échec générique (réseau, serveur) : le detail RFC 7807 du backend
   /// prime quand il existe ([SupportState.serverDetail]).
   generic,
@@ -35,6 +43,7 @@ final class SupportState extends Equatable {
     this.createdTicketId,
     this.sendStatus = SupportActionStatus.idle,
     this.hideStatus = SupportActionStatus.idle,
+    this.closeStatus = SupportActionStatus.idle,
     this.failure,
     this.serverDetail,
     this.pendingAttachments = const [],
@@ -56,6 +65,11 @@ final class SupportState extends Equatable {
   /// Retrait d'un ticket de la liste (FLUTTER-9W) : `failure` déclenche le
   /// message d'erreur, la liste ayant déjà été restaurée.
   final SupportActionStatus hideStatus;
+
+  /// Fermeture de la demande : `success` quand le serveur a confirmé (le
+  /// ticket de l'état est alors RESOLVED), `failure` sans rien changer.
+  /// Signal à usage unique, jamais reporté.
+  final SupportActionStatus closeStatus;
 
   /// Cause du dernier échec (chargement, création ou envoi). `null` hors
   /// échec. La présentation choisit le texte localisé à partir de cette
@@ -107,6 +121,7 @@ final class SupportState extends Equatable {
     String? createdTicketId,
     SupportActionStatus? sendStatus,
     SupportActionStatus? hideStatus,
+    SupportActionStatus? closeStatus,
     SupportFailure? failure,
     String? serverDetail,
     List<SupportAttachmentUpload>? pendingAttachments,
@@ -123,6 +138,7 @@ final class SupportState extends Equatable {
       sendStatus: sendStatus ?? this.sendStatus,
       // Signal à usage unique, comme `failure` : jamais reporté.
       hideStatus: hideStatus ?? SupportActionStatus.idle,
+      closeStatus: closeStatus ?? SupportActionStatus.idle,
       failure: failure,
       serverDetail: serverDetail,
       pendingAttachments: pendingAttachments ?? this.pendingAttachments,
@@ -141,6 +157,7 @@ final class SupportState extends Equatable {
     createdTicketId,
     sendStatus,
     hideStatus,
+    closeStatus,
     failure,
     serverDetail,
     pendingAttachments,
