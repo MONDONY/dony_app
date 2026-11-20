@@ -167,16 +167,49 @@ void main() {
     );
   });
 
-  test('seed_ne_remplace_pas_un_trajet_dont_le_toggle_a_echoue', () async {
-    final trip = _trip('t1', likeCount: 2);
-    when(() => repo.like('t1')).thenThrow(Exception('x'));
-    await expectLater(cubit.toggle(trip), throwsException);
+  test(
+    'apres_un_echec_le_trajet_revient_et_seed_le_rafraichit_de_nouveau',
+    () async {
+      final trip = _trip('t1', likeCount: 2);
+      when(() => repo.like('t1')).thenThrow(Exception('x'));
+      await expectLater(cubit.toggle(trip), throwsException);
 
-    cubit.seed([_trip('t1', likeCount: 9, likedByMe: true)]);
+      // Retour à l'état d'avant l'appui.
+      expect(
+        cubit.state.byTrip['t1'],
+        const TripLikeStatus(likeCount: 2, likedByMe: false),
+      );
+
+      // Rien n'a été basculé : une liste relue rafraîchit ce trajet.
+      cubit.seed([_trip('t1', likeCount: 9, likedByMe: true)]);
+
+      expect(
+        cubit.state.byTrip['t1'],
+        const TripLikeStatus(likeCount: 9, likedByMe: true),
+      );
+    },
+  );
+
+  test('echec_apres_une_bascule_reussie_le_trajet_reste_protege', () async {
+    final trip = _trip('t1', likeCount: 2);
+    when(() => repo.like('t1')).thenAnswer(
+      (_) async => const TripLikeStatus(likeCount: 3, likedByMe: true),
+    );
+    await cubit.toggle(trip);
+    when(() => repo.unlike('t1')).thenThrow(Exception('x'));
+    await expectLater(cubit.toggle(trip), throwsException);
 
     expect(
       cubit.state.byTrip['t1'],
-      const TripLikeStatus(likeCount: 2, likedByMe: false),
+      const TripLikeStatus(likeCount: 3, likedByMe: true),
+    );
+    // Liste relue depuis le cache serveur (5 min) : valeurs d'avant la
+    // bascule réussie, ignorées.
+    cubit.seed([_trip('t1', likeCount: 2)]);
+
+    expect(
+      cubit.state.byTrip['t1'],
+      const TripLikeStatus(likeCount: 3, likedByMe: true),
     );
   });
 
