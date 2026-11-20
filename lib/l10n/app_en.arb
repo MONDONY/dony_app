@@ -11963,5 +11963,13 @@
   "inquirySendLimitError": "Message limit reached. Book to continue.",
   "@inquirySendLimitError": {
       "description": "Error shown when sending a question message is refused because of the quota."
-  }
+  },
+  "tripLikeTooltip": "Like",
+  "tripUnlikeTooltip": "Unlike",
+  "tripLikeCountSemantics": "{count, plural, =1{{count} person likes this trip} other{{count} people like this trip}}",
+  "@tripLikeCountSemantics": {
+      "placeholders": {"count": {"type": "int"}}
+  },
+  "tripLikeLoginInviteTitle": "Sign in to like this trip.",
+  "tripLikeLoginInviteBody": "A like is tied to your account: it shows the traveler their trip is getting attention."
 }

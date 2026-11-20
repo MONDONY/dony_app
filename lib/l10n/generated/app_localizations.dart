@@ -38909,6 +38909,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Limite de messages atteinte. Réservez pour continuer.'**
   String get inquirySendLimitError;
+
+  /// Infobulle et nom d'accessibilité du cœur d'une carte trajet, trajet pas encore aimé (trip_like_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'aime'**
+  String get tripLikeTooltip;
+
+  /// Infobulle et nom d'accessibilité du cœur d'une carte trajet déjà aimé : le toucher retire le j'aime (trip_like_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Je n\'aime plus'**
+  String get tripUnlikeTooltip;
+
+  /// Lecture d'écran du compteur de j'aime d'une carte trajet (affiché à partir de 1).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} personne aime ce trajet} other{{count} personnes aiment ce trajet}}'**
+  String tripLikeCountSemantics(int count);
+
+  /// Feuille compte requis : un visiteur sans compte touche le cœur d'une carte trajet (sous-titre de la feuille).
+  ///
+  /// In fr, this message translates to:
+  /// **'Connectez-vous pour aimer ce trajet.'**
+  String get tripLikeLoginInviteTitle;
+
+  /// Feuille compte requis, j'aime d'un trajet : texte sous « Actions protégées ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Un j\'aime est lié à votre compte : il montre au voyageur que son trajet intéresse.'**
+  String get tripLikeLoginInviteBody;
 }
 
 class _AppLocalizationsDelegate

@@ -35,6 +35,9 @@ import 'package:dony/features/home/presentation/screens/search_composer_screen.d
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
 import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
 import 'package:dony/features/home/presentation/widgets/search_period.dart';
+import 'package:dony/features/likes/bloc/trip_likes_cubit.dart';
+import 'package:dony/features/likes/data/models/trip_like_status.dart';
+import 'package:dony/features/likes/data/repositories/trip_like_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -184,6 +187,8 @@ class _FakeContentCategoryRepository implements IContentCategoryRepository {
 
 class MockAnalyticsService extends Mock implements AnalyticsService {}
 
+class _MockTripLikeRepository extends Mock implements TripLikeRepository {}
+
 class MockPackageRequestSearchBloc
     extends MockBloc<PackageRequestSearchEvent, PackageRequestSearchState>
     implements PackageRequestSearchBloc {}
@@ -255,6 +260,8 @@ UserModel _makeUser({List<String> roles = const ['ROLE_SENDER']}) => UserModel(
 AnnouncementModel _makeAnn({
   String id = 'a1',
   String travelerId = 'traveler-1',
+  int likeCount = 0,
+  bool likedByMe = false,
 }) => AnnouncementModel(
   id: id,
   travelerId: travelerId,
@@ -267,6 +274,8 @@ AnnouncementModel _makeAnn({
   status: 'ACTIVE',
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
+  likeCount: likeCount,
+  likedByMe: likedByMe,
 );
 
 /// Trois trajets d'un autre voyageur : le feed n'est pas vide, donc l'état vide
@@ -409,6 +418,10 @@ Widget _buildHome({
   MockFavoriteIdsCubit? favCubit,
   String helpConfigJson = _emptyHelpConfigJson,
   MockAnnouncementBloc? announcementBlocOverride,
+
+  /// États émis par le bloc des trajets, rejoués pour chaque abonné.
+  List<AnnouncementState>? announcementEmits,
+  TripLikesCubit? likesCubit,
 }) {
   final announcementBloc = announcementBlocOverride ?? MockAnnouncementBloc();
   final authBloc = MockAuthBloc();
@@ -420,7 +433,11 @@ Widget _buildHome({
   when(
     () => announcementBloc.state,
   ).thenReturn(announcementState ?? AnnouncementInitial());
-  when(() => announcementBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => announcementBloc.stream).thenAnswer(
+    (_) => announcementEmits == null
+        ? const Stream.empty()
+        : Stream.fromIterable(announcementEmits),
+  );
   when(
     () => authBloc.state,
   ).thenReturn(authState ?? AuthAuthenticated(user ?? _makeUser()));
@@ -442,6 +459,8 @@ Widget _buildHome({
       BlocProvider<NotificationBloc>.value(value: notifBloc),
       BlocProvider<BidBloc>.value(value: effectiveBidBloc),
       BlocProvider<FavoriteIdsCubit>.value(value: effectiveFavCubit),
+      if (likesCubit != null)
+        BlocProvider<TripLikesCubit>.value(value: likesCubit),
       _helpCenterProvider(helpConfigJson: helpConfigJson),
     ],
     child: const HomeScreen(),
@@ -1193,6 +1212,47 @@ void main() {
         ).called(1);
       },
     );
+
+    testWidgets('cartes de la recherche : ligne d\'actions et j\'aime '
+        'reçus versés à TripLikesCubit', (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final likes = TripLikesCubit(_MockTripLikeRepository(), analytics);
+      addTearDown(likes.close);
+      final loaded = AnnouncementSearchLoaded(
+        [_makeAnn(likeCount: 5, likedByMe: true)],
+        similar: [
+          SimilarAnnouncement(
+            announcement: _makeAnn(id: 's1', likeCount: 2),
+            unmet: const [],
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        _buildHome(
+          announcementState: loaded,
+          announcementEmits: [loaded],
+          likesCubit: likes,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+      await ouvrirListe(tester);
+
+      expect(
+        likes.state.byTrip['a1'],
+        const TripLikeStatus(likeCount: 5, likedByMe: true),
+      );
+      expect(
+        likes.state.byTrip['s1'],
+        const TripLikeStatus(likeCount: 2, likedByMe: false),
+      );
+      final card = tester.widget<TravelerCard>(find.byType(TravelerCard).first);
+      expect(card.showActions, isTrue);
+      expect(find.byKey(const Key('trip-card-actions')), findsWidgets);
+    });
 
     testWidgets('shows TravelerCards when announcements loaded', (
       tester,

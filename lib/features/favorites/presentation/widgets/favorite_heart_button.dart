@@ -19,11 +19,17 @@ class FavoriteHeartButton extends StatefulWidget {
     required this.onToggle,
     this.size = 26,
     this.onDark = false,
+    this.alignment = Alignment.center,
   });
 
   final bool isFavorite;
   final VoidCallback onToggle;
   final double size;
+
+  /// Place du signet dans sa zone de toucher de 44 px. En bout de la ligne
+  /// d'actions d'une carte trajet, `AlignmentDirectional.centerEnd` l'aligne
+  /// sur le bord du texte sans réduire la cible.
+  final AlignmentGeometry alignment;
 
   /// Posé sur un fond sombre (carte héro bleu nuit de la feuille « Détail du
   /// trajet ») : signet blanc sur une pastille translucide. Les couleurs par
@@ -90,6 +96,7 @@ class _FavoriteHeartButtonState extends State<FavoriteHeartButton>
         // malgré les contraintes ci-dessous.
         visualDensity: VisualDensity.standard,
         padding: EdgeInsets.zero,
+        alignment: widget.alignment,
         // L'icône reste à sa taille, seule la zone tappable est portée au
         // minimum confortable : à 26 px d'icône la cible ne faisait que 40 px.
         constraints: const BoxConstraints(

@@ -2,17 +2,14 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
-import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/presentation/trip_moment_corridor.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_card_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_owner/trip_owner_header.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -35,6 +32,7 @@ class TripCard extends StatelessWidget {
     required this.onTap,
     required this.index,
     this.showFavorite = false,
+    this.showOwnLikes = false,
     this.pinned,
     this.onTogglePin,
   });
@@ -43,14 +41,22 @@ class TripCard extends StatelessWidget {
   final VoidCallback onTap;
   final int index;
 
-  /// When true, renders a heart button in the header row.
-  /// Requires a [FavoriteIdsCubit] to be in the widget tree; if absent the
-  /// heart is silently omitted (defensive read — never crashes).
+  /// Carte du trajet d'un autre voyageur : signet des favoris et ♡ actif.
+  /// Sur une carte active, ils vivent dans la ligne d'actions du pied
+  /// ([TripCardActions], avec le partage) ; une carte passée garde le signet
+  /// dans son en-tête. Signet omis sans `FavoriteIdsCubit` dans l'arbre, ♡
+  /// omis sans `TripLikesCubit` (lecture défensive, jamais de plantage).
   ///
   /// Caller is responsible for NOT passing true on items owned by the current
-  /// user. The in-card heart has no owner guard; the backend returns 422 on an
-  /// own-trip add, but the optimistic UI would flash before the error arrives.
+  /// user, except the favorites list, which keeps it with [showOwnLikes] so
+  /// the bookmark can remove one's own trip. The backend returns 422 on an
+  /// own-trip add, but the optimistic UI would flash before the error.
   final bool showFavorite;
+
+  /// Carte du voyageur sur son propre trajet : la ligne d'actions montre le
+  /// compteur de j'aime en lecture seule (dès 1) et le partage, sans ♡ actif.
+  /// Le signet n'y est que si [showFavorite] est vrai.
+  final bool showOwnLikes;
 
   /// Épingle de « Mes trajets » (FLUTTER-FS) : `null` = pas d'épingle (carte
   /// d'un autre voyageur, trajet terminé). Distincte du signet des favoris.
@@ -202,6 +208,7 @@ class TripCard extends StatelessWidget {
                 kg: _kg,
                 price: _price,
                 showFavorite: showFavorite,
+                showOwnLikes: showOwnLikes,
                 pinButton: _pinButton(),
               ),
       ),
@@ -216,44 +223,6 @@ class TripCard extends StatelessWidget {
         .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
         .slideY(begin: 0.04, duration: 300.ms, curve: Curves.easeOutCubic);
   }
-}
-
-// ─────────────────────────────────────────────────────────────
-// Shared helper — defensive favorite heart
-// ─────────────────────────────────────────────────────────────
-
-/// Renders a [FavoriteHeartButton] driven by [FavoriteIdsCubit].
-/// Silently returns [SizedBox.shrink] if no cubit is in the tree —
-/// so the card never crashes when rendered outside a cubit provider.
-Widget _buildFavoriteHeart(BuildContext context, AnnouncementModel trip) {
-  final tripId = trip.id;
-  FavoriteIdsCubit? cubit;
-  try {
-    cubit = context.read<FavoriteIdsCubit>();
-  } catch (_) {
-    // No FavoriteIdsCubit in the tree — render nothing.
-    return const SizedBox.shrink();
-  }
-  final c = cubit;
-  return BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
-    bloc: c,
-    builder: (ctx, _) => FavoriteHeartButton(
-      isFavorite: c.isTripFav(tripId),
-      onToggle: () async {
-        try {
-          await c.toggleTrip(tripId, corridor: tripMomentCorridor(trip));
-        } catch (_) {
-          if (ctx.mounted) {
-            DonySnackbar.show(
-              ctx,
-              message: ctx.l10n.listingRetryActionMessage,
-              type: DonySnackbarType.error,
-            );
-          }
-        }
-      },
-    ),
-  );
 }
 
 /// Épingle de « Mes trajets » (FLUTTER-FS) : punaise pleine et teintée quand
@@ -318,6 +287,7 @@ class _ActiveCardContent extends StatelessWidget {
     required this.kg,
     required this.price,
     required this.showFavorite,
+    required this.showOwnLikes,
     this.pinButton,
   });
 
@@ -333,7 +303,10 @@ class _ActiveCardContent extends StatelessWidget {
   final String Function(double) kg;
   final String Function(double) price;
   final bool showFavorite;
+  final bool showOwnLikes;
   final Widget? pinButton;
+
+  bool get _showActions => showFavorite || showOwnLikes;
 
   /// Builds the optional « demandes » stats row (acceptées / en attente).
   /// Returns an empty list when both counts are 0 so the card stays clean and
@@ -378,12 +351,17 @@ class _ActiveCardContent extends StatelessWidget {
     final l = context.l10n;
 
     return Padding(
-      padding: const EdgeInsets.all(DonySpacing.base),
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.base,
+        DonySpacing.base,
+        DonySpacing.base,
+        _showActions ? TripCardActions.cardBottomPadding : DonySpacing.base,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Header row: route title + badge + optional heart ──
+          // ── Header row: route title + badge + pin ──
           Row(
             children: [
               Expanded(
@@ -401,10 +379,6 @@ class _ActiveCardContent extends StatelessWidget {
               if (pinButton case final pin?) ...[
                 const SizedBox(width: DonySpacing.xs),
                 pin,
-              ],
-              if (showFavorite) ...[
-                const SizedBox(width: DonySpacing.xs),
-                _buildFavoriteHeart(context, announcement),
               ],
             ],
           ),
@@ -495,6 +469,14 @@ class _ActiveCardContent extends StatelessWidget {
               ),
             ],
           ),
+
+          // ── Ligne d'actions : ♡, partage, signet ──
+          if (_showActions)
+            TripCardActions(
+              announcement: announcement,
+              isOwn: showOwnLikes,
+              showBookmark: showFavorite,
+            ),
         ],
       ),
     );
@@ -625,7 +607,7 @@ class _PastCardContent extends StatelessWidget {
           ],
           if (showFavorite) ...[
             const SizedBox(width: DonySpacing.xs),
-            _buildFavoriteHeart(context, announcement),
+            TripBookmarkButton(trip: announcement),
           ],
         ],
       ),

@@ -4,11 +4,13 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
+import 'package:dony/features/likes/bloc/trip_likes_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
@@ -71,12 +73,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         BlocListener<FavoriteTripsCubit, FavoriteTripsState>(
           listenWhen: (_, c) =>
               c is FavoriteTripsLoaded || c is FavoriteTripsEmpty,
-          listener: (context, state) =>
-              context.read<FavoriteIdsCubit>().syncTripsFromList(
-                state is FavoriteTripsLoaded
-                    ? state.trips.map((t) => t.id)
-                    : const <String>[],
-              ),
+          listener: (context, state) {
+            context.read<FavoriteIdsCubit>().syncTripsFromList(
+              state is FavoriteTripsLoaded
+                  ? state.trips.map((t) => t.id)
+                  : const <String>[],
+            );
+            // J'aime des cartes : la liste des favoris porte aussi le
+            // compteur et l'état du lecteur.
+            if (state is FavoriteTripsLoaded) {
+              maybeRead<TripLikesCubit>(context)?.seed(state.trips);
+            }
+          },
         ),
         BlocListener<FavoriteRequestsCubit, FavoriteRequestsState>(
           listenWhen: (_, c) =>
@@ -186,6 +194,9 @@ class _TripsTab extends StatelessWidget {
 
         if (state is FavoriteTripsLoaded) {
           final trips = state.trips;
+          final currentUserId = maybeRead<AuthBloc>(
+            context,
+          )?.state.currentUserId;
           return RefreshIndicator(
             onRefresh: () => context.read<FavoriteTripsCubit>().refresh(),
             child: ListView.builder(
@@ -202,7 +213,12 @@ class _TripsTab extends StatelessWidget {
                   announcement: trip,
                   onTap: () => _openTrip(context, trip),
                   index: index,
+                  // Signet dans la ligne d'actions, gardé sur son propre
+                  // trajet pour pouvoir le retirer des favoris.
                   showFavorite: true,
+                  // Son propre trajet : compteur en lecture seule, sans ♡.
+                  showOwnLikes:
+                      currentUserId != null && trip.travelerId == currentUserId,
                 );
               },
             ),

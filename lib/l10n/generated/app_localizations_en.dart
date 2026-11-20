@@ -24124,4 +24124,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get inquirySendLimitError =>
       'Message limit reached. Book to continue.';
+
+  @override
+  String get tripLikeTooltip => 'Like';
+
+  @override
+  String get tripUnlikeTooltip => 'Unlike';
+
+  @override
+  String tripLikeCountSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people like this trip',
+      one: '$count person likes this trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripLikeLoginInviteTitle => 'Sign in to like this trip.';
+
+  @override
+  String get tripLikeLoginInviteBody =>
+      'A like is tied to your account: it shows the traveler their trip is getting attention.';
 }

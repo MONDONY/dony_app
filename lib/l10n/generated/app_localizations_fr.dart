@@ -24298,4 +24298,28 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get inquirySendLimitError =>
       'Limite de messages atteinte. Réservez pour continuer.';
+
+  @override
+  String get tripLikeTooltip => 'J\'aime';
+
+  @override
+  String get tripUnlikeTooltip => 'Je n\'aime plus';
+
+  @override
+  String tripLikeCountSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count personnes aiment ce trajet',
+      one: '$count personne aime ce trajet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripLikeLoginInviteTitle => 'Connectez-vous pour aimer ce trajet.';
+
+  @override
+  String get tripLikeLoginInviteBody =>
+      'Un j\'aime est lié à votre compte : il montre au voyageur que son trajet intéresse.';
 }
