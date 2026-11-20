@@ -107,6 +107,10 @@ AnnouncementModel _$AnnouncementModelFromJson(
       ? null
       : DateTime.parse(json['handoverDeadline'] as String),
   isFavorite: json['isFavorite'] as bool? ?? false,
+  likeCount: json['likeCount'] == null
+      ? 0
+      : _likeCountFromJson(json['likeCount']),
+  likedByMe: json['likedByMe'] as bool? ?? false,
   urgent: json['urgent'] as bool?,
   currency: json['currency'] as String? ?? 'EUR',
   negotiable: json['negotiable'] as bool? ?? false,
@@ -173,6 +177,8 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'surplusPublished': instance.surplusPublished,
       'handoverDeadline': instance.handoverDeadline?.toIso8601String(),
       'isFavorite': instance.isFavorite,
+      'likeCount': instance.likeCount,
+      'likedByMe': instance.likedByMe,
       'urgent': instance.urgent,
       'currency': instance.currency,
       'negotiable': instance.negotiable,
