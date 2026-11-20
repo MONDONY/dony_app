@@ -136,14 +136,14 @@ class _LikeToggle extends StatelessWidget {
       // Voice Access).
       onTap: onTap,
       excludeSemantics: true,
+      // L'infobulle visuelle dit le geste qui suit. Le `Material` transparent
+      // donne au ♡ sa propre surface d'encre : le fond décoré de la carte
+      // recouvrait celle de l'écran (ni éclaboussure ni focus visible), sans
+      // changer la mise en page. `Tooltip(` reste à moins de 10 lignes de
+      // l'`InkWell` : c'est la fenêtre où le garde a11y cherche un nom.
       child: Tooltip(
-        // L'infobulle visuelle dit le geste qui suit.
         message: liked ? l.tripUnlikeTooltip : l.tripLikeTooltip,
         excludeFromSemantics: true,
-        // Surface d'encre propre au ♡ : le fond de la carte (Container
-        // décoré) recouvrait celle de l'écran, ni éclaboussure ni focus
-        // visible. Transparente, elle ne change ni la mise en page ni les
-        // tailles.
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
