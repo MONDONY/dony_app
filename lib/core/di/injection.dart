@@ -132,6 +132,9 @@ import 'package:dony/features/incident_report/data/repositories/incident_report_
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/data/kyc_completion_tracker.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
+import 'package:dony/features/likes/bloc/trip_likes_cubit.dart';
+import 'package:dony/features/likes/data/datasources/trip_like_remote_datasource.dart';
+import 'package:dony/features/likes/data/repositories/trip_like_repository.dart';
 import 'package:dony/features/maintenance/bloc/maintenance_cubit.dart';
 import 'package:dony/features/maintenance/data/datasources/maintenance_live_datasource.dart';
 import 'package:dony/features/maintenance/data/datasources/maintenance_remote_datasource.dart';
@@ -2001,6 +2004,18 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Global singleton — shared source-of-truth for heart buttons across the app
   getIt.registerLazySingleton<FavoriteIdsCubit>(
     () => FavoriteIdsCubit(getIt<FavoriteRepository>()),
+    dispose: (c) => c.close(),
+  );
+  // J'aime des trajets — singleton partagé par toutes les cartes
+  getIt.registerLazySingleton<TripLikeRemoteDatasource>(
+    () => TripLikeRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<TripLikeRepository>(
+    () => TripLikeRepository(getIt<TripLikeRemoteDatasource>()),
+  );
+  getIt.registerLazySingleton<TripLikesCubit>(
+    () =>
+        TripLikesCubit(getIt<TripLikeRepository>(), getIt<AnalyticsService>()),
     dispose: (c) => c.close(),
   );
   getIt.registerFactory<FavoriteTripsCubit>(

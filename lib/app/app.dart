@@ -39,6 +39,7 @@ import 'package:dony/features/connectivity/presentation/widgets/connectivity_ban
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/data/favorites_migration.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/likes/bloc/trip_likes_cubit.dart';
 import 'package:dony/features/maintenance/bloc/maintenance_cubit.dart';
 import 'package:dony/features/maintenance/presentation/maintenance_gate.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -500,6 +501,10 @@ class _DonyAppState extends State<DonyApp> {
                 BlocProvider<FavoriteIdsCubit>.value(
                   value: getIt<FavoriteIdsCubit>(),
                 ),
+                // « J'aime » des cartes de trajet, vidé avec le compte.
+                BlocProvider<TripLikesCubit>.value(
+                  value: getIt<TripLikesCubit>(),
+                ),
               ],
               child: BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
@@ -533,6 +538,8 @@ class _DonyAppState extends State<DonyApp> {
                       const StripeAccountReset(),
                     );
                     context.read<ActivationCubit>().reset();
+                    // Les j'aime du compte précédent ne doivent pas fuiter.
+                    context.read<TripLikesCubit>().reset();
                     // « Mes colis » de l'instance globale : sans ce reset, le
                     // compte suivant voyait le colis du précédent sur la carte
                     // d'un trajet, ouvert en vue voyageur (FLUTTER-XF).
