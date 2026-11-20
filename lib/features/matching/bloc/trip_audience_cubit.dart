@@ -46,6 +46,7 @@ class TripAudienceCubit extends Cubit<TripAudienceState> {
           properties: {
             'unique_viewers': audience.uniqueViewerCount,
             'share_views': audience.shareViewCount,
+            'likes': audience.likeCount,
           },
         ),
       );

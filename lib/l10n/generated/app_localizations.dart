@@ -14458,6 +14458,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{{count} vue de votre affiche partagée} other{{count} vues de votre affiche partagée}}'**
   String tripAudiencePosterViews(int count);
 
+  /// Ligne d'audience du trajet vue par son voyageur : nombre de j'aime laissés par les gens sur son trajet, en dernier morceau après les vues, seulement s'il y en a au moins un (trip_audience_line.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} j\'aime} other{{count} j\'aime}}'**
+  String tripAudienceLikes(int count);
+
   /// Message du bandeau brouillon (trip_owner_detail_screen.dart).
   ///
   /// In fr, this message translates to:
@@ -38909,6 +38915,48 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Limite de messages atteinte. Réservez pour continuer.'**
   String get inquirySendLimitError;
+
+  /// Infobulle et nom d'accessibilité du cœur d'une carte trajet, trajet pas encore aimé (trip_like_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'aime'**
+  String get tripLikeTooltip;
+
+  /// Infobulle et nom d'accessibilité du cœur d'une carte trajet déjà aimé : le toucher retire le j'aime (trip_like_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Je n\'aime plus'**
+  String get tripUnlikeTooltip;
+
+  /// Lecture d'écran du compteur de j'aime d'une carte trajet (affiché à partir de 1).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} personne aime ce trajet} other{{count} personnes aiment ce trajet}}'**
+  String tripLikeCountSemantics(int count);
+
+  /// Feuille compte requis : un visiteur sans compte touche le cœur d'une carte trajet (sous-titre de la feuille).
+  ///
+  /// In fr, this message translates to:
+  /// **'Connectez-vous pour aimer ce trajet.'**
+  String get tripLikeLoginInviteTitle;
+
+  /// Feuille compte requis, j'aime d'un trajet : texte sous « Actions protégées ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Un j\'aime est lié à votre compte : il montre au voyageur que son trajet intéresse.'**
+  String get tripLikeLoginInviteBody;
+
+  /// Feuille compte requis : un visiteur sans compte touche l'icône de partage d'une carte trajet (sous-titre de la feuille, trip_card_actions.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Connectez-vous pour partager ce trajet.'**
+  String get tripShareLoginInviteTitle;
+
+  /// Feuille compte requis, partage d'un trajet : texte sous « Actions protégées ». L'affiche propose l'image, le lien et la légende.
+  ///
+  /// In fr, this message translates to:
+  /// **'Avec un compte Yadony, partagez l\'affiche du trajet : image, lien et légende prêts à envoyer.'**
+  String get tripShareLoginInviteBody;
 }
 
 class _AppLocalizationsDelegate

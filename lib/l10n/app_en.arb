@@ -4363,6 +4363,7 @@
   "tripOwnerDraftBannerTitle": "This trip is a draft",
   "tripAudienceViewers": "{count, plural, =0{No one has seen your trip yet} =1{{count} person has seen your trip} other{{count} people have seen your trip}}",
   "tripAudiencePosterViews": "{count, plural, =1{{count} view of your shared poster} other{{count} views of your shared poster}}",
+  "tripAudienceLikes": "{count, plural, =1{{count} like} other{{count} likes}}",
   "tripOwnerDraftBannerMessage": "It's invisible to senders until it's published.",
   "tripOwnerMarkArrivedButton": "Arrived at destination",
   "tripOwnerDeleteBlockedTitle": "Deletion not possible",
@@ -11963,5 +11964,21 @@
   "inquirySendLimitError": "Message limit reached. Book to continue.",
   "@inquirySendLimitError": {
       "description": "Error shown when sending a question message is refused because of the quota."
+  },
+  "tripLikeTooltip": "Like",
+  "tripUnlikeTooltip": "Unlike",
+  "tripLikeCountSemantics": "{count, plural, =1{{count} person likes this trip} other{{count} people like this trip}}",
+  "@tripLikeCountSemantics": {
+      "placeholders": {"count": {"type": "int"}}
+  },
+  "tripLikeLoginInviteTitle": "Sign in to like this trip.",
+  "tripLikeLoginInviteBody": "A like is tied to your account: it shows the traveler their trip is getting attention.",
+  "tripShareLoginInviteTitle": "Sign in to share this trip.",
+  "@tripShareLoginInviteTitle": {
+      "description": "Sign-in required sheet: a guest taps the share icon of a trip card (sheet subtitle, trip_card_actions.dart)."
+  },
+  "tripShareLoginInviteBody": "With a Yadony account, share the trip poster: image, link and caption ready to send.",
+  "@tripShareLoginInviteBody": {
+      "description": "Sign-in required sheet, trip share: text under \"Protected actions\". The poster offers the image, the link and the caption."
   }
 }

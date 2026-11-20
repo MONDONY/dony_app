@@ -121,6 +121,8 @@ class TravelerProfile {
   }
 }
 
+int _likeCountFromJson(Object? v) => (v as num?)?.toInt() ?? 0;
+
 @JsonSerializable()
 class AnnouncementModel {
   final String id;
@@ -233,6 +235,14 @@ class AnnouncementModel {
   /// Fourni par le backend sur les endpoints de feed ; `false` par défaut.
   @JsonKey(defaultValue: false)
   final bool isFavorite;
+
+  /// Nombre de « j'aime » publics du trajet. Absent d'un ancien back : 0.
+  @JsonKey(fromJson: _likeCountFromJson)
+  final int likeCount;
+
+  /// L'utilisateur courant a aimé ce trajet. Absent d'un ancien back : false.
+  @JsonKey(defaultValue: false)
+  final bool likedByMe;
 
   /// Urgence calculée côté backend (`dony.urgency.threshold-days`). Source de
   /// vérité quand présente ; `null` pour les anciens payloads (repli local
@@ -359,6 +369,8 @@ class AnnouncementModel {
     this.surplusPublished = false,
     this.handoverDeadline,
     this.isFavorite = false,
+    this.likeCount = 0,
+    this.likedByMe = false,
     this.urgent,
     this.currency = 'EUR',
     this.negotiable = false,

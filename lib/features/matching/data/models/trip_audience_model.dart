@@ -5,12 +5,14 @@ class TripAudienceModel extends Equatable {
   const TripAudienceModel({
     required this.uniqueViewerCount,
     required this.shareViewCount,
+    this.likeCount = 0,
   });
 
   factory TripAudienceModel.fromJson(Map<String, dynamic> json) =>
       TripAudienceModel(
         uniqueViewerCount: (json['uniqueViewerCount'] as num?)?.toInt() ?? 0,
         shareViewCount: (json['shareViewCount'] as num?)?.toInt() ?? 0,
+        likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
       );
 
   /// Personnes connectées, autres que le voyageur, qui ont ouvert le trajet
@@ -20,8 +22,11 @@ class TripAudienceModel extends Equatable {
   /// Consultations de la page web publique de l'affiche partagée.
   final int shareViewCount;
 
+  /// « J'aime » reçus par le trajet. N'entre pas dans [isEmpty].
+  final int likeCount;
+
   bool get isEmpty => uniqueViewerCount == 0 && shareViewCount == 0;
 
   @override
-  List<Object?> get props => [uniqueViewerCount, shareViewCount];
+  List<Object?> get props => [uniqueViewerCount, shareViewCount, likeCount];
 }

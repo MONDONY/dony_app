@@ -1,11 +1,11 @@
-import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Bouton favori (signet) — pur visuel, stateless.
 ///
-/// Signet rempli [DonyColors.primary] quand [isFavorite] est vrai, contour
+/// Signet rempli au primaire du thème (`colorScheme.primary`, qui suit le
+/// mode sombre et le contraste élevé) quand [isFavorite] est vrai, contour
 /// [cs.onSurfaceVariant] sinon. Le nom historique du widget est conservé pour
 /// ne pas casser ses appelants ; c'est bien un signet qui est rendu.
 ///
@@ -19,11 +19,17 @@ class FavoriteHeartButton extends StatefulWidget {
     required this.onToggle,
     this.size = 26,
     this.onDark = false,
+    this.alignment = Alignment.center,
   });
 
   final bool isFavorite;
   final VoidCallback onToggle;
   final double size;
+
+  /// Place du signet dans sa zone de toucher de 44 px. En bout de la ligne
+  /// d'actions d'une carte trajet, `AlignmentDirectional.centerEnd` l'aligne
+  /// sur le bord du texte sans réduire la cible.
+  final AlignmentGeometry alignment;
 
   /// Posé sur un fond sombre (carte héro bleu nuit de la feuille « Détail du
   /// trajet ») : signet blanc sur une pastille translucide. Les couleurs par
@@ -90,6 +96,7 @@ class _FavoriteHeartButtonState extends State<FavoriteHeartButton>
         // malgré les contraintes ci-dessous.
         visualDensity: VisualDensity.standard,
         padding: EdgeInsets.zero,
+        alignment: widget.alignment,
         // L'icône reste à sa taille, seule la zone tappable est portée au
         // minimum confortable : à 26 px d'icône la cible ne faisait que 40 px.
         constraints: const BoxConstraints(
@@ -108,7 +115,7 @@ class _FavoriteHeartButtonState extends State<FavoriteHeartButton>
           widget.isFavorite ? Icons.bookmark : Icons.bookmark_border,
           color: widget.onDark
               ? Colors.white
-              : (widget.isFavorite ? DonyColors.primary : cs.onSurfaceVariant),
+              : (widget.isFavorite ? cs.primary : cs.onSurfaceVariant),
           size: widget.size,
         ),
         onPressed: _handleToggle,

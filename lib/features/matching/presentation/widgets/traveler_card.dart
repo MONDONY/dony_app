@@ -11,6 +11,7 @@ import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/features/matching/presentation/utils/trip_capacity.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_card_actions.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -28,6 +29,7 @@ class TravelerCard extends StatelessWidget {
     this.existingBidStatus,
     this.unmetReasons = const [],
     this.compact = false,
+    this.showActions = false,
   });
 
   final AnnouncementModel announcement;
@@ -54,6 +56,13 @@ class TravelerCard extends StatelessWidget {
   /// carrousel « Près de moi », les feuilles et les alternatives gardent la
   /// carte d'origine.
   final bool compact;
+
+  /// Ligne d'icônes en pied de carte ([TripCardActions]) : ♡ et compteur,
+  /// partage, signet des favoris. Cartes de la recherche (liste et carte de
+  /// l'accueil) ; les feuilles, alternatives et profils gardent la carte
+  /// d'origine. Sur son propre trajet ([isOwnAnnouncement]) : compteur en
+  /// lecture seule et partage, sans ♡ actif ni signet.
+  final bool showActions;
 
   /// Nombre de catégories affichées avant la pastille « +N ».
   ///
@@ -214,7 +223,14 @@ class TravelerCard extends StatelessWidget {
               ),
             ],
           ),
-          padding: EdgeInsets.all(compact ? DonySpacing.md : DonySpacing.base),
+          padding: EdgeInsets.fromLTRB(
+            compact ? DonySpacing.md : DonySpacing.base,
+            compact ? DonySpacing.md : DonySpacing.base,
+            compact ? DonySpacing.md : DonySpacing.base,
+            showActions
+                ? TripCardActions.cardBottomPadding
+                : (compact ? DonySpacing.md : DonySpacing.base),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -538,6 +554,13 @@ class TravelerCard extends StatelessWidget {
                   ),
                 ],
               ],
+              if (showActions)
+                TripCardActions(
+                  announcement: announcement,
+                  isOwn: isOwnAnnouncement,
+                  gap: compact ? DonySpacing.sm : DonySpacing.md,
+                  cardPadding: compact ? DonySpacing.md : DonySpacing.base,
+                ),
             ],
           ),
         ),

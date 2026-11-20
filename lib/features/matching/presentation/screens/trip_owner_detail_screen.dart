@@ -289,7 +289,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                     ? IconButton(
                         key: const Key('trip-owner-share-button'),
                         tooltip: context.l10n.tripPosterShareButton,
-                        icon: const DonyIcon('share-2', size: 22),
+                        icon: const DonyIcon('share-curved', size: 22),
                         onPressed: () => openTripPoster(context, live.trip),
                       )
                     : const SizedBox.shrink(),

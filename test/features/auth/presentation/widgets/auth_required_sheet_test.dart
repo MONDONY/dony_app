@@ -95,5 +95,48 @@ void main() {
       expect(find.text('Sign in'), findsOneWidget);
       expect(find.text('Keep exploring'), findsOneWidget);
     });
+
+    testWidgets('adapte le texte au motif « j\'aime »', (tester) async {
+      await _open(tester, reason: AuthRequiredReason.like);
+
+      expect(find.text('Connectez-vous pour aimer ce trajet.'), findsOneWidget);
+      expect(
+        find.text(
+          "Un j'aime est lié à votre compte : il montre au voyageur que son "
+          'trajet intéresse.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('adapte le texte au motif « partage »', (tester) async {
+      await _open(tester, reason: AuthRequiredReason.share);
+
+      expect(
+        find.text('Connectez-vous pour partager ce trajet.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          "Avec un compte Yadony, partagez l'affiche du trajet : image, "
+          'lien et légende prêts à envoyer.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('motif « j\'aime » en anglais', (tester) async {
+      useEnglish();
+      await _open(tester, reason: AuthRequiredReason.like);
+
+      expect(find.text('Sign in to like this trip.'), findsOneWidget);
+      expect(
+        find.text(
+          'A like is tied to your account: it shows the traveler their '
+          'trip is getting attention.',
+        ),
+        findsOneWidget,
+      );
+    });
   });
 }

@@ -12,7 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// l'app, et combien de fois son affiche partagée a été consultée.
 ///
 /// Elle n'a plus de place dans le corps de l'écran : « N personnes ont vu
-/// votre trajet » est le sous-titre de la tuile « Affiche »
+/// votre trajet · N j'aime » est le sous-titre de la tuile « Affiche »
 /// ([tileSubtitle]) et la ligne complète s'affiche dans son sheet
 /// ([TripAudienceLine]). Le chargement reste fait par l'écran, pour le seul
 /// propriétaire confirmé ([TripAudienceLoader]) : un visiteur n'appelle
@@ -26,28 +26,39 @@ abstract final class TripAudience {
   static bool shownFor(String status) => status == 'ACTIVE';
 
   /// Morceaux de la ligne d'audience, dans l'ordre : personnes qui ont vu le
-  /// trajet dans l'app, puis vues de l'affiche partagée.
+  /// trajet dans l'app, puis vues de l'affiche partagée, puis j'aime (en
+  /// dernier, seulement s'il y en a). « Personne n'a encore vu votre trajet »
+  /// n'apparaît que sans vue ni j'aime : des j'aime seuls donnent « 2 j'aime »
+  /// (on peut aimer depuis la carte sans ouvrir le trajet).
   ///
   /// À 0 dans l'app, le nombre de personnes ne s'affiche que si l'affiche
   /// n'a pas été vue non plus (« Personne n'a encore vu votre trajet ») :
   /// « personne » contredirait les vues de l'affiche juste à côté.
   static List<String> parts(AppLocalizations l, TripAudienceModel audience) => [
-    if (audience.uniqueViewerCount > 0 || audience.isEmpty)
+    if (audience.uniqueViewerCount > 0 ||
+        (audience.isEmpty && audience.likeCount == 0))
       l.tripAudienceViewers(audience.uniqueViewerCount),
     if (audience.shareViewCount > 0)
       l.tripAudiencePosterViews(audience.shareViewCount),
+    if (audience.likeCount > 0) l.tripAudienceLikes(audience.likeCount),
   ];
 
   /// Sous-titre de la tuile « Affiche » d'après l'audience chargée : son
-  /// premier morceau (« 12 personnes ont vu votre trajet », sinon les vues de
-  /// l'affiche). `null` tant que rien n'est sûr (chargement, échec, ancien
-  /// back, cubit absent) : la tuile garde alors son texte habituel.
+  /// premier morceau (« 128 personnes ont vu votre trajet », sinon les vues
+  /// de l'affiche), suivi des j'aime s'il y en a (« · 24 j'aime ») ; des
+  /// j'aime seuls donnent « 2 j'aime ». Les vues de l'affiche à côté des
+  /// personnes restent dans le sheet. `null` tant que rien n'est sûr
+  /// (chargement, échec, ancien back, cubit absent) : la tuile garde alors
+  /// son texte habituel.
   static String? tileSubtitle(AppLocalizations l, TripAudienceState? state) {
     final audience = state?.audience;
     if (state?.status != TripAudienceStatus.loaded || audience == null) {
       return null;
     }
-    return parts(l, audience).first;
+    final all = parts(l, audience);
+    if (audience.likeCount == 0 || all.length == 1) return all.first;
+    // Les j'aime sont toujours le dernier morceau.
+    return '${all.first} · ${all.last}';
   }
 }
 

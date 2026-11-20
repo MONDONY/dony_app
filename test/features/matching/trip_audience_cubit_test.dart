@@ -20,10 +20,14 @@ void main() {
     backend = MockAnalyticsBackend();
   });
 
-  const audience = TripAudienceModel(uniqueViewerCount: 12, shareViewCount: 7);
+  const audience = TripAudienceModel(
+    uniqueViewerCount: 12,
+    shareViewCount: 7,
+    likeCount: 4,
+  );
 
   blocTest<TripAudienceCubit, TripAudienceState>(
-    'load → loading puis loaded, event avec les deux compteurs',
+    'load → loading puis loaded, event avec les trois compteurs',
     build: () {
       when(
         () => repository.getTripAudience('ann-1'),
@@ -41,6 +45,29 @@ void main() {
         () => backend.capture(AnalyticsEvents.tripAudienceLoaded, {
           'unique_viewers': 12,
           'share_views': 7,
+          'likes': 4,
+        }),
+      ).called(1);
+    },
+  );
+
+  blocTest<TripAudienceCubit, TripAudienceState>(
+    'load sans j\'aime : l\'event porte likes: 0',
+    build: () {
+      when(() => repository.getTripAudience('ann-1')).thenAnswer(
+        (_) async =>
+            const TripAudienceModel(uniqueViewerCount: 1, shareViewCount: 0),
+      );
+      final analytics = makeEnabledAnalytics(backend)..onConfigured();
+      return TripAudienceCubit(repository, analytics);
+    },
+    act: (c) => c.load('ann-1'),
+    verify: (_) {
+      verify(
+        () => backend.capture(AnalyticsEvents.tripAudienceLoaded, {
+          'unique_viewers': 1,
+          'share_views': 0,
+          'likes': 0,
         }),
       ).called(1);
     },

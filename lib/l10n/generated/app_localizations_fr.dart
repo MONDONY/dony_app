@@ -8739,6 +8739,17 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String tripAudienceLikes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count j\'aime',
+      one: '$count j\'aime',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get tripOwnerDraftBannerMessage =>
       'Il est invisible pour les expéditeurs tant qu\'il n\'est pas publié.';
 
@@ -24298,4 +24309,36 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get inquirySendLimitError =>
       'Limite de messages atteinte. Réservez pour continuer.';
+
+  @override
+  String get tripLikeTooltip => 'J\'aime';
+
+  @override
+  String get tripUnlikeTooltip => 'Je n\'aime plus';
+
+  @override
+  String tripLikeCountSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count personnes aiment ce trajet',
+      one: '$count personne aime ce trajet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripLikeLoginInviteTitle => 'Connectez-vous pour aimer ce trajet.';
+
+  @override
+  String get tripLikeLoginInviteBody =>
+      'Un j\'aime est lié à votre compte : il montre au voyageur que son trajet intéresse.';
+
+  @override
+  String get tripShareLoginInviteTitle =>
+      'Connectez-vous pour partager ce trajet.';
+
+  @override
+  String get tripShareLoginInviteBody =>
+      'Avec un compte Yadony, partagez l\'affiche du trajet : image, lien et légende prêts à envoyer.';
 }

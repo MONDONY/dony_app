@@ -13,6 +13,7 @@ import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/trip_bids_events_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -1294,6 +1295,15 @@ void main() {
 
       expect(
         find.descendant(of: find.byType(AppBar), matching: shareButton),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: shareButton,
+          matching: find.byWidgetPredicate(
+            (w) => w is DonyIcon && w.name == 'share-curved',
+          ),
+        ),
         findsOneWidget,
       );
       // Le bouton du bas reste en place.

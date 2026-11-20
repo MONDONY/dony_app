@@ -10,6 +10,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/presentation/widgets/first_action_card.dart';
@@ -30,6 +31,7 @@ import 'package:dony/features/home/presentation/widgets/home_publish_button.dart
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
 import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
 import 'package:dony/features/home/presentation/widgets/search_period.dart';
+import 'package:dony/features/likes/bloc/trip_likes_cubit.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -1516,7 +1518,18 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final activation = _activationCubit;
     final scaffold = Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
+      body: BlocConsumer<AnnouncementBloc, AnnouncementState>(
+        // J'aime des cartes : chaque liste reçue (pages suivantes et bloc
+        // « Autres annonces » compris) rafraîchit les trajets jamais
+        // basculés ici (`TripLikesCubit.seed`).
+        listenWhen: (_, curr) => curr is AnnouncementSearchLoaded,
+        listener: (context, state) {
+          if (state is! AnnouncementSearchLoaded) return;
+          maybeRead<TripLikesCubit>(context)?.seed([
+            ...state.results,
+            for (final s in state.similar) s.announcement,
+          ]);
+        },
         builder: (context, state) {
           final raw = state is AnnouncementSearchLoaded
               ? state.results
@@ -2778,6 +2791,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
       distanceBadge: badge,
       existingBidStatus: existingBid?.status,
       unmetReasons: unmetReasons,
+      // ♡ + compteur, partage et signet en pied de carte, liste comme carte.
+      showActions: true,
       onTap: () {
         _trackCardOpened(source, 'trip');
         if (isOwn) {

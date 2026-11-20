@@ -1502,4 +1502,22 @@ abstract final class AnalyticsEvents {
   /// Bannière ou ligne « Informations fiscales » du Profil touchée (propriété
   /// `variant` : `banner` / `row`).
   static const profileTaxInfoTapped = 'profile_tax_info_tapped';
+
+  /// « J'aime » posé sur une carte de trajet, confirmé par le serveur.
+  static const tripLiked = 'trip_liked';
+
+  /// « J'aime » retiré, confirmé par le serveur.
+  static const tripUnliked = 'trip_unliked';
+
+  /// « J'aime » refusé ou impossible. Propriété `error_code` seule
+  /// (`trip-like-own-trip`, `network`, `unknown`…).
+  static const tripLikeFailed = 'trip_like_failed';
+
+  /// Visiteur sans compte qui touche le cœur ou l'icône de partage d'une
+  /// carte de trajet : feuille de connexion ouverte. Le motif (j'aime ou
+  /// partage) n'est pas mesuré.
+  static const tripLikeLoginPrompted = 'trip_like_login_prompted';
+
+  /// Bouton de partage d'une carte de trajet touché.
+  static const tripCardShareTapped = 'trip_card_share_tapped';
 }

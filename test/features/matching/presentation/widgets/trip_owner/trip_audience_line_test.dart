@@ -45,9 +45,14 @@ void main() {
     );
   }
 
-  TripAudienceState loaded(int viewers, int shares) => TripAudienceState.loaded(
-    TripAudienceModel(uniqueViewerCount: viewers, shareViewCount: shares),
-  );
+  TripAudienceState loaded(int viewers, int shares, {int likes = 0}) =>
+      TripAudienceState.loaded(
+        TripAudienceModel(
+          uniqueViewerCount: viewers,
+          shareViewCount: shares,
+          likeCount: likes,
+        ),
+      );
 
   group('statuts : chargée seulement quand la tuile « Affiche » existe', () {
     const expected = {
@@ -204,6 +209,113 @@ void main() {
       );
       expect(TripAudience.tileSubtitle(fr, null), isNull);
     });
+  });
+
+  group('TripAudience.parts : j\'aime en dernier', () {
+    final fr = lookupAppLocalizations(const Locale('fr'));
+    final en = lookupAppLocalizations(const Locale('en'));
+    TripAudienceModel m(int v, int s, int l) => TripAudienceModel(
+      uniqueViewerCount: v,
+      shareViewCount: s,
+      likeCount: l,
+    );
+
+    test('vues et j\'aime (FR / EN)', () {
+      expect(
+        TripAudience.parts(fr, m(128, 0, 24)).join(' · '),
+        '128 personnes ont vu votre trajet · 24 j\'aime',
+      );
+      expect(
+        TripAudience.parts(en, m(128, 0, 24)).join(' · '),
+        '128 people have seen your trip · 24 likes',
+      );
+      expect(TripAudience.parts(en, m(2, 0, 1)).last, '1 like');
+    });
+
+    test('vues, affiche et j\'aime : les j\'aime sont derniers', () {
+      expect(TripAudience.parts(fr, m(12, 7, 3)), [
+        '12 personnes ont vu votre trajet',
+        '7 vues de votre affiche partagée',
+        '3 j\'aime',
+      ]);
+    });
+
+    test('zéro j\'aime : la ligne d\'avant', () {
+      expect(TripAudience.parts(fr, m(12, 7, 0)), [
+        '12 personnes ont vu votre trajet',
+        '7 vues de votre affiche partagée',
+      ]);
+    });
+
+    test('que des j\'aime : seulement les j\'aime, jamais « Personne »', () {
+      expect(TripAudience.parts(fr, m(0, 0, 2)), ['2 j\'aime']);
+      expect(TripAudience.parts(en, m(0, 0, 2)), ['2 likes']);
+    });
+
+    test('rien du tout : « Personne n\'a encore vu votre trajet »', () {
+      expect(TripAudience.parts(fr, m(0, 0, 0)), [
+        'Personne n\'a encore vu votre trajet',
+      ]);
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(0, 0)),
+        'Personne n\'a encore vu votre trajet',
+      );
+    });
+
+    // Maquette écran 4 : « 128 personnes ont vu votre trajet · 24 j'aime ».
+    test('tileSubtitle : premier morceau suivi des j\'aime (FR / EN)', () {
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(128, 0, likes: 24)),
+        '128 personnes ont vu votre trajet · 24 j\'aime',
+      );
+      expect(
+        TripAudience.tileSubtitle(en, loaded(128, 0, likes: 24)),
+        '128 people have seen your trip · 24 likes',
+      );
+      // Les vues de l'affiche restent dans le sheet : la tuile ne garde que
+      // le premier morceau, puis les j'aime.
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(12, 7, likes: 1)),
+        '12 personnes ont vu votre trajet · 1 j\'aime',
+      );
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(0, 3, likes: 2)),
+        '3 vues de votre affiche partagée · 2 j\'aime',
+      );
+    });
+
+    test('tileSubtitle : que des j\'aime, jamais « Personne »', () {
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(0, 0, likes: 2)),
+        '2 j\'aime',
+      );
+      expect(TripAudience.tileSubtitle(en, loaded(0, 0, likes: 1)), '1 like');
+    });
+
+    test('tileSubtitle : sans j\'aime, inchangé', () {
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(128, 7)),
+        '128 personnes ont vu votre trajet',
+      );
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(0, 3)),
+        '3 vues de votre affiche partagée',
+      );
+    });
+  });
+
+  testWidgets('que des j\'aime : la ligne dit « 2 j\'aime »', (tester) async {
+    await pumpTripCard(tester, line(loaded(0, 0, likes: 2)));
+    expect(find.text('2 j\'aime'), findsOneWidget);
+    expect(find.textContaining('Personne'), findsNothing);
+  });
+
+  testWidgets('la ligne affiche les j\'aime', (tester) async {
+    await pumpTripCard(tester, line(loaded(128, 0, likes: 24)));
+    expect(
+      find.text('128 personnes ont vu votre trajet · 24 j\'aime'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('la ligne ne charge rien elle-même', (tester) async {
