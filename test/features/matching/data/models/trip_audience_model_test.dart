@@ -22,10 +22,7 @@ void main() {
   });
 
   test('TripAudienceModel_lit_likeCount_et_0_si_absent', () {
-    expect(
-      TripAudienceModel.fromJson(const {'likeCount': 5}).likeCount,
-      5,
-    );
+    expect(TripAudienceModel.fromJson(const {'likeCount': 5}).likeCount, 5);
     expect(TripAudienceModel.fromJson(const {}).likeCount, 0);
   });
 
