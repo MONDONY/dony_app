@@ -23610,5 +23610,13 @@
   "tripLikeLoginInviteBody": "Un j'aime est lié à votre compte : il montre au voyageur que son trajet intéresse.",
   "@tripLikeLoginInviteBody": {
       "description": "Feuille compte requis, j'aime d'un trajet : texte sous « Actions protégées »."
+  },
+  "tripShareLoginInviteTitle": "Connectez-vous pour partager ce trajet.",
+  "@tripShareLoginInviteTitle": {
+      "description": "Feuille compte requis : un visiteur sans compte touche l'icône de partage d'une carte trajet (sous-titre de la feuille, trip_card_actions.dart)."
+  },
+  "tripShareLoginInviteBody": "Avec un compte Yadony, partagez l'affiche du trajet : image, lien et légende prêts à envoyer.",
+  "@tripShareLoginInviteBody": {
+      "description": "Feuille compte requis, partage d'un trajet : texte sous « Actions protégées ». L'affiche propose l'image, le lien et la légende."
   }
 }

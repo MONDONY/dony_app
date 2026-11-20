@@ -16,6 +16,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card_actions.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -237,10 +238,65 @@ void main() {
         TripCardActions(announcement: _trip(likeCount: 1), isOwn: false),
       );
       expect(tester.widget<Text>(find.byKey(_likeCount)).data, '1');
+      // Le ♡ est un bouton à bascule actionnable au lecteur d'écran
+      // (TalkBack ACTION_CLICK, Switch Access, Voice Access).
       expect(
-        tester.getSemantics(find.byKey(_likeButton)).value,
-        '1 personne aime ce trajet',
+        tester.getSemantics(find.byKey(_likeButton)),
+        matchesSemantics(
+          isButton: true,
+          hasTapAction: true,
+          hasToggledState: true,
+          label: "J'aime",
+          value: '1 personne aime ce trajet',
+        ),
       );
+      semantics.dispose();
+    });
+
+    testWidgets('lecteur d\'écran : l\'action du ♡ aime le trajet', (
+      tester,
+    ) async {
+      useSession(real: true);
+      final semantics = tester.ensureSemantics();
+      when(() => likeRepo.like('trip-1')).thenAnswer(
+        (_) async => const TripLikeStatus(likeCount: 3, likedByMe: true),
+      );
+      await pump(
+        tester,
+        TripCardActions(announcement: _trip(likeCount: 2), isOwn: false),
+      );
+
+      // Action « toucher » du lecteur d'écran, pas un toucher à l'écran.
+      tester.semantics.tap(find.semantics.byLabel("J'aime"));
+      await tester.pumpAndSettle();
+
+      verify(() => likeRepo.like('trip-1')).called(1);
+      expect(
+        tester.getSemantics(find.byKey(_likeButton)),
+        matchesSemantics(
+          isButton: true,
+          hasTapAction: true,
+          hasToggledState: true,
+          isToggled: true,
+          label: "Je n'aime plus",
+          value: '3 personnes aiment ce trajet',
+        ),
+      );
+      semantics.dispose();
+    });
+
+    testWidgets('lecteur d\'écran : le compteur de son trajet n\'a pas '
+        'd\'action', (tester) async {
+      useSession(real: true);
+      final semantics = tester.ensureSemantics();
+      await pump(
+        tester,
+        TripCardActions(announcement: _trip(likeCount: 4), isOwn: true),
+      );
+
+      final node = tester.getSemantics(find.byKey(_readOnlyLikes));
+      expect(node, matchesSemantics(label: '4 personnes aiment ce trajet'));
+      expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isFalse);
       semantics.dispose();
     });
 
@@ -517,6 +573,66 @@ void main() {
       verify(
         () => analytics.logEvent(AnalyticsEvents.tripCardShareTapped),
       ).called(1);
+      verifyNever(
+        () => analytics.logEvent(AnalyticsEvents.tripLikeLoginPrompted),
+      );
+    });
+
+    testWidgets('visiteur : le partage ouvre l\'invitation, pas l\'affiche', (
+      tester,
+    ) async {
+      useSession(real: false);
+      await pump(tester, TripCardActions(announcement: _trip(), isOwn: false));
+
+      await tester.tap(find.byKey(_shareButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Connexion requise'), findsOneWidget);
+      expect(
+        find.text('Connectez-vous pour partager ce trajet.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          "Avec un compte Yadony, partagez l'affiche du trajet : image, "
+          'lien et légende prêts à envoyer.',
+        ),
+        findsOneWidget,
+      );
+      // Le partage n'a pas eu lieu : invitation mesurée, pas de partage.
+      verify(
+        () => analytics.logEvent(AnalyticsEvents.tripLikeLoginPrompted),
+      ).called(1);
+      verifyNever(
+        () => analytics.logEvent(AnalyticsEvents.tripCardShareTapped),
+      );
+
+      // « Continuer à explorer » : toujours sur la carte, jamais l'affiche.
+      await tester.tap(find.text('Continuer à explorer'));
+      await tester.pumpAndSettle();
+      expect(find.text('poster trip-1'), findsNothing);
+      expect(find.byKey(_shareButton), findsOneWidget);
+    });
+
+    testWidgets('visiteur : invitation au partage en anglais', (tester) async {
+      useSession(real: false);
+      await pump(
+        tester,
+        TripCardActions(announcement: _trip(), isOwn: false),
+        locale: AppL10n.en,
+      );
+
+      await tester.tap(find.byKey(_shareButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sign in to share this trip.'), findsOneWidget);
+      expect(
+        find.text(
+          'With a Yadony account, share the trip poster: image, link and '
+          'caption ready to send.',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('partage : primaire seulement pendant l\'appui', (

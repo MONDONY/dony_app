@@ -112,6 +112,10 @@ class _LikeToggle extends StatelessWidget {
       toggled: liked,
       label: tooltip,
       value: count > 0 ? l.tripLikeCountSemantics(count) : null,
+      // `excludeSemantics` retire l'action de l'InkWell : sans ce rappel, le
+      // ♡ restait inactivable au lecteur d'écran (TalkBack, Switch Access,
+      // Voice Access).
+      onTap: onTap,
       excludeSemantics: true,
       child: Tooltip(
         message: tooltip,

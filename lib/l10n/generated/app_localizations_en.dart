@@ -24148,4 +24148,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tripLikeLoginInviteBody =>
       'A like is tied to your account: it shows the traveler their trip is getting attention.';
+
+  @override
+  String get tripShareLoginInviteTitle => 'Sign in to share this trip.';
+
+  @override
+  String get tripShareLoginInviteBody =>
+      'With a Yadony account, share the trip poster: image, link and caption ready to send.';
 }

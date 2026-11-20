@@ -4,7 +4,7 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-enum AuthRequiredReason { explore, offer, report, flightAlert, like }
+enum AuthRequiredReason { explore, offer, report, flightAlert, like, share }
 
 abstract final class AuthRequiredSheet {
   static Future<void> show(
@@ -76,6 +76,12 @@ abstract final class AuthRequiredSheet {
       AuthRequiredReason.like => _AuthRequiredCopy(
         subtitle: l10n.tripLikeLoginInviteTitle,
         body: l10n.tripLikeLoginInviteBody,
+      ),
+      // Partage d'une carte trajet par un visiteur : l'affiche
+      // (`/announcements/:id/affiche`) demande un compte.
+      AuthRequiredReason.share => _AuthRequiredCopy(
+        subtitle: l10n.tripShareLoginInviteTitle,
+        body: l10n.tripShareLoginInviteBody,
       ),
       AuthRequiredReason.explore => _AuthRequiredCopy(
         subtitle: l10n.authRequiredExploreSubtitle,

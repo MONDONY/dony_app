@@ -109,6 +109,22 @@ void main() {
       );
     });
 
+    testWidgets('adapte le texte au motif « partage »', (tester) async {
+      await _open(tester, reason: AuthRequiredReason.share);
+
+      expect(
+        find.text('Connectez-vous pour partager ce trajet.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          "Avec un compte Yadony, partagez l'affiche du trajet : image, "
+          'lien et légende prêts à envoyer.',
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('motif « j\'aime » en anglais', (tester) async {
       useEnglish();
       await _open(tester, reason: AuthRequiredReason.like);

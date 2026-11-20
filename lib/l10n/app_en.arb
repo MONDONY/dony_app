@@ -11971,5 +11971,13 @@
       "placeholders": {"count": {"type": "int"}}
   },
   "tripLikeLoginInviteTitle": "Sign in to like this trip.",
-  "tripLikeLoginInviteBody": "A like is tied to your account: it shows the traveler their trip is getting attention."
+  "tripLikeLoginInviteBody": "A like is tied to your account: it shows the traveler their trip is getting attention.",
+  "tripShareLoginInviteTitle": "Sign in to share this trip.",
+  "@tripShareLoginInviteTitle": {
+      "description": "Sign-in required sheet: a guest taps the share icon of a trip card (sheet subtitle, trip_card_actions.dart)."
+  },
+  "tripShareLoginInviteBody": "With a Yadony account, share the trip poster: image, link and caption ready to send.",
+  "@tripShareLoginInviteBody": {
+      "description": "Sign-in required sheet, trip share: text under \"Protected actions\". The poster offers the image, the link and the caption."
+  }
 }

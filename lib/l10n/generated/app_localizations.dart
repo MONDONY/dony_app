@@ -38939,6 +38939,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Un j\'aime est lié à votre compte : il montre au voyageur que son trajet intéresse.'**
   String get tripLikeLoginInviteBody;
+
+  /// Feuille compte requis : un visiteur sans compte touche l'icône de partage d'une carte trajet (sous-titre de la feuille, trip_card_actions.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Connectez-vous pour partager ce trajet.'**
+  String get tripShareLoginInviteTitle;
+
+  /// Feuille compte requis, partage d'un trajet : texte sous « Actions protégées ». L'affiche propose l'image, le lien et la légende.
+  ///
+  /// In fr, this message translates to:
+  /// **'Avec un compte Yadony, partagez l\'affiche du trajet : image, lien et légende prêts à envoyer.'**
+  String get tripShareLoginInviteBody;
 }
 
 class _AppLocalizationsDelegate

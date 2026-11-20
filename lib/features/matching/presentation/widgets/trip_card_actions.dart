@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/likes/bloc/trip_likes_cubit.dart';
@@ -119,7 +124,18 @@ class _ShareButton extends StatelessWidget {
         ),
       ),
       onPressed: () {
-        maybeRead<TripLikesCubit>(context)?.trackShareTapped();
+        final likes = maybeRead<TripLikesCubit>(context);
+        // L'affiche n'est pas ouverte aux visiteurs : le routeur les
+        // renverrait sans un mot vers la connexion. Même invitation que le ♡,
+        // et le partage, qui n'a pas eu lieu, n'est pas mesuré.
+        if (!(getItSafe<FirebaseSessionProbe>()?.hasRealSession ?? false)) {
+          likes?.trackLoginPrompted();
+          unawaited(
+            AuthRequiredSheet.show(context, reason: AuthRequiredReason.share),
+          );
+          return;
+        }
+        likes?.trackShareTapped();
         openTripPoster(context, announcement);
       },
       // DonyIcon ne lit pas IconTheme : la couleur résolue par le bouton

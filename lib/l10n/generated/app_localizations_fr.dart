@@ -24322,4 +24322,12 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tripLikeLoginInviteBody =>
       'Un j\'aime est lié à votre compte : il montre au voyageur que son trajet intéresse.';
+
+  @override
+  String get tripShareLoginInviteTitle =>
+      'Connectez-vous pour partager ce trajet.';
+
+  @override
+  String get tripShareLoginInviteBody =>
+      'Avec un compte Yadony, partagez l\'affiche du trajet : image, lien et légende prêts à envoyer.';
 }
