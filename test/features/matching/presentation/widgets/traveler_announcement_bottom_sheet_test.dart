@@ -5,6 +5,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -2444,6 +2445,15 @@ void main() {
 
       expect(find.byKey(const Key('trip-sheet-share-button')), findsOneWidget);
       expect(find.byType(FavoriteHeartButton), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('trip-sheet-share-button')),
+          matching: find.byWidgetPredicate(
+            (w) => w is DonyIcon && w.name == 'share-curved',
+          ),
+        ),
+        findsOneWidget,
+      );
 
       await tester.tap(find.byKey(const Key('trip-sheet-share-button')));
       await tester.pumpAndSettle();

@@ -1060,7 +1060,7 @@ class _SharePosterButton extends StatelessWidget {
       key: const Key('trip-sheet-share-button'),
       tooltip: context.l10n.tripPosterShareButton,
       onPressed: onPressed,
-      icon: DonyIcon('share-2', size: 22, color: cs.onPrimaryContainer),
+      icon: DonyIcon('share-curved', size: 22, color: cs.onPrimaryContainer),
     );
   }
 }
