@@ -247,11 +247,27 @@ void main() {
       ]);
     });
 
-    test('que des j\'aime : « Personne » puis les j\'aime', () {
-      expect(TripAudience.parts(fr, m(0, 0, 2)), [
+    test('que des j\'aime : seulement les j\'aime, jamais « Personne »', () {
+      expect(TripAudience.parts(fr, m(0, 0, 2)), ['2 j\'aime']);
+      expect(TripAudience.parts(en, m(0, 0, 2)), ['2 likes']);
+    });
+
+    test('rien du tout : « Personne n\'a encore vu votre trajet »', () {
+      expect(TripAudience.parts(fr, m(0, 0, 0)), [
         'Personne n\'a encore vu votre trajet',
-        '2 j\'aime',
       ]);
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(0, 0)),
+        'Personne n\'a encore vu votre trajet',
+      );
+    });
+
+    test('tileSubtitle : jamais le morceau des j\'aime', () {
+      expect(TripAudience.tileSubtitle(fr, loaded(0, 0, likes: 2)), isNull);
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(0, 3, likes: 2)),
+        '3 vues de votre affiche partagée',
+      );
     });
 
     test('le sous-titre de la tuile reste le morceau des vues', () {
@@ -260,6 +276,12 @@ void main() {
         '128 personnes ont vu votre trajet',
       );
     });
+  });
+
+  testWidgets('que des j\'aime : la ligne dit « 2 j\'aime »', (tester) async {
+    await pumpTripCard(tester, line(loaded(0, 0, likes: 2)));
+    expect(find.text('2 j\'aime'), findsOneWidget);
+    expect(find.textContaining('Personne'), findsNothing);
   });
 
   testWidgets('la ligne affiche les j\'aime', (tester) async {

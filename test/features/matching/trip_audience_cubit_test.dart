@@ -52,6 +52,28 @@ void main() {
   );
 
   blocTest<TripAudienceCubit, TripAudienceState>(
+    'load sans j\'aime : l\'event porte likes: 0',
+    build: () {
+      when(() => repository.getTripAudience('ann-1')).thenAnswer(
+        (_) async =>
+            const TripAudienceModel(uniqueViewerCount: 1, shareViewCount: 0),
+      );
+      final analytics = makeEnabledAnalytics(backend)..onConfigured();
+      return TripAudienceCubit(repository, analytics);
+    },
+    act: (c) => c.load('ann-1'),
+    verify: (_) {
+      verify(
+        () => backend.capture(AnalyticsEvents.tripAudienceLoaded, {
+          'unique_viewers': 1,
+          'share_views': 0,
+          'likes': 0,
+        }),
+      ).called(1);
+    },
+  );
+
+  blocTest<TripAudienceCubit, TripAudienceState>(
     'load → hidden sur erreur (ancien back sans la route, réseau), sans event',
     build: () {
       when(

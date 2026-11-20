@@ -27,14 +27,16 @@ abstract final class TripAudience {
 
   /// Morceaux de la ligne d'audience, dans l'ordre : personnes qui ont vu le
   /// trajet dans l'app, puis vues de l'affiche partagée, puis j'aime (en
-  /// dernier, seulement s'il y en a). Des j'aime seuls ne changent pas le
-  /// premier morceau : « Personne n'a encore vu votre trajet · 2 j'aime ».
+  /// dernier, seulement s'il y en a). « Personne n'a encore vu votre trajet »
+  /// n'apparaît que sans vue ni j'aime : des j'aime seuls donnent « 2 j'aime »
+  /// (on peut aimer depuis la carte sans ouvrir le trajet).
   ///
   /// À 0 dans l'app, le nombre de personnes ne s'affiche que si l'affiche
   /// n'a pas été vue non plus (« Personne n'a encore vu votre trajet ») :
   /// « personne » contredirait les vues de l'affiche juste à côté.
   static List<String> parts(AppLocalizations l, TripAudienceModel audience) => [
-    if (audience.uniqueViewerCount > 0 || audience.isEmpty)
+    if (audience.uniqueViewerCount > 0 ||
+        (audience.isEmpty && audience.likeCount == 0))
       l.tripAudienceViewers(audience.uniqueViewerCount),
     if (audience.shareViewCount > 0)
       l.tripAudiencePosterViews(audience.shareViewCount),
@@ -43,13 +45,15 @@ abstract final class TripAudience {
 
   /// Sous-titre de la tuile « Affiche » d'après l'audience chargée : son
   /// premier morceau (« 12 personnes ont vu votre trajet », sinon les vues de
-  /// l'affiche). `null` tant que rien n'est sûr (chargement, échec, ancien
+  /// l'affiche) ; `null` pour des j'aime seuls. `null` tant que rien n'est sûr (chargement, échec, ancien
   /// back, cubit absent) : la tuile garde alors son texte habituel.
   static String? tileSubtitle(AppLocalizations l, TripAudienceState? state) {
     final audience = state?.audience;
     if (state?.status != TripAudienceStatus.loaded || audience == null) {
       return null;
     }
+    // Jamais le morceau des j'aime : sans vue, la tuile garde son texte.
+    if (audience.isEmpty && audience.likeCount > 0) return null;
     return parts(l, audience).first;
   }
 }
