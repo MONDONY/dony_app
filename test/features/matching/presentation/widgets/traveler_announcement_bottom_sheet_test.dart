@@ -2155,7 +2155,12 @@ void main() {
           ),
         );
         expect(iconeActive.icon, Icons.bookmark);
-        expect(iconeActive.color, DonyColors.primary);
+        // Primaire du thème (le harnais n'en pose pas : celui de Flutter).
+        final cs = Theme.of(
+          tester.element(find.byType(FavoriteHeartButton)),
+        ).colorScheme;
+        expect(iconeActive.color, cs.primary);
+        expect(iconeActive.color, isNot(cs.onSurfaceVariant));
       },
     );
   });

@@ -1,4 +1,4 @@
-import 'package:dony/core/design/tokens/color_tokens.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
@@ -29,6 +29,11 @@ Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 Widget _wrapWithTheme(Widget child) => MaterialApp(
   theme: ThemeData.light(useMaterial3: true),
+  home: Scaffold(body: child),
+);
+
+Widget _wrapWithAppTheme(ThemeData theme, Widget child) => MaterialApp(
+  theme: theme,
   home: Scaffold(body: child),
 );
 
@@ -87,13 +92,42 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _wrap(FavoriteHeartButton(isFavorite: true, onToggle: () {})),
+        _wrapWithAppTheme(
+          AppTheme.light(),
+          FavoriteHeartButton(isFavorite: true, onToggle: () {}),
+        ),
       );
       await tester.pump();
 
       final icon = tester.widget<Icon>(find.byType(Icon));
       expect(icon.color, DonyColors.primary);
     });
+
+    // Le primaire suit le thème : #0B5FFF ne fait que 3,4:1 sur la surface
+    // sombre.
+    for (final (name, theme) in [
+      ('sombre', AppTheme.dark()),
+      (
+        'contraste élevé',
+        AppTheme.light(a11y: const A11yThemeOptions(highContrast: true)),
+      ),
+    ]) {
+      testWidgets('thème $name : couleur icône = primaire du thème', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _wrapWithAppTheme(
+            theme,
+            FavoriteHeartButton(isFavorite: true, onToggle: () {}),
+          ),
+        );
+        await tester.pump();
+
+        final icon = tester.widget<Icon>(find.byType(Icon));
+        expect(theme.colorScheme.primary, isNot(DonyColors.primary));
+        expect(icon.color, theme.colorScheme.primary);
+      });
+    }
   });
 
   group('FavoriteHeartButton — interaction', () {
@@ -327,7 +361,8 @@ void main() {
       await tester.pumpWidget(
         BlocProvider<FavoriteIdsCubit>.value(
           value: cubit,
-          child: _wrap(
+          child: _wrapWithAppTheme(
+            AppTheme.light(),
             TripCard(
               announcement: makeAnnouncement(),
               onTap: () {},

@@ -1,11 +1,11 @@
-import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Bouton favori (signet) — pur visuel, stateless.
 ///
-/// Signet rempli [DonyColors.primary] quand [isFavorite] est vrai, contour
+/// Signet rempli au primaire du thème (`colorScheme.primary`, qui suit le
+/// mode sombre et le contraste élevé) quand [isFavorite] est vrai, contour
 /// [cs.onSurfaceVariant] sinon. Le nom historique du widget est conservé pour
 /// ne pas casser ses appelants ; c'est bien un signet qui est rendu.
 ///
@@ -115,7 +115,7 @@ class _FavoriteHeartButtonState extends State<FavoriteHeartButton>
           widget.isFavorite ? Icons.bookmark : Icons.bookmark_border,
           color: widget.onDark
               ? Colors.white
-              : (widget.isFavorite ? DonyColors.primary : cs.onSurfaceVariant),
+              : (widget.isFavorite ? cs.primary : cs.onSurfaceVariant),
           size: widget.size,
         ),
         onPressed: _handleToggle,

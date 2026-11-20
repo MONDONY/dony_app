@@ -23,15 +23,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///
 /// - Partage : ouvre l'affiche du trajet ([openTripPoster], la même que la
 ///   feuille du trajet), masqué quand [canShareTripPoster] est faux. Action
-///   sans état : primaire seulement pendant l'appui.
+///   sans état : primaire du thème seulement pendant l'appui.
 /// - [isOwn] (le voyageur sur son propre trajet) : compteur en lecture seule
 ///   et partage, ni ♡ actif ni signet. Sans rien à montrer (trajet complet
 ///   sans j'aime), la ligne et son filet disparaissent.
+/// - Trajet que le back refuse d'aimer ([TripLikeButton.canLike] faux : en
+///   cours, brouillon, caché…) : compteur en lecture seule, comme sur son
+///   propre trajet.
 /// - [showBookmark] : signet affiché, par défaut sur le trajet d'un autre.
 ///   Les favoris le gardent sur son propre trajet, pour pouvoir le retirer.
 ///
-/// La carte qui la pose réduit sa marge du bas à [cardBottomPadding] : la
-/// zone de toucher de 44 px porte déjà son propre blanc.
+/// La carte qui la pose réduit sa marge du bas de [cardPadding] à
+/// [cardBottomPadding] : la zone de toucher de 44 px porte déjà son propre
+/// blanc. Quand la ligne disparaît, elle rend la différence, et la carte
+/// garde sa marge habituelle.
 class TripCardActions extends StatelessWidget {
   const TripCardActions({
     super.key,
@@ -39,7 +44,9 @@ class TripCardActions extends StatelessWidget {
     required this.isOwn,
     bool? showBookmark,
     this.gap = DonySpacing.md,
-  }) : showBookmark = showBookmark ?? !isOwn;
+    this.cardPadding = DonySpacing.base,
+  }) : assert(cardPadding >= cardBottomPadding),
+       showBookmark = showBookmark ?? !isOwn;
 
   final AnnouncementModel announcement;
   final bool isOwn;
@@ -48,30 +55,41 @@ class TripCardActions extends StatelessWidget {
   /// Espace au-dessus du filet, celui des autres sections de la carte.
   final double gap;
 
+  /// Marge du bas de la carte quand elle n'a pas de ligne d'actions.
+  final double cardPadding;
+
   /// Marge du bas de la carte sous la ligne d'icônes.
   static const double cardBottomPadding = DonySpacing.sm;
 
   @override
   Widget build(BuildContext context) {
     final canShare = canShareTripPoster(announcement);
+    final likeReadOnly = isOwn || !TripLikeButton.canLike(announcement);
     // Seul le compteur peut encore remplir la ligne : elle attend qu'il y
     // ait au moins un j'aime.
-    if (isOwn && !canShare && !showBookmark) {
+    if (likeReadOnly && !canShare && !showBookmark) {
       final likes = maybeRead<TripLikesCubit>(context);
-      if (likes == null) return const SizedBox.shrink();
+      if (likes == null) return _empty();
       return BlocBuilder<TripLikesCubit, TripLikesState>(
         bloc: likes,
         buildWhen: (prev, curr) =>
             prev.byTrip[announcement.id] != curr.byTrip[announcement.id],
         builder: (context, _) => likes.statusOf(announcement).likeCount > 0
-            ? _row(context, canShare: canShare)
-            : const SizedBox.shrink(),
+            ? _row(context, canShare: canShare, likeReadOnly: likeReadOnly)
+            : _empty(),
       );
     }
-    return _row(context, canShare: canShare);
+    return _row(context, canShare: canShare, likeReadOnly: likeReadOnly);
   }
 
-  Widget _row(BuildContext context, {required bool canShare}) {
+  /// Ligne vide : le blanc que la carte a retiré de sa marge du bas.
+  Widget _empty() => SizedBox(height: cardPadding - cardBottomPadding);
+
+  Widget _row(
+    BuildContext context, {
+    required bool canShare,
+    required bool likeReadOnly,
+  }) {
     final cs = Theme.of(context).colorScheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -83,7 +101,7 @@ class TripCardActions extends StatelessWidget {
         Row(
           key: const Key('trip-card-actions'),
           children: [
-            TripLikeButton(announcement: announcement, readOnly: isOwn),
+            TripLikeButton(announcement: announcement, readOnly: likeReadOnly),
             if (canShare) _ShareButton(announcement: announcement),
             const Spacer(),
             if (showBookmark)
@@ -119,7 +137,7 @@ class _ShareButton extends StatelessWidget {
       style: ButtonStyle(
         iconColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.pressed)
-              ? DonyColors.primary
+              ? cs.primary
               : cs.onSurfaceVariant,
         ),
       ),

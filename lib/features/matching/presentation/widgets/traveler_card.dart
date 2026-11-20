@@ -559,6 +559,7 @@ class TravelerCard extends StatelessWidget {
                   announcement: announcement,
                   isOwn: isOwnAnnouncement,
                   gap: compact ? DonySpacing.sm : DonySpacing.md,
+                  cardPadding: compact ? DonySpacing.md : DonySpacing.base,
                 ),
             ],
           ),

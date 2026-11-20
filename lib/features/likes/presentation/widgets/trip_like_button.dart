@@ -16,10 +16,14 @@ import 'package:intl/intl.dart';
 
 /// ♡ public d'un trajet et son compteur, lus dans [TripLikesCubit].
 ///
-/// - Sélectionné : cœur plein en [DonyColors.primary] ; sinon contour neutre.
+/// - Sélectionné : cœur plein au primaire du thème (`colorScheme.primary`,
+///   qui suit le mode sombre et le contraste élevé) ; sinon contour neutre.
 /// - Compteur masqué à 0, affiché dès 1 (abrégé au-delà de 1 000 : « 1,3 k »).
-/// - [readOnly] (le voyageur sur son propre trajet) : compteur seul, sans
-///   geste, rien du tout à 0.
+/// - [readOnly] (le voyageur sur son propre trajet, ou un trajet que le back
+///   refuse d'aimer, [canLike] faux) : cœur au contour neutre et compteur,
+///   sans geste, rien du tout à 0.
+/// - Lecteur d'écran : libellé constant « J'aime », l'état passe par
+///   `toggled` ; seule l'infobulle visuelle dit « Je n'aime plus ».
 /// - Visiteur sans compte ([FirebaseSessionProbe.hasRealSession] faux) : le
 ///   toucher ouvre l'invitation à se connecter ([AuthRequiredSheet]), sans
 ///   rien changer au compteur.
@@ -42,6 +46,13 @@ class TripLikeButton extends StatelessWidget {
 
   /// Taille des icônes de la ligne d'actions (♡, partage, signet).
   static const double iconSize = 24;
+
+  /// Le back accepte-t-il un j'aime sur [trip] ? Même règle que
+  /// `TripLikeService.requireLikeable` : trajet ACTIVE ou FULL, non caché.
+  /// Ailleurs (en cours, brouillon, retiré…), chaque toucher finirait en 404
+  /// puis « Action impossible » : le ♡ y reste en lecture seule.
+  static bool canLike(AnnouncementModel trip) =>
+      (trip.status == 'ACTIVE' || trip.isFull) && !trip.hidden;
 
   @override
   Widget build(BuildContext context) {
@@ -101,8 +112,7 @@ class _LikeToggle extends StatelessWidget {
     final l = context.l10n;
     final liked = status.likedByMe;
     final count = status.likeCount;
-    final color = liked ? DonyColors.primary : cs.onSurfaceVariant;
-    final tooltip = liked ? l.tripUnlikeTooltip : l.tripLikeTooltip;
+    final color = liked ? cs.primary : cs.onSurfaceVariant;
     final animate = !MediaQuery.disableAnimationsOf(context);
 
     return Semantics(
@@ -110,7 +120,9 @@ class _LikeToggle extends StatelessWidget {
       container: true,
       button: true,
       toggled: liked,
-      label: tooltip,
+      // Libellé constant : l'état est dit par « activé ». Un libellé qui
+      // bascule faisait lire « Je n'aime plus, activé » à TalkBack.
+      label: l.tripLikeTooltip,
       value: count > 0 ? l.tripLikeCountSemantics(count) : null,
       // `excludeSemantics` retire l'action de l'InkWell : sans ce rappel, le
       // ♡ restait inactivable au lecteur d'écran (TalkBack, Switch Access,
@@ -118,31 +130,39 @@ class _LikeToggle extends StatelessWidget {
       onTap: onTap,
       excludeSemantics: true,
       child: Tooltip(
-        message: tooltip,
+        // L'infobulle visuelle dit le geste qui suit.
+        message: liked ? l.tripUnlikeTooltip : l.tripLikeTooltip,
         excludeFromSemantics: true,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          child: _LikeLayout(
-            count: count,
-            countColor: color,
-            // Pop court du cœur, coupé avec « réduire les animations ».
-            icon: AnimatedSwitcher(
-              duration: animate
-                  ? const Duration(milliseconds: 220)
-                  : Duration.zero,
-              transitionBuilder: (child, animation) => ScaleTransition(
-                scale: CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutBack,
+        // Surface d'encre propre au ♡ : le fond de la carte (Container
+        // décoré) recouvrait celle de l'écran, ni éclaboussure ni focus
+        // visible. Transparente, elle ne change ni la mise en page ni les
+        // tailles.
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            child: _LikeLayout(
+              count: count,
+              countColor: color,
+              // Pop court du cœur, coupé avec « réduire les animations ».
+              icon: AnimatedSwitcher(
+                duration: animate
+                    ? const Duration(milliseconds: 220)
+                    : Duration.zero,
+                transitionBuilder: (child, animation) => ScaleTransition(
+                  scale: CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutBack,
+                  ),
+                  child: child,
                 ),
-                child: child,
-              ),
-              child: Icon(
-                liked ? Icons.favorite : Icons.favorite_border,
-                key: ValueKey(liked),
-                size: TripLikeButton.iconSize,
-                color: color,
+                child: Icon(
+                  liked ? Icons.favorite : Icons.favorite_border,
+                  key: ValueKey(liked),
+                  size: TripLikeButton.iconSize,
+                  color: color,
+                ),
               ),
             ),
           ),
@@ -152,8 +172,10 @@ class _LikeToggle extends StatelessWidget {
   }
 }
 
-/// Compteur du voyageur sur son propre trajet : il voit qui aime, sans
-/// pouvoir aimer.
+/// Compteur sans geste : le voyageur sur son propre trajet voit combien
+/// l'aiment, sans pouvoir aimer ; même chose sur un trajet que le back
+/// refuse d'aimer. Cœur au contour neutre : un cœur plein se lirait
+/// « j'ai aimé ce trajet ».
 class _ReadOnlyLikes extends StatelessWidget {
   const _ReadOnlyLikes({required this.count});
 
@@ -170,10 +192,10 @@ class _ReadOnlyLikes extends StatelessWidget {
       child: _LikeLayout(
         count: count,
         countColor: cs.onSurfaceVariant,
-        icon: const Icon(
-          Icons.favorite,
+        icon: Icon(
+          Icons.favorite_border,
           size: TripLikeButton.iconSize,
-          color: DonyColors.primary,
+          color: cs.onSurfaceVariant,
         ),
       ),
     );

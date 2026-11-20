@@ -10,6 +10,7 @@ import 'package:dony/features/favorites/presentation/widgets/favorite_heart_butt
 import 'package:dony/features/likes/bloc/trip_likes_cubit.dart';
 import 'package:dony/features/likes/data/models/trip_like_status.dart';
 import 'package:dony/features/likes/data/repositories/trip_like_repository.dart';
+import 'package:dony/features/likes/presentation/widgets/trip_like_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
@@ -47,6 +48,7 @@ AnnouncementModel _trip({
   String status = 'ACTIVE',
   int likeCount = 0,
   bool likedByMe = false,
+  bool hidden = false,
 }) => AnnouncementModel(
   id: id,
   travelerId: 'tv1',
@@ -61,6 +63,7 @@ AnnouncementModel _trip({
   updatedAt: DateTime(2026, 3),
   likeCount: likeCount,
   likedByMe: likedByMe,
+  hidden: hidden,
   traveler: const TravelerProfile(
     id: 'tv1',
     displayName: 'Moustapha H.',
@@ -117,13 +120,14 @@ void main() {
 
   /// Monte [child] sur un écran de [width] dp, texte agrandi à [textScale],
   /// avec les vraies traductions, GoRouter (affiche, connexion) et les deux
-  /// cubits réels.
+  /// cubits réels, sous le thème [theme] (clair par défaut).
   Future<void> pump(
     WidgetTester tester,
     Widget child, {
     Locale locale = AppL10n.fr,
     double width = 360,
     double textScale = 1,
+    ThemeData? theme,
   }) async {
     tester.view.physicalSize = Size(width * 3, 800 * 3);
     tester.view.devicePixelRatio = 3;
@@ -158,7 +162,7 @@ void main() {
           BlocProvider<FavoriteIdsCubit>.value(value: favorites),
         ],
         child: MaterialApp.router(
-          theme: AppTheme.light(),
+          theme: theme ?? AppTheme.light(),
           locale: locale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -271,6 +275,8 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => likeRepo.like('trip-1')).called(1);
+      // Libellé constant, l'état passe par « activé » : TalkBack lit
+      // « J'aime, activé », jamais « Je n'aime plus, activé ».
       expect(
         tester.getSemantics(find.byKey(_likeButton)),
         matchesSemantics(
@@ -278,11 +284,83 @@ void main() {
           hasTapAction: true,
           hasToggledState: true,
           isToggled: true,
-          label: "Je n'aime plus",
+          label: "J'aime",
           value: '3 personnes aiment ce trajet',
         ),
       );
+      // L'infobulle visuelle, elle, dit le geste qui suit.
+      expect(find.byTooltip("Je n'aime plus"), findsOneWidget);
       semantics.dispose();
+    });
+
+    testWidgets('lecteur d\'écran : libellé constant en anglais aussi', (
+      tester,
+    ) async {
+      useSession(real: true);
+      final semantics = tester.ensureSemantics();
+      await pump(
+        tester,
+        TripCardActions(
+          announcement: _trip(likeCount: 2, likedByMe: true),
+          isOwn: false,
+        ),
+        locale: AppL10n.en,
+      );
+      expect(
+        tester.getSemantics(find.byKey(_likeButton)),
+        matchesSemantics(
+          isButton: true,
+          hasTapAction: true,
+          hasToggledState: true,
+          isToggled: true,
+          label: 'Like',
+          value: '2 people like this trip',
+        ),
+      );
+      expect(find.byTooltip('Unlike'), findsOneWidget);
+      semantics.dispose();
+    });
+
+    testWidgets('le ♡ a sa propre surface d\'encre dans la carte, sans '
+        'changer sa cible de 44 px', (tester) async {
+      useSession(real: true);
+      await pump(
+        tester,
+        TravelerCard(
+          announcement: _trip(likeCount: 2),
+          index: 0,
+          isOwnAnnouncement: false,
+          compact: true,
+          showActions: true,
+          onTap: () {},
+        ),
+      );
+      final ink = find.descendant(
+        of: find.byKey(_likeButton),
+        matching: find.byType(InkWell),
+      );
+      expect(ink, findsOneWidget);
+      // Le fond de la carte (Container décoré) recouvrait l'encre du Material
+      // de l'écran : ni éclaboussure ni focus visible. Le Material le plus
+      // proche est maintenant transparent, posé dans le ♡ lui-même.
+      final material = tester
+          .element(ink)
+          .findAncestorWidgetOfExactType<Material>();
+      expect(material?.type, MaterialType.transparency);
+      expect(
+        find.descendant(
+          of: find.byKey(_likeButton),
+          matching: find.byWidget(material!),
+        ),
+        findsOneWidget,
+      );
+      final size = tester.getSize(find.byKey(_likeButton));
+      expect(size.width, greaterThanOrEqualTo(kDonyMinTapTarget));
+      expect(size.height, greaterThanOrEqualTo(kDonyMinTapTarget));
+      expect(
+        tester.getSize(ink).height,
+        greaterThanOrEqualTo(kDonyMinTapTarget),
+      );
     });
 
     testWidgets('lecteur d\'écran : le compteur de son trajet n\'a pas '
@@ -436,6 +514,18 @@ void main() {
           findsOneWidget,
         );
         expect(find.byKey(_shareButton), findsOneWidget);
+        // Cœur au contour, neutre : il ne se lit pas « j'ai aimé mon trajet ».
+        final icon = tester.widget<Icon>(
+          find.descendant(
+            of: find.byKey(_readOnlyLikes),
+            matching: find.byType(Icon),
+          ),
+        );
+        final cs = Theme.of(
+          tester.element(find.byKey(_readOnlyLikes)),
+        ).colorScheme;
+        expect(icon.icon, Icons.favorite_border);
+        expect(icon.color, cs.onSurfaceVariant);
         // Lecture seule : toucher le compteur ne fait rien.
         await tester.tap(find.byKey(_readOnlyLikes));
         await tester.pumpAndSettle();
@@ -663,6 +753,70 @@ void main() {
       expect(shareColor(), isNot(DonyColors.primary));
     });
 
+    // Le primaire du thème change avec le mode sombre et le contraste élevé
+    // (bleu #0B5FFF ≈ 3,4:1 sur la surface sombre : échec AA).
+    for (final (name, theme) in [
+      ('sombre', AppTheme.dark()),
+      (
+        'contraste élevé',
+        AppTheme.light(a11y: const A11yThemeOptions(highContrast: true)),
+      ),
+      (
+        'sombre et contraste élevé',
+        AppTheme.dark(a11y: const A11yThemeOptions(highContrast: true)),
+      ),
+    ]) {
+      testWidgets('thème $name : ♡ aimé, compteur, signet et partage au '
+          'primaire du thème', (tester) async {
+        useSession(real: true);
+        final primary = theme.colorScheme.primary;
+        expect(primary, isNot(DonyColors.primary));
+        favorites.emitSeed(trips: {'trip-1'}, requests: {});
+        await pump(
+          tester,
+          TripCardActions(
+            announcement: _trip(likeCount: 3, likedByMe: true),
+            isOwn: false,
+          ),
+          theme: theme,
+        );
+
+        expect(heartIcon(tester).icon, Icons.favorite);
+        expect(heartIcon(tester).color, primary);
+        expect(
+          tester.widget<Text>(find.byKey(_likeCount)).style?.color,
+          primary,
+        );
+        final bookmark = tester.widget<Icon>(
+          find.descendant(
+            of: find.byType(FavoriteHeartButton),
+            matching: find.byType(Icon),
+          ),
+        );
+        expect(bookmark.icon, Icons.bookmark);
+        expect(bookmark.color, primary);
+
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.byKey(_shareButton)),
+        );
+        await tester.pump(const Duration(milliseconds: 150));
+        await tester.pump(const Duration(milliseconds: 250));
+        expect(
+          tester
+              .widget<DonyIcon>(
+                find.descendant(
+                  of: find.byKey(_shareButton),
+                  matching: find.byType(DonyIcon),
+                ),
+              )
+              .color,
+          primary,
+        );
+        await gesture.cancel();
+        await tester.pumpAndSettle();
+      });
+    }
+
     testWidgets('sans cubits dans l\'arbre : partage seul, sans plantage', (
       tester,
     ) async {
@@ -757,6 +911,29 @@ void main() {
     }
   });
 
+  group('TripLikeButton.canLike : même règle que le back', () {
+    const expected = {
+      'ACTIVE': true,
+      'FULL': true,
+      'DRAFT': false,
+      'IN_PROGRESS': false,
+      'COMPLETED': false,
+      'CANCELLED': false,
+      'REMOVED_BY_ADMIN': false,
+      'SOMETHING_NEW': false,
+    };
+    for (final MapEntry(key: status, value: likeable) in expected.entries) {
+      test(status, () {
+        expect(TripLikeButton.canLike(_trip(status: status)), likeable);
+        // Caché : jamais, quel que soit le statut.
+        expect(
+          TripLikeButton.canLike(_trip(status: status, hidden: true)),
+          isFalse,
+        );
+      });
+    }
+  });
+
   group('TripCard', () {
     testWidgets('carte active d\'un autre voyageur : signet dans la ligne, '
         'plus dans l\'en-tête', (tester) async {
@@ -828,6 +1005,93 @@ void main() {
       expect(find.byKey(_readOnlyLikes), findsOneWidget);
       expect(find.byKey(_likeButton), findsNothing);
       expect(find.byType(FavoriteHeartButton), findsOneWidget);
+    });
+
+    // Le back n'accepte un j'aime que sur un trajet ACTIVE ou FULL non caché :
+    // ailleurs, chaque toucher donnait un 404 puis « Action impossible ».
+    for (final (name, trip) in [
+      ('en cours', _trip(status: 'IN_PROGRESS', likeCount: 3)),
+      ('brouillon', _trip(status: 'DRAFT', likeCount: 3)),
+      ('retiré par l\'équipe', _trip(status: 'REMOVED_BY_ADMIN', likeCount: 3)),
+      ('caché', _trip(likeCount: 3, hidden: true)),
+      ('complet et caché', _trip(status: 'FULL', likeCount: 3, hidden: true)),
+    ]) {
+      testWidgets('favori $name d\'un autre : ♡ en lecture seule, signet '
+          'gardé', (tester) async {
+        useSession(real: true);
+        await pump(
+          tester,
+          TripCard(
+            announcement: trip,
+            index: 0,
+            showFavorite: true,
+            onTap: () {},
+          ),
+        );
+        expect(find.byKey(_likeButton), findsNothing);
+        expect(find.byKey(_readOnlyLikes), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byKey(_readOnlyLikes),
+            matching: find.text('3'),
+          ),
+          findsOneWidget,
+        );
+        expect(find.byType(FavoriteHeartButton), findsOneWidget);
+
+        await tester.tap(find.byKey(_readOnlyLikes));
+        await tester.pump(const Duration(milliseconds: 300));
+        verifyNever(() => likeRepo.like(any()));
+        verifyNever(() => likeRepo.unlike(any()));
+        expect(
+          find.text(AppL10n.current.listingRetryActionMessage),
+          findsNothing,
+        );
+      });
+    }
+
+    testWidgets('favori complet d\'un autre : ♡ actif', (tester) async {
+      useSession(real: true);
+      await pump(
+        tester,
+        TripCard(
+          announcement: _trip(status: 'FULL', likeCount: 3),
+          index: 0,
+          showFavorite: true,
+          onTap: () {},
+        ),
+      );
+      expect(find.byKey(_likeButton), findsOneWidget);
+      expect(find.byKey(_readOnlyLikes), findsNothing);
+    });
+
+    testWidgets('son trajet complet sans j\'aime : la carte garde sa marge '
+        'du bas', (tester) async {
+      useSession(real: true);
+      await pump(
+        tester,
+        Column(
+          children: [
+            TripCard(
+              announcement: _trip(id: 'a', status: 'FULL'),
+              index: 0,
+              showOwnLikes: true,
+              onTap: () {},
+            ),
+            TripCard(
+              announcement: _trip(id: 'b', status: 'FULL'),
+              index: 0,
+              onTap: () {},
+            ),
+          ],
+        ),
+      );
+      expect(find.byKey(_actions), findsNothing);
+      final cards = find.byType(TripCard);
+      expect(
+        tester.getSize(cards.at(0)).height,
+        tester.getSize(cards.at(1)).height,
+      );
     });
 
     testWidgets('carte passée : inchangée, signet dans l\'en-tête', (
@@ -909,6 +1173,51 @@ void main() {
       expect(find.byType(FavoriteHeartButton), findsNothing);
       expect(find.byKey(_shareButton), findsOneWidget);
     });
+
+    for (final compact in [true, false]) {
+      testWidgets('son trajet complet sans j\'aime : la carte garde sa marge '
+          'du bas (compact: $compact)', (tester) async {
+        useSession(real: true);
+        TravelerCard card(String id, {required bool actions}) => TravelerCard(
+          announcement: _trip(id: id, status: 'FULL'),
+          index: 0,
+          isOwnAnnouncement: true,
+          compact: compact,
+          showActions: actions,
+          onTap: () {},
+        );
+        await pump(
+          tester,
+          Column(
+            children: [card('a', actions: true), card('b', actions: false)],
+          ),
+        );
+        expect(find.byKey(_actions), findsNothing);
+        final cards = find.byType(TravelerCard);
+        expect(
+          tester.getSize(cards.at(0)).height,
+          tester.getSize(cards.at(1)).height,
+        );
+
+        // Un j'aime arrive : la ligne s'affiche et la marge se resserre
+        // (la zone de 44 px porte son propre blanc).
+        likes.seed([_trip(id: 'a', status: 'FULL', likeCount: 2)]);
+        await tester.pump();
+        expect(find.byKey(_actions), findsOneWidget);
+        // Boîte de la carte elle-même, sous la même translation d'entrée
+        // (flutter_animate) que la ligne.
+        final box = find.byKey(const Key('traveler-card-opacity')).first;
+        expect(
+          tester.getBottomLeft(find.byKey(_actions)).dy,
+          moreOrLessEquals(
+            tester.getBottomLeft(box).dy -
+                TripCardActions.cardBottomPadding -
+                1.5, // bordure de « Votre trajet »
+            epsilon: 0.01,
+          ),
+        );
+      });
+    }
 
     testWidgets('toucher le coeur n\'ouvre pas le trajet', (tester) async {
       useSession(real: true);
