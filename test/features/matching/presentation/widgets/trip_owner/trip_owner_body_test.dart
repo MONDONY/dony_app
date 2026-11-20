@@ -35,6 +35,7 @@ import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/trip_depart_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -1221,6 +1222,69 @@ void main() {
           startsWith(
             locale.languageCode == 'fr' ? '10 colis · ' : '10 parcels · ',
           ),
+        );
+      });
+    }
+  });
+
+  // Maquette écran 4 : la tuile « Affiche » dit aussi les j'aime.
+  group('tuile « Affiche » avec les j\'aime, 360 dp', () {
+    const withLikes = TripAudienceState.loaded(
+      TripAudienceModel(
+        uniqueViewerCount: 128,
+        shareViewCount: 3,
+        likeCount: 24,
+      ),
+    );
+    for (final locale in const [Locale('fr'), Locale('en')]) {
+      final expected = locale.languageCode == 'fr'
+          ? '128 personnes ont vu votre trajet · 24 j\'aime'
+          : '128 people have seen your trip · 24 likes';
+      Finder subtitle() => find.descendant(
+        of: key('trip-tile-poster'),
+        matching: find.text(expected),
+      );
+
+      testWidgets('${locale.languageCode} : sous-titre entier à la taille '
+          'normale', (tester) async {
+        await pump(
+          tester,
+          trip: _trip(),
+          locale: locale,
+          size: const Size(360, 3200),
+          audienceState: withLikes,
+        );
+        expect(tester.takeException(), isNull);
+        expect(subtitle(), findsOneWidget);
+        expect(
+          tester.renderObject<RenderParagraph>(subtitle()).didExceedMaxLines,
+          isFalse,
+        );
+      });
+
+      testWidgets('${locale.languageCode} : texte 200 %, aucun débordement '
+          'dans la grille', (tester) async {
+        await pump(
+          tester,
+          trip: _trip(),
+          locale: locale,
+          textScale: 2,
+          size: const Size(360, 6000),
+          audienceState: withLikes,
+        );
+        expect(tester.takeException(), isNull);
+        expect(subtitle(), findsOneWidget);
+        // Abrégé plutôt que débordant : nombre de lignes borné, points de
+        // suspension.
+        final text = tester.widget<Text>(subtitle());
+        expect(text.maxLines, isNotNull);
+        expect(text.overflow, TextOverflow.ellipsis);
+        // La tuile tient dans sa demi-largeur de grille.
+        final tile = tester.getRect(key('trip-tile-poster'));
+        expect(tile.right, lessThanOrEqualTo(360));
+        expect(
+          tester.getRect(subtitle()).bottom,
+          lessThanOrEqualTo(tile.bottom),
         );
       });
     }

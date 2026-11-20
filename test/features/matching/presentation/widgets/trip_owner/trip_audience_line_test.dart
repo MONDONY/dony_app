@@ -262,18 +262,44 @@ void main() {
       );
     });
 
-    test('tileSubtitle : jamais le morceau des j\'aime', () {
-      expect(TripAudience.tileSubtitle(fr, loaded(0, 0, likes: 2)), isNull);
+    // Maquette écran 4 : « 128 personnes ont vu votre trajet · 24 j'aime ».
+    test('tileSubtitle : premier morceau suivi des j\'aime (FR / EN)', () {
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(128, 0, likes: 24)),
+        '128 personnes ont vu votre trajet · 24 j\'aime',
+      );
+      expect(
+        TripAudience.tileSubtitle(en, loaded(128, 0, likes: 24)),
+        '128 people have seen your trip · 24 likes',
+      );
+      // Les vues de l'affiche restent dans le sheet : la tuile ne garde que
+      // le premier morceau, puis les j'aime.
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(12, 7, likes: 1)),
+        '12 personnes ont vu votre trajet · 1 j\'aime',
+      );
       expect(
         TripAudience.tileSubtitle(fr, loaded(0, 3, likes: 2)),
-        '3 vues de votre affiche partagée',
+        '3 vues de votre affiche partagée · 2 j\'aime',
       );
     });
 
-    test('le sous-titre de la tuile reste le morceau des vues', () {
+    test('tileSubtitle : que des j\'aime, jamais « Personne »', () {
       expect(
-        TripAudience.tileSubtitle(fr, loaded(128, 0, likes: 24)),
+        TripAudience.tileSubtitle(fr, loaded(0, 0, likes: 2)),
+        '2 j\'aime',
+      );
+      expect(TripAudience.tileSubtitle(en, loaded(0, 0, likes: 1)), '1 like');
+    });
+
+    test('tileSubtitle : sans j\'aime, inchangé', () {
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(128, 7)),
         '128 personnes ont vu votre trajet',
+      );
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(0, 3)),
+        '3 vues de votre affiche partagée',
       );
     });
   });

@@ -90,9 +90,9 @@ String tripTileTitle(AppLocalizations l, TripTile tile) => switch (tile) {
 /// - `payments` : les moyens acceptés (« Carte, Espèces, Mobile money ») ;
 /// - `conditions` : « 3 types acceptés · 2 types refusés », à défaut ce qui
 ///   existe, ou « Note aux expéditeurs » s'il n'y a que la note ;
-/// - `poster` : l'audience du trajet une fois chargée ([audience], « 12
-///   personnes ont vu votre trajet », [TripAudience.tileSubtitle]), sinon
-///   « Partager le trajet » ;
+/// - `poster` : l'audience du trajet une fois chargée ([audience], « 128
+///   personnes ont vu votre trajet · 24 j'aime »,
+///   [TripAudience.tileSubtitle]), sinon « Partager le trajet » ;
 /// - `arrival` : « Instructions de retrait ».
 String? tripTileSubtitle(
   AppLocalizations l,

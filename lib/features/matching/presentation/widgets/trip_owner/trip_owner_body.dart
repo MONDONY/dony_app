@@ -278,6 +278,9 @@ class _TripOwnerBodyState extends State<TripOwnerBody> {
       iconName: tripTileIcon(tile),
       label: tripTileTitle(l, tile),
       subtitle: tripTileSubtitle(l, tile, live.trip, audience: audience),
+      // « 128 personnes ont vu votre trajet · 24 j'aime » : sur deux lignes,
+      // la demi-tuile d'un écran de 360 dp coupait les j'aime.
+      subtitleMaxLines: tile == TripTile.poster ? 3 : 2,
       color: Theme.of(context).colorScheme.primary,
       onTap: () => _open(
         () => openTripTileSheet(context, live.trip, tile, bids: live.bids),

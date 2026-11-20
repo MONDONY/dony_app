@@ -12,7 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// l'app, et combien de fois son affiche partagée a été consultée.
 ///
 /// Elle n'a plus de place dans le corps de l'écran : « N personnes ont vu
-/// votre trajet » est le sous-titre de la tuile « Affiche »
+/// votre trajet · N j'aime » est le sous-titre de la tuile « Affiche »
 /// ([tileSubtitle]) et la ligne complète s'affiche dans son sheet
 /// ([TripAudienceLine]). Le chargement reste fait par l'écran, pour le seul
 /// propriétaire confirmé ([TripAudienceLoader]) : un visiteur n'appelle
@@ -44,17 +44,21 @@ abstract final class TripAudience {
   ];
 
   /// Sous-titre de la tuile « Affiche » d'après l'audience chargée : son
-  /// premier morceau (« 12 personnes ont vu votre trajet », sinon les vues de
-  /// l'affiche) ; `null` pour des j'aime seuls. `null` tant que rien n'est sûr (chargement, échec, ancien
-  /// back, cubit absent) : la tuile garde alors son texte habituel.
+  /// premier morceau (« 128 personnes ont vu votre trajet », sinon les vues
+  /// de l'affiche), suivi des j'aime s'il y en a (« · 24 j'aime ») ; des
+  /// j'aime seuls donnent « 2 j'aime ». Les vues de l'affiche à côté des
+  /// personnes restent dans le sheet. `null` tant que rien n'est sûr
+  /// (chargement, échec, ancien back, cubit absent) : la tuile garde alors
+  /// son texte habituel.
   static String? tileSubtitle(AppLocalizations l, TripAudienceState? state) {
     final audience = state?.audience;
     if (state?.status != TripAudienceStatus.loaded || audience == null) {
       return null;
     }
-    // Jamais le morceau des j'aime : sans vue, la tuile garde son texte.
-    if (audience.isEmpty && audience.likeCount > 0) return null;
-    return parts(l, audience).first;
+    final all = parts(l, audience);
+    if (audience.likeCount == 0 || all.length == 1) return all.first;
+    // Les j'aime sont toujours le dernier morceau.
+    return '${all.first} · ${all.last}';
   }
 }
 
