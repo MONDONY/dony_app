@@ -29,7 +29,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///   sans j'aime), la ligne et son filet disparaissent.
 /// - Trajet que le back refuse d'aimer ([TripLikeButton.canLike] faux : en
 ///   cours, brouillon, caché…) : compteur en lecture seule, comme sur son
-///   propre trajet.
+///   propre trajet, sauf si l'utilisateur l'avait déjà aimé : le ♡ reste
+///   actif pour retirer son j'aime.
 /// - [showBookmark] : signet affiché, par défaut sur le trajet d'un autre.
 ///   Les favoris le gardent sur son propre trajet, pour pouvoir le retirer.
 ///
@@ -64,32 +65,33 @@ class TripCardActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canShare = canShareTripPoster(announcement);
-    final likeReadOnly = isOwn || !TripLikeButton.canLike(announcement);
-    // Seul le compteur peut encore remplir la ligne : elle attend qu'il y
-    // ait au moins un j'aime.
-    if (likeReadOnly && !canShare && !showBookmark) {
+    // Le ♡ décide seul de sa lecture seule (j'aime déjà posé, retirable) ;
+    // ici, seul le remplissage de la ligne compte.
+    final likeInert = isOwn || !TripLikeButton.canLike(announcement);
+    // Seul le compteur ou un j'aime posé peut encore remplir la ligne : elle
+    // attend qu'il y ait au moins un j'aime.
+    if (likeInert && !canShare && !showBookmark) {
       final likes = maybeRead<TripLikesCubit>(context);
       if (likes == null) return _empty();
       return BlocBuilder<TripLikesCubit, TripLikesState>(
         bloc: likes,
         buildWhen: (prev, curr) =>
             prev.byTrip[announcement.id] != curr.byTrip[announcement.id],
-        builder: (context, _) => likes.statusOf(announcement).likeCount > 0
-            ? _row(context, canShare: canShare, likeReadOnly: likeReadOnly)
-            : _empty(),
+        builder: (context, _) {
+          final status = likes.statusOf(announcement);
+          return status.likeCount > 0 || (!isOwn && status.likedByMe)
+              ? _row(context, canShare: canShare)
+              : _empty();
+        },
       );
     }
-    return _row(context, canShare: canShare, likeReadOnly: likeReadOnly);
+    return _row(context, canShare: canShare);
   }
 
   /// Ligne vide : le blanc que la carte a retiré de sa marge du bas.
   Widget _empty() => SizedBox(height: cardPadding - cardBottomPadding);
 
-  Widget _row(
-    BuildContext context, {
-    required bool canShare,
-    required bool likeReadOnly,
-  }) {
+  Widget _row(BuildContext context, {required bool canShare}) {
     final cs = Theme.of(context).colorScheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -101,7 +103,7 @@ class TripCardActions extends StatelessWidget {
         Row(
           key: const Key('trip-card-actions'),
           children: [
-            TripLikeButton(announcement: announcement, readOnly: likeReadOnly),
+            TripLikeButton(announcement: announcement, readOnly: isOwn),
             if (canShare) _ShareButton(announcement: announcement),
             const Spacer(),
             if (showBookmark)

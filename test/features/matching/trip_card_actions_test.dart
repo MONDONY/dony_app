@@ -434,6 +434,78 @@ void main() {
       verify(() => likeRepo.unlike('trip-1')).called(1);
     });
 
+    // Un j'aime déjà posé reste retirable quand le trajet n'est plus
+    // aimable (en cours, caché) : le back accepte le retrait, jamais un
+    // nouveau j'aime.
+    for (final (name, liked) in [
+      ('en cours', _trip(status: 'IN_PROGRESS', likeCount: 2, likedByMe: true)),
+      ('caché', _trip(likeCount: 2, likedByMe: true, hidden: true)),
+    ]) {
+      testWidgets('trajet $name déjà aimé : ♡ actif, le retrait passe puis '
+          'lecture seule', (tester) async {
+        useSession(real: true);
+        when(() => likeRepo.unlike('trip-1')).thenAnswer(
+          (_) async => const TripLikeStatus(likeCount: 1, likedByMe: false),
+        );
+        await pump(tester, TripCardActions(announcement: liked, isOwn: false));
+        expect(find.byKey(_readOnlyLikes), findsNothing);
+        expect(heartIcon(tester).icon, Icons.favorite);
+        expect(
+          heartIcon(tester).color,
+          Theme.of(tester.element(find.byKey(_likeButton))).colorScheme.primary,
+        );
+
+        await tester.tap(find.byKey(_likeButton));
+        await tester.pumpAndSettle();
+
+        verify(() => likeRepo.unlike('trip-1')).called(1);
+        verifyNever(() => likeRepo.like(any()));
+        expect(find.byKey(_likeButton), findsNothing);
+        expect(find.byKey(_readOnlyLikes), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byKey(_readOnlyLikes),
+            matching: find.text('1'),
+          ),
+          findsOneWidget,
+        );
+      });
+    }
+
+    testWidgets('trajet en cours non aimé : lecture seule, aucun appel', (
+      tester,
+    ) async {
+      useSession(real: true);
+      await pump(
+        tester,
+        TripCardActions(
+          announcement: _trip(status: 'IN_PROGRESS', likeCount: 2),
+          isOwn: false,
+        ),
+      );
+      expect(find.byKey(_likeButton), findsNothing);
+      expect(find.byKey(_readOnlyLikes), findsOneWidget);
+      await tester.tap(find.byKey(_readOnlyLikes));
+      await tester.pump(const Duration(milliseconds: 300));
+      verifyNever(() => likeRepo.like(any()));
+      verifyNever(() => likeRepo.unlike(any()));
+    });
+
+    testWidgets('son trajet aimé : lecture seule quel que soit likedByMe', (
+      tester,
+    ) async {
+      useSession(real: true);
+      await pump(
+        tester,
+        TripCardActions(
+          announcement: _trip(likeCount: 2, likedByMe: true),
+          isOwn: true,
+        ),
+      );
+      expect(find.byKey(_likeButton), findsNothing);
+      expect(find.byKey(_readOnlyLikes), findsOneWidget);
+    });
+
     testWidgets('echec_du_j_aime_affiche_le_message_d_erreur', (tester) async {
       useSession(real: true);
       when(() => likeRepo.like('trip-1')).thenThrow(Exception('réseau'));

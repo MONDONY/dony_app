@@ -19,9 +19,11 @@ import 'package:intl/intl.dart';
 /// - Sélectionné : cœur plein au primaire du thème (`colorScheme.primary`,
 ///   qui suit le mode sombre et le contraste élevé) ; sinon contour neutre.
 /// - Compteur masqué à 0, affiché dès 1 (abrégé au-delà de 1 000 : « 1,3 k »).
-/// - [readOnly] (le voyageur sur son propre trajet, ou un trajet que le back
-///   refuse d'aimer, [canLike] faux) : cœur au contour neutre et compteur,
-///   sans geste, rien du tout à 0.
+/// - Lecture seule ([readOnly], le voyageur sur son propre trajet, ou un
+///   trajet que le back refuse d'aimer, [canLike] faux, sans j'aime de
+///   l'utilisateur) : cœur au contour neutre et compteur, sans geste, rien
+///   du tout à 0. Un j'aime déjà posé sur un trajet devenu non aimable reste
+///   actif pour pouvoir être retiré.
 /// - Lecteur d'écran : libellé constant « J'aime », l'état passe par
 ///   `toggled` ; seule l'infobulle visuelle dit « Je n'aime plus ».
 /// - Visiteur sans compte ([FirebaseSessionProbe.hasRealSession] faux) : le
@@ -64,7 +66,12 @@ class TripLikeButton extends StatelessWidget {
           prev.byTrip[announcement.id] != curr.byTrip[announcement.id],
       builder: (context, _) {
         final status = cubit.statusOf(announcement);
-        if (readOnly) {
+        // Un j'aime déjà posé reste retirable même quand le trajet n'est
+        // plus aimable (le back accepte le retrait, jamais un nouveau
+        // j'aime) : une fois retiré, le ♡ retombe en lecture seule.
+        final locked =
+            readOnly || (!canLike(announcement) && !status.likedByMe);
+        if (locked) {
           return status.likeCount > 0
               ? _ReadOnlyLikes(count: status.likeCount)
               : const SizedBox.shrink();
