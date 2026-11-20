@@ -20,10 +20,14 @@ void main() {
     backend = MockAnalyticsBackend();
   });
 
-  const audience = TripAudienceModel(uniqueViewerCount: 12, shareViewCount: 7);
+  const audience = TripAudienceModel(
+    uniqueViewerCount: 12,
+    shareViewCount: 7,
+    likeCount: 4,
+  );
 
   blocTest<TripAudienceCubit, TripAudienceState>(
-    'load → loading puis loaded, event avec les deux compteurs',
+    'load → loading puis loaded, event avec les trois compteurs',
     build: () {
       when(
         () => repository.getTripAudience('ann-1'),
@@ -41,6 +45,7 @@ void main() {
         () => backend.capture(AnalyticsEvents.tripAudienceLoaded, {
           'unique_viewers': 12,
           'share_views': 7,
+          'likes': 4,
         }),
       ).called(1);
     },

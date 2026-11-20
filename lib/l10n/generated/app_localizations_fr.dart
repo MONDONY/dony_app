@@ -8739,6 +8739,17 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String tripAudienceLikes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count j\'aime',
+      one: '$count j\'aime',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get tripOwnerDraftBannerMessage =>
       'Il est invisible pour les expéditeurs tant qu\'il n\'est pas publié.';
 

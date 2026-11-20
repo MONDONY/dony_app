@@ -14458,6 +14458,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{{count} vue de votre affiche partagée} other{{count} vues de votre affiche partagée}}'**
   String tripAudiencePosterViews(int count);
 
+  /// Ligne d'audience du trajet vue par son voyageur : nombre de j'aime laissés par les gens sur son trajet, en dernier morceau après les vues, seulement s'il y en a au moins un (trip_audience_line.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} j\'aime} other{{count} j\'aime}}'**
+  String tripAudienceLikes(int count);
+
   /// Message du bandeau brouillon (trip_owner_detail_screen.dart).
   ///
   /// In fr, this message translates to:

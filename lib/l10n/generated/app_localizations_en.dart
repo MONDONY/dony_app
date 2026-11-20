@@ -8686,6 +8686,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String tripAudienceLikes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count likes',
+      one: '$count like',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get tripOwnerDraftBannerMessage =>
       'It\'s invisible to senders until it\'s published.';
 

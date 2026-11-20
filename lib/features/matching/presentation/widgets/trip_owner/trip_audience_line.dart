@@ -26,7 +26,9 @@ abstract final class TripAudience {
   static bool shownFor(String status) => status == 'ACTIVE';
 
   /// Morceaux de la ligne d'audience, dans l'ordre : personnes qui ont vu le
-  /// trajet dans l'app, puis vues de l'affiche partagée.
+  /// trajet dans l'app, puis vues de l'affiche partagée, puis j'aime (en
+  /// dernier, seulement s'il y en a). Des j'aime seuls ne changent pas le
+  /// premier morceau : « Personne n'a encore vu votre trajet · 2 j'aime ».
   ///
   /// À 0 dans l'app, le nombre de personnes ne s'affiche que si l'affiche
   /// n'a pas été vue non plus (« Personne n'a encore vu votre trajet ») :
@@ -36,6 +38,7 @@ abstract final class TripAudience {
       l.tripAudienceViewers(audience.uniqueViewerCount),
     if (audience.shareViewCount > 0)
       l.tripAudiencePosterViews(audience.shareViewCount),
+    if (audience.likeCount > 0) l.tripAudienceLikes(audience.likeCount),
   ];
 
   /// Sous-titre de la tuile « Affiche » d'après l'audience chargée : son

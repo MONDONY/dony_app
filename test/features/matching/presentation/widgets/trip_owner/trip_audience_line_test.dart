@@ -45,9 +45,14 @@ void main() {
     );
   }
 
-  TripAudienceState loaded(int viewers, int shares) => TripAudienceState.loaded(
-    TripAudienceModel(uniqueViewerCount: viewers, shareViewCount: shares),
-  );
+  TripAudienceState loaded(int viewers, int shares, {int likes = 0}) =>
+      TripAudienceState.loaded(
+        TripAudienceModel(
+          uniqueViewerCount: viewers,
+          shareViewCount: shares,
+          likeCount: likes,
+        ),
+      );
 
   group('statuts : chargée seulement quand la tuile « Affiche » existe', () {
     const expected = {
@@ -204,6 +209,65 @@ void main() {
       );
       expect(TripAudience.tileSubtitle(fr, null), isNull);
     });
+  });
+
+  group('TripAudience.parts : j\'aime en dernier', () {
+    final fr = lookupAppLocalizations(const Locale('fr'));
+    final en = lookupAppLocalizations(const Locale('en'));
+    TripAudienceModel m(int v, int s, int l) => TripAudienceModel(
+      uniqueViewerCount: v,
+      shareViewCount: s,
+      likeCount: l,
+    );
+
+    test('vues et j\'aime (FR / EN)', () {
+      expect(
+        TripAudience.parts(fr, m(128, 0, 24)).join(' · '),
+        '128 personnes ont vu votre trajet · 24 j\'aime',
+      );
+      expect(
+        TripAudience.parts(en, m(128, 0, 24)).join(' · '),
+        '128 people have seen your trip · 24 likes',
+      );
+      expect(TripAudience.parts(en, m(2, 0, 1)).last, '1 like');
+    });
+
+    test('vues, affiche et j\'aime : les j\'aime sont derniers', () {
+      expect(TripAudience.parts(fr, m(12, 7, 3)), [
+        '12 personnes ont vu votre trajet',
+        '7 vues de votre affiche partagée',
+        '3 j\'aime',
+      ]);
+    });
+
+    test('zéro j\'aime : la ligne d\'avant', () {
+      expect(TripAudience.parts(fr, m(12, 7, 0)), [
+        '12 personnes ont vu votre trajet',
+        '7 vues de votre affiche partagée',
+      ]);
+    });
+
+    test('que des j\'aime : « Personne » puis les j\'aime', () {
+      expect(TripAudience.parts(fr, m(0, 0, 2)), [
+        'Personne n\'a encore vu votre trajet',
+        '2 j\'aime',
+      ]);
+    });
+
+    test('le sous-titre de la tuile reste le morceau des vues', () {
+      expect(
+        TripAudience.tileSubtitle(fr, loaded(128, 0, likes: 24)),
+        '128 personnes ont vu votre trajet',
+      );
+    });
+  });
+
+  testWidgets('la ligne affiche les j\'aime', (tester) async {
+    await pumpTripCard(tester, line(loaded(128, 0, likes: 24)));
+    expect(
+      find.text('128 personnes ont vu votre trajet · 24 j\'aime'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('la ligne ne charge rien elle-même', (tester) async {
