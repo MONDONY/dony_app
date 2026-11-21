@@ -299,6 +299,11 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // Un filleul a fait son premier envoi : la récompense est à choisir sur
     // l'écran Parrainage (yadony-back #528).
     'REFERRAL_REWARD_AVAILABLE' => '/profile/referral',
+    // Bienvenue du filleul (yadony-back #774) : le code de parrainage et la
+    // réduction de -5 % sur le premier envoi sont dans le texte ; la
+    // notification mène au début de l'envoi d'un colis. Le type suffit, le
+    // champ `route` de la push n'est pas lu.
+    'REFERRAL_WELCOME' => '/parcels/send-intro',
     // Décision de l'équipe sur la demande GP Pro (yadony-back #560) : l'écran
     // GP Pro montre le badge, le motif d'un refus ou d'un retrait.
     'GP_PRO_APPROVED' ||

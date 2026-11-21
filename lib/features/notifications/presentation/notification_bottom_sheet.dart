@@ -805,6 +805,7 @@ class _NotificationIcon extends StatelessWidget {
       'RECIPIENT_REPLACEMENT_REQUESTED' => (cs.warning, 'user-plus'),
       'RECIPIENT_CHANGED' => (cs.warning, 'refresh-cw'),
       'REFERRAL_REWARD_AVAILABLE' => (cs.warning, 'gift'),
+      'REFERRAL_WELCOME' => (cs.warning, 'gift'),
 
       // Informe / met en relation
       'BID_CREATED' => (cs.primary, 'package'),

@@ -38,6 +38,13 @@ void main() {
       );
     });
 
+    test('REFERRAL_WELCOME : la notification ouvre l\'envoi de colis', () {
+      expect(
+        routeForNotification(_notif('REFERRAL_WELCOME')),
+        '/parcels/send-intro',
+      );
+    });
+
     test(
       'SUPPORT_MESSAGE du centre de notifications ouvre la conversation',
       () {

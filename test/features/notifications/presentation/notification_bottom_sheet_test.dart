@@ -310,6 +310,12 @@ void main() {
       expect(await iconAssetFor(tester, 'REFERRAL_REWARD_AVAILABLE'), 'gift');
     });
 
+    testWidgets('le message de bienvenue du filleul a l icône cadeau', (
+      tester,
+    ) async {
+      expect(await iconAssetFor(tester, 'REFERRAL_WELCOME'), 'gift');
+    });
+
     testWidgets('une suggestion selon les recherches a l icône loupe', (
       tester,
     ) async {
