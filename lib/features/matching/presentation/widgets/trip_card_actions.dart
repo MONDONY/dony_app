@@ -19,18 +19,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Ligne d'icônes en pied de carte trajet (recherche, carte, favoris), sous
 /// un filet comme les autres sections de la carte, sans barre ni cadre :
-/// ♡ et son compteur puis partage à gauche, signet (favori privé) à droite.
+/// pouce « j'aime » puis partage à gauche, signet (favori privé) à droite.
 ///
 /// - Partage : ouvre l'affiche du trajet ([openTripPoster], la même que la
 ///   feuille du trajet), masqué quand [canShareTripPoster] est faux. Action
 ///   sans état : primaire du thème seulement pendant l'appui.
 /// - [isOwn] (le voyageur sur son propre trajet) : compteur en lecture seule
-///   et partage, ni ♡ actif ni signet. Sans rien à montrer (trajet complet
-///   sans j'aime), la ligne et son filet disparaissent.
-/// - Trajet que le back refuse d'aimer ([TripLikeButton.canLike] faux : en
-///   cours, brouillon, caché…) : compteur en lecture seule, comme sur son
-///   propre trajet, sauf si l'utilisateur l'avait déjà aimé : le ♡ reste
-///   actif pour retirer son j'aime.
+///   (dès 1 j'aime) et partage, ni pouce actif ni signet. Sans rien à
+///   montrer (trajet complet sans j'aime), la ligne et son filet
+///   disparaissent.
+/// - Un autre utilisateur a toujours son pouce, donc jamais de ligne vide :
+///   le nombre n'apparaît qu'après son j'aime. Trajet que le back refuse
+///   d'aimer ([TripLikeButton.canLike] faux : en cours, brouillon, caché…) :
+///   pouce de lecture seule sans nombre, sauf si l'utilisateur l'avait déjà
+///   aimé : le pouce reste actif pour retirer son j'aime.
 /// - [showBookmark] : signet affiché, par défaut sur le trajet d'un autre.
 ///   Les favoris le gardent sur son propre trajet, pour pouvoir le retirer.
 ///
@@ -65,12 +67,10 @@ class TripCardActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canShare = canShareTripPoster(announcement);
-    // Le ♡ décide seul de sa lecture seule (j'aime déjà posé, retirable) ;
-    // ici, seul le remplissage de la ligne compte.
-    final likeInert = isOwn || !TripLikeButton.canLike(announcement);
-    // Seul le compteur ou un j'aime posé peut encore remplir la ligne : elle
-    // attend qu'il y ait au moins un j'aime.
-    if (likeInert && !canShare && !showBookmark) {
+    // Seul le pouce d'un autre utilisateur est toujours là : sur son propre
+    // trajet, sans partage ni signet, seul le compteur peut encore remplir
+    // la ligne, qui attend qu'il y ait au moins un j'aime.
+    if (isOwn && !canShare && !showBookmark) {
       final likes = maybeRead<TripLikesCubit>(context);
       if (likes == null) return _empty();
       return BlocBuilder<TripLikesCubit, TripLikesState>(
@@ -78,8 +78,7 @@ class TripCardActions extends StatelessWidget {
         buildWhen: (prev, curr) =>
             prev.byTrip[announcement.id] != curr.byTrip[announcement.id],
         builder: (context, _) {
-          final status = likes.statusOf(announcement);
-          return status.likeCount > 0 || (!isOwn && status.likedByMe)
+          return likes.statusOf(announcement).likeCount > 0
               ? _row(context, canShare: canShare)
               : _empty();
         },
@@ -146,7 +145,7 @@ class _ShareButton extends StatelessWidget {
       onPressed: () {
         final likes = maybeRead<TripLikesCubit>(context);
         // L'affiche n'est pas ouverte aux visiteurs : le routeur les
-        // renverrait sans un mot vers la connexion. Même invitation que le ♡,
+        // renverrait sans un mot vers la connexion. Même invitation que le pouce,
         // et le partage, qui n'a pas eu lieu, n'est pas mesuré.
         if (!(getItSafe<FirebaseSessionProbe>()?.hasRealSession ?? false)) {
           likes?.trackLoginPrompted();

@@ -57,11 +57,11 @@ class TravelerCard extends StatelessWidget {
   /// carte d'origine.
   final bool compact;
 
-  /// Ligne d'icônes en pied de carte ([TripCardActions]) : ♡ et compteur,
+  /// Ligne d'icônes en pied de carte ([TripCardActions]) : pouce « j'aime »,
   /// partage, signet des favoris. Cartes de la recherche (liste et carte de
   /// l'accueil) ; les feuilles, alternatives et profils gardent la carte
   /// d'origine. Sur son propre trajet ([isOwnAnnouncement]) : compteur en
-  /// lecture seule et partage, sans ♡ actif ni signet.
+  /// lecture seule et partage, sans pouce actif ni signet.
   final bool showActions;
 
   /// Nombre de catégories affichées avant la pastille « +N ».
