@@ -269,7 +269,7 @@ class _SenderOptionsSheet extends StatelessWidget {
             const SizedBox(height: DonySpacing.sm),
             if (bid.trackingToken != null) ...[
               _OptionTile(
-                iconAsset: 'share-2',
+                iconAsset: 'share-curved',
                 iconColor: cs.primary,
                 iconBg: cs.primaryContainer,
                 label: l.bidDetailShareTracking,

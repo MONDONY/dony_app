@@ -262,7 +262,7 @@ class _TripOwnerOptionsSheet extends StatelessWidget {
         l.tripOwnerShowDialogMessage,
       ),
       TripMenuEntry.sharePoster => (
-        'share-2',
+        'share-curved',
         l.tripPosterShareButton,
         l.tripTilePosterSubtitle,
       ),

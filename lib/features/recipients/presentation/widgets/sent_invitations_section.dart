@@ -238,7 +238,7 @@ class _SentInvitationRow extends StatelessWidget {
                       alignment: AlignmentDirectional.centerStart,
                     ),
                     onPressed: () => unawaited(_shareAppLink(buttonContext)),
-                    icon: DonyIcon('share-2', size: 16, color: cs.primary),
+                    icon: DonyIcon('share-curved', size: 16, color: cs.primary),
                     label: Text(l.recipientSentInvitationShareAction),
                   ),
                 ),

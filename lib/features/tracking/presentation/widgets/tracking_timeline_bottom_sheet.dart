@@ -117,7 +117,7 @@ class _TimelineActions extends StatelessWidget {
               child: DonyButton(
                 key: const Key('tracking-share'),
                 label: context.l10n.trackingTimelineShare,
-                iconAsset: 'share-2',
+                iconAsset: 'share-curved',
                 variant: DonyButtonVariant.secondary,
                 onPressed: share,
               ),

@@ -49,7 +49,7 @@ class DonySuccessScreen extends StatefulWidget {
     this.tertiaryLabel,
     this.onTertiary,
     this.extraActions = const [],
-    this.secondaryIconAsset = 'share-2',
+    this.secondaryIconAsset = 'share-curved',
     this.extra,
     this.modalMoment,
   });

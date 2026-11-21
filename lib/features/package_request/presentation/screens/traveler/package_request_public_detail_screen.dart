@@ -286,7 +286,7 @@ class _PackageRequestPublicDetailScreenState
               IconButton(
                 key: const Key('request-public-share-button'),
                 tooltip: context.l10n.tripPosterShareButton,
-                icon: const DonyIcon('share-2', size: 22),
+                icon: const DonyIcon('share-curved', size: 22),
                 onPressed: () =>
                     context.push('/package-requests/${r.id}/affiche', extra: r),
               ),
