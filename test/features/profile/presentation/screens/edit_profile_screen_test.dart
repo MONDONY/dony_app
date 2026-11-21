@@ -3,8 +3,7 @@ import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
-import 'package:dony/core/design/widgets/dony_search_field.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/media_service.dart';
@@ -15,17 +14,21 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
 import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
 import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
+import 'package:dony/features/profile/data/models/username_availability.dart';
+import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:dony/features/traveler_status/bloc/traveler_status_cubit.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/features/traveler_status/data/traveler_status_declaration.dart';
 import 'package:dony/features/traveler_status/data/traveler_status_repository.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
+
 import '../../../../helpers/l10n_test_helpers.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -42,6 +45,8 @@ class _MockGpProRepository extends Mock implements GpProRepository {}
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _MockImagePicker extends Mock implements ImagePicker {}
+
+class _MockProfileRepository extends Mock implements ProfileRepository {}
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -1336,6 +1341,152 @@ void main() {
         expect(tester.takeException(), isNull);
         // Une ligne : la hauteur du bouton reste celle d'un bouton normal.
         expect(tester.getSize(resign).height, lessThan(64));
+      });
+    }
+  });
+
+  // ── Identifiant Yadony ────────────────────────────────────────────────────
+
+  group('identifiant Yadony', () {
+    const withUsername = UserModel(
+      id: 'user-sender',
+      firstName: 'Ibrahima',
+      lastName: 'Diallo',
+      email: 'ibra@test.com',
+      username: 'awa.diallo',
+      roles: ['SENDER'],
+      kycStatus: 'NOT_STARTED',
+      status: 'ACTIVE',
+    );
+    late _MockProfileRepository profileRepo;
+
+    setUp(() {
+      DonySnackbar.clearDedup();
+      profileRepo = _MockProfileRepository();
+      if (getIt.isRegistered<ProfileRepository>()) {
+        getIt.unregister<ProfileRepository>();
+      }
+      getIt.registerSingleton<ProfileRepository>(profileRepo);
+      when(
+        () => profileRepo.checkUsername(
+          any(),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      ).thenAnswer((_) async => const UsernameAvailability(available: true));
+      when(
+        () => profileRepo.changeUsername(any()),
+      ).thenAnswer((_) async => withUsername);
+    });
+    tearDown(() {
+      if (getIt.isRegistered<ProfileRepository>()) {
+        getIt.unregister<ProfileRepository>();
+      }
+    });
+
+    Future<void> pumpScreen(
+      WidgetTester tester, {
+      UserModel user = withUsername,
+      Size size = const Size(360, 900),
+    }) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(user),
+      );
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('mode vue : libellé et @identifiant en lecture seule', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      expect(find.text('IDENTIFIANT YADONY'), findsOneWidget);
+      expect(find.text('@awa.diallo'), findsOneWidget);
+      expect(find.byKey(const Key('profile-username-row')), findsNothing);
+    });
+
+    testWidgets('ligne absente sans identifiant', (tester) async {
+      await pumpScreen(tester, user: _senderUser);
+      expect(find.text('IDENTIFIANT YADONY'), findsNothing);
+    });
+
+    testWidgets('mode édition : carte avec pastille Modifier, après Identité '
+        'et avant Coordonnées', (tester) async {
+      await pumpScreen(tester);
+      await _enterEditMode(tester);
+      final row = find.byKey(const Key('profile-username-row'));
+      await tester.ensureVisible(row);
+      expect(row, findsOneWidget);
+      expect(
+        find.descendant(of: row, matching: find.text('@awa.diallo')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: row, matching: find.text('Modifier')),
+        findsOneWidget,
+      );
+      final y = tester.getTopLeft(row).dy;
+      final last = tester.getTopLeft(find.byType(DonyTextField).at(1)).dy;
+      final contact = tester.getTopLeft(find.text('COORDONNÉES')).dy;
+      expect(y, greaterThan(last));
+      expect(y, lessThan(contact));
+    });
+
+    testWidgets('tap : ouvre la feuille, puis succès : message et rafraîchit', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      await _enterEditMode(tester);
+      final row = find.byKey(const Key('profile-username-row'));
+      await tester.ensureVisible(row);
+      await tester.pumpAndSettle();
+      await tester.tap(row);
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+      expect(find.text('Mon identifiant'), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('username-field')), 'awa.d');
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+      await tester.tap(find.byKey(const Key('username-save')));
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+
+      verify(() => profileRepo.changeUsername('awa.d')).called(1);
+      expect(find.text('Identifiant modifié'), findsOneWidget);
+      verify(
+        () => mockAuthBloc.add(any(that: isA<AuthProfileRefreshRequested>())),
+      ).called(1);
+    });
+
+    for (final locale in [AppL10n.fr, AppL10n.en]) {
+      testWidgets('360 dp ${locale.languageCode} : pas de débordement', (
+        tester,
+      ) async {
+        if (locale == AppL10n.en) useEnglish();
+        await pumpScreen(
+          tester,
+          user: withUsername.copyWith(username: 'awa.diallo.tres.long.xx'),
+        );
+        await tester.tap(
+          find.widgetWithText(
+            DonyButton,
+            locale == AppL10n.fr ? 'Modifier' : 'Edit',
+          ),
+        );
+        await tester.pumpAndSettle();
+        final row = find.byKey(const Key('profile-username-row'));
+        await tester.ensureVisible(row);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(row, findsOneWidget);
       });
     }
   });

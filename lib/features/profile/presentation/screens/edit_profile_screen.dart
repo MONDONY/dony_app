@@ -15,6 +15,7 @@ import 'package:dony/features/gp_pro/bloc/gp_pro_state.dart';
 import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_manage_sheet.dart';
 import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_resign.dart';
 import 'package:dony/features/profile/presentation/profile_labels.dart';
+import 'package:dony/features/profile/presentation/widgets/edit_username_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_photo_viewer.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart'
     show profileCompletionTierColor;
@@ -431,6 +432,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           enabled: !isSaving,
                         ),
                       ],
+                      // Identifiant public : hors « Enregistrer », il se change
+                      // dans sa propre feuille (disponibilité vérifiée par le
+                      // serveur, un changement tous les 30 jours).
+                      if (user.username != null &&
+                          user.username!.isNotEmpty) ...[
+                        const SizedBox(height: DonySpacing.md),
+                        _UsernameRow(
+                          username: user.username!,
+                          editing: _editing,
+                        ),
+                      ],
                       const SizedBox(height: DonySpacing.xxl),
 
                       // ── Section À propos ─────────────────────────────────────
@@ -797,6 +809,50 @@ class _StaticInfoRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Ligne « Identifiant Yadony » : lecture seule hors édition ; en édition,
+/// carte de même forme qu'Email et Téléphone dont la pastille « Modifier »
+/// ouvre la feuille « Mon identifiant ».
+class _UsernameRow extends StatelessWidget {
+  const _UsernameRow({required this.username, required this.editing});
+
+  final String username;
+  final bool editing;
+
+  Future<void> _edit(BuildContext context) async {
+    final auth = context.read<AuthBloc>();
+    final message = context.l10n.usernameSaved;
+    final saved = await EditUsernameSheet.show(context);
+    if (!saved || !context.mounted) return;
+    DonySnackbar.show(
+      context,
+      message: message,
+      type: DonySnackbarType.success,
+    );
+    if (!auth.isClosed) auth.add(const AuthProfileRefreshRequested());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    if (!editing) {
+      return _StaticInfoRow(
+        label: l.profileEditUsernameLabel,
+        value: '@$username',
+        placeholder: '',
+      );
+    }
+    return _InfoCardRow(
+      rowKey: const Key('profile-username-row'),
+      iconAsset: 'at-sign',
+      label: l.profileEditUsernameLabel,
+      value: '@$username',
+      muted: false,
+      pillLabel: l.commonEdit,
+      onTap: () => unawaited(_edit(context)),
     );
   }
 }
