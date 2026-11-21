@@ -23609,7 +23609,7 @@
   },
   "tripLikeCountSemantics": "{count, plural, =1{{count} personne aime ce trajet} other{{count} personnes aiment ce trajet}}",
   "@tripLikeCountSemantics": {
-      "description": "Lecture d'écran du compteur de j'aime d'une carte trajet (le nombre n'est exposé qu'après le j'aime de l'utilisateur, ou dès le premier j'aime au voyageur du trajet).",
+      "description": "Lecture d'écran du compteur de j'aime d'une carte trajet (le nombre est exposé dès le premier j'aime, jamais à 0).",
       "placeholders": {"count": {"type": "int"}}
   },
   "tripLikeLoginInviteTitle": "Connectez-vous pour aimer ce trajet.",

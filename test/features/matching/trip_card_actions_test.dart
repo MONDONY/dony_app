@@ -228,15 +228,18 @@ void main() {
         expect(size.height, greaterThanOrEqualTo(kDonyMinTapTarget));
       }
       // Rien de sélectionné : pouce et signet au contour, couleur neutre.
-      // Trajet déjà aimé par 3 personnes, mais pas par moi : aucun nombre.
+      // Trajet déjà aimé par 3 personnes, mais pas par moi : le nombre est
+      // visible, le pouce reste au contour.
       expect(thumbIcon(tester).icon, Icons.thumb_up_outlined);
       expect(thumbIcon(tester).color, isNot(DonyColors.primary));
-      expect(find.byKey(_likeCount), findsNothing);
+      expect(tester.widget<Text>(find.byKey(_likeCount)).data, '3');
       expect(find.byIcon(Icons.favorite), findsNothing);
       expect(find.byIcon(Icons.favorite_border), findsNothing);
     });
 
-    testWidgets('compteur_cache_tant_que_je_n_ai_pas_aime', (tester) async {
+    testWidgets('compteur_visible_des_1_j_aime_meme_sans_mon_j_aime', (
+      tester,
+    ) async {
       useSession(real: true);
       final semantics = tester.ensureSemantics();
       for (final likeCount in [0, 1, 25]) {
@@ -247,11 +250,18 @@ void main() {
             isOwn: false,
           ),
         );
-        // Le pouce est toujours là, jamais de nombre avant mon j'aime.
+        // Le pouce est toujours là ; le nombre dès 1, jamais « 0 ».
         expect(find.byKey(_likeButton), findsOneWidget);
-        expect(find.byKey(_likeCount), findsNothing);
+        if (likeCount == 0) {
+          expect(find.byKey(_likeCount), findsNothing);
+        } else {
+          expect(
+            tester.widget<Text>(find.byKey(_likeCount)).data,
+            '$likeCount',
+          );
+        }
         // Lecteur d'écran : bouton à bascule actionnable (TalkBack
-        // ACTION_CLICK, Switch Access, Voice Access), sans nombre non plus.
+        // ACTION_CLICK, Switch Access, Voice Access).
         final node = tester.getSemantics(find.byKey(_likeButton));
         expect(
           node,
@@ -262,7 +272,11 @@ void main() {
             label: "J'aime",
           ),
         );
-        expect(node.value, isEmpty);
+        if (likeCount == 0) {
+          expect(node.value, isEmpty);
+        } else {
+          expect(node.value, isNotEmpty);
+        }
       }
       semantics.dispose();
     });
@@ -319,7 +333,7 @@ void main() {
         TripCardActions(announcement: _trip(likeCount: 2), isOwn: false),
       );
 
-      expect(find.byKey(_likeCount), findsNothing);
+      expect(tester.widget<Text>(find.byKey(_likeCount)).data, '2');
 
       // Action « toucher » du lecteur d'écran, pas un toucher à l'écran.
       tester.semantics.tap(find.semantics.byLabel("J'aime"));
@@ -454,7 +468,7 @@ void main() {
         TripCardActions(announcement: _trip(likeCount: 2), isOwn: false),
       );
       expect(thumbIcon(tester).icon, Icons.thumb_up_outlined);
-      expect(find.byKey(_likeCount), findsNothing);
+      expect(tester.widget<Text>(find.byKey(_likeCount)).data, '2');
 
       await tester.tap(find.byKey(_likeButton));
       await tester.pumpAndSettle();
@@ -476,7 +490,7 @@ void main() {
         tester,
         TripCardActions(announcement: _trip(likeCount: 2), isOwn: false),
       );
-      expect(find.byKey(_likeCount), findsNothing);
+      expect(tester.widget<Text>(find.byKey(_likeCount)).data, '2');
 
       await tester.tap(find.byKey(_likeButton));
       await tester.pump();
@@ -491,8 +505,8 @@ void main() {
       expect(tester.widget<Text>(find.byKey(_likeCount)).data, '4');
     });
 
-    testWidgets('toucher un pouce déjà aimé retire le j\'aime et cache le '
-        'nombre', (tester) async {
+    testWidgets('toucher un pouce déjà aimé retire le j\'aime, le nombre '
+        'reste celui du serveur', (tester) async {
       useSession(real: true);
       when(() => likeRepo.unlike('trip-1')).thenAnswer(
         (_) async => const TripLikeStatus(likeCount: 1, likedByMe: false),
@@ -510,7 +524,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(thumbIcon(tester).icon, Icons.thumb_up_outlined);
-      expect(find.byKey(_likeCount), findsNothing);
+      expect(tester.widget<Text>(find.byKey(_likeCount)).data, '1');
       verify(() => likeRepo.unlike('trip-1')).called(1);
     });
 
@@ -606,9 +620,9 @@ void main() {
         find.text(AppL10n.current.listingRetryActionMessage),
         findsOneWidget,
       );
-      // Retour à l'état d'avant : pouce vide, toujours aucun nombre.
+      // Retour à l'état d'avant : pouce vide, nombre d'avant.
       expect(thumbIcon(tester).icon, Icons.thumb_up_outlined);
-      expect(find.byKey(_likeCount), findsNothing);
+      expect(tester.widget<Text>(find.byKey(_likeCount)).data, '2');
     });
 
     testWidgets('toucher_le_signet_appelle_toggleTrip', (tester) async {
@@ -779,13 +793,11 @@ void main() {
     testWidgets('le partage ne saute pas quand le nombre apparaît : '
         'AnimatedSize, et position stable une fois posé', (tester) async {
       useSession(real: true);
+      // Zéro j'aime : pas de nombre ; le premier j'aime le fait apparaître.
       when(() => likeRepo.like('trip-1')).thenAnswer(
-        (_) async => const TripLikeStatus(likeCount: 3, likedByMe: true),
+        (_) async => const TripLikeStatus(likeCount: 1, likedByMe: true),
       );
-      await pump(
-        tester,
-        TripCardActions(announcement: _trip(likeCount: 2), isOwn: false),
-      );
+      await pump(tester, TripCardActions(announcement: _trip(), isOwn: false));
       expect(
         find.descendant(
           of: find.byKey(_likeButton),
@@ -876,7 +888,7 @@ void main() {
         // « Continuer à explorer » : rien n'a bougé sur la carte.
         await tester.tap(find.text('Continuer à explorer'));
         await tester.pumpAndSettle();
-        expect(find.byKey(_likeCount), findsNothing);
+        expect(tester.widget<Text>(find.byKey(_likeCount)).data, '2');
         expect(thumbIcon(tester).icon, Icons.thumb_up_outlined);
       },
     );

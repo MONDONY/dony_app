@@ -18,10 +18,9 @@ import 'package:intl/intl.dart';
 ///
 /// - Sélectionné : pouce plein au primaire du thème (`colorScheme.primary`,
 ///   qui suit le mode sombre et le contraste élevé) ; sinon contour neutre.
-/// - Compteur caché tant que l'utilisateur n'a pas aimé : un non-aimant ne
-///   voit que le pouce. Une fois aimé, il montre le TOTAL (le sien compris,
-///   d'abord optimiste puis celui du serveur), abrégé au-delà de 1 000
-///   (« 1,3 k ») ; retirer son j'aime le cache de nouveau. Jamais de 0.
+/// - Compteur visible pour tous dès 1 j'aime, aimé ou non : le TOTAL (le
+///   sien compris, d'abord optimiste puis celui du serveur), abrégé au-delà
+///   de 1 000 (« 1,3 k »). À 0, le pouce s'affiche seul : jamais de « 0 ».
 /// - Lecture seule ([readOnly], le voyageur sur son propre trajet) : pouce au
 ///   contour neutre sans geste et compteur dès 1 j'aime, rien à 0. Un trajet
 ///   que le back refuse d'aimer ([canLike] faux) sans j'aime de
@@ -127,8 +126,8 @@ class _LikeToggle extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
     final liked = status.likedByMe;
-    // Le nombre n'apparaît qu'après mon j'aime, jamais à 0.
-    final count = liked && status.likeCount > 0 ? status.likeCount : 0;
+    // Le nombre apparaît dès 1 j'aime, jamais à 0.
+    final count = status.likeCount > 0 ? status.likeCount : 0;
     final color = liked ? cs.primary : cs.onSurfaceVariant;
     final animate = !MediaQuery.disableAnimationsOf(context);
 
@@ -140,7 +139,7 @@ class _LikeToggle extends StatelessWidget {
       // Libellé constant : l'état est dit par « activé ». Un libellé qui
       // bascule faisait lire « Je n'aime plus, activé » à TalkBack.
       label: l.tripLikeTooltip,
-      // Même règle que le nombre affiché : rien à lire s'il est caché.
+      // Même règle que le nombre affiché : rien à lire à 0.
       value: count > 0 ? l.tripLikeCountSemantics(count) : null,
       // `excludeSemantics` retire l'action de l'InkWell : sans ce rappel, le
       // pouce restait inactivable au lecteur d'écran (TalkBack, Switch Access,
