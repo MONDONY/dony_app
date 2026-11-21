@@ -23601,20 +23601,20 @@
   },
   "tripLikeTooltip": "J'aime",
   "@tripLikeTooltip": {
-      "description": "Infobulle et nom d'accessibilité du cœur d'une carte trajet, trajet pas encore aimé (trip_like_button.dart)."
+      "description": "Infobulle et nom d'accessibilité du pouce d'une carte trajet, trajet pas encore aimé (trip_like_button.dart)."
   },
   "tripUnlikeTooltip": "Je n'aime plus",
   "@tripUnlikeTooltip": {
-      "description": "Infobulle et nom d'accessibilité du cœur d'une carte trajet déjà aimé : le toucher retire le j'aime (trip_like_button.dart)."
+      "description": "Infobulle et nom d'accessibilité du pouce d'une carte trajet déjà aimé : le toucher retire le j'aime (trip_like_button.dart)."
   },
   "tripLikeCountSemantics": "{count, plural, =1{{count} personne aime ce trajet} other{{count} personnes aiment ce trajet}}",
   "@tripLikeCountSemantics": {
-      "description": "Lecture d'écran du compteur de j'aime d'une carte trajet (affiché à partir de 1).",
+      "description": "Lecture d'écran du compteur de j'aime d'une carte trajet (le nombre est exposé dès le premier j'aime, jamais à 0).",
       "placeholders": {"count": {"type": "int"}}
   },
   "tripLikeLoginInviteTitle": "Connectez-vous pour aimer ce trajet.",
   "@tripLikeLoginInviteTitle": {
-      "description": "Feuille compte requis : un visiteur sans compte touche le cœur d'une carte trajet (sous-titre de la feuille)."
+      "description": "Feuille compte requis : un visiteur sans compte touche le pouce d'une carte trajet (sous-titre de la feuille)."
   },
   "tripLikeLoginInviteBody": "Un j'aime est lié à votre compte : il montre au voyageur que son trajet intéresse.",
   "@tripLikeLoginInviteBody": {

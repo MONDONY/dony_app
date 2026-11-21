@@ -2791,7 +2791,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       distanceBadge: badge,
       existingBidStatus: existingBid?.status,
       unmetReasons: unmetReasons,
-      // ♡ + compteur, partage et signet en pied de carte, liste comme carte.
+      // pouce, partage et signet en pied de carte, liste comme carte.
       showActions: true,
       onTap: () {
         _trackCardOpened(source, 'trip');

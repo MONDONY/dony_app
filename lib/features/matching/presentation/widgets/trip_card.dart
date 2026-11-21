@@ -41,10 +41,10 @@ class TripCard extends StatelessWidget {
   final VoidCallback onTap;
   final int index;
 
-  /// Carte du trajet d'un autre voyageur : signet des favoris et ♡ actif.
+  /// Carte du trajet d'un autre voyageur : signet des favoris et pouce actif.
   /// Sur une carte active, ils vivent dans la ligne d'actions du pied
   /// ([TripCardActions], avec le partage) ; une carte passée garde le signet
-  /// dans son en-tête. Signet omis sans `FavoriteIdsCubit` dans l'arbre, ♡
+  /// dans son en-tête. Signet omis sans `FavoriteIdsCubit` dans l'arbre, pouce
   /// omis sans `TripLikesCubit` (lecture défensive, jamais de plantage).
   ///
   /// Caller is responsible for NOT passing true on items owned by the current
@@ -54,7 +54,7 @@ class TripCard extends StatelessWidget {
   final bool showFavorite;
 
   /// Carte du voyageur sur son propre trajet : la ligne d'actions montre le
-  /// compteur de j'aime en lecture seule (dès 1) et le partage, sans ♡ actif.
+  /// compteur de j'aime en lecture seule (dès 1) et le partage, sans pouce actif.
   /// Le signet n'y est que si [showFavorite] est vrai.
   final bool showOwnLikes;
 
@@ -470,7 +470,7 @@ class _ActiveCardContent extends StatelessWidget {
             ],
           ),
 
-          // ── Ligne d'actions : ♡, partage, signet ──
+          // ── Ligne d'actions : pouce, partage, signet ──
           if (_showActions)
             TripCardActions(
               announcement: announcement,

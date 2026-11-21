@@ -38916,25 +38916,25 @@ abstract class AppLocalizations {
   /// **'Limite de messages atteinte. Réservez pour continuer.'**
   String get inquirySendLimitError;
 
-  /// Infobulle et nom d'accessibilité du cœur d'une carte trajet, trajet pas encore aimé (trip_like_button.dart).
+  /// Infobulle et nom d'accessibilité du pouce d'une carte trajet, trajet pas encore aimé (trip_like_button.dart).
   ///
   /// In fr, this message translates to:
   /// **'J\'aime'**
   String get tripLikeTooltip;
 
-  /// Infobulle et nom d'accessibilité du cœur d'une carte trajet déjà aimé : le toucher retire le j'aime (trip_like_button.dart).
+  /// Infobulle et nom d'accessibilité du pouce d'une carte trajet déjà aimé : le toucher retire le j'aime (trip_like_button.dart).
   ///
   /// In fr, this message translates to:
   /// **'Je n\'aime plus'**
   String get tripUnlikeTooltip;
 
-  /// Lecture d'écran du compteur de j'aime d'une carte trajet (affiché à partir de 1).
+  /// Lecture d'écran du compteur de j'aime d'une carte trajet (le nombre n'est exposé qu'après le j'aime de l'utilisateur, ou dès le premier j'aime au voyageur du trajet).
   ///
   /// In fr, this message translates to:
   /// **'{count, plural, =1{{count} personne aime ce trajet} other{{count} personnes aiment ce trajet}}'**
   String tripLikeCountSemantics(int count);
 
-  /// Feuille compte requis : un visiteur sans compte touche le cœur d'une carte trajet (sous-titre de la feuille).
+  /// Feuille compte requis : un visiteur sans compte touche le pouce d'une carte trajet (sous-titre de la feuille).
   ///
   /// In fr, this message translates to:
   /// **'Connectez-vous pour aimer ce trajet.'**

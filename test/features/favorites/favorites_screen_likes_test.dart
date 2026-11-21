@@ -156,7 +156,7 @@ void main() {
         likes.state.byTrip['trip-own'],
         const TripLikeStatus(likeCount: 3, likedByMe: true),
       );
-      // Trajet d'un autre : ♡ actif. Son trajet : compteur en lecture seule.
+      // Trajet d'un autre : pouce actif. Son trajet : compteur en lecture seule.
       expect(find.byKey(const Key('trip-like-button')), findsOneWidget);
       expect(find.byKey(const Key('trip-like-count-readonly')), findsOneWidget);
       // Le signet reste sur les deux cartes, dans la ligne d'actions.
