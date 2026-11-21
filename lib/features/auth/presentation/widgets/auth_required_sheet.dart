@@ -72,7 +72,7 @@ abstract final class AuthRequiredSheet {
         subtitle: l10n.authRequiredFlightAlertSubtitle,
         body: l10n.authRequiredFlightAlertBody,
       ),
-      // Pouce d'une carte trajet touché par un visiteur : pas de j'aime anonyme.
+      // Cœur d'une carte trajet touché par un visiteur : pas de j'aime anonyme.
       AuthRequiredReason.like => _AuthRequiredCopy(
         subtitle: l10n.tripLikeLoginInviteTitle,
         body: l10n.tripLikeLoginInviteBody,
