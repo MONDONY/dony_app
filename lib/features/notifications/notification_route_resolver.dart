@@ -156,6 +156,9 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // un colis d'un expéditeur autorisé est rattaché sans confirmation.
     'RECIPIENT_INVITATION' => '/recipient-invitations',
     'RECIPIENT_INVITATION_ACCEPTED' => '/profile/recipients',
+    // Refus de l'invité : l'invitation disparaît des envoyées, le carnet
+    // (rechargé à l'ouverture de l'écran) est la bonne destination.
+    'RECIPIENT_INVITATION_DECLINED' => '/profile/recipients',
     // L'expéditeur l'a retiré de son carnet : il retrouve ses expéditeurs
     // autorisés, à jour (FLUTTER-8Z).
     'RECIPIENT_INVITATION_REMOVED' => '/recipient-invitations',

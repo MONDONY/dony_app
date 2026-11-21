@@ -337,6 +337,10 @@ void main() {
         'badge-check',
       );
       expect(
+        await iconAssetFor(tester, 'RECIPIENT_INVITATION_DECLINED'),
+        'user-x',
+      );
+      expect(
         await iconAssetFor(tester, 'RECIPIENT_INVITATION_REMOVED'),
         'user-x',
       );
