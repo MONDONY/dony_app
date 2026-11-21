@@ -569,9 +569,15 @@ AppException mapHttpError(DioException err) {
     );
   }
   if (statusCode == 429) {
+    // Sans `code`, le dernier segment du `type` RFC 7807 identifie le quota
+    // (`recipient-lookup-quota` ou `recipient-invitation-quota`).
+    final type = data is Map ? data['type'] : null;
+    final typeSlug = type is String && type.isNotEmpty
+        ? type.split('/').last
+        : null;
     return RateLimitException(
       detail ?? l.networkFallbackTooManyAttempts,
-      apiCode,
+      apiCode ?? (typeSlug == null || typeSlug.isEmpty ? null : typeSlug),
     );
   }
   // Fichier refusé pour sa taille : définitif (rejouer l'envoi échouerait à

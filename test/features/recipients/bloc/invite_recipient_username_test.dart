@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/features/recipients/bloc/invite_recipient_cubit.dart';
 import 'package:dony/features/recipients/data/models/recipient_invitation.dart';
 import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
@@ -241,6 +242,29 @@ void main() {
       await c.close();
     });
   });
+
+  test('validation après close : ni requête ni exception', () async {
+    final c = build()..inputChanged('awa.diallo');
+    await c.close();
+    await c.usernameCommitted();
+    verifyNever(() => repo.lookupUsername(any()));
+  });
+
+  test(
+    'contact choisi : une recherche en vol n\'écrit pas sur le numéro',
+    () async {
+      when(() => repo.lookupUsername(any())).thenAnswer((_) async => _found);
+      final c = build()..inputChanged('awa.diallo');
+      final pending = c.usernameCommitted();
+      c.contactPicked(
+        const PickedContact(fullName: 'Awa', phone: '+221771234567'),
+      );
+      await pending;
+      expect(c.state.channel, InvitationChannel.phone);
+      expect(c.state.lookup, UsernameLookupStatus.idle);
+      await c.close();
+    },
+  );
 
   test('le nom survit au changement d\'onglet', () {
     final c = build()

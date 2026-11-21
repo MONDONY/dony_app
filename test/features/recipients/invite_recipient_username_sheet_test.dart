@@ -162,6 +162,8 @@ void main() {
     await tester.enterText(usernameField(), 'awa.diallo');
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle();
+    // Puis la perte de focus : pas de seconde recherche.
+    await blur(tester);
     verify(() => repo.lookupUsername('awa.diallo')).called(1);
     expect(submitButton(tester).onPressed, isNotNull);
   });

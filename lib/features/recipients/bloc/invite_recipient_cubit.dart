@@ -192,6 +192,9 @@ class InviteRecipientCubit extends Cubit<InviteRecipientState> {
   /// reprend son nom. Un contact sans numéro ne garde que le nom.
   void contactPicked(PickedContact contact, {String? countryCode}) {
     if (state.status == InviteRecipientStatus.submitting) return;
+    // Une recherche d'identifiant en vol ne doit pas écrire sur l'onglet
+    // Numéro.
+    _generation++;
     final phone = contact.phone;
     final fullName = contact.fullName?.trim() ?? '';
     final name = fullName.length > InviteRecipientState.nameMaxLength
@@ -234,6 +237,8 @@ class InviteRecipientCubit extends Cubit<InviteRecipientState> {
   /// recherche, seulement si le format local est valide (le seau serveur est
   /// de 30 par heure, partagé avec l'envoi). Le serveur reste l'autorité.
   Future<void> usernameCommitted() async {
+    // Feuille fermée (glissement) : ni requête, ni émission.
+    if (isClosed) return;
     final s = state;
     if (s.channel != InvitationChannel.username ||
         s.status == InviteRecipientStatus.submitting ||

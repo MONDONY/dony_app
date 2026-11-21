@@ -34,6 +34,22 @@ void main() {
       },
     );
 
+    test('429 : le code du quota est conservé (code, sinon type)', () {
+      final byCode = mapHttpError(
+        _http(429, body: {'code': 'recipient-lookup-quota'}),
+      );
+      expect((byCode as RateLimitException).apiCode, 'recipient-lookup-quota');
+      final byType = mapHttpError(
+        _http(
+          429,
+          body: {'type': 'https://yadony.com/problems/recipient-lookup-quota'},
+        ),
+      );
+      expect((byType as RateLimitException).apiCode, 'recipient-lookup-quota');
+      final bare = mapHttpError(_http(429));
+      expect((bare as RateLimitException).apiCode, isNull);
+    });
+
     test('409 → ConflictException avec le code RFC 7807', () {
       final e = mapHttpError(
         _http(
