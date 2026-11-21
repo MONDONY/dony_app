@@ -367,7 +367,7 @@ class _InviteLinkCard extends StatelessWidget {
                 child: Builder(
                   builder: (buttonContext) => OutlinedButton.icon(
                     key: const ValueKey('referral-share-sheet'),
-                    icon: DonyIcon('share-2', size: 18, color: cs.primary),
+                    icon: DonyIcon('share-curved', size: 18, color: cs.primary),
                     label: Text(l.commonShare),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: cs.primary,

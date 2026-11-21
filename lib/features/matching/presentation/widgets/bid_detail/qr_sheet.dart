@@ -189,7 +189,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
                       return DonyButton(
                         label: context.l10n.commonShare,
                         variant: DonyButtonVariant.secondary,
-                        iconAsset: 'share-2',
+                        iconAsset: 'share-curved',
                         isLoading: isSharing,
                         onPressed: (isSaving || isSharing)
                             ? null

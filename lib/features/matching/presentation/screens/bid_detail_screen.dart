@@ -771,7 +771,7 @@ class _BidDetailViewState extends State<_BidDetailView>
                     actions: [
                       if (isSender && _bid.trackingToken != null)
                         IconButton(
-                          icon: DonyIcon('share-2', color: cs.onSurface),
+                          icon: DonyIcon('share-curved', color: cs.onSurface),
                           tooltip: l.bidDetailShareTracking,
                           onPressed: () => shareTrackingLink(
                             _bid,

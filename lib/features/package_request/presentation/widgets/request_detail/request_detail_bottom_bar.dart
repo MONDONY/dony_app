@@ -18,7 +18,7 @@ import 'package:flutter/material.dart';
     ),
     RequestPrimaryAction.share => (
       label: l.commonShare,
-      icon: 'share-2',
+      icon: 'share-curved',
       enabled: true,
     ),
     RequestPrimaryAction.openThread => (

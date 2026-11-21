@@ -70,7 +70,7 @@ String tripTileIcon(TripTile tile) => switch (tile) {
   TripTile.itinerary => 'route',
   TripTile.payments => 'credit-card',
   TripTile.conditions => 'clipboard-check',
-  TripTile.poster => 'share-2',
+  TripTile.poster => 'share-curved',
   TripTile.arrival => 'flag',
 };
 
