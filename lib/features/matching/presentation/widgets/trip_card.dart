@@ -41,10 +41,10 @@ class TripCard extends StatelessWidget {
   final VoidCallback onTap;
   final int index;
 
-  /// Carte du trajet d'un autre voyageur : signet des favoris et pouce actif.
+  /// Carte du trajet d'un autre voyageur : signet des favoris et cœur actif.
   /// Sur une carte active, ils vivent dans la ligne d'actions du pied
   /// ([TripCardActions], avec le partage) ; une carte passée garde le signet
-  /// dans son en-tête. Signet omis sans `FavoriteIdsCubit` dans l'arbre, pouce
+  /// dans son en-tête. Signet omis sans `FavoriteIdsCubit` dans l'arbre, cœur
   /// omis sans `TripLikesCubit` (lecture défensive, jamais de plantage).
   ///
   /// Caller is responsible for NOT passing true on items owned by the current
@@ -54,8 +54,8 @@ class TripCard extends StatelessWidget {
   final bool showFavorite;
 
   /// Carte du voyageur sur son propre trajet : la ligne d'actions montre le
-  /// compteur de j'aime en lecture seule (dès 1) et le partage, sans pouce actif.
-  /// Le signet n'y est que si [showFavorite] est vrai.
+  /// cœur (qu'il peut aimer, comme n'importe qui), le compteur de j'aime dès 1
+  /// et le partage. Le signet n'y est que si [showFavorite] est vrai.
   final bool showOwnLikes;
 
   /// Épingle de « Mes trajets » (FLUTTER-FS) : `null` = pas d'épingle (carte
@@ -470,7 +470,7 @@ class _ActiveCardContent extends StatelessWidget {
             ],
           ),
 
-          // ── Ligne d'actions : pouce, partage, signet ──
+          // ── Ligne d'actions : cœur, partage, signet ──
           if (_showActions)
             TripCardActions(
               announcement: announcement,

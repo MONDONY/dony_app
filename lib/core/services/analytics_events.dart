@@ -1529,7 +1529,7 @@ abstract final class AnalyticsEvents {
   /// (`trip-like-own-trip`, `network`, `unknown`…).
   static const tripLikeFailed = 'trip_like_failed';
 
-  /// Visiteur sans compte qui touche le pouce ou l'icône de partage d'une
+  /// Visiteur sans compte qui touche le cœur ou l'icône de partage d'une
   /// carte de trajet : feuille de connexion ouverte. Le motif (j'aime ou
   /// partage) n'est pas mesuré.
   static const tripLikeLoginPrompted = 'trip_like_login_prompted';

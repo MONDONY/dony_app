@@ -216,7 +216,7 @@ class _TripsTab extends StatelessWidget {
                   // Signet dans la ligne d'actions, gardé sur son propre
                   // trajet pour pouvoir le retirer des favoris.
                   showFavorite: true,
-                  // Son propre trajet : compteur en lecture seule, sans pouce actif.
+                  // Son propre trajet : même cœur et même compteur, sans signet par défaut.
                   showOwnLikes:
                       currentUserId != null && trip.travelerId == currentUserId,
                 );

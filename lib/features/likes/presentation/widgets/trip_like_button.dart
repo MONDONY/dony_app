@@ -14,17 +14,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-/// Pouce « j'aime » public d'un trajet, lu dans [TripLikesCubit].
+/// Cœur « j'aime » public d'un trajet, lu dans [TripLikesCubit].
 ///
-/// - Sélectionné : pouce plein au primaire du thème (`colorScheme.primary`,
+/// - Sélectionné : cœur plein au primaire du thème (`colorScheme.primary`,
 ///   qui suit le mode sombre et le contraste élevé) ; sinon contour neutre.
 /// - Compteur visible pour tous dès 1 j'aime, aimé ou non : le TOTAL (le
 ///   sien compris, d'abord optimiste puis celui du serveur), abrégé au-delà
-///   de 1 000 (« 1,3 k »). À 0, le pouce s'affiche seul : jamais de « 0 ».
-/// - Lecture seule ([readOnly], le voyageur sur son propre trajet) : pouce au
-///   contour neutre sans geste et compteur dès 1 j'aime, rien à 0. Un trajet
-///   que le back refuse d'aimer ([canLike] faux) sans j'aime de
-///   l'utilisateur : même pouce neutre, sans geste et sans nombre. Un j'aime
+///   de 1 000 (« 1,3 k »). À 0, le cœur s'affiche seul : jamais de « 0 ».
+/// - Le voyageur ([isOwn]) aime son propre trajet comme n'importe qui, avec le
+///   même cœur et le même compteur.
+/// - Trajet que le back refuse d'aimer ([canLike] faux : en cours, brouillon,
+///   caché…) sans j'aime de l'utilisateur : aucun cœur. Seul le voyageur y
+///   garde le compteur en lecture seule (dès 1 j'aime, rien à 0). Un j'aime
 ///   déjà posé sur un trajet devenu non aimable reste actif pour pouvoir être
 ///   retiré.
 /// - Lecteur d'écran : libellé constant « J'aime », l'état passe par
@@ -45,19 +46,22 @@ class TripLikeButton extends StatelessWidget {
   const TripLikeButton({
     super.key,
     required this.announcement,
-    this.readOnly = false,
+    this.isOwn = false,
   });
 
   final AnnouncementModel announcement;
-  final bool readOnly;
 
-  /// Taille des icônes de la ligne d'actions (pouce, partage, signet).
+  /// Le voyageur sur son propre trajet : même cœur, et compteur en lecture
+  /// seule quand le trajet n'est plus aimable.
+  final bool isOwn;
+
+  /// Taille des icônes de la ligne d'actions (cœur, partage, signet).
   static const double iconSize = 24;
 
   /// Le back accepte-t-il un j'aime sur [trip] ? Même règle que
   /// `TripLikeService.requireLikeable` : trajet ACTIVE ou FULL, non caché.
   /// Ailleurs (en cours, brouillon, retiré…), chaque toucher finirait en 404
-  /// puis « Action impossible » : le pouce y reste en lecture seule.
+  /// puis « Action impossible » : le cœur y reste en lecture seule.
   static bool canLike(AnnouncementModel trip) =>
       (trip.status == 'ACTIVE' || trip.isFull) && !trip.hidden;
 
@@ -73,14 +77,13 @@ class TripLikeButton extends StatelessWidget {
         final status = cubit.statusOf(announcement);
         // Un j'aime déjà posé reste retirable même quand le trajet n'est
         // plus aimable (le back accepte le retrait, jamais un nouveau
-        // j'aime) : une fois retiré, le pouce retombe en lecture seule.
-        final locked =
-            readOnly || (!canLike(announcement) && !status.likedByMe);
+        // j'aime) : une fois retiré, le cœur disparaît.
+        final locked = !canLike(announcement) && !status.likedByMe;
         if (locked) {
           // Seul le voyageur voit le nombre sur son trajet, dès 1 ; sans
-          // rien à lui montrer, il n'a pas de pouce. Un autre utilisateur
+          // rien à lui montrer, il n'a pas de cœur. Un autre utilisateur
           // sur un trajet non aimable, sans j'aime à lui : rien du tout.
-          return readOnly && status.likeCount > 0
+          return isOwn && status.likeCount > 0
               ? _ReadOnlyLikes(count: status.likeCount)
               : const SizedBox.shrink();
         }
@@ -142,12 +145,12 @@ class _LikeToggle extends StatelessWidget {
       // Même règle que le nombre affiché : rien à lire à 0.
       value: count > 0 ? l.tripLikeCountSemantics(count) : null,
       // `excludeSemantics` retire l'action de l'InkWell : sans ce rappel, le
-      // pouce restait inactivable au lecteur d'écran (TalkBack, Switch Access,
+      // cœur restait inactivable au lecteur d'écran (TalkBack, Switch Access,
       // Voice Access).
       onTap: onTap,
       excludeSemantics: true,
       // L'infobulle visuelle dit le geste qui suit. Le `Material` transparent
-      // donne au pouce sa propre surface d'encre : le fond décoré de la carte
+      // donne au cœur sa propre surface d'encre : le fond décoré de la carte
       // recouvrait celle de l'écran (ni éclaboussure ni focus visible), sans
       // changer la mise en page. `Tooltip(` reste à moins de 10 lignes de
       // l'`InkWell` : c'est la fenêtre où le garde a11y cherche un nom.
@@ -162,7 +165,7 @@ class _LikeToggle extends StatelessWidget {
             child: _LikeLayout(
               count: count,
               countColor: color,
-              // Pop court du pouce, coupé avec « réduire les animations ».
+              // Pop court du cœur, coupé avec « réduire les animations ».
               icon: AnimatedSwitcher(
                 duration: animate
                     ? const Duration(milliseconds: 220)
@@ -175,7 +178,7 @@ class _LikeToggle extends StatelessWidget {
                   child: child,
                 ),
                 child: Icon(
-                  liked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                  liked ? Icons.favorite : Icons.favorite_border,
                   key: ValueKey(liked),
                   size: TripLikeButton.iconSize,
                   color: color,
@@ -189,8 +192,8 @@ class _LikeToggle extends StatelessWidget {
   }
 }
 
-/// Pouce sans geste : le voyageur sur son propre trajet voit combien
-/// l'aiment ([count] > 0), sans pouvoir aimer. Pouce au contour neutre : un pouce plein se lirait « j'ai aimé ce trajet ».
+/// Cœur sans geste : le voyageur sur son propre trajet voit combien
+/// l'aiment ([count] > 0), sans pouvoir aimer. Cœur au contour neutre : un cœur plein se lirait « j'ai aimé ce trajet ».
 class _ReadOnlyLikes extends StatelessWidget {
   const _ReadOnlyLikes({required this.count});
 
@@ -208,7 +211,7 @@ class _ReadOnlyLikes extends StatelessWidget {
         count: count,
         countColor: cs.onSurfaceVariant,
         icon: Icon(
-          Icons.thumb_up_outlined,
+          Icons.favorite_border,
           size: TripLikeButton.iconSize,
           color: cs.onSurfaceVariant,
         ),
@@ -217,7 +220,7 @@ class _ReadOnlyLikes extends StatelessWidget {
   }
 }
 
-/// Pouce au début d'une zone d'au moins 44 × 44, compteur à sa suite.
+/// Cœur au début d'une zone d'au moins 44 × 44, compteur à sa suite.
 class _LikeLayout extends StatelessWidget {
   const _LikeLayout({
     required this.icon,
