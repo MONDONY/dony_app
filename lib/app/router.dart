@@ -33,6 +33,7 @@ import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
+import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
 import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
@@ -292,11 +293,7 @@ const _publicRoutes = {
 };
 
 /// Routes de l'ancien parcours d'inscription, redirigées vers l'accueil.
-const _retiredSignupRoutes = [
-  '/auth/intent',
-  '/auth/personal-info',
-  '/auth/referral-code',
-];
+const _retiredSignupRoutes = ['/auth/intent', '/auth/personal-info'];
 
 /// Décide si une navigation doit être détournée vers l'écran de connexion, et
 /// renvoie `null` si elle peut aboutir.
@@ -971,6 +968,19 @@ final GoRouter appRouter = GoRouter(
             context.read<AuthBloc>().state.currentUser?.phoneNumber,
           ),
         ),
+      ),
+    ),
+    // Après « Faisons connaissance » : code de parrainage facultatif (voir
+    // ReferralCodeScreen). Un `ReferralBloc` neuf : l'écran n'a pas à partager
+    // l'état du singleton du profil.
+    GoRoute(
+      path: referralCodeRoute,
+      builder: (context, state) => BlocProvider(
+        create: (_) => ReferralBloc(
+          getIt<ReferralRepository>(),
+          getIt<AnalyticsService>(),
+        ),
+        child: ReferralCodeScreen(analytics: getIt<AnalyticsService>()),
       ),
     ),
     // Fin d'inscription : choix de la première action (voir FirstStepsScreen).

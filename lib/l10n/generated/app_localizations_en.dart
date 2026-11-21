@@ -1540,6 +1540,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get referralAutoAppliedMessage => 'Referral code applied.';
 
   @override
+  String get referralSignupEyebrow => 'Optional';
+
+  @override
+  String get referralSignupTitle => 'Got a referral code?';
+
+  @override
+  String get referralSignupBody =>
+      'Enter the code of the person who invited you to get a welcome code.';
+
+  @override
+  String get referralSignupFootnote =>
+      'You can skip this step and enter a code later from your profile.';
+
+  @override
+  String get referralSignupCodeLabel => 'Referral code';
+
+  @override
+  String get referralSignupCodeHint => 'E.g. JEAN0234';
+
+  @override
+  String get referralSignupApply => 'Apply code';
+
+  @override
+  String get referralSignupSkip => 'Skip';
+
+  @override
   String get authRequiredTitle => 'Sign-in required';
 
   @override

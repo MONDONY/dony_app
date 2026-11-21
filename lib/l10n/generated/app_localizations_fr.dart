@@ -1551,6 +1551,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String get referralAutoAppliedMessage => 'Code de parrainage appliqué.';
 
   @override
+  String get referralSignupEyebrow => 'Facultatif';
+
+  @override
+  String get referralSignupTitle => 'Un code de parrainage ?';
+
+  @override
+  String get referralSignupBody =>
+      'Entrez le code de la personne qui vous a invité pour recevoir un code de bienvenue.';
+
+  @override
+  String get referralSignupFootnote =>
+      'Vous pouvez passer cette étape et saisir un code plus tard depuis votre profil.';
+
+  @override
+  String get referralSignupCodeLabel => 'Code de parrainage';
+
+  @override
+  String get referralSignupCodeHint => 'Ex : JEAN0234';
+
+  @override
+  String get referralSignupApply => 'Valider le code';
+
+  @override
+  String get referralSignupSkip => 'Passer';
+
+  @override
   String get authRequiredTitle => 'Connexion requise';
 
   @override

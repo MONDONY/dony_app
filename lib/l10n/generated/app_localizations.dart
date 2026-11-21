@@ -2780,6 +2780,54 @@ abstract class AppLocalizations {
   /// **'Code de parrainage appliqué.'**
   String get referralAutoAppliedMessage;
 
+  /// No description provided for @referralSignupEyebrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Facultatif'**
+  String get referralSignupEyebrow;
+
+  /// No description provided for @referralSignupTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un code de parrainage ?'**
+  String get referralSignupTitle;
+
+  /// No description provided for @referralSignupBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez le code de la personne qui vous a invité pour recevoir un code de bienvenue.'**
+  String get referralSignupBody;
+
+  /// No description provided for @referralSignupFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pouvez passer cette étape et saisir un code plus tard depuis votre profil.'**
+  String get referralSignupFootnote;
+
+  /// No description provided for @referralSignupCodeLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de parrainage'**
+  String get referralSignupCodeLabel;
+
+  /// No description provided for @referralSignupCodeHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : JEAN0234'**
+  String get referralSignupCodeHint;
+
+  /// No description provided for @referralSignupApply.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider le code'**
+  String get referralSignupApply;
+
+  /// No description provided for @referralSignupSkip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer'**
+  String get referralSignupSkip;
+
   /// No description provided for @authRequiredTitle.
   ///
   /// In fr, this message translates to:

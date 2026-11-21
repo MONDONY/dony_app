@@ -552,6 +552,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.profileBasicsCountryPrefilledHint,
   'profileBasicsSaveError': (l) => l.profileBasicsSaveError,
   'referralAutoAppliedMessage': (l) => l.referralAutoAppliedMessage,
+  'referralSignupEyebrow': (l) => l.referralSignupEyebrow,
+  'referralSignupTitle': (l) => l.referralSignupTitle,
+  'referralSignupBody': (l) => l.referralSignupBody,
+  'referralSignupFootnote': (l) => l.referralSignupFootnote,
+  'referralSignupCodeLabel': (l) => l.referralSignupCodeLabel,
+  'referralSignupCodeHint': (l) => l.referralSignupCodeHint,
+  'referralSignupApply': (l) => l.referralSignupApply,
+  'referralSignupSkip': (l) => l.referralSignupSkip,
   'authRequiredTitle': (l) => l.authRequiredTitle,
   'authRequiredSignIn': (l) => l.authRequiredSignIn,
   'authRequiredKeepExploring': (l) => l.authRequiredKeepExploring,
@@ -3202,6 +3210,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripAudienceViewers': (l) => l.tripAudienceViewers(intPlaceholderValue),
   'tripAudiencePosterViews': (l) =>
       l.tripAudiencePosterViews(intPlaceholderValue),
+  'tripAudienceLikes': (l) => l.tripAudienceLikes(intPlaceholderValue),
   'tripOwnerDraftBannerMessage': (l) => l.tripOwnerDraftBannerMessage,
   'tripOwnerMarkArrivedButton': (l) => l.tripOwnerMarkArrivedButton,
   'tripOwnerDeleteBlockedTitle': (l) => l.tripOwnerDeleteBlockedTitle,
@@ -8397,6 +8406,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.inquiryLockedBarMessage(intPlaceholderValue, placeholderMarker('name')),
   'inquiryBookingCardTitle': (l) => l.inquiryBookingCardTitle,
   'inquirySendLimitError': (l) => l.inquirySendLimitError,
+  'tripLikeTooltip': (l) => l.tripLikeTooltip,
+  'tripUnlikeTooltip': (l) => l.tripUnlikeTooltip,
+  'tripLikeCountSemantics': (l) =>
+      l.tripLikeCountSemantics(intPlaceholderValue),
+  'tripLikeLoginInviteTitle': (l) => l.tripLikeLoginInviteTitle,
+  'tripLikeLoginInviteBody': (l) => l.tripLikeLoginInviteBody,
+  'tripShareLoginInviteTitle': (l) => l.tripShareLoginInviteTitle,
+  'tripShareLoginInviteBody': (l) => l.tripShareLoginInviteBody,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

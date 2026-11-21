@@ -351,6 +351,7 @@ class AuthFlowActions extends StatelessWidget {
     this.onSkip,
     this.skipEnabled = true,
     this.skipLabel,
+    this.skipKey,
   });
 
   final Widget? primary;
@@ -369,6 +370,9 @@ class AuthFlowActions extends StatelessWidget {
   /// Libellé du lien « passer ». `null` : « Passer pour l'instant » traduit.
   final String? skipLabel;
 
+  /// Clé du bouton « passer » (tests).
+  final Key? skipKey;
+
   @override
   Widget build(BuildContext context) {
     // « Passer » est un bouton bordé AU-DESSUS du bouton principal : le
@@ -382,6 +386,7 @@ class AuthFlowActions extends StatelessWidget {
         if (onSkip != null) ...[
           const SizedBox(height: DonySpacing.sm),
           DonyButton(
+            key: skipKey,
             label: skipLabel ?? context.l10n.authFlowSkipForNow,
             variant: DonyButtonVariant.secondary,
             onPressed: skipEnabled ? onSkip : null,

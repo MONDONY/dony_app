@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
+import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -42,6 +43,7 @@ void main() {
       '/profile/edit',
       analyticsConsentRoute,
       profileBasicsRoute,
+      referralCodeRoute,
       '/trips/create',
     ];
 
@@ -170,17 +172,13 @@ void main() {
     });
   });
 
-  // Ancien parcours d'inscription (informations, parrainage, « Votre projet ») :
+  // Ancien parcours d'inscription (informations, « Votre projet ») :
   // les écrans n'existent plus, un lien ou un état
   // restauré qui les vise atterrit sur l'accueil.
   group('routes retirées de l\'inscription', () {
     tearDown(getIt.reset);
 
-    const retired = [
-      '/auth/personal-info',
-      '/auth/referral-code',
-      '/auth/intent',
-    ];
+    const retired = ['/auth/personal-info', '/auth/intent'];
 
     GoRoute? findRoute(List<RouteBase> routes, String path) {
       for (final route in routes) {
@@ -233,6 +231,22 @@ void main() {
     }
   });
 
+  test('/auth/referral-code est un écran, plus une route retirée', () {
+    GoRoute? find(List<RouteBase> routes) {
+      for (final route in routes) {
+        if (route is GoRoute && route.path == referralCodeRoute) return route;
+        final nested = find(route.routes);
+        if (nested != null) return nested;
+      }
+      return null;
+    }
+
+    final route = find(appRouter.configuration.routes);
+    expect(route, isNotNull);
+    expect(route!.redirect, isNull, reason: 'plus de renvoi vers /home');
+    expect(route.builder, isNotNull);
+  });
+
   group('utilisateur réel', () {
     const routes = [
       '/payments/pay',
@@ -241,6 +255,7 @@ void main() {
       '/profile/edit',
       analyticsConsentRoute,
       profileBasicsRoute,
+      referralCodeRoute,
       '/trips/create',
       '/home',
       '/package-requests/abc-123',
