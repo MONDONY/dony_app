@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/data/models/referral_info.dart';
@@ -79,5 +80,58 @@ void main() {
     bloc.add(const ReferralShared('test message'));
     await Future<void>.delayed(const Duration(milliseconds: 200));
     verifyNever(() => backend.capture(any(), any()));
+  });
+
+  group('inscription (fromSignup)', () {
+    test('code accepté : referral_signup_applied, sans propriété', () async {
+      when(() => repo.redeemCode(any())).thenAnswer((_) async {});
+      final bloc = makeBloc();
+      bloc.add(const ReferralRedeemRequested('AMINA05', fromSignup: true));
+      await bloc.stream.firstWhere((s) => s is ReferralRedeemed);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      final captured = verify(
+        () => backend.capture(
+          AnalyticsEvents.referralSignupApplied,
+          captureAny(),
+        ),
+      ).captured;
+      expect(captured, hasLength(1));
+      expect(captured.single.toString(), isNot(contains('AMINA05')));
+    });
+
+    test(
+      'code refusé : referral_signup_rejected avec error_code seul',
+      () async {
+        when(() => repo.redeemCode(any())).thenThrow(
+          const ValidationException(
+            'AMINA05 inconnu',
+            code: 'referral-code-not-found',
+          ),
+        );
+        final bloc = makeBloc();
+        bloc.add(const ReferralRedeemRequested('AMINA05', fromSignup: true));
+        await bloc.stream.firstWhere((s) => s is ReferralRedeemError);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        final captured = verify(
+          () => backend.capture(
+            AnalyticsEvents.referralSignupRejected,
+            captureAny(),
+          ),
+        ).captured;
+        expect(captured.single, {'error_code': 'referral-code-not-found'});
+      },
+    );
+
+    test(
+      'hors inscription (profil) : aucun événement referral_signup_*',
+      () async {
+        when(() => repo.redeemCode(any())).thenAnswer((_) async {});
+        final bloc = makeBloc();
+        bloc.add(const ReferralRedeemRequested('AMINA05'));
+        await bloc.stream.firstWhere((s) => s is ReferralRedeemed);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        verifyNever(() => backend.capture(any(), any()));
+      },
+    );
   });
 }

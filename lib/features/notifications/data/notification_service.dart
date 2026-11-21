@@ -939,6 +939,13 @@ class NotificationService {
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',
           tag: tag,
+          // Le message de bienvenue du filleul porte son code promo : sans
+          // texte déplié, Android le tronque sur une seule ligne.
+          styleInformation:
+              message.data['type'] == 'REFERRAL_WELCOME' &&
+                  notification.body != null
+              ? BigTextStyleInformation(notification.body!)
+              : null,
         ),
         iOS: const DarwinNotificationDetails(
           presentAlert: true,

@@ -873,6 +873,22 @@ abstract final class AnalyticsEvents {
   /// (propriété `outcome` : `applied` / `rejected`, jamais le code).
   static const referralAutoApplied = 'referral_auto_applied';
 
+  // Écran « Parrainage » de l'inscription (après « Faisons connaissance »).
+  // Aucune propriété ne porte le code saisi.
+
+  /// Écran Parrainage affiché à l'inscription.
+  static const referralSignupViewed = 'referral_signup_viewed';
+
+  /// Code saisi à l'inscription accepté par le serveur.
+  static const referralSignupApplied = 'referral_signup_applied';
+
+  /// Code saisi à l'inscription refusé (propriété `error_code` : code
+  /// d'erreur du serveur, ou `unknown`).
+  static const referralSignupRejected = 'referral_signup_rejected';
+
+  /// « Passer » touché sur l'écran Parrainage de l'inscription.
+  static const referralSignupSkipped = 'referral_signup_skipped';
+
   /// Bouton « Ouvrir Yadony » d'un e-mail de notification ouvert dans l'app
   /// (lien universel `https://yadony.com/ouvrir?type=…` ou
   /// `yadony://open?type=…`). Propriétés `type` (type de notification) et

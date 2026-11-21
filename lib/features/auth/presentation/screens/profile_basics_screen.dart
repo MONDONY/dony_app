@@ -7,6 +7,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/profile_basics_cubit.dart';
 import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
+import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/referral/data/pending_referral_redeemer.dart';
 import 'package:dony/l10n/country_names.dart';
@@ -17,7 +18,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Écran facultatif « Faisons connaissance », juste après le code de
-/// vérification et avant les premiers pas (`firstStepsRoute`).
+/// vérification. Il mène à l'écran Parrainage (`referralCodeRoute`), sauf si
+/// un code venu d'un lien d'invitation vient d'être appliqué : on file alors
+/// aux premiers pas (`firstStepsRoute`).
 ///
 /// Hors du préfixe `/onboarding`, que le routeur traite comme public : cet
 /// écran suppose un compte connecté.
@@ -37,8 +40,10 @@ class ProfileBasicsScreen extends StatefulWidget {
 
   final String? initialCountryCode;
 
-  /// Applique le code parrain venu d'un lien d'invitation, une seule fois à
-  /// l'ouverture. `null` : rien à appliquer.
+  /// Applique le code parrain venu d'un lien d'invitation, une seule fois, en
+  /// QUITTANT l'écran (« Continuer » ou « Passer ») : le prénom est alors déjà
+  /// enregistré, le serveur le lit pour fabriquer le code de bienvenue.
+  /// `null` : rien à appliquer.
   final PendingReferralRedeemer? redeemer;
 
   @override
@@ -50,23 +55,39 @@ class _ProfileBasicsScreenState extends State<ProfileBasicsScreen> {
   final _lastNameCtrl = TextEditingController();
   late final _country = ValueNotifier<String?>(widget.initialCountryCode);
 
+  /// Une sortie est en cours (le code du lien est en train d'être appliqué) :
+  /// jamais deux fois.
+  bool _leaving = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) context.read<ProfileBasicsCubit>().trackViewed();
-      unawaited(_applyReferral());
     });
   }
 
-  Future<void> _applyReferral() async {
+  /// Sortie de l'écran, appelée une fois le prénom enregistré (ou l'étape
+  /// passée). Le code du lien est appliqué ICI et non à l'ouverture : à
+  /// l'ouverture le prénom n'était pas encore saisi, le serveur créait donc
+  /// un code de bienvenue aléatoire (`YADO-XXXX`) au lieu de `AMINA05`.
+  ///
+  /// Code appliqué : snackbar puis premiers pas, l'écran Parrainage serait
+  /// redondant. Sinon (aucun code, ou code refusé) : écran Parrainage.
+  Future<void> _leave() async {
+    if (_leaving) return;
+    _leaving = true;
     final outcome = await widget.redeemer?.apply();
-    if (outcome == PendingReferralOutcome.applied && mounted) {
+    if (!mounted) return;
+    if (outcome == PendingReferralOutcome.applied) {
       DonySnackbar.show(
         context,
         message: context.l10n.referralAutoAppliedMessage,
         type: DonySnackbarType.success,
       );
+      context.go(firstStepsRoute);
+    } else {
+      context.go(referralCodeRoute);
     }
   }
 
@@ -107,7 +128,7 @@ class _ProfileBasicsScreenState extends State<ProfileBasicsScreen> {
           if (state.refreshProfile) {
             context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
           }
-          context.go(firstStepsRoute);
+          unawaited(_leave());
         } else if (state is ProfileBasicsError) {
           DonySnackbar.show(
             context,
@@ -118,6 +139,8 @@ class _ProfileBasicsScreenState extends State<ProfileBasicsScreen> {
       },
       builder: (context, state) {
         final isSaving = state is ProfileBasicsSaving;
+        // Succès : la sortie (code du lien) est en cours, plus de nouvelle action.
+        final busy = isSaving || state is ProfileBasicsSuccess;
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -183,10 +206,10 @@ class _ProfileBasicsScreenState extends State<ProfileBasicsScreen> {
                             key: const Key('profile-basics-continue'),
                             label: l.commonContinue,
                             iconAsset: 'arrow-right',
-                            isLoading: isSaving,
-                            onPressed: isSaving ? null : _submit,
+                            isLoading: busy,
+                            onPressed: busy ? null : _submit,
                           ),
-                          skipEnabled: !isSaving,
+                          skipEnabled: !busy,
                           onSkip: () =>
                               context.read<ProfileBasicsCubit>().skip(),
                         ),

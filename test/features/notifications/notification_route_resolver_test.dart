@@ -957,6 +957,30 @@ void main() {
     expect(isShellTabRoute('/profile/referral'), isFalse);
   });
 
+  test('resolves_referralWelcome_toSendIntroRoute', () {
+    expect(
+      resolveNotificationRoute('REFERRAL_WELCOME', {
+        'route': '/parcels/send-intro',
+      }),
+      '/parcels/send-intro',
+    );
+    // Type seul, sans champ route : la cible vient du type.
+    expect(
+      resolveNotificationRoute('REFERRAL_WELCOME', {}),
+      '/parcels/send-intro',
+    );
+    expect(isShellTabRoute('/parcels/send-intro'), isFalse);
+  });
+
+  test('un type inconnu retombe sur null sans exception', () {
+    expect(
+      resolveNotificationRoute('TYPE_QUI_NEXISTE_PAS', {
+        'route': '/parcels/send-intro',
+      }),
+      isNull,
+    );
+  });
+
   test('FIRST_ACTION_REMINDER ouvre les premiers pas', () {
     expect(
       resolveNotificationRoute('FIRST_ACTION_REMINDER', {}),

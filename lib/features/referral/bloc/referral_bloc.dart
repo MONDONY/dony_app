@@ -228,9 +228,22 @@ class ReferralBloc extends Bloc<ReferralEvent, ReferralState> {
     emit(const ReferralRedeemLoading());
     try {
       await _repository.redeemCode(event.code);
+      if (event.fromSignup) {
+        unawaited(_analytics.logEvent(AnalyticsEvents.referralSignupApplied));
+      }
       emit(const ReferralRedeemed());
     } catch (e) {
-      emit(ReferralRedeemError(unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      if (event.fromSignup) {
+        // Jamais le code ni le message (qui peut le citer) : le code d'erreur seul.
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.referralSignupRejected,
+            properties: {'error_code': error.code ?? 'unknown'},
+          ),
+        );
+      }
+      emit(ReferralRedeemError(error));
     }
   }
 }
