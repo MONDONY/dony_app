@@ -57,6 +57,7 @@ jobs:
       target: ${{ steps.v.outputs.target }}
       build_number: ${{ steps.bn.outputs.build_number }}
       skip: ${{ steps.diff.outputs.skip || 'false' }}
+      ios_closed: ${{ steps.ver.outputs.closed || 'false' }}
     steps:
       - id: v
         env:
@@ -90,6 +91,26 @@ jobs:
           NUMBER=$(python3 -I tool/next_build_number.py)
           echo "build_number=$NUMBER" >> "$GITHUB_OUTPUT"
           echo "Build $NUMBER"
+
+      # Apple refuse tout nouveau build d'une version déjà soumise, approuvée ou
+      # publiée (« train closed », 409) : le build iOS de 30 min échouait alors
+      # à l'envoi, à chaque merge. On le saura avant : iOS est sauté avec un
+      # avertissement, Android continue. Staging comme production (même train).
+      - name: Version iOS encore ouverte chez Apple ?
+        id: ver
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_APP_ID: "6797821239"
+        run: |
+          python3 -I tool/check_ios_version_closed.py pubspec.yaml | tee -a "$GITHUB_OUTPUT"
+          REASON=$(grep '^reason=' "$GITHUB_OUTPUT" | tail -1 | cut -d= -f2- || true)
+          if [ -n "$REASON" ]; then
+            echo "::warning title=iOS ignoré::$REASON"
+            echo "### iOS ignoré" >> "$GITHUB_STEP_SUMMARY"
+            echo "$REASON" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       # Un merge qui ne touche ni le code ni la config native ne mérite pas
       # un build de 30 min (docs, plans, workflows).
@@ -216,7 +237,7 @@ jobs:
     name: iOS → TestFlight
     environment: ${{ needs.prepare.outputs.target }}
     needs: prepare
-    if: needs.prepare.outputs.skip != 'true' && (github.event_name != 'workflow_dispatch' || inputs.ios)
+    if: needs.prepare.outputs.skip != 'true' && needs.prepare.outputs.ios_closed != 'true' && (github.event_name != 'workflow_dispatch' || inputs.ios)
     runs-on: macos-15
     timeout-minutes: 75
     steps:
