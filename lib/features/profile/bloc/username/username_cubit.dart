@@ -23,6 +23,13 @@ enum UsernameStatus {
   /// `429` : trop de vérifications ou de changements.
   quota,
   error,
+
+  /// Route absente (back pas encore déployé) : « Indisponible pour le
+  /// moment », enregistrement désactivé.
+  unsupported,
+
+  /// `403` : un invité n'a pas d'identifiant à choisir.
+  guest,
 }
 
 class UsernameState extends Equatable {
@@ -166,20 +173,28 @@ class UsernameCubit extends Cubit<UsernameState> {
     } catch (e) {
       if (isClosed || generation != _generation) return;
       final error = unwrapDioError(e);
-      emit(
-        UsernameState(
-          input: value,
-          status: error is RateLimitException
-              ? UsernameStatus.quota
-              : UsernameStatus.error,
-        ),
-      );
+      emit(UsernameState(input: value, status: _statusFor(error)));
     }
   }
 
+  /// État commun aux erreurs de vérification et d'envoi qui ne portent pas de
+  /// verdict sur l'identifiant lui-même.
+  static UsernameStatus _statusFor(AppException error) {
+    if (error is RateLimitException) return UsernameStatus.quota;
+    if (error is ForbiddenException) return UsernameStatus.guest;
+    // Un 404 `user-not-found` n'a pas de sens ici ; tout autre 404 est une
+    // route absente (ancien back).
+    if (error is NotFoundException &&
+        !(usernameProblemSlug(error)?.endsWith('user-not-found') ?? false)) {
+      return UsernameStatus.unsupported;
+    }
+    return UsernameStatus.error;
+  }
+
   UsernameState _stateFromSubmitError(String value, AppException error) {
-    if (error is RateLimitException) {
-      return UsernameState(input: value, status: UsernameStatus.quota);
+    final common = _statusFor(error);
+    if (common != UsernameStatus.error) {
+      return UsernameState(input: value, status: common);
     }
     UsernameState unavailable(
       UsernameReason reason, [

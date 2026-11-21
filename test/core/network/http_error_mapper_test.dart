@@ -67,6 +67,31 @@ void main() {
       expect(c.extensions?['nextChangeAt'], '2026-12-20T10:00:00Z');
     });
 
+    test('404 → propriétés RFC 7807 conservées dans extensions', () {
+      final e = mapHttpError(
+        _http(
+          404,
+          body: {
+            'type': 'https://api.yadony.com/problems/user-not-found',
+            'detail': 'Introuvable',
+          },
+        ),
+      );
+
+      expect(e, isA<NotFoundException>());
+      final n = e as NotFoundException;
+      expect(n.message, 'Introuvable');
+      expect(n.extensions?['type'], endsWith('user-not-found'));
+    });
+
+    test('404 sans corps → extensions nulles, message de repli inchangé', () {
+      final e = mapHttpError(_http(404)) as NotFoundException;
+
+      expect(e.extensions, isNull);
+      expect(e.code, 'NOT_FOUND');
+      expect(e.message, isNotEmpty);
+    });
+
     test('409 sans corps → extensions nulles, message de repli inchangé', () {
       final e = mapHttpError(_http(409));
 

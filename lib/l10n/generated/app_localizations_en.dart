@@ -24250,4 +24250,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get usernameCheckFailed =>
       'Could not check this username. Please try again.';
+
+  @override
+  String get usernameCopied => 'Username copied';
+
+  @override
+  String usernameCopySemantics(String username) {
+    return 'Username $username, tap to copy';
+  }
+
+  @override
+  String get profileEditUsernameLabel => 'YADONY USERNAME';
+
+  @override
+  String get usernameUnavailableNow => 'Unavailable right now';
+
+  @override
+  String get usernameGuestForbidden =>
+      'Create an account to choose your username.';
 }

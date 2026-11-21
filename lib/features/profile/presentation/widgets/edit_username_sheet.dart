@@ -89,6 +89,10 @@ class _EditUsernameContentState extends State<_EditUsernameContent> {
         return l.usernameQuota;
       case UsernameStatus.error:
         return l.usernameCheckFailed;
+      case UsernameStatus.unsupported:
+        return l.usernameUnavailableNow;
+      case UsernameStatus.guest:
+        return l.usernameGuestForbidden;
       default:
         return null;
     }

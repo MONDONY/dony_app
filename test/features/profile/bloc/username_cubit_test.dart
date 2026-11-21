@@ -245,4 +245,49 @@ void main() {
     await Future<void>.delayed(_wait);
     expect(cubit.state.status, UsernameStatus.error);
   });
+
+  test(
+    '404 d une route absente (type sans user-not-found) : unsupported',
+    () async {
+      when(
+        () => repo.checkUsername(any(), cancelToken: any(named: 'cancelToken')),
+      ).thenThrow(
+        const NotFoundException(
+          extensions: {'type': 'about:blank', 'status': 404},
+        ),
+      );
+      cubit.inputChanged('awa');
+      await Future<void>.delayed(_wait);
+      expect(cubit.state.status, UsernameStatus.unsupported);
+      expect(cubit.state.canSave, isFalse);
+    },
+  );
+
+  test('404 sans corps (ancien back) : unsupported', () async {
+    when(
+      () => repo.checkUsername(any(), cancelToken: any(named: 'cancelToken')),
+    ).thenThrow(const NotFoundException());
+    cubit.inputChanged('awa');
+    await Future<void>.delayed(_wait);
+    expect(cubit.state.status, UsernameStatus.unsupported);
+  });
+
+  test('404 de l enregistrement sans user-not-found : unsupported', () async {
+    stubCheck(const UsernameAvailability(available: true));
+    when(() => repo.changeUsername('awa')).thenThrow(const NotFoundException());
+    cubit.inputChanged('awa');
+    await Future<void>.delayed(_wait);
+    await cubit.submit();
+    expect(cubit.state.status, UsernameStatus.unsupported);
+  });
+
+  test('403 (invité) : état guest, enregistrement désactivé', () async {
+    when(
+      () => repo.checkUsername(any(), cancelToken: any(named: 'cancelToken')),
+    ).thenThrow(const ForbiddenException());
+    cubit.inputChanged('awa');
+    await Future<void>.delayed(_wait);
+    expect(cubit.state.status, UsernameStatus.guest);
+    expect(cubit.state.canSave, isFalse);
+  });
 }

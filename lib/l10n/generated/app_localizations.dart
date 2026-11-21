@@ -39101,6 +39101,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vérification impossible. Réessayez.'**
   String get usernameCheckFailed;
+
+  /// Confirmation après copie de l'identifiant depuis le profil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant copié'**
+  String get usernameCopied;
+
+  /// Libellé accessibilité de la puce identifiant du profil ({username}).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant {username}, toucher pour copier'**
+  String usernameCopySemantics(String username);
+
+  /// Ligne « Identifiant » de Modifier le profil.
+  ///
+  /// In fr, this message translates to:
+  /// **'IDENTIFIANT YADONY'**
+  String get profileEditUsernameLabel;
+
+  /// Route absente (ancien back) : la feuille ne peut pas vérifier ni enregistrer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indisponible pour le moment'**
+  String get usernameUnavailableNow;
+
+  /// 403 : un invité ne peut pas choisir d'identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créez un compte pour choisir votre identifiant.'**
+  String get usernameGuestForbidden;
 }
 
 class _AppLocalizationsDelegate

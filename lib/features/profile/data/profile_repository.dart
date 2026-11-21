@@ -15,6 +15,7 @@ String? usernameProblemSlug(AppException e) {
   final Map<String, Object?>? ext = switch (e) {
     ConflictException() => e.extensions,
     ValidationException() => e.extensions,
+    NotFoundException() => e.extensions,
     _ => null,
   };
   final type = ext?['type'];

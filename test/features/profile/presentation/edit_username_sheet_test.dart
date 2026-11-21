@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/bloc/username/username_cubit.dart';
 import 'package:dony/features/profile/data/models/username_availability.dart';
@@ -171,6 +172,19 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('route absente (404) : texte poli, Enregistrer désactivé', (
+    tester,
+  ) async {
+    when(
+      () => repo.checkUsername(any(), cancelToken: any(named: 'cancelToken')),
+    ).thenThrow(const NotFoundException());
+    await open(tester);
+    await tester.enterText(field(), 'awa');
+    await settle(tester);
+    expect(find.text('Indisponible pour le moment'), findsOneWidget);
+    expect(saveButton(tester).onPressed, isNull);
   });
 
   for (final locale in [AppL10n.fr, AppL10n.en]) {

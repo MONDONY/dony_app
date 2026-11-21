@@ -550,6 +550,7 @@ AppException mapHttpError(DioException err) {
     return NotFoundException(
       message: detail ?? l.networkFallbackNotFound,
       apiCode: apiCode,
+      extensions: data is Map ? Map<String, Object?>.from(data) : null,
     );
   }
   if (statusCode == 409) {

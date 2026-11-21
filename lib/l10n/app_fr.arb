@@ -23667,5 +23667,15 @@
   "usernameQuota": "Trop de vérifications pour le moment. Réessayez dans une heure.",
   "@usernameQuota": {"description": "429 sur la vérification ou le changement."},
   "usernameCheckFailed": "Vérification impossible. Réessayez.",
-  "@usernameCheckFailed": {"description": "Erreur réseau ou serveur pendant la vérification."}
+  "@usernameCheckFailed": {"description": "Erreur réseau ou serveur pendant la vérification."},
+  "usernameCopied": "Identifiant copié",
+  "@usernameCopied": {"description": "Confirmation après copie de l'identifiant depuis le profil."},
+  "usernameCopySemantics": "Identifiant {username}, toucher pour copier",
+  "@usernameCopySemantics": {"description": "Libellé accessibilité de la puce identifiant du profil ({username}).", "placeholders": {"username": {"type": "String", "example": "awa.diallo"}}},
+  "profileEditUsernameLabel": "IDENTIFIANT YADONY",
+  "@profileEditUsernameLabel": {"description": "Ligne « Identifiant » de Modifier le profil."},
+  "usernameUnavailableNow": "Indisponible pour le moment",
+  "@usernameUnavailableNow": {"description": "Route absente (ancien back) : la feuille ne peut pas vérifier ni enregistrer."},
+  "usernameGuestForbidden": "Créez un compte pour choisir votre identifiant.",
+  "@usernameGuestForbidden": {"description": "403 : un invité ne peut pas choisir d'identifiant."}
 }

@@ -24424,4 +24424,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get usernameCheckFailed => 'Vérification impossible. Réessayez.';
+
+  @override
+  String get usernameCopied => 'Identifiant copié';
+
+  @override
+  String usernameCopySemantics(String username) {
+    return 'Identifiant $username, toucher pour copier';
+  }
+
+  @override
+  String get profileEditUsernameLabel => 'IDENTIFIANT YADONY';
+
+  @override
+  String get usernameUnavailableNow => 'Indisponible pour le moment';
+
+  @override
+  String get usernameGuestForbidden =>
+      'Créez un compte pour choisir votre identifiant.';
 }
