@@ -370,29 +370,25 @@ void main() {
         },
       );
 
-      testWidgets('zone tactile de la puce : au moins 44 dp de haut', (
+      testWidgets('la puce garde la hauteur des autres puces, un tap copie', (
         tester,
       ) async {
-        await tester.pumpWidget(_buildHeader(username: 'awa.diallo'));
+        var opened = 0;
+        await tester.pumpWidget(
+          _buildHeader(username: 'awa.diallo', onTap: () => opened++),
+        );
         await settle(tester);
-        final rect = tester.getRect(
+        final chip = tester.getRect(
           find.byKey(const Key('profile-username-chip')),
         );
-        expect(rect.height, greaterThanOrEqualTo(44));
-        // La puce visible reste petite, le toucher porte au-delà.
-        final visible = tester.getSize(
-          find
-              .descendant(
-                of: find.byKey(const Key('profile-username-chip')),
-                matching: find.byType(DecoratedBox),
-              )
-              .first,
-        );
-        expect(visible.height, lessThan(30));
-        await tester.tapAt(rect.bottomCenter - const Offset(0, 3));
+        // Pas de zone tactile élargie : la rangée ne grandit pas.
+        expect(chip.height, lessThan(32));
+        await tester.tapAt(chip.center);
         await tester.pump();
         await settle(tester);
         expect(copied, ['awa.diallo']);
+        expect(find.text('Identifiant copié'), findsOneWidget);
+        expect(opened, 0);
       });
 
       testWidgets('un tap sur l avatar appelle toujours onTap', (tester) async {

@@ -193,6 +193,27 @@ void main() {
       c.close();
     });
 
+    test(
+      '404 user-not-found : le drapeau de session n\'est pas posé',
+      () async {
+        final c = await commit(
+          _dio(const NotFoundException(apiCode: 'user-not-found')),
+        );
+        expect(c.state.usernameUnsupported, isFalse);
+        verifyNever(() => repo.usernameChannelUnsupported = true);
+        await c.close();
+      },
+    );
+
+    test(
+      '404 sans type user-not-found : le drapeau de session est posé',
+      () async {
+        final c = await commit(_dio(const NotFoundException()));
+        verify(() => repo.usernameChannelUnsupported = true).called(1);
+        await c.close();
+      },
+    );
+
     test('autre échec : réessayable à la validation suivante', () async {
       final c = await commit(Exception('boom'));
       expect(c.state.lookup, UsernameLookupStatus.failed);
@@ -259,6 +280,30 @@ void main() {
         await c.close();
       },
     );
+
+    test('404 user-not-found à l\'envoi : pas de drapeau de session', () async {
+      when(() => repo.lookupUsername(any())).thenAnswer((_) async => _found);
+      when(
+        () => repo.sendToUsername(any(), name: any(named: 'name')),
+      ).thenThrow(_dio(const NotFoundException(apiCode: 'user-not-found')));
+      final c = build()..inputChanged('awa.diallo');
+      await c.usernameCommitted();
+      await c.submit();
+      verifyNever(() => repo.usernameChannelUnsupported = true);
+      await c.close();
+    });
+
+    test('404 sans type à l\'envoi : drapeau de session posé', () async {
+      when(() => repo.lookupUsername(any())).thenAnswer((_) async => _found);
+      when(
+        () => repo.sendToUsername(any(), name: any(named: 'name')),
+      ).thenThrow(_dio(const NotFoundException()));
+      final c = build()..inputChanged('awa.diallo');
+      await c.usernameCommitted();
+      await c.submit();
+      verify(() => repo.usernameChannelUnsupported = true).called(1);
+      await c.close();
+    });
 
     test('429 du quota quotidien : quota d\'envoi, pas de recherche', () async {
       when(() => repo.lookupUsername(any())).thenAnswer((_) async => _found);

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -355,11 +357,107 @@ void main() {
       expect(captured.values.contains('awa'), isFalse);
     });
 
-    test('échec sans code lisible : unknown', () async {
+    test('échec 429 : error_code = code du quota', () async {
+      stubCheck(const UsernameAvailability(available: true));
+      when(
+        () => repo.changeUsername('awa'),
+      ).thenThrow(const RateLimitException('x', 'username-change-quota'));
+      cubit.inputChanged('awa');
+      await Future<void>.delayed(_wait);
+      await cubit.submit();
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.usernameChangeFailed,
+          properties: {'error_code': 'username-change-quota'},
+        ),
+      ).called(1);
+    });
+
+    test('échec 405 : error_code = 405', () async {
+      stubCheck(const UsernameAvailability(available: true));
+      when(
+        () => repo.changeUsername('awa'),
+      ).thenThrow(const NetworkException('x', code: '405'));
+      cubit.inputChanged('awa');
+      await Future<void>.delayed(_wait);
+      await cubit.submit();
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.usernameChangeFailed,
+          properties: {'error_code': '405'},
+        ),
+      ).called(1);
+    });
+
+    test(
+      'feuille fermée pendant le PUT : événement une fois, rien émis',
+      () async {
+        stubCheck(const UsernameAvailability(available: true));
+        final completer = Completer<UserModel>();
+        when(
+          () => repo.changeUsername('awa'),
+        ).thenAnswer((_) => completer.future);
+        cubit.inputChanged('awa');
+        await Future<void>.delayed(_wait);
+        final pending = cubit.submit();
+        await cubit.close();
+        completer.complete(_user('awa'));
+        await pending;
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.usernameChanged,
+            properties: {'from_suggestion': false},
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'feuille fermée pendant un PUT en échec : événement une fois',
+      () async {
+        stubCheck(const UsernameAvailability(available: true));
+        final completer = Completer<UserModel>();
+        when(
+          () => repo.changeUsername('awa'),
+        ).thenAnswer((_) => completer.future);
+        cubit.inputChanged('awa');
+        await Future<void>.delayed(_wait);
+        final pending = cubit.submit();
+        await cubit.close();
+        completer.completeError(
+          const ConflictException('x', code: 'username-taken'),
+        );
+        await pending;
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.usernameChangeFailed,
+            properties: {'error_code': 'username-taken'},
+          ),
+        ).called(1);
+      },
+    );
+
+    test('échec hors ligne : error_code = OFFLINE', () async {
       stubCheck(const UsernameAvailability(available: true));
       when(
         () => repo.changeUsername('awa'),
       ).thenThrow(const OfflineException());
+      cubit.inputChanged('awa');
+      await Future<void>.delayed(_wait);
+      await cubit.submit();
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.usernameChangeFailed,
+          properties: {'error_code': 'OFFLINE'},
+        ),
+      ).called(1);
+    });
+
+    test('échec sans code lisible : unknown', () async {
+      stubCheck(const UsernameAvailability(available: true));
+      when(
+        () => repo.changeUsername('awa'),
+      ).thenThrow(const ConflictException('x'));
       cubit.inputChanged('awa');
       await Future<void>.delayed(_wait);
       await cubit.submit();

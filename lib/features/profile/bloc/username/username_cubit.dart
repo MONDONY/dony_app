@@ -142,35 +142,46 @@ class UsernameCubit extends Cubit<UsernameState> {
     final value = state.input;
     _cancelPending();
     emit(UsernameState(input: value, status: UsernameStatus.saving));
+    final UserModel user;
     try {
-      final user = await _repository.changeUsername(value);
-      if (isClosed) return;
-      emit(
-        UsernameState(
-          input: value,
-          status: UsernameStatus.saved,
-          savedUser: user,
-        ),
-      );
-      // Jamais la valeur de l'identifiant : seulement l'origine du choix.
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.usernameChanged,
-          properties: {'from_suggestion': _fromSuggestion},
-        ),
-      );
+      user = await _repository.changeUsername(value);
     } catch (e) {
-      if (isClosed) return;
       final error = unwrapDioError(e);
-      emit(_stateFromSubmitError(value, error));
+      // Tracé même si la feuille a été fermée pendant l'appel, une fois.
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.usernameChangeFailed,
-          properties: {'error_code': usernameProblemSlug(error) ?? 'unknown'},
+          properties: {'error_code': _errorCode(error)},
         ),
       );
+      if (isClosed) return;
+      emit(_stateFromSubmitError(value, error));
+      return;
     }
+    // Jamais la valeur de l'identifiant : seulement l'origine du choix.
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.usernameChanged,
+        properties: {'from_suggestion': _fromSuggestion},
+      ),
+    );
+    if (isClosed) return;
+    emit(
+      UsernameState(
+        input: value,
+        status: UsernameStatus.saved,
+        savedUser: user,
+      ),
+    );
   }
+
+  /// `error_code` : slug du problème, sinon le code de l'exception, sinon
+  /// `unknown`.
+  static String _errorCode(AppException error) =>
+      usernameProblemSlug(error) ??
+      (error is RateLimitException ? error.apiCode : null) ??
+      error.code ??
+      'unknown';
 
   void _cancelPending() {
     _generation++;
