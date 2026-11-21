@@ -370,13 +370,38 @@ void main() {
         },
       );
 
+      testWidgets('zone tactile de la puce : au moins 44 dp de haut', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_buildHeader(username: 'awa.diallo'));
+        await settle(tester);
+        final rect = tester.getRect(
+          find.byKey(const Key('profile-username-chip')),
+        );
+        expect(rect.height, greaterThanOrEqualTo(44));
+        // La puce visible reste petite, le toucher porte au-delà.
+        final visible = tester.getSize(
+          find
+              .descendant(
+                of: find.byKey(const Key('profile-username-chip')),
+                matching: find.byType(DecoratedBox),
+              )
+              .first,
+        );
+        expect(visible.height, lessThan(30));
+        await tester.tapAt(rect.bottomCenter - const Offset(0, 3));
+        await tester.pump();
+        await settle(tester);
+        expect(copied, ['awa.diallo']);
+      });
+
       testWidgets('un tap sur l avatar appelle toujours onTap', (tester) async {
         var opened = 0;
         await tester.pumpWidget(
           _buildHeader(username: 'awa.diallo', onTap: () => opened++),
         );
         await settle(tester);
-        await tester.tap(find.byKey(const Key('profile-header-open')));
+        await tester.tap(find.byType(DonyAvatar));
         await tester.pump();
         expect(opened, 1);
         expect(copied, isEmpty);

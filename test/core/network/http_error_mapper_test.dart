@@ -34,6 +34,23 @@ void main() {
       },
     );
 
+    test(
+      '405 Dio (corps RFC 7807 method-not-allowed) : NetworkException 405',
+      () {
+        final e = mapHttpError(
+          _http(
+            405,
+            body: {
+              'type': 'https://yadony.com/problems/method-not-allowed',
+              'status': 405,
+            },
+          ),
+        );
+        expect(e, isA<NetworkException>());
+        expect(e.code, '405');
+      },
+    );
+
     test('429 : le code du quota est conservé (code, sinon type)', () {
       final byCode = mapHttpError(
         _http(429, body: {'code': 'recipient-lookup-quota'}),

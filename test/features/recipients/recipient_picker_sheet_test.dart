@@ -201,6 +201,7 @@ void main() {
   ) async {
     DonySnackbar.clearDedup();
     final invitations = MockInvitationRepository();
+    when(() => invitations.usernameChannelUnsupported).thenReturn(false);
     when(
       () => invitations.sendToPhone(any(), name: any(named: 'name')),
     ).thenAnswer((_) async {});

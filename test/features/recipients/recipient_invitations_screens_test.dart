@@ -95,6 +95,7 @@ void main() {
   setUp(() {
     DonySnackbar.clearDedup();
     repo = _MockRepo();
+    when(() => repo.usernameChannelUnsupported).thenReturn(false);
     analytics = _MockAnalytics();
     visited = [];
     when(

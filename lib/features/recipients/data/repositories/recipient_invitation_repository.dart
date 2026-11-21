@@ -6,6 +6,12 @@ class RecipientInvitationRepository {
 
   final RecipientInvitationDatasource _datasource;
 
+  /// Le back connecté ne connaît pas la recherche par identifiant (route
+  /// absente : 404, ou 405 sur l'ancien contrôleur). Le verdict vaut pour la
+  /// session : le dépôt est un singleton, l'onglet « Identifiant » reste
+  /// masqué à chaque ouverture de la feuille sans refaire d'appel.
+  bool usernameChannelUnsupported = false;
+
   Future<void> sendToPhone(String phoneE164, {String? name}) =>
       _datasource.send(phone: phoneE164, name: name);
 

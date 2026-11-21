@@ -240,6 +240,7 @@ class _ContactChips extends StatelessWidget {
       builder: (_, phoneAuthEnabled, _) => Wrap(
         spacing: DonySpacing.xs,
         runSpacing: DonySpacing.xs,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           if (username != null && username!.isNotEmpty)
             _UsernameChip(username: username!),
@@ -359,37 +360,51 @@ class _UsernameChip extends StatelessWidget {
       label: context.l10n.usernameCopySemantics(username),
       excludeSemantics: true,
       child: Material(
-        color: DonyColors.blue50,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
+        type: MaterialType.transparency,
         child: InkWell(
           key: const Key('profile-username-chip'),
           borderRadius: BorderRadius.circular(DonyRadius.full),
           onTap: () => unawaited(_copy(context)),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.sm,
-              vertical: DonySpacing.xxs + 1,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const DonyIcon('at-sign', size: 11, color: fg),
-                const SizedBox(width: 3),
-                Flexible(
-                  child: Text(
-                    username,
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: fg,
-                      fontWeight: FontWeight.w700,
-                    ),
+          // Zone tactile de 44 dp au moins ; la puce garde sa taille visuelle,
+          // centrée dedans.
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Center(
+              widthFactor: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: DonyColors.blue50,
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.sm,
+                    vertical: DonySpacing.xxs + 1,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const DonyIcon('at-sign', size: 11, color: fg),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          username,
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: fg,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const DonyIcon('copy', size: 11, color: fg),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 4),
-                const DonyIcon('copy', size: 11, color: fg),
-              ],
+              ),
             ),
           ),
         ),

@@ -25,6 +25,7 @@ void main() {
 
   setUp(() {
     repo = _MockRepo();
+    when(() => repo.usernameChannelUnsupported).thenReturn(false);
     analytics = _MockAnalytics();
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
@@ -162,6 +163,36 @@ void main() {
       },
     );
 
+    test(
+      '405 (prod : GET lookup mappé sur /{id}) : route absente, onglet retiré',
+      () async {
+        final c = await commit(
+          _dio(const NetworkException('Method Not Allowed', code: '405')),
+        );
+        expect(c.state.lookup, UsernameLookupStatus.unsupported);
+        expect(c.state.usernameUnsupported, isTrue);
+        // Le verdict est mémorisé pour la session, sur le dépôt singleton.
+        verify(() => repo.usernameChannelUnsupported = true).called(1);
+        await c.close();
+      },
+    );
+
+    test('un autre NetworkException reste un échec réessayable', () async {
+      final c = await commit(_dio(const NetworkException('x', code: '500')));
+      expect(c.state.lookup, UsernameLookupStatus.failed);
+      verifyNever(() => repo.usernameChannelUnsupported = true);
+      await c.close();
+    });
+
+    test('un cubit ouvert après un verdict unsupported n\'a pas d\'onglet', () {
+      when(() => repo.usernameChannelUnsupported).thenReturn(true);
+      final c = InviteRecipientCubit(repo, analytics);
+      expect(c.state.usernameUnsupported, isTrue);
+      c.selectChannel(InvitationChannel.username);
+      expect(c.state.channel, InvitationChannel.phone);
+      c.close();
+    });
+
     test('autre échec : réessayable à la validation suivante', () async {
       final c = await commit(Exception('boom'));
       expect(c.state.lookup, UsernameLookupStatus.failed);
@@ -210,6 +241,24 @@ void main() {
       expect(c.state.status, InviteRecipientStatus.editing);
       await c.close();
     });
+
+    test(
+      '405 à l\'envoi (champ username) : onglet retiré et mémorisé',
+      () async {
+        when(() => repo.lookupUsername(any())).thenAnswer((_) async => _found);
+        when(
+          () => repo.sendToUsername(any(), name: any(named: 'name')),
+        ).thenThrow(_dio(const NetworkException('x', code: '405')));
+        final c = build()..inputChanged('awa.diallo');
+        await c.usernameCommitted();
+        await c.submit();
+        expect(c.state.lookup, UsernameLookupStatus.unsupported);
+        expect(c.state.usernameUnsupported, isTrue);
+        expect(c.state.status, InviteRecipientStatus.editing);
+        verify(() => repo.usernameChannelUnsupported = true).called(1);
+        await c.close();
+      },
+    );
 
     test('429 du quota quotidien : quota d\'envoi, pas de recherche', () async {
       when(() => repo.lookupUsername(any())).thenAnswer((_) async => _found);

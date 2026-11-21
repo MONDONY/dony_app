@@ -62,6 +62,7 @@ void main() {
 
   setUp(() {
     repository = MockInvitationRepository();
+    when(() => repository.usernameChannelUnsupported).thenReturn(false);
     analytics = MockAnalyticsService();
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),

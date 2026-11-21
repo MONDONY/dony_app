@@ -11,8 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Feuille « Ajouter un destinataire Yadony » : l'expéditeur invite par numéro
-/// ou par e-mail. Rend `true` quand l'invitation est partie : l'appelant
+/// Feuille « Ajouter un destinataire Yadony » : l'expéditeur invite par numéro,
+/// par e-mail ou par identifiant Yadony. Rend `true` quand l'invitation est partie : l'appelant
 /// affiche alors le message, identique que le compte existe ou non.
 ///
 /// [userCountry] (code ISO du pays de l'utilisateur) sert à mettre au format
@@ -106,6 +106,11 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
         InvitationChannel.email => _emailCtrl,
         InvitationChannel.username => _usernameCtrl,
       };
+
+  static bool _hasInitial(String initial) {
+    final v = initial.trim();
+    return v.isNotEmpty && v != '?';
+  }
 
   /// Message d'erreur du champ identifiant pour l'état courant.
   String? _usernameError(InviteRecipientState state) {
@@ -212,7 +217,11 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
                         ),
                       ),
                       Text(
-                        l.recipientInviteUsernameFound(state.foundInitial),
+                        // Sans initiale lisible (« ? » ou vide), pas de
+                        // « prénom commençant par ? ».
+                        _hasInitial(state.foundInitial)
+                            ? l.recipientInviteUsernameFound(state.foundInitial)
+                            : l.recipientInviteUsernameFoundNoInitial,
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -270,10 +279,15 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
           (!p.usernameUnsupported && c.usernameUnsupported),
       listener: (context, state) {
         // Back sans la recherche d'identifiant : l'onglet disparaît, la
-        // feuille revient au numéro.
+        // feuille revient au numéro, avec une phrase pour l'expliquer (une
+        // fois : le verdict est mémorisé pour la session).
         if (state.usernameUnsupported &&
             state.channel == InvitationChannel.username) {
           _onChannel(cubit, InvitationChannel.phone);
+          DonySnackbar.show(
+            context,
+            message: l.recipientInviteUsernameUnsupported,
+          );
         }
         if (state.status == InviteRecipientStatus.sent) {
           widget.onSent?.call();

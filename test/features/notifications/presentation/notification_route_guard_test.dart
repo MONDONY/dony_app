@@ -67,6 +67,16 @@ void main() {
         ),
         '/profile/recipients',
       );
+      expect(
+        openableRouteForNotification(
+          notif(
+            'RECIPIENT_INVITATION_DECLINED',
+            deeplink: 'yadony://recipients',
+          ),
+          exists,
+        ),
+        '/profile/recipients',
+      );
     });
 
     test('sans repli connu, aucune route : le toast s\'affiche', () {

@@ -64,6 +64,7 @@ void main() {
   setUp(() {
     DonySnackbar.clearDedup();
     repo = _MockRepo();
+    when(() => repo.usernameChannelUnsupported).thenReturn(false);
     analytics = _MockAnalytics();
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
@@ -279,6 +280,54 @@ void main() {
       expect(find.text('E-mail'), findsOneWidget);
     },
   );
+
+  testWidgets('405 (prod) : onglet retiré, retour au numéro, phrase une fois', (
+    tester,
+  ) async {
+    when(
+      () => repo.lookupUsername(any()),
+    ).thenThrow(_dio(const NetworkException('x', code: '405')));
+    await open(tester);
+    await selectUsernameTab(tester);
+    await tester.enterText(usernameField(), 'awa.diallo');
+    await blur(tester);
+
+    expect(find.text('Identifiant'), findsNothing);
+    expect(find.byKey(const Key('invite-recipient-phone')), findsOneWidget);
+    expect(
+      find.text('La recherche par identifiant n\'est pas encore disponible.'),
+      findsOneWidget,
+    );
+    expect(find.text('Vérification impossible. Réessayez.'), findsNothing);
+    verify(() => repo.usernameChannelUnsupported = true).called(1);
+  });
+
+  testWidgets(
+    'verdict déjà connu : pas d\'onglet dès l\'ouverture, sans phrase',
+    (tester) async {
+      when(() => repo.usernameChannelUnsupported).thenReturn(true);
+      await open(tester);
+      expect(find.text('Identifiant'), findsNothing);
+      expect(find.text('Numéro'), findsOneWidget);
+      expect(
+        find.text('La recherche par identifiant n\'est pas encore disponible.'),
+        findsNothing,
+      );
+      verifyNever(() => repo.lookupUsername(any()));
+    },
+  );
+
+  testWidgets('initiale « ? » : seulement « Compte trouvé »', (tester) async {
+    when(() => repo.lookupUsername(any())).thenAnswer(
+      (_) async => const UsernameLookup(username: 'awa.diallo', initial: '?'),
+    );
+    await open(tester);
+    await selectUsernameTab(tester);
+    await tester.enterText(usernameField(), 'awa.diallo');
+    await blur(tester);
+    expect(find.text('Compte trouvé'), findsOneWidget);
+    expect(find.textContaining('commençant'), findsNothing);
+  });
 
   testWidgets('envoi : POST avec l\'identifiant et le nom, feuille fermée', (
     tester,
