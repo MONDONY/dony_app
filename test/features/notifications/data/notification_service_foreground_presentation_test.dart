@@ -202,4 +202,51 @@ void main() {
     ).captured;
     expect((captured.single as NotificationDetails).android?.tag, isNull);
   });
+
+  test('Android : le message de bienvenue du filleul s’affiche en entier '
+      '(texte déplié, le code reste lisible)', () {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    const body = 'Vous avez été parrainé par Fatou. Voici votre code AMINA05.';
+
+    service.testHandleForegroundMessage(
+      const RemoteMessage(
+        data: {'type': 'REFERRAL_WELCOME'},
+        notification: RemoteNotification(title: 'Bienvenue', body: body),
+      ),
+    );
+
+    final captured = verify(
+      () => local.show(
+        any(),
+        'Bienvenue',
+        body,
+        captureAny(),
+        payload: any(named: 'payload'),
+      ),
+    ).captured;
+    final style =
+        (captured.single as NotificationDetails).android?.styleInformation;
+    expect(style, isA<BigTextStyleInformation>());
+    expect((style! as BigTextStyleInformation).bigText, body);
+  });
+
+  test('Android : les autres push gardent le style par défaut', () {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+
+    service.testHandleForegroundMessage(message());
+
+    final captured = verify(
+      () => local.show(
+        any(),
+        'Awa',
+        'Bonjour',
+        captureAny(),
+        payload: any(named: 'payload'),
+      ),
+    ).captured;
+    expect(
+      (captured.single as NotificationDetails).android?.styleInformation,
+      isNull,
+    );
+  });
 }

@@ -8,6 +8,7 @@ import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -74,6 +75,64 @@ void main() {
       await tester.pump();
     }
   }
+
+  group('message de bienvenue du filleul : le code reste lisible', () {
+    const welcomeBody =
+        'Vous avez été parrainé par Jean-Christophe. Voici votre code '
+        'JEANCHRISTOPHE05 : -5 % de réduction sur votre premier envoi.';
+
+    Future<void> pumpNarrow(WidgetTester tester, NotificationModel n) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      stub(NotificationLoaded(notifications: [n], unreadCount: 1));
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.3)),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: BlocProvider<NotificationBloc>.value(
+              value: bloc,
+              child: const NotificationBottomSheet(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('REFERRAL_WELCOME : corps entier (code compris), sans coupure '
+        'ni débordement, à 360 dp et x1,3', (tester) async {
+      await pumpNarrow(
+        tester,
+        _notif(type: 'REFERRAL_WELCOME', body: welcomeBody),
+      );
+
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.text(welcomeBody),
+      );
+      expect(paragraph.maxLines, isNull);
+      expect(paragraph.didExceedMaxLines, isFalse);
+      expect(find.textContaining('JEANCHRISTOPHE05'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('les autres types gardent le corps limité à 2 lignes', (
+      tester,
+    ) async {
+      await pumpNarrow(tester, _notif(body: welcomeBody));
+
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.text(welcomeBody),
+      );
+      expect(paragraph.maxLines, 2);
+      expect(paragraph.didExceedMaxLines, isTrue);
+    });
+  });
 
   testWidgets('ouverture : la liste est demandée au bloc', (tester) async {
     stub(const NotificationInitial());

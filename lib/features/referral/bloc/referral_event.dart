@@ -70,6 +70,11 @@ class ReferralShared extends ReferralEvent {
 }
 
 class ReferralRedeemRequested extends ReferralEvent {
-  const ReferralRedeemRequested(this.code);
+  const ReferralRedeemRequested(this.code, {this.fromSignup = false});
   final String code;
+
+  /// Saisi sur l'écran d'inscription « Un code de parrainage ? » : le bloc
+  /// mesure alors `referral_signup_applied` / `referral_signup_rejected`
+  /// (sans le code).
+  final bool fromSignup;
 }

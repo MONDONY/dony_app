@@ -708,8 +708,15 @@ class _NotificationTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     notification.body,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    // Le message de bienvenue du filleul porte son code
+                    // promo, que la ligne ne doit jamais couper : un tap
+                    // ouvre l'envoi de colis, jamais un écran de détail.
+                    maxLines: notification.type == 'REFERRAL_WELCOME'
+                        ? null
+                        : 2,
+                    overflow: notification.type == 'REFERRAL_WELCOME'
+                        ? TextOverflow.visible
+                        : TextOverflow.ellipsis,
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],

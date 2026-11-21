@@ -24,7 +24,7 @@ import 'package:go_router/go_router.dart';
 const String referralCodeRoute = '/auth/referral-code';
 
 /// Un code, une validation, « Passer » toujours visible (aussi après un
-/// refus). Le code passe par [ReferralBloc] (`POST /me/referral/redeem`) :
+/// refus). Le code passe par [ReferralBloc] (`POST /referral/redeem`) :
 /// jamais de logique réseau dans l'écran.
 ///
 /// Un code venu d'un lien d'invitation est déjà appliqué en quittant
@@ -33,7 +33,8 @@ const String referralCodeRoute = '/auth/referral-code';
 class ReferralCodeScreen extends StatefulWidget {
   const ReferralCodeScreen({super.key, required this.analytics});
 
-  /// Mesure : aucune propriété ne porte le code saisi.
+  /// Mesure de la vue et de « Passer » (applied et rejected partent du
+  /// [ReferralBloc]) : aucune propriété ne porte le code saisi.
   final AnalyticsService analytics;
 
   @override
@@ -76,7 +77,9 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
     final code = _ctrl.text.trim().toUpperCase();
     if (code.isEmpty) return;
     _error.value = null;
-    context.read<ReferralBloc>().add(ReferralRedeemRequested(code));
+    context.read<ReferralBloc>().add(
+      ReferralRedeemRequested(code, fromSignup: true),
+    );
   }
 
   void _skip(BuildContext context) {
@@ -86,9 +89,6 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
 
   void _onState(BuildContext context, ReferralState state) {
     if (state is ReferralRedeemed) {
-      unawaited(
-        widget.analytics.logEvent(AnalyticsEvents.referralSignupApplied),
-      );
       DonySnackbar.show(
         context,
         message: context.l10n.referralAutoAppliedMessage,
@@ -97,12 +97,6 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
       context.go(firstStepsRoute);
     } else if (state is ReferralRedeemError) {
       _error.value = state.error;
-      unawaited(
-        widget.analytics.logEvent(
-          AnalyticsEvents.referralSignupRejected,
-          properties: {'error_code': state.error.code ?? 'unknown'},
-        ),
-      );
     }
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
@@ -452,6 +453,28 @@ void main() {
         verify(() => redeemer.apply()).called(1);
       });
     }
+
+    testWidgets(
+      'pendant l\'application du code : spinner sur « Continuer », boutons grisés',
+      (tester) async {
+        final pending = Completer<PendingReferralOutcome>();
+        when(() => redeemer.apply()).thenAnswer((_) => pending.future);
+        await pump(tester, redeemer: redeemer);
+
+        await tester.tap(continueButton());
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+
+        verify(() => redeemer.apply()).called(1);
+        expect(tester.widget<DonyButton>(continueButton()).isLoading, isTrue);
+        expect(tester.widget<DonyButton>(continueButton()).onPressed, isNull);
+        expect(tester.widget<DonyButton>(skipButton()).onPressed, isNull);
+
+        pending.complete(PendingReferralOutcome.applied);
+        await tester.pumpAndSettle(const Duration(seconds: 5));
+        expect(find.text('Premiers pas'), findsOneWidget);
+      },
+    );
 
     testWidgets('un double toucher n\'applique le code qu\'une fois', (
       tester,

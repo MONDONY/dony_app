@@ -206,7 +206,7 @@ class _ProfileBasicsScreenState extends State<ProfileBasicsScreen> {
                             key: const Key('profile-basics-continue'),
                             label: l.commonContinue,
                             iconAsset: 'arrow-right',
-                            isLoading: isSaving,
+                            isLoading: busy,
                             onPressed: busy ? null : _submit,
                           ),
                           skipEnabled: !busy,
