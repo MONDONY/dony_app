@@ -556,6 +556,7 @@ AppException mapHttpError(DioException err) {
     return ConflictException(
       detail ?? l.networkFallbackConflict,
       code: apiCode,
+      extensions: data is Map ? Map<String, Object?>.from(data) : null,
     );
   }
   if (statusCode == 422) {

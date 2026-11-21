@@ -1,7 +1,29 @@
+import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/data/models/open_listing.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
+import 'package:dony/features/profile/data/models/username_availability.dart';
+
+/// Identifiant du problème RFC 7807 d'une erreur (`username-taken`,
+/// `username-change-too-soon`...) : le `code` posé par le back, sinon le
+/// dernier segment du `type`. `null` quand aucun des deux n'est lisible.
+String? usernameProblemSlug(AppException e) {
+  final code = e.code;
+  if (code != null && code.contains('-')) return code;
+  final Map<String, Object?>? ext = switch (e) {
+    ConflictException() => e.extensions,
+    ValidationException() => e.extensions,
+    _ => null,
+  };
+  final type = ext?['type'];
+  if (type is String && type.isNotEmpty) {
+    final slug = type.split('/').last;
+    return slug.isEmpty ? null : slug;
+  }
+  return null;
+}
 
 class ProfileRepository {
   final ApiClient _client;
@@ -49,6 +71,43 @@ class ProfileRepository {
         }
       }
       return items;
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  /// Disponibilité d'un identifiant pour l'utilisateur courant. `429` au-delà
+  /// de 120 vérifications par heure. [cancelToken] annule la requête quand la
+  /// saisie a changé.
+  Future<UsernameAvailability> checkUsername(
+    String value, {
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      final response = await _client.dio.get<dynamic>(
+        '/auth/me/username/availability',
+        queryParameters: {'value': value},
+        cancelToken: cancelToken,
+      );
+      return UsernameAvailability.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  /// Change l'identifiant et rend le compte mis à jour. Échecs RFC 7807 :
+  /// `422` `username-invalid` / `username-reserved` / `username-looks-like-phone`,
+  /// `409` `username-taken` (avec `suggestions`) ou `username-change-too-soon`
+  /// (avec `nextChangeAt`), `403` pour un invité. Voir [usernameProblemSlug].
+  Future<UserModel> changeUsername(String value) async {
+    try {
+      final response = await _client.dio.put<dynamic>(
+        '/auth/me/username',
+        data: {'username': value},
+      );
+      return UserModel.fromJson(response.data as Map<String, dynamic>);
     } catch (e) {
       throw unwrapDioError(e);
     }

@@ -129,7 +129,14 @@ class ValidationException extends AppException {
 }
 
 class ConflictException extends AppException {
-  const ConflictException(super.message, {super.code});
+  const ConflictException(super.message, {super.code, this.extensions});
+
+  /// Corps ProblemDetail complet (`type`, propriétés posées par le back comme
+  /// `suggestions` ou `nextChangeAt`). `null` quand la réponse n'en porte pas.
+  final Map<String, Object?>? extensions;
+
+  @override
+  List<Object?> get props => [message, code, extensions];
 }
 
 class RateLimitException extends AppException {

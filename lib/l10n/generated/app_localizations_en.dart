@@ -24192,4 +24192,62 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tripShareLoginInviteBody =>
       'With a Yadony account, share the trip poster: image, link and caption ready to send.';
+
+  @override
+  String get usernameSheetTitle => 'My username';
+
+  @override
+  String get usernameSheetIntro =>
+      'People can find you with this username, without knowing your phone number.';
+
+  @override
+  String get usernameFieldLabel => 'Username';
+
+  @override
+  String get usernameTaken => 'This username is already taken.';
+
+  @override
+  String get usernameRecentlyReleased =>
+      'This username was used recently and is not available yet.';
+
+  @override
+  String get usernameAvailable => 'Available';
+
+  @override
+  String get usernameTrySuggestions => 'Try instead';
+
+  @override
+  String get usernameInvalidFormat =>
+      'Use 3 to 20 characters: lowercase letters, digits, dot and underscore.';
+
+  @override
+  String get usernameReserved =>
+      'This username is reserved. Please choose another one.';
+
+  @override
+  String get usernameLooksLikePhone =>
+      'A username cannot look like a phone number.';
+
+  @override
+  String usernameChangeTooSoon(String date) {
+    return 'You can change it again on $date.';
+  }
+
+  @override
+  String get usernameUnchanged => 'This is already your username.';
+
+  @override
+  String get usernameSaved => 'Username updated';
+
+  @override
+  String get usernameHelp =>
+      '3 to 20 characters: lowercase letters, digits, dot and underscore. You can change it once every 30 days.';
+
+  @override
+  String get usernameQuota =>
+      'Too many checks for now. Please try again in an hour.';
+
+  @override
+  String get usernameCheckFailed =>
+      'Could not check this username. Please try again.';
 }

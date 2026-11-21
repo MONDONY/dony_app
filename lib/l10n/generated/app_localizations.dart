@@ -38964,25 +38964,25 @@ abstract class AppLocalizations {
   /// **'Limite de messages atteinte. Réservez pour continuer.'**
   String get inquirySendLimitError;
 
-  /// Infobulle et nom d'accessibilité du pouce d'une carte trajet, trajet pas encore aimé (trip_like_button.dart).
+  /// Infobulle et nom d'accessibilité du cœur d'une carte trajet, trajet pas encore aimé (trip_like_button.dart).
   ///
   /// In fr, this message translates to:
   /// **'J\'aime'**
   String get tripLikeTooltip;
 
-  /// Infobulle et nom d'accessibilité du pouce d'une carte trajet déjà aimé : le toucher retire le j'aime (trip_like_button.dart).
+  /// Infobulle et nom d'accessibilité du cœur d'une carte trajet déjà aimé : le toucher retire le j'aime (trip_like_button.dart).
   ///
   /// In fr, this message translates to:
   /// **'Je n\'aime plus'**
   String get tripUnlikeTooltip;
 
-  /// Lecture d'écran du compteur de j'aime d'une carte trajet (le nombre n'est exposé qu'après le j'aime de l'utilisateur, ou dès le premier j'aime au voyageur du trajet).
+  /// Lecture d'écran du compteur de j'aime d'une carte trajet (le nombre est exposé dès le premier j'aime, jamais à 0).
   ///
   /// In fr, this message translates to:
   /// **'{count, plural, =1{{count} personne aime ce trajet} other{{count} personnes aiment ce trajet}}'**
   String tripLikeCountSemantics(int count);
 
-  /// Feuille compte requis : un visiteur sans compte touche le pouce d'une carte trajet (sous-titre de la feuille).
+  /// Feuille compte requis : un visiteur sans compte touche le cœur d'une carte trajet (sous-titre de la feuille).
   ///
   /// In fr, this message translates to:
   /// **'Connectez-vous pour aimer ce trajet.'**
@@ -39005,6 +39005,102 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Avec un compte Yadony, partagez l\'affiche du trajet : image, lien et légende prêts à envoyer.'**
   String get tripShareLoginInviteBody;
+
+  /// Feuille « Mon identifiant » : titre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon identifiant'**
+  String get usernameSheetTitle;
+
+  /// Feuille « Mon identifiant » : phrase d'introduction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos proches vous retrouvent avec cet identifiant, sans connaître votre numéro.'**
+  String get usernameSheetIntro;
+
+  /// Feuille « Mon identifiant » : libellé du champ (préfixe @ affiché devant).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant'**
+  String get usernameFieldLabel;
+
+  /// Identifiant déjà pris (TAKEN).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet identifiant est déjà pris.'**
+  String get usernameTaken;
+
+  /// Identifiant libéré depuis moins de 30 jours (RECENTLY_RELEASED).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet identifiant a servi récemment, il n\'est pas encore libre.'**
+  String get usernameRecentlyReleased;
+
+  /// Identifiant libre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible'**
+  String get usernameAvailable;
+
+  /// Titre de la rangée de puces de suggestions.
+  ///
+  /// In fr, this message translates to:
+  /// **'Essayez plutôt'**
+  String get usernameTrySuggestions;
+
+  /// Format refusé, localement ou par le serveur (INVALID_FORMAT).
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisez 3 à 20 caractères : minuscules, chiffres, point et tiret bas.'**
+  String get usernameInvalidFormat;
+
+  /// Mot réservé (RESERVED).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet identifiant est réservé. Choisissez-en un autre.'**
+  String get usernameReserved;
+
+  /// Suite de chiffres refusée (LOOKS_LIKE_PHONE).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un identifiant ne peut pas ressembler à un numéro de téléphone.'**
+  String get usernameLooksLikePhone;
+
+  /// Un seul changement tous les 30 jours ; {date} formatée (ex. « 20 décembre 2026 »).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification possible le {date}.'**
+  String usernameChangeTooSoon(String date);
+
+  /// Identifiant identique à l'actuel (UNCHANGED).
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est déjà votre identifiant.'**
+  String get usernameUnchanged;
+
+  /// Confirmation après l'enregistrement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant modifié'**
+  String get usernameSaved;
+
+  /// Aide sous le champ de l'identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'3 à 20 caractères : minuscules, chiffres, point et tiret bas. Modifiable une fois tous les 30 jours.'**
+  String get usernameHelp;
+
+  /// 429 sur la vérification ou le changement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de vérifications pour le moment. Réessayez dans une heure.'**
+  String get usernameQuota;
+
+  /// Erreur réseau ou serveur pendant la vérification.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification impossible. Réessayez.'**
+  String get usernameCheckFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -24367,4 +24367,61 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tripShareLoginInviteBody =>
       'Avec un compte Yadony, partagez l\'affiche du trajet : image, lien et légende prêts à envoyer.';
+
+  @override
+  String get usernameSheetTitle => 'Mon identifiant';
+
+  @override
+  String get usernameSheetIntro =>
+      'Vos proches vous retrouvent avec cet identifiant, sans connaître votre numéro.';
+
+  @override
+  String get usernameFieldLabel => 'Identifiant';
+
+  @override
+  String get usernameTaken => 'Cet identifiant est déjà pris.';
+
+  @override
+  String get usernameRecentlyReleased =>
+      'Cet identifiant a servi récemment, il n\'est pas encore libre.';
+
+  @override
+  String get usernameAvailable => 'Disponible';
+
+  @override
+  String get usernameTrySuggestions => 'Essayez plutôt';
+
+  @override
+  String get usernameInvalidFormat =>
+      'Utilisez 3 à 20 caractères : minuscules, chiffres, point et tiret bas.';
+
+  @override
+  String get usernameReserved =>
+      'Cet identifiant est réservé. Choisissez-en un autre.';
+
+  @override
+  String get usernameLooksLikePhone =>
+      'Un identifiant ne peut pas ressembler à un numéro de téléphone.';
+
+  @override
+  String usernameChangeTooSoon(String date) {
+    return 'Modification possible le $date.';
+  }
+
+  @override
+  String get usernameUnchanged => 'C\'est déjà votre identifiant.';
+
+  @override
+  String get usernameSaved => 'Identifiant modifié';
+
+  @override
+  String get usernameHelp =>
+      '3 à 20 caractères : minuscules, chiffres, point et tiret bas. Modifiable une fois tous les 30 jours.';
+
+  @override
+  String get usernameQuota =>
+      'Trop de vérifications pour le moment. Réessayez dans une heure.';
+
+  @override
+  String get usernameCheckFailed => 'Vérification impossible. Réessayez.';
 }
