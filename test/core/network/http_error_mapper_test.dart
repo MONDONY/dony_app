@@ -46,6 +46,49 @@ void main() {
       expect(e.code, 'depart-already-scanned');
     });
 
+    test('409 → propriétés RFC 7807 conservées dans extensions', () {
+      final e = mapHttpError(
+        _http(
+          409,
+          body: {
+            'detail': 'Identifiant déjà pris',
+            'code': 'username-taken',
+            'suggestions': ['awa1', 'awa.d'],
+            'nextChangeAt': '2026-12-20T10:00:00Z',
+          },
+        ),
+      );
+
+      expect(e, isA<ConflictException>());
+      final c = e as ConflictException;
+      expect(c.code, 'username-taken');
+      expect(c.message, 'Identifiant déjà pris');
+      expect(c.extensions?['suggestions'], ['awa1', 'awa.d']);
+      expect(c.extensions?['nextChangeAt'], '2026-12-20T10:00:00Z');
+    });
+
+    test('409 sans corps → extensions nulles, message de repli inchangé', () {
+      final e = mapHttpError(_http(409));
+
+      expect(e, isA<ConflictException>());
+      final c = e as ConflictException;
+      expect(c.extensions, isNull);
+      expect(c.code, isNull);
+      expect(c.message, isNotEmpty);
+    });
+
+    test('409 sans propriété en plus : mêmes message et code qu avant', () {
+      final e =
+          mapHttpError(
+                _http(409, body: {'detail': 'déjà scanné', 'code': 'x-y'}),
+              )
+              as ConflictException;
+
+      expect(e.message, 'déjà scanné');
+      expect(e.code, 'x-y');
+      expect(e.extensions, {'detail': 'déjà scanné', 'code': 'x-y'});
+    });
+
     test('422 bid-below-min-price → propriétés RFC 7807 conservées', () {
       final e = mapHttpError(
         _http(

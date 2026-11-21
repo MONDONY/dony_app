@@ -112,6 +112,7 @@ class _EditUsernameContentState extends State<_EditUsernameContent> {
           );
         }
         if (state.status == UsernameStatus.saved) {
+          // Même schéma qu'InviteRecipientSheet : le pop se fait ici, dans le listener.
           Navigator.of(context).pop(true);
         }
       },
