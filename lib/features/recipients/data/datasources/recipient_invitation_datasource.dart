@@ -14,17 +14,40 @@ class RecipientInvitationDatasource {
   /// `429` au-delà du quota, `422` pour un format refusé. [name] (facultatif,
   /// 100 caractères au plus) n'est envoyé que renseigné : un back antérieur
   /// ne le connaît pas.
-  Future<void> send({String? phone, String? email, String? name}) async {
-    assert((phone == null) != (email == null), 'phone XOR email');
+  Future<void> send({
+    String? phone,
+    String? email,
+    String? username,
+    String? name,
+  }) async {
+    assert(
+      [phone, email, username].where((v) => v != null).length == 1,
+      'phone, email ou username, un seul',
+    );
     final trimmed = name?.trim();
     await _apiClient.dio.post(
       _base,
       data: {
         'phone': ?phone,
         'email': ?email,
+        'username': ?username,
         if (trimmed != null && trimmed.isNotEmpty) 'name': trimmed,
       },
     );
+  }
+
+  /// Aperçu d'un identifiant (`GET /recipient-invitations/lookup`). `404`
+  /// `user-not-found` si inconnu, `422` `recipient-invitation-self`, `429`
+  /// `recipient-lookup-quota`. Une route absente (404 sans ce type) signifie
+  /// un back non déployé.
+  Future<UsernameLookup> lookupUsername(String username) async {
+    final response = await _apiClient.dio.get(
+      '$_base/lookup',
+      queryParameters: {'username': username},
+    );
+    final data = response.data;
+    final map = data is Map<String, dynamic> ? data : const <String, dynamic>{};
+    return UsernameLookup.fromJson(map);
   }
 
   Future<List<SentRecipientInvitation>> fetchSent() async {

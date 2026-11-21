@@ -12,6 +12,12 @@ class RecipientInvitationRepository {
   Future<void> sendToEmail(String email, {String? name}) =>
       _datasource.send(email: email, name: name);
 
+  Future<void> sendToUsername(String username, {String? name}) =>
+      _datasource.send(username: username, name: name);
+
+  Future<UsernameLookup> lookupUsername(String username) =>
+      _datasource.lookupUsername(username);
+
   Future<List<SentRecipientInvitation>> getSent() => _datasource.fetchSent();
 
   Future<List<IncomingRecipientInvitation>> getIncoming() =>
