@@ -11,6 +11,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/auth/presentation/screens/profile_basics_screen.dart';
+import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
 import 'package:dony/features/referral/data/pending_referral_redeemer.dart';
 import 'package:dony/features/settings/data/models/user_business_prefs_dto.dart';
 import 'package:dony/features/settings/data/repositories/business_prefs_repository.dart';
@@ -143,6 +144,10 @@ void main() {
           ),
         ),
         GoRoute(
+          path: referralCodeRoute,
+          builder: (_, _) => const Scaffold(body: Text('Parrainage')),
+        ),
+        GoRoute(
           path: firstStepsRoute,
           builder: (_, _) => const Scaffold(body: Text('Premiers pas')),
         ),
@@ -228,7 +233,7 @@ void main() {
   });
 
   testWidgets(
-    '« Passer pour l\'instant » va sur les premiers pas sans aucun appel',
+    '« Passer pour l\'instant » va sur l\'écran Parrainage sans aucun appel',
     (tester) async {
       await pump(tester, initialCountryCode: 'SN');
 
@@ -239,7 +244,7 @@ void main() {
       await tester.tap(skipButton());
       await tester.pumpAndSettle();
 
-      expect(find.text('Premiers pas'), findsOneWidget);
+      expect(find.text('Parrainage'), findsOneWidget);
       verifyZeroInteractions(auth);
       verifyZeroInteractions(businessPrefs);
       verifyZeroInteractions(box);
@@ -249,7 +254,7 @@ void main() {
 
   testWidgets(
     '« Continuer » écrit le nom et le pays prérempli, rafraîchit le profil '
-    'puis va sur les premiers pas',
+    'puis va sur l\'écran Parrainage',
     (tester) async {
       await pump(tester, initialCountryCode: 'SN');
 
@@ -273,7 +278,7 @@ void main() {
         ),
       ).called(1);
       verify(() => authBloc.add(const AuthProfileRefreshRequested())).called(1);
-      expect(find.text('Premiers pas'), findsOneWidget);
+      expect(find.text('Parrainage'), findsOneWidget);
     },
   );
 
@@ -345,7 +350,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Premiers pas'), findsNothing);
+    expect(find.text('Parrainage'), findsNothing);
     await tester.pumpAndSettle(const Duration(seconds: 5));
   });
 
@@ -353,7 +358,69 @@ void main() {
     late _MockRedeemer redeemer;
     setUp(() => redeemer = _MockRedeemer());
 
-    testWidgets('applied : snackbar de succès, apply appelé une fois', (
+    testWidgets(
+      'rien n\'est appliqué à l\'ouverture (prénom pas encore saisi)',
+      (tester) async {
+        when(
+          () => redeemer.apply(),
+        ).thenAnswer((_) async => PendingReferralOutcome.applied);
+        await pump(tester, redeemer: redeemer);
+
+        verifyNever(() => redeemer.apply());
+      },
+    );
+
+    testWidgets(
+      'le prénom est enregistré AVANT l\'application du code du lien',
+      (tester) async {
+        final calls = <String>[];
+        when(
+          () => auth.updateProfile(
+            firstName: any(named: 'firstName'),
+            lastName: any(named: 'lastName'),
+          ),
+        ).thenAnswer((_) async {
+          calls.add('prénom enregistré');
+          return _FakeUserModel();
+        });
+        when(() => redeemer.apply()).thenAnswer((_) async {
+          calls.add('code appliqué');
+          return PendingReferralOutcome.applied;
+        });
+        await pump(tester, redeemer: redeemer);
+
+        await tester.enterText(
+          find.byKey(const Key('profile-basics-first-name')),
+          'Amina',
+        );
+        await tester.tap(continueButton());
+        await tester.pumpAndSettle(const Duration(seconds: 5));
+
+        expect(calls, ['prénom enregistré', 'code appliqué']);
+      },
+    );
+
+    testWidgets(
+      'applied : snackbar de succès, premiers pas, pas d\'écran Parrainage',
+      (tester) async {
+        when(
+          () => redeemer.apply(),
+        ).thenAnswer((_) async => PendingReferralOutcome.applied);
+        await pump(tester, redeemer: redeemer);
+
+        await tester.tap(continueButton());
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(find.text('Code de parrainage appliqué.'), findsOneWidget);
+        verify(() => redeemer.apply()).called(1);
+        await tester.pumpAndSettle(const Duration(seconds: 5));
+        expect(find.text('Premiers pas'), findsOneWidget);
+        expect(find.text('Parrainage'), findsNothing);
+      },
+    );
+
+    testWidgets('« Passer » applique aussi le code du lien, après l\'étape', (
       tester,
     ) async {
       when(
@@ -361,23 +428,47 @@ void main() {
       ).thenAnswer((_) async => PendingReferralOutcome.applied);
       await pump(tester, redeemer: redeemer);
 
-      expect(find.text('Code de parrainage appliqué.'), findsOneWidget);
-      verify(() => redeemer.apply()).called(1);
+      await tester.tap(skipButton());
       await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      verify(() => redeemer.apply()).called(1);
+      verifyZeroInteractions(auth);
+      expect(find.text('Premiers pas'), findsOneWidget);
     });
 
     for (final outcome in [
       PendingReferralOutcome.none,
       PendingReferralOutcome.rejected,
     ]) {
-      testWidgets('$outcome : aucun message', (tester) async {
+      testWidgets('$outcome : aucun message, écran Parrainage', (tester) async {
         when(() => redeemer.apply()).thenAnswer((_) async => outcome);
         await pump(tester, redeemer: redeemer);
 
+        await tester.tap(continueButton());
+        await tester.pumpAndSettle(const Duration(seconds: 5));
+
         expect(find.text('Code de parrainage appliqué.'), findsNothing);
+        expect(find.text('Parrainage'), findsOneWidget);
         verify(() => redeemer.apply()).called(1);
       });
     }
+
+    testWidgets('un double toucher n\'applique le code qu\'une fois', (
+      tester,
+    ) async {
+      when(() => redeemer.apply()).thenAnswer((_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+        return PendingReferralOutcome.applied;
+      });
+      await pump(tester, redeemer: redeemer);
+
+      await tester.tap(continueButton());
+      await tester.pump();
+      await tester.tap(continueButton(), warnIfMissed: false);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      verify(() => redeemer.apply()).called(1);
+    });
   });
 
   group('360 dp, polices réelles', () {
