@@ -192,9 +192,6 @@ class InviteRecipientCubit extends Cubit<InviteRecipientState> {
   /// reprend son nom. Un contact sans numéro ne garde que le nom.
   void contactPicked(PickedContact contact, {String? countryCode}) {
     if (state.status == InviteRecipientStatus.submitting) return;
-    // Une recherche d'identifiant en vol ne doit pas écrire sur l'onglet
-    // Numéro.
-    _generation++;
     final phone = contact.phone;
     final fullName = contact.fullName?.trim() ?? '';
     final name = fullName.length > InviteRecipientState.nameMaxLength
@@ -205,6 +202,9 @@ class InviteRecipientCubit extends Cubit<InviteRecipientState> {
       emit(state.copyWith(name: keptName));
       return;
     }
+    // Le contact remplace l'état par celui du numéro : une recherche
+    // d'identifiant en vol ne doit pas y écrire.
+    _generation++;
     emit(
       InviteRecipientState(
         input: internationalizeRecipientPhone(phone, countryCode),

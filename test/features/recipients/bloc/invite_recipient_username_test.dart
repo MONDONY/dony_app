@@ -239,6 +239,8 @@ void main() {
       await c.submit();
       expect(c.state.lookup, UsernameLookupStatus.quota);
       expect(c.state.status, InviteRecipientStatus.editing);
+      expect(c.state.isQuotaExceeded, isFalse);
+      expect(c.state.error, isNull);
       await c.close();
     });
   });
@@ -265,6 +267,19 @@ void main() {
       await c.close();
     },
   );
+
+  test('contact sans téléphone : la recherche en vol aboutit', () async {
+    when(() => repo.lookupUsername(any())).thenAnswer((_) async => _found);
+    final c = build()..inputChanged('awa.diallo');
+    final pending = c.usernameCommitted();
+    c.contactPicked(const PickedContact(fullName: 'Awa'));
+    expect(c.state.name, 'Awa');
+    expect(c.state.lookup, UsernameLookupStatus.searching);
+    await pending;
+    expect(c.state.channel, InvitationChannel.username);
+    expect(c.state.lookup, UsernameLookupStatus.found);
+    await c.close();
+  });
 
   test('le nom survit au changement d\'onglet', () {
     final c = build()
