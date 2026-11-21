@@ -39047,6 +39047,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Numéro enregistré.'**
   String get contactPhoneDeclaredSuccess;
+
+  /// Titre de l'erreur 409 phone-declare-not-allowed : le pays du numéro reçoit les SMS (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code SMS disponible'**
+  String get errorPhoneDeclareNotAllowedTitle;
+
+  /// Message de l'erreur 409 phone-declare-not-allowed : la vérification par SMS reste la voie (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro peut recevoir un code par SMS. Touchez « Envoyer le code » pour le vérifier.'**
+  String get errorPhoneDeclareNotAllowedMessage;
 }
 
 class _AppLocalizationsDelegate

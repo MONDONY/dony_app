@@ -24389,4 +24389,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contactPhoneDeclaredSuccess => 'Numéro enregistré.';
+
+  @override
+  String get errorPhoneDeclareNotAllowedTitle => 'Code SMS disponible';
+
+  @override
+  String get errorPhoneDeclareNotAllowedMessage =>
+      'Ce numéro peut recevoir un code par SMS. Touchez « Envoyer le code » pour le vérifier.';
 }

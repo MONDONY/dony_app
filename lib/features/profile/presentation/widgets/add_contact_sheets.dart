@@ -23,6 +23,19 @@ import 'package:go_router/go_router.dart';
 
 enum _ContactStep { input, otp }
 
+/// Vrai dès qu'un `declare` a répondu 404 ou 405 : le back déployé n'a pas
+/// encore la route (il renvoie déjà `country-blocked`, mais pas `declare`).
+/// L'offre est alors masquée pour toute la session et l'écran garde le
+/// comportement d'avant : le refus SMS du serveur, tel quel.
+bool _declareRouteMissing = false;
+
+@visibleForTesting
+void resetDeclareRouteMissing() => _declareRouteMissing = false;
+
+/// Le back ne connaît pas la route `declare` (404, ou 405 qui n'a pas de code).
+bool _isDeclareRouteMissing(AppException e) =>
+    e is NotFoundException || e.code == '405';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // EditPhoneScreen / EditEmailScreen — écrans plein écran, même flow OTP que les
 // sheets ci-dessous. Le numéro et l'email exigent une preuve de possession
@@ -257,10 +270,15 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   /// Vrai entre la demande « Enregistrer sans vérifier » et sa réponse.
   bool _declareSubmitted = false;
 
+  /// Dernier refus `country-blocked` : réaffiché tel quel si `declare` n'existe
+  /// pas sur le back déployé.
+  AppException? _blockedError;
+
   @override
   void initState() {
     super.initState();
     widget.onSubmitReady(_handleSubmit);
+    _phoneCtrl.addListener(_dropStaleOffer);
   }
 
   @override
@@ -280,6 +298,17 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
     }
   }
 
+  /// Retire l'offre dès que le numéro du champ (ou son pays) n'est plus celui
+  /// pour lequel le code SMS a été refusé : `_declare` enverrait sinon un autre
+  /// numéro que celui affiché.
+  void _dropStaleOffer() {
+    if (_declareOffer.value == null) return;
+    final number = _phoneCtrl.text.trim();
+    if (number.isEmpty || toE164(_country.dialCode, number) != _pendingPhone) {
+      _declareOffer.value = null;
+    }
+  }
+
   void _sendOtp() {
     final number = _phoneCtrl.text.trim();
     if (number.isEmpty) return;
@@ -295,6 +324,23 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
     if (_pendingPhone.isEmpty) return;
     _declareSubmitted = true;
     context.read<AuthBloc>().add(AuthPhoneDeclared(_pendingPhone));
+  }
+
+  /// Refus de `declare`. 404/405 : le back n'a pas la route, retour au
+  /// comportement d'avant (le refus SMS du serveur) et plus d'offre de la
+  /// session. 409/422 : l'offre est retirée et l'erreur affichée. Panne
+  /// passagère (503, hors ligne, délai) : l'offre reste pour réessayer.
+  void _onDeclareError(AppException error) {
+    if (_isDeclareRouteMissing(error)) {
+      _declareRouteMissing = true;
+      _declareOffer.value = null;
+      ErrorPresenter.show(context, _blockedError ?? error);
+      return;
+    }
+    if (error is ConflictException || error is ValidationException) {
+      _declareOffer.value = null;
+    }
+    ErrorPresenter.show(context, error);
   }
 
   void _verifyOtp() {
@@ -336,15 +382,14 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
           final wasDeclaring = _declareSubmitted;
           _verifySubmitted = false;
           _declareSubmitted = false;
-          if (isSmsCountryBlocked(state.error)) {
+          if (wasDeclaring) {
+            _onDeclareError(state.error);
+          } else if (isSmsCountryBlocked(state.error) &&
+              !_declareRouteMissing) {
             // Le bandeau explique et offre « Enregistrer sans vérifier » :
             // pas de snackbar en double.
+            _blockedError = state.error;
             _declareOffer.value = state.error;
-          } else if (wasDeclaring) {
-            // 409 `phone-declare-not-allowed` (le pays n'est pas bloqué) ou
-            // autre refus : l'erreur SMS normale, sans l'offre.
-            _declareOffer.value = null;
-            ErrorPresenter.show(context, state.error);
           } else if (phoneConflictCodes.contains(state.error.code)) {
             // Le bandeau ci-dessous explique quoi faire et propose le
             // support : pas de snackbar en double (YADONY-FLUTTER-PROD-Y).
@@ -377,7 +422,10 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
                 return _PhoneInputStep(
                   controller: _phoneCtrl,
                   country: _country,
-                  onCountryChanged: (c) => setState(() => _country = c),
+                  onCountryChanged: (c) {
+                    setState(() => _country = c);
+                    _dropStaleOffer();
+                  },
                   tt: tt,
                   cs: cs,
                 );
@@ -423,14 +471,19 @@ class _PhoneDeclareOffer extends StatelessWidget {
           type: DonyStatusBannerType.info,
           title: l.contactPhoneDeclareTitle,
           message: l.contactPhoneDeclareMessage,
-          action: TextButton(
-            key: const Key('phone-declare-cta'),
-            onPressed: state is AuthLoading ? null : onDeclare,
-            child: Text(
-              l.contactPhoneDeclareAction,
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.visible,
+          // Pleine largeur du bandeau : le libellé n'est jamais coupé ni
+          // rétréci, il a toute la place du bandeau.
+          action: SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              key: const Key('phone-declare-cta'),
+              onPressed: state is AuthLoading ? null : onDeclare,
+              child: Text(
+                l.contactPhoneDeclareAction,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.visible,
+              ),
             ),
           ),
         ),

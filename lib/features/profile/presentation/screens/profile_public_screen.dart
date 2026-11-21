@@ -1102,9 +1102,7 @@ class _VerificationsSection extends StatelessWidget {
           label: l.profilePublicVerificationPhone,
           // SMS d'abord ; sinon un numéro déclaré puis vérifié par l'équipe.
           verified: profile.phoneVerified || profile.phoneYadonyVerified,
-          verifiedLabel: !profile.phoneVerified && profile.phoneYadonyVerified
-              ? l.phoneVerificationYadony
-              : null,
+          yadonyVerified: !profile.phoneVerified && profile.phoneYadonyVerified,
         ),
         _VerificationRow(
           label: l.profilePublicVerificationEmail,
@@ -1143,13 +1141,14 @@ class _VerificationRow extends StatelessWidget {
   const _VerificationRow({
     required this.label,
     required this.verified,
-    this.verifiedLabel,
+    this.yadonyVerified = false,
   });
   final String label;
   final bool verified;
 
-  /// Remplace « Vérifié » quand la vérification a une autre origine.
-  final String? verifiedLabel;
+  /// Vérifié par l'équipe Yadony et non par SMS : autre libellé, autre icône
+  /// (`shield-check`) et autre teinte (info), comme [PhoneVerificationBadge].
+  final bool yadonyVerified;
 
   @override
   Widget build(BuildContext context) {
@@ -1158,25 +1157,33 @@ class _VerificationRow extends StatelessWidget {
     final l = context.l10n;
     return Semantics(
       label:
-          '$label, ${verified ? (verifiedLabel ?? l.profilePublicVerifiedValue) : l.profilePublicNotVerifiedValue}',
+          '$label, ${verified ? (yadonyVerified ? l.phoneVerificationYadony : l.profilePublicVerifiedValue) : l.profilePublicNotVerifiedValue}',
       excludeSemantics: true,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
         child: Row(
           children: [
             DonyIcon(
-              verified ? 'circle-check' : 'circle-x',
+              !verified
+                  ? 'circle-x'
+                  : (yadonyVerified ? 'shield-check' : 'circle-check'),
               size: 18,
-              color: verified ? cs.success : cs.onSurfaceVariant,
+              color: !verified
+                  ? cs.onSurfaceVariant
+                  : (yadonyVerified ? cs.info : cs.success),
             ),
             const SizedBox(width: DonySpacing.sm),
             Expanded(child: Text(label, style: tt.bodyMedium)),
             Text(
               verified
-                  ? (verifiedLabel ?? l.profilePublicVerifiedValue)
+                  ? (yadonyVerified
+                        ? l.phoneVerificationYadony
+                        : l.profilePublicVerifiedValue)
                   : l.profilePublicNotVerifiedValue,
               style: tt.bodySmall?.copyWith(
-                color: verified ? cs.success : cs.onSurfaceVariant,
+                color: !verified
+                    ? cs.onSurfaceVariant
+                    : (yadonyVerified ? cs.info : cs.success),
                 fontWeight: FontWeight.w600,
               ),
             ),

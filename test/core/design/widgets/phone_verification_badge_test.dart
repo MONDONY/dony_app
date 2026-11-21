@@ -1,9 +1,44 @@
+import 'dart:io';
+
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/phone_verification_badge.dart';
 import 'package:dony/core/phone/phone_verification_level.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+
+Future<void> _loadFonts() async {
+  const families = {
+    'HankenGrotesk': [
+      'HankenGrotesk-SemiBold',
+      'HankenGrotesk-Bold',
+      'HankenGrotesk-ExtraBold',
+    ],
+    'PlusJakartaSans': [
+      'PlusJakartaSans-Regular',
+      'PlusJakartaSans-Medium',
+      'PlusJakartaSans-SemiBold',
+      'PlusJakartaSans-Bold',
+    ],
+  };
+  for (final MapEntry(key: family, value: files) in families.entries) {
+    final loader = FontLoader(family);
+    for (final file in files) {
+      loader.addFont(
+        Future.value(
+          ByteData.sublistView(
+            File('assets/fonts/$file.ttf').readAsBytesSync(),
+          ),
+        ),
+      );
+    }
+    await loader.load();
+  }
+}
 
 void main() {
   group('PhoneVerificationBadge', () {
@@ -68,23 +103,51 @@ void main() {
       expect(colors, hasLength(3));
     });
 
-    testWidgets('libellé sur une ligne à 360 dp, sans exception', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(360, 640);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      await tester.pumpWidget(
-        localizedApp(
-          const Scaffold(
-            body: PhoneVerificationBadge(PhoneVerificationLevel.yadony),
-          ),
-        ),
+    // Vraies polices : sans elles les glyphes carrés de 1 em fausseraient la
+    // mesure (et un maxLines == 1 ne prouve rien, il est vrai par construction).
+    for (final (locale, level, label) in [
+      ('fr', PhoneVerificationLevel.yadony, 'Vérifié par Yadony'),
+      ('fr', PhoneVerificationLevel.none, 'Non vérifié'),
+      ('en', PhoneVerificationLevel.yadony, 'Verified by Yadony'),
+      ('en', PhoneVerificationLevel.none, 'Not verified'),
+    ]) {
+      testWidgets(
+        '$locale ${level.name} : libellé entier sur une ligne à 360 dp, sans coupe',
+        (tester) async {
+          await _loadFonts();
+          if (locale == 'en') enableEnglish();
+          tester.view.physicalSize = const Size(360, 640);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.resetPhysicalSize);
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: AppTheme.light(),
+              locale: Locale(locale),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: Align(
+                  alignment: Alignment.topLeft,
+                  child: PhoneVerificationBadge(level),
+                ),
+              ),
+            ),
+          );
+          expect(tester.takeException(), isNull);
+          final text = find.text(label);
+          final rendered = tester.renderObject<RenderParagraph>(text);
+          // Ellipsis = didExceedMaxLines ; une seconde ligne ferait grandir la boîte.
+          expect(rendered.didExceedMaxLines, isFalse);
+          final painter = TextPainter(
+            text: rendered.text,
+            textDirection: TextDirection.ltr,
+          )..layout();
+          expect(tester.getSize(text).width, closeTo(painter.width, 1));
+          expect(tester.getSize(text).height, closeTo(painter.height, 1));
+          expect(painter.width, lessThan(200), reason: 'police réelle chargée');
+        },
       );
-      expect(tester.takeException(), isNull);
-      final text = tester.widget<Text>(find.text('Vérifié par Yadony'));
-      expect(text.maxLines, 1);
-    });
+    }
 
     test('parse tolère l absence et les valeurs inconnues', () {
       expect(

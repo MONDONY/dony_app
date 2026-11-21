@@ -11995,5 +11995,7 @@
   "contactPhoneDeclareTitle": "No SMS in this country",
   "contactPhoneDeclareMessage": "Text messages can't reach this country. You can save this number without verifying it: it will be used to call you and to find you, never to sign in or to pay.",
   "contactPhoneDeclareAction": "Save without verifying",
-  "contactPhoneDeclaredSuccess": "Number saved."
+  "contactPhoneDeclaredSuccess": "Number saved.",
+  "errorPhoneDeclareNotAllowedTitle": "SMS code available",
+  "errorPhoneDeclareNotAllowedMessage": "This number can receive an SMS code. Tap \"Send code\" to verify it."
 }

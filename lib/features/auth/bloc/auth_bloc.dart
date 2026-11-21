@@ -639,8 +639,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // paiements.
       final user = await _authRepository.declarePhone(event.phoneNumber);
       emit(AuthProfileUpdated(user));
+      unawaited(_analytics?.logEvent(AnalyticsEvents.phoneDeclared));
     } catch (e) {
-      emit(AuthError(_friendlyError(e)));
+      final error = _friendlyError(e);
+      unawaited(
+        _analytics?.logEvent(
+          AnalyticsEvents.phoneDeclareFailed,
+          properties: {'error_code': error.code ?? 'unknown'},
+        ),
+      );
+      emit(AuthError(error));
     }
   }
 

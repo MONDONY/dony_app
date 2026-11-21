@@ -24214,4 +24214,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactPhoneDeclaredSuccess => 'Number saved.';
+
+  @override
+  String get errorPhoneDeclareNotAllowedTitle => 'SMS code available';
+
+  @override
+  String get errorPhoneDeclareNotAllowedMessage =>
+      'This number can receive an SMS code. Tap \"Send code\" to verify it.';
 }

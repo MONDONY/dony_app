@@ -23663,5 +23663,13 @@
   "contactPhoneDeclaredSuccess": "Numéro enregistré.",
   "@contactPhoneDeclaredSuccess": {
     "description": "Confirmation après l'enregistrement d'un numéro sans vérification (add_contact_sheets.dart)."
+  },
+  "errorPhoneDeclareNotAllowedTitle": "Code SMS disponible",
+  "@errorPhoneDeclareNotAllowedTitle": {
+    "description": "Titre de l'erreur 409 phone-declare-not-allowed : le pays du numéro reçoit les SMS (error_catalog.dart)."
+  },
+  "errorPhoneDeclareNotAllowedMessage": "Ce numéro peut recevoir un code par SMS. Touchez « Envoyer le code » pour le vérifier.",
+  "@errorPhoneDeclareNotAllowedMessage": {
+    "description": "Message de l'erreur 409 phone-declare-not-allowed : la vérification par SMS reste la voie (error_catalog.dart)."
   }
 }

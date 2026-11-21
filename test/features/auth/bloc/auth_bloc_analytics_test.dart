@@ -180,6 +180,65 @@ void main() {
     });
   });
 
+  group('phone_declared / phone_declare_failed', () {
+    test('succès : phone_declared sans propriété, jamais le numéro', () async {
+      when(() => repo.declarePhone('+22507000000')).thenAnswer(
+        (_) async => const UserModel(
+          id: 'u',
+          roles: ['SENDER'],
+          kycStatus: 'NOT_STARTED',
+          status: 'ACTIVE',
+          declaredPhone: '+22507000000',
+          declaredPhoneLevel: 'DECLARED',
+        ),
+      );
+      final bloc = makeBloc();
+      bloc.add(const AuthPhoneDeclared('+22507000000'));
+      await bloc.stream.firstWhere((s) => s is AuthProfileUpdated);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.phoneDeclared, any()),
+      ).called(1);
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.phoneDeclareFailed, any()),
+      );
+    });
+
+    test('échec : phone_declare_failed avec error_code seul', () async {
+      when(() => repo.declarePhone(any())).thenThrow(
+        const ConflictException('x', code: 'phone-declare-not-allowed'),
+      );
+      final bloc = makeBloc();
+      bloc.add(const AuthPhoneDeclared('+33612345678'));
+      await bloc.stream.firstWhere((s) => s is AuthError);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.phoneDeclareFailed, {
+          'error_code': 'phone-declare-not-allowed',
+        }),
+      ).called(1);
+      verifyNever(() => backend.capture(AnalyticsEvents.phoneDeclared, any()));
+    });
+
+    test('échec sans code : unknown', () async {
+      when(
+        () => repo.declarePhone(any()),
+      ).thenThrow(const NetworkException('offline'));
+      final bloc = makeBloc();
+      bloc.add(const AuthPhoneDeclared('+33612345678'));
+      await bloc.stream.firstWhere((s) => s is AuthError);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.phoneDeclareFailed, {
+          'error_code': 'unknown',
+        }),
+      ).called(1);
+    });
+  });
+
   group('profile_photo_updated', () {
     test('fires after successful avatar upload', () async {
       when(() => repo.uploadAvatar(any())).thenAnswer((_) async => fakeUser);

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -9,7 +10,10 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -43,8 +47,38 @@ const _blocked = ServiceUnavailableException(
   {'reason': 'country-blocked', 'callingCode': '33'},
 );
 
+/// Charge les vraies polices de l'app : sans elles, `flutter test` rend des
+/// glyphes carrés de 1 em et toute mesure de largeur est fausse.
+Future<void> _loadFonts() async {
+  const families = {
+    'HankenGrotesk': [
+      'HankenGrotesk-SemiBold',
+      'HankenGrotesk-Bold',
+      'HankenGrotesk-ExtraBold',
+    ],
+    'PlusJakartaSans': [
+      'PlusJakartaSans-Regular',
+      'PlusJakartaSans-Medium',
+      'PlusJakartaSans-SemiBold',
+      'PlusJakartaSans-Bold',
+    ],
+  };
+  for (final MapEntry(key: family, value: files) in families.entries) {
+    final loader = FontLoader(family);
+    for (final file in files) {
+      final bytes = File('assets/fonts/$file.ttf').readAsBytesSync();
+      loader.addFont(Future.value(ByteData.sublistView(bytes)));
+    }
+    await loader.load();
+  }
+}
+
 void main() {
-  setUpAll(() => registerFallbackValue(_FakeAuthEvent()));
+  setUpAll(() async {
+    registerFallbackValue(_FakeAuthEvent());
+    await _loadFonts();
+  });
+  setUp(resetDeclareRouteMissing);
 
   late _MockAuthBloc bloc;
   late StreamController<AuthState> states;
@@ -70,8 +104,12 @@ void main() {
     await tester.pumpWidget(
       BlocProvider<AuthBloc>.value(
         value: bloc,
-        child: localizedApp(
-          Builder(
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          locale: locale ?? const Locale('fr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
             builder: (context) => TextButton(
               onPressed: () async => results.add(
                 await Navigator.of(context).push<Object?>(
@@ -81,7 +119,6 @@ void main() {
               child: const Text('open'),
             ),
           ),
-          locale: locale ?? const Locale('fr'),
         ),
       ),
     );
@@ -168,6 +205,15 @@ void main() {
 
         expect(find.text('Enregistrer sans vérifier'), findsNothing);
         expect(find.byType(EditPhoneScreen), findsOneWidget);
+        // Message dédié : le SMS fonctionne pour ce pays, pas l'inverse.
+        expect(
+          find.textContaining('peut recevoir un code par SMS'),
+          findsWidgets,
+        );
+        expect(
+          find.textContaining('Connectez-vous avec votre adresse'),
+          findsNothing,
+        );
         await tester.pumpAndSettle(const Duration(seconds: 6));
       },
     );
@@ -191,43 +237,157 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 6));
     });
 
-    testWidgets('libellé FR sur une ligne à 360 dp, sans exception', (
+    // Vraies polices, thème de l'app : le libellé doit tenir dans le bouton
+    // pleine largeur du bandeau, sans coupe ni rétrécissement.
+    for (final (name, locale, label) in [
+      ('FR', const Locale('fr'), 'Enregistrer sans vérifier'),
+      ('EN', const Locale('en'), 'Save without verifying'),
+    ]) {
+      testWidgets('libellé $name tient dans le bouton à 360 dp', (
+        tester,
+      ) async {
+        if (name == 'EN') enableEnglish();
+        tester.view.physicalSize = const Size(360, 740);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        await open(tester, locale: locale);
+        states.add(const AuthError(_blocked));
+        await tester.pump();
+        await tester.pump();
+
+        final text = find.text(label);
+        expect(text, findsOneWidget);
+        final button = find.byKey(const Key('phone-declare-cta'));
+        expect(
+          tester.widget<Text>(text).style?.fontSize,
+          isNull,
+          reason: 'police du thème, jamais réduite',
+        );
+        final rendered = tester.renderObject<RenderParagraph>(text);
+        final painter = TextPainter(
+          text: rendered.text,
+          textDirection: TextDirection.ltr,
+          maxLines: 1,
+        )..layout();
+        // Police réelle chargée : un glyphe carré de 1 em ferait ~350 px.
+        expect(painter.width, lessThan(260));
+        expect(tester.getRect(text).width, closeTo(painter.width, 1));
+        expect(
+          tester.getRect(text).right,
+          lessThanOrEqualTo(tester.getRect(button).right),
+        );
+        expect(
+          tester.getRect(text).left,
+          greaterThanOrEqualTo(tester.getRect(button).left),
+        );
+        expect(rendered.didExceedMaxLines, isFalse);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('numéro corrigé : l offre disparaît', (tester) async {
+      await open(tester);
+      states.add(const AuthError(_blocked));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Enregistrer sans vérifier'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), '699999999');
+      await tester.pump();
+
+      expect(find.text('Enregistrer sans vérifier'), findsNothing);
+      await tester.pumpAndSettle(const Duration(seconds: 6));
+    });
+
+    testWidgets('même numéro retapé à l identique : l offre reste', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(360, 740);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
       await open(tester);
       states.add(const AuthError(_blocked));
       await tester.pump();
       await tester.pump();
 
-      final label = find.text('Enregistrer sans vérifier');
-      expect(label, findsOneWidget);
-      final text = tester.widget<Text>(label);
-      expect(text.maxLines, 1);
-      expect(text.style?.fontSize, isNull);
-      // Une seule ligne : hauteur du texte inférieure à deux lignes.
-      expect(tester.getSize(label).height, lessThan(30));
-      expect(tester.takeException(), isNull);
+      await tester.enterText(find.byType(TextField), '612345678');
+      await tester.pump();
+
+      expect(find.text('Enregistrer sans vérifier'), findsOneWidget);
     });
 
-    testWidgets('libellé EN sur une ligne à 360 dp, sans exception', (
+    for (final (name, error) in <(String, AppException)>[
+      ('404', const NotFoundException(apiCode: 'NOT_FOUND')),
+      ('405', const NetworkException('Method Not Allowed', code: '405')),
+    ]) {
+      testWidgets(
+        'declare $name (back sans la route) : ancien comportement, offre masquée pour la session',
+        (tester) async {
+          await open(tester);
+          states.add(const AuthError(_blocked));
+          await tester.pump();
+          await tester.pump();
+          await tester.tap(find.text('Enregistrer sans vérifier'));
+          await tester.pump();
+
+          states.add(AuthError(error));
+          await tester.pump();
+          await tester.pump();
+
+          // Le refus SMS du serveur, tel qu'avant : son détail, sans l'offre.
+          expect(find.text('Enregistrer sans vérifier'), findsNothing);
+          expect(find.textContaining('Pas de SMS vers ce pays'), findsWidgets);
+          await tester.pumpAndSettle(const Duration(seconds: 6));
+
+          // Nouveau refus country-blocked dans la même session : pas d'offre.
+          await tester.tap(find.byType(DonyButton));
+          await tester.pump();
+          states.add(const AuthError(_blocked));
+          await tester.pump();
+          await tester.pump();
+          expect(find.text('Enregistrer sans vérifier'), findsNothing);
+          await tester.pumpAndSettle(const Duration(seconds: 6));
+        },
+      );
+    }
+
+    testWidgets('panne passagère de declare : l offre reste pour réessayer', (
       tester,
     ) async {
-      enableEnglish();
-      tester.view.physicalSize = const Size(360, 740);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      await open(tester, locale: const Locale('en'));
+      await open(tester);
       states.add(const AuthError(_blocked));
       await tester.pump();
       await tester.pump();
+      await tester.tap(find.text('Enregistrer sans vérifier'));
+      await tester.pump();
 
-      final label = find.text('Save without verifying');
-      expect(label, findsOneWidget);
-      expect(tester.getSize(label).height, lessThan(30));
-      expect(tester.takeException(), isNull);
+      states.add(
+        const AuthError(
+          ServiceUnavailableException('x', 'declared-phone-unavailable'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Enregistrer sans vérifier'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 6));
+    });
+
+    testWidgets('declare 422 (numéro invalide) : l offre est retirée', (
+      tester,
+    ) async {
+      await open(tester);
+      states.add(const AuthError(_blocked));
+      await tester.pump();
+      await tester.pump();
+      await tester.tap(find.text('Enregistrer sans vérifier'));
+      await tester.pump();
+
+      states.add(
+        const AuthError(ValidationException('x', code: 'invalid-phone-number')),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Enregistrer sans vérifier'), findsNothing);
+      await tester.pumpAndSettle(const Duration(seconds: 6));
     });
   });
 
