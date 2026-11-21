@@ -27805,6 +27805,18 @@ abstract class AppLocalizations {
   /// **'Compte trouvé, prénom commençant par {initial}'**
   String recipientInviteUsernameFound(String initial);
 
+  /// Feuille d'invitation : aperçu d'un identifiant trouvé quand le back ne donne pas l'initiale du prénom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte trouvé'**
+  String get recipientInviteUsernameFoundNoInitial;
+
+  /// Feuille d'invitation : message à la bascule vers Numéro quand le back ne connaît pas la recherche par identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'La recherche par identifiant n\'est pas encore disponible.'**
+  String get recipientInviteUsernameUnsupported;
+
   /// Feuille d'invitation : identifiant inconnu (404 user-not-found).
   ///
   /// In fr, this message translates to:
@@ -39063,7 +39075,7 @@ abstract class AppLocalizations {
   /// Feuille « Mon identifiant » : phrase d'introduction.
   ///
   /// In fr, this message translates to:
-  /// **'Vos proches vous retrouvent avec cet identifiant, sans connaître votre numéro.'**
+  /// **'C\'est ce que les autres saisissent pour vous ajouter comme destinataire. Il ne montre ni votre nom ni votre numéro.'**
   String get usernameSheetIntro;
 
   /// Feuille « Mon identifiant » : libellé du champ (préfixe @ affiché devant).
@@ -39137,6 +39149,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'3 à 20 caractères : minuscules, chiffres, point et tiret bas. Modifiable une fois tous les 30 jours.'**
   String get usernameHelp;
+
+  /// Feuille « Mon identifiant » : aide sous le champ quand l'identifiant saisi est disponible.
+  ///
+  /// In fr, this message translates to:
+  /// **'3 à 20 caractères : minuscules, chiffres, point et tiret bas. Votre identifiant actuel reste réservé 30 jours.'**
+  String get usernameHelpAvailable;
+
+  /// Un seul changement tous les 30 jours ; repli quand le back ne donne pas de date lisible.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà changé d\'identifiant récemment. Réessayez plus tard.'**
+  String get usernameChangeTooSoonNoDate;
 
   /// 429 sur la vérification ou le changement.
   ///

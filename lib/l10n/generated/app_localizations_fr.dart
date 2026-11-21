@@ -16975,6 +16975,13 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get recipientInviteUsernameFoundNoInitial => 'Compte trouvé';
+
+  @override
+  String get recipientInviteUsernameUnsupported =>
+      'La recherche par identifiant n\'est pas encore disponible.';
+
+  @override
   String get recipientInviteUsernameNotFound =>
       'Cet utilisateur n\'existe pas. Vérifiez l\'identifiant.';
 
@@ -24402,7 +24409,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get usernameSheetIntro =>
-      'Vos proches vous retrouvent avec cet identifiant, sans connaître votre numéro.';
+      'C\'est ce que les autres saisissent pour vous ajouter comme destinataire. Il ne montre ni votre nom ni votre numéro.';
 
   @override
   String get usernameFieldLabel => 'Identifiant';
@@ -24446,6 +24453,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get usernameHelp =>
       '3 à 20 caractères : minuscules, chiffres, point et tiret bas. Modifiable une fois tous les 30 jours.';
+
+  @override
+  String get usernameHelpAvailable =>
+      '3 à 20 caractères : minuscules, chiffres, point et tiret bas. Votre identifiant actuel reste réservé 30 jours.';
+
+  @override
+  String get usernameChangeTooSoonNoDate =>
+      'Vous avez déjà changé d\'identifiant récemment. Réessayez plus tard.';
 
   @override
   String get usernameQuota =>

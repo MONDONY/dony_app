@@ -16864,6 +16864,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get recipientInviteUsernameFoundNoInitial => 'Account found';
+
+  @override
+  String get recipientInviteUsernameUnsupported =>
+      'Search by username isn\'t available yet.';
+
+  @override
   String get recipientInviteUsernameNotFound =>
       'This user does not exist. Check the username.';
 
@@ -24228,7 +24235,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get usernameSheetIntro =>
-      'People can find you with this username, without knowing your phone number.';
+      'This is what others type to add you as a recipient. It shows neither your name nor your phone number.';
 
   @override
   String get usernameFieldLabel => 'Username';
@@ -24272,6 +24279,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get usernameHelp =>
       '3 to 20 characters: lowercase letters, digits, dot and underscore. You can change it once every 30 days.';
+
+  @override
+  String get usernameHelpAvailable =>
+      '3 to 20 characters: lowercase letters, digits, dot and underscore. Your current username stays reserved for 30 days.';
+
+  @override
+  String get usernameChangeTooSoonNoDate =>
+      'You changed your username recently. Try again later.';
 
   @override
   String get usernameQuota =>
