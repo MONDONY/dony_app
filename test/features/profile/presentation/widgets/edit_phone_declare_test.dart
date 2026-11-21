@@ -73,12 +73,31 @@ Future<void> _loadFonts() async {
   }
 }
 
+/// Laisse la snackbar d'erreur disparaître (persistante, 10 min, pour un
+/// refus SMS) : elle couvre le bas de l'écran,
+/// donc le bouton collant, tant qu'elle est affichée.
+Future<void> _letSnackbarGo(WidgetTester tester) async {
+  await tester.pump(const Duration(minutes: 11));
+  // Un SnackBar avec action reste affiché tant qu'on ne le ferme pas.
+  ScaffoldMessenger.of(
+    tester.element(find.byType(Scaffold).first),
+  ).clearSnackBars();
+  await tester.pumpAndSettle();
+}
+
 void main() {
   setUpAll(() async {
     registerFallbackValue(_FakeAuthEvent());
     await _loadFonts();
   });
-  setUp(resetDeclareRouteMissing);
+  setUp(() {
+    resetDeclareRouteMissing();
+    // DonySnackbar déduplique sur une horloge réelle partagée entre tests.
+    DonySnackbar.clearDedup();
+    // Un tap manqué (hors écran, masqué) doit faire échouer le test.
+    WidgetController.hitTestWarningShouldBeFatal = true;
+  });
+  tearDown(() => WidgetController.hitTestWarningShouldBeFatal = false);
 
   late _MockAuthBloc bloc;
   late StreamController<AuthState> states;
@@ -101,6 +120,11 @@ void main() {
   /// Ouvre l'écran par un push (pour observer le `pop(true)` du succès).
   Future<List<Object?>> open(WidgetTester tester, {Locale? locale}) async {
     final results = <Object?>[];
+    // Surface explicite, identique sur toutes les machines.
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       BlocProvider<AuthBloc>.value(
         value: bloc,
@@ -125,6 +149,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), '612345678');
+    await tester.ensureVisible(find.byType(DonyButton));
     await tester.tap(find.byType(DonyButton));
     await tester.pump();
     return results;
@@ -214,7 +239,7 @@ void main() {
           find.textContaining('Connectez-vous avec votre adresse'),
           findsNothing,
         );
-        await tester.pumpAndSettle(const Duration(seconds: 6));
+        await _letSnackbarGo(tester);
       },
     );
 
@@ -234,7 +259,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Enregistrer sans vérifier'), findsNothing);
-      await tester.pumpAndSettle(const Duration(seconds: 6));
+      await _letSnackbarGo(tester);
     });
 
     // Vraies polices, thème de l'app : le libellé doit tenir dans le bouton
@@ -296,7 +321,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Enregistrer sans vérifier'), findsNothing);
-      await tester.pumpAndSettle(const Duration(seconds: 6));
+      await _letSnackbarGo(tester);
     });
 
     testWidgets('même numéro retapé à l identique : l offre reste', (
@@ -334,16 +359,17 @@ void main() {
           // Le refus SMS du serveur, tel qu'avant : son détail, sans l'offre.
           expect(find.text('Enregistrer sans vérifier'), findsNothing);
           expect(find.textContaining('Pas de SMS vers ce pays'), findsWidgets);
-          await tester.pumpAndSettle(const Duration(seconds: 6));
+          await _letSnackbarGo(tester);
 
           // Nouveau refus country-blocked dans la même session : pas d'offre.
+          await tester.ensureVisible(find.byType(DonyButton));
           await tester.tap(find.byType(DonyButton));
           await tester.pump();
           states.add(const AuthError(_blocked));
           await tester.pump();
           await tester.pump();
           expect(find.text('Enregistrer sans vérifier'), findsNothing);
-          await tester.pumpAndSettle(const Duration(seconds: 6));
+          await _letSnackbarGo(tester);
         },
       );
     }
@@ -367,7 +393,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Enregistrer sans vérifier'), findsOneWidget);
-      await tester.pumpAndSettle(const Duration(seconds: 6));
+      await _letSnackbarGo(tester);
     });
 
     testWidgets('declare 422 (numéro invalide) : l offre est retirée', (
@@ -387,7 +413,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Enregistrer sans vérifier'), findsNothing);
-      await tester.pumpAndSettle(const Duration(seconds: 6));
+      await _letSnackbarGo(tester);
     });
   });
 
