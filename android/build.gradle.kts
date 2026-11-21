@@ -38,6 +38,23 @@ allprojects {
     }
 }
 
+// posthog_flutter 5.25.2 déclare `posthog-android:[3.44.0,4.0.0]` : la borne
+// haute d'une plage Maven est INCLUSE, donc Gradle a pris la 4.0.0 (publiée le
+// 20/11/2026, version majeure cassante) et le plugin ne compile plus
+// (PostHogOnFeatureFlags, onFeatureFlags, getFeatureFlagPayload, RRStyle).
+// On fige la dernière 3.x pour tous les modules (debug et release).
+// À retirer quand posthog_flutter supportera la 4.x.
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "com.posthog" && requested.name == "posthog-android") {
+                useVersion("3.77.1")
+                because("posthog_flutter ne supporte pas posthog-android 4.x (plage inclusive jusqu'à 4.0.0)")
+            }
+        }
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
