@@ -1,3 +1,4 @@
+import 'package:dony/core/phone/phone_verification_level.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,6 +17,70 @@ void main() {
       kycStatus: 'PENDING',
       status: 'ACTIVE',
     );
+
+    group('numéro déclaré (sans SMS)', () {
+      test('JSON sans les nouveaux champs : aucun crash, valeurs nulles', () {
+        final user = UserModel.fromJson(const {
+          'id': 'u1',
+          'roles': <String>[],
+        });
+        expect(user.declaredPhone, isNull);
+        expect(user.declaredPhoneLevel, isNull);
+        expect(user.declaredPhoneVerification, isNull);
+      });
+
+      test('lu, aller-retour toJson, copyWith et props', () {
+        final user = UserModel.fromJson(const {
+          'id': 'u1',
+          'roles': <String>[],
+          'declaredPhone': '+22507000000',
+          'declaredPhoneLevel': 'YADONY_VERIFIED',
+        });
+        expect(user.declaredPhone, '+22507000000');
+        expect(user.declaredPhoneVerification, PhoneVerificationLevel.yadony);
+        final again = UserModel.fromJson(user.toJson());
+        expect(again, user);
+        expect(
+          user.copyWith(declaredPhone: '+22507111111').declaredPhone,
+          '+22507111111',
+        );
+        expect(
+          user.copyWith(firstName: 'A').declaredPhoneLevel,
+          'YADONY_VERIFIED',
+        );
+      });
+
+      test(
+        'DECLARED = non vérifié ; niveau absent avec numéro = non vérifié',
+        () {
+          expect(
+            UserModel.fromJson(const {
+              'id': 'u1',
+              'declaredPhone': '+225',
+              'declaredPhoneLevel': 'DECLARED',
+            }).declaredPhoneVerification,
+            PhoneVerificationLevel.none,
+          );
+          expect(
+            UserModel.fromJson(const {
+              'id': 'u1',
+              'declaredPhone': '+225',
+            }).declaredPhoneVerification,
+            PhoneVerificationLevel.none,
+          );
+        },
+      );
+
+      test('withTravelerStatus conserve le numéro déclaré', () {
+        final user = UserModel.fromJson(const {
+          'id': 'u1',
+          'declaredPhone': '+225',
+          'declaredPhoneLevel': 'DECLARED',
+        }).withTravelerStatus(TravelerStatus.individual);
+        expect(user.declaredPhone, '+225');
+        expect(user.declaredPhoneLevel, 'DECLARED');
+      });
+    });
 
     group('messagingMutedUntil (FLUTTER-CT/CV)', () {
       test('lu depuis /auth/me, aller-retour toJson', () {

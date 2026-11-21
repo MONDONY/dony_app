@@ -111,6 +111,56 @@ void main() {
       expect(OfflineSyncService.isDefinitiveRejection(e), isFalse);
     });
 
+    test('503 sms-otp-disabled country-blocked : extensions conservées', () {
+      final e = mapHttpError(
+        _http(
+          503,
+          body: {
+            'code': 'sms-otp-disabled',
+            'detail': 'Pas de SMS vers la Côte d\'Ivoire',
+            'reason': 'country-blocked',
+            'callingCode': '225',
+          },
+        ),
+      );
+
+      expect(e, isA<ServiceUnavailableException>());
+      expect(e.code, 'sms-otp-disabled');
+      expect(isSmsCountryBlocked(e), isTrue);
+      expect(
+        (e as ServiceUnavailableException).extensions?['callingCode'],
+        '225',
+      );
+    });
+
+    test(
+      'isSmsCountryBlocked : faux sans raison, autre code ou autre type',
+      () {
+        expect(isSmsCountryBlocked(mapHttpError(_http(503))), isFalse);
+        expect(
+          isSmsCountryBlocked(
+            mapHttpError(_http(503, body: {'code': 'sms-otp-disabled'})),
+          ),
+          isFalse,
+        );
+        expect(
+          isSmsCountryBlocked(
+            mapHttpError(
+              _http(503, body: {'code': 'x', 'reason': 'country-blocked'}),
+            ),
+          ),
+          isFalse,
+        );
+        expect(
+          isSmsCountryBlocked(
+            const ConflictException('x', code: 'sms-otp-disabled'),
+          ),
+          isFalse,
+        );
+        expect(isSmsCountryBlocked(null), isFalse);
+      },
+    );
+
     test(
       'statut inconnu (418) → NetworkException portant le statut en code',
       () {

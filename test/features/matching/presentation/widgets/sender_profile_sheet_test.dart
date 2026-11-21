@@ -1,6 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/gp_pro_badge.dart';
+import 'package:dony/core/design/widgets/phone_verification_badge.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/phone/phone_verification_level.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
@@ -128,6 +130,41 @@ void main() {
   testWidgets('pas de badge GP Pro sans senderGpPro', (tester) async {
     await _openSheet(tester, _bid(senderName: 'Fatou S.'));
     expect(find.byType(GpProBadge), findsNothing);
+  });
+
+  for (final (level, label) in [
+    (PhoneVerificationLevel.sms, 'Vérifié'),
+    (PhoneVerificationLevel.yadony, 'Vérifié par Yadony'),
+    (PhoneVerificationLevel.none, 'Non vérifié'),
+  ]) {
+    testWidgets('numéro révélé : badge ${level.name} ($label)', (tester) async {
+      whenListen(
+        contactRevealBloc,
+        const Stream<ContactRevealState>.empty(),
+        initialState: ContactRevealSuccess('+22507000000', verification: level),
+      );
+      await _openSheet(
+        tester,
+        _bid(senderName: 'Fatou S.', senderPhoneAvailable: true),
+      );
+
+      expect(find.text('+22507000000'), findsOneWidget);
+      expect(
+        tester
+            .widget<PhoneVerificationBadge>(find.byType(PhoneVerificationBadge))
+            .level,
+        level,
+      );
+      expect(find.text(label), findsOneWidget);
+    });
+  }
+
+  testWidgets('numéro pas encore révélé : aucun badge', (tester) async {
+    await _openSheet(
+      tester,
+      _bid(senderName: 'Fatou S.', senderPhoneAvailable: true),
+    );
+    expect(find.byType(PhoneVerificationBadge), findsNothing);
   });
 
   testWidgets('libellé Envois de la stat', (tester) async {

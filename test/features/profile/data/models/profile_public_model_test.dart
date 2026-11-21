@@ -38,6 +38,24 @@ void main() {
     });
   });
 
+  group('ProfilePublicModel : numéro vérifié par Yadony', () {
+    test('phoneYadonyVerified lu ; absent (ancien back) = faux', () {
+      expect(
+        ProfilePublicModel.fromJson({
+          'userId': 'u1',
+          'phoneYadonyVerified': true,
+        }).phoneYadonyVerified,
+        isTrue,
+      );
+      final old = ProfilePublicModel.fromJson({
+        'userId': 'u1',
+        'phoneVerified': true,
+      });
+      expect(old.phoneYadonyVerified, isFalse);
+      expect(old.phoneVerified, isTrue);
+    });
+  });
+
   group('ProfilePublicModel : taux de fiabilité retiré', () {
     test('ignores_legacy_reliability_percent_in_json', () {
       final model = ProfilePublicModel.fromJson({

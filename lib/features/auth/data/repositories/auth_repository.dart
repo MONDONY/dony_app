@@ -62,5 +62,7 @@ class AuthRepository {
     required String code,
   }) => _datasource.attachPhone(phoneNumber: phoneNumber, code: code);
 
+  Future<UserModel> declarePhone(String e164) => _datasource.declarePhone(e164);
+
   Future<void> markOnboardingSeen() => _datasource.markOnboardingSeen();
 }

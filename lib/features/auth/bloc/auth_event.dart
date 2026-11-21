@@ -32,6 +32,17 @@ class AuthPhoneVerified extends AuthEvent {
   List<Object?> get props => [verificationId, smsCode, autoVerified];
 }
 
+/// Enregistre le numéro sans code SMS (pays où le SMS n'arrive pas). Offert
+/// seulement après un refus `country-blocked` à l'envoi du code.
+class AuthPhoneDeclared extends AuthEvent {
+  final String phoneNumber;
+
+  const AuthPhoneDeclared(this.phoneNumber);
+
+  @override
+  List<Object?> get props => [phoneNumber];
+}
+
 class AuthRegisterRequested extends AuthEvent {
   const AuthRegisterRequested();
 }

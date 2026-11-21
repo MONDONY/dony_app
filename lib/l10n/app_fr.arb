@@ -23635,5 +23635,33 @@
   "tripShareLoginInviteBody": "Avec un compte Yadony, partagez l'affiche du trajet : image, lien et légende prêts à envoyer.",
   "@tripShareLoginInviteBody": {
       "description": "Feuille compte requis, partage d'un trajet : texte sous « Actions protégées ». L'affiche propose l'image, le lien et la légende."
+  },
+  "phoneVerificationNone": "Non vérifié",
+  "@phoneVerificationNone": {
+    "description": "Pastille d'un numéro seulement déclaré, vérifié par personne (phone_verification_badge.dart)."
+  },
+  "phoneVerificationYadony": "Vérifié par Yadony",
+  "@phoneVerificationYadony": {
+    "description": "Pastille d'un numéro déclaré puis vérifié par l'équipe Yadony (phone_verification_badge.dart)."
+  },
+  "phoneVerificationSms": "Vérifié",
+  "@phoneVerificationSms": {
+    "description": "Pastille d'un numéro vérifié par un code SMS (phone_verification_badge.dart)."
+  },
+  "contactPhoneDeclareTitle": "Pas de SMS dans ce pays",
+  "@contactPhoneDeclareTitle": {
+    "description": "Titre du bandeau proposé quand le code SMS ne peut pas partir vers le pays du numéro (add_contact_sheets.dart)."
+  },
+  "contactPhoneDeclareMessage": "Les SMS n'arrivent pas dans ce pays. Vous pouvez enregistrer ce numéro sans le vérifier : il servira à vous appeler et à vous retrouver, jamais à vous connecter ni à payer.",
+  "@contactPhoneDeclareMessage": {
+    "description": "Explication du bandeau « Enregistrer sans vérifier » (add_contact_sheets.dart)."
+  },
+  "contactPhoneDeclareAction": "Enregistrer sans vérifier",
+  "@contactPhoneDeclareAction": {
+    "description": "Bouton du bandeau : enregistre le numéro sans code SMS (add_contact_sheets.dart). Une seule ligne."
+  },
+  "contactPhoneDeclaredSuccess": "Numéro enregistré.",
+  "@contactPhoneDeclaredSuccess": {
+    "description": "Confirmation après l'enregistrement d'un numéro sans vérification (add_contact_sheets.dart)."
   }
 }

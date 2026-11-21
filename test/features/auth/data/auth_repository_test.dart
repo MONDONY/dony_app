@@ -131,6 +131,16 @@ void main() {
     ).called(1);
   });
 
+  test('declarePhone delegates to datasource', () async {
+    when(
+      () => mockDs.declarePhone('+22507000000'),
+    ).thenAnswer((_) async => _user);
+
+    final result = await repo.declarePhone('+22507000000');
+    expect(result.id, 'u1');
+    verify(() => mockDs.declarePhone('+22507000000')).called(1);
+  });
+
   test('registerWithEmail delegates to datasource', () async {
     when(
       () => mockDs.registerWithEmail(email: 'user@example.com'),

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/design/widgets/phone_verification_badge.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
@@ -158,24 +159,40 @@ class _SenderProfileSheet extends StatelessWidget {
                             final phone = state is ContactRevealSuccess
                                 ? state.phoneNumber
                                 : null;
-                            return Row(
+                            // Le badge dit si le numéro a été vérifié (SMS,
+                            // Yadony) ou seulement déclaré : jamais avant la
+                            // révélation, jamais sans numéro.
+                            final level =
+                                state is ContactRevealSuccess && phone != null
+                                ? state.verification
+                                : null;
+                            return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                DonyIcon(
-                                  'phone',
-                                  size: 13,
-                                  color: cs.onSurfaceVariant,
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    DonyIcon(
+                                      'phone',
+                                      size: 13,
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                    const SizedBox(width: DonySpacing.xs),
+                                    Text(
+                                      phone ??
+                                          context
+                                              .l10n
+                                              .senderProfilePhoneLoadingLabel,
+                                      style: tt.bodyMedium?.copyWith(
+                                        color: cs.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: DonySpacing.xs),
-                                Text(
-                                  phone ??
-                                      context
-                                          .l10n
-                                          .senderProfilePhoneLoadingLabel,
-                                  style: tt.bodyMedium?.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
+                                if (level != null) ...[
+                                  const SizedBox(height: DonySpacing.xs),
+                                  PhoneVerificationBadge(level),
+                                ],
                               ],
                             );
                           },

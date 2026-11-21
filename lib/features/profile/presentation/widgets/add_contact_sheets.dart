@@ -249,6 +249,14 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   /// listener du BLoC y écrit, et il est disposé avec lui.
   final _conflict = ValueNotifier<AppException?>(null);
 
+  /// Refus « pas de SMS vers ce pays » reçu à l'envoi du code : le bandeau
+  /// propose alors d'enregistrer le numéro sans le vérifier. Possédé par le
+  /// [State] (seul le listener du BLoC y écrit), disposé avec lui.
+  final _declareOffer = ValueNotifier<AppException?>(null);
+
+  /// Vrai entre la demande « Enregistrer sans vérifier » et sa réponse.
+  bool _declareSubmitted = false;
+
   @override
   void initState() {
     super.initState();
@@ -260,6 +268,7 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
     _phoneCtrl.dispose();
     _otpCtrl.dispose();
     _conflict.dispose();
+    _declareOffer.dispose();
     super.dispose();
   }
 
@@ -276,7 +285,16 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
     if (number.isEmpty) return;
     _pendingPhone = toE164(_country.dialCode, number);
     _conflict.value = null;
+    _declareOffer.value = null;
     context.read<AuthBloc>().add(AuthSendOtpRequested(_pendingPhone));
+  }
+
+  /// Enregistre le numéro sans code SMS. Aucun SMS ne part : la voie n'est
+  /// offerte qu'après un refus `country-blocked` du back.
+  void _declare() {
+    if (_pendingPhone.isEmpty) return;
+    _declareSubmitted = true;
+    context.read<AuthBloc>().add(AuthPhoneDeclared(_pendingPhone));
   }
 
   void _verifyOtp() {
@@ -302,17 +320,32 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
           // AuthProfileUpdated part aussi d'une resynchronisation du profil
           // en arrière-plan : seule la vérification lancée ici ferme l'écran
           // (FLUTTER-BX). `true` signale à l'appelant que le contact a changé.
-          if (!_verifySubmitted) return;
+          if (!_verifySubmitted && !_declareSubmitted) return;
+          final declared = _declareSubmitted;
           _verifySubmitted = false;
+          _declareSubmitted = false;
           DonySnackbar.show(
             context,
-            message: context.l10n.contactPhoneAddedSuccess,
+            message: declared
+                ? context.l10n.contactPhoneDeclaredSuccess
+                : context.l10n.contactPhoneAddedSuccess,
             type: DonySnackbarType.success,
           );
           Navigator.of(context, rootNavigator: true).pop(true);
         } else if (state is AuthError) {
+          final wasDeclaring = _declareSubmitted;
           _verifySubmitted = false;
-          if (phoneConflictCodes.contains(state.error.code)) {
+          _declareSubmitted = false;
+          if (isSmsCountryBlocked(state.error)) {
+            // Le bandeau explique et offre « Enregistrer sans vérifier » :
+            // pas de snackbar en double.
+            _declareOffer.value = state.error;
+          } else if (wasDeclaring) {
+            // 409 `phone-declare-not-allowed` (le pays n'est pas bloqué) ou
+            // autre refus : l'erreur SMS normale, sans l'offre.
+            _declareOffer.value = null;
+            ErrorPresenter.show(context, state.error);
+          } else if (phoneConflictCodes.contains(state.error.code)) {
             // Le bandeau ci-dessous explique quoi faire et propose le
             // support : pas de snackbar en double (YADONY-FLUTTER-PROD-Y).
             _conflict.value = state.error;
@@ -330,6 +363,12 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
             builder: (_, error, _) => error == null
                 ? const SizedBox.shrink()
                 : _PhoneConflictBanner(error: error, phone: _pendingPhone),
+          ),
+          ValueListenableBuilder<AppException?>(
+            valueListenable: _declareOffer,
+            builder: (_, error, _) => error == null
+                ? const SizedBox.shrink()
+                : _PhoneDeclareOffer(onDeclare: _declare),
           ),
           ValueListenableBuilder<_ContactStep>(
             valueListenable: widget.stepNotifier,
@@ -354,6 +393,47 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Bandeau proposé quand le code SMS ne peut pas partir vers le pays du
+/// numéro (`country-blocked`) : explique, puis « Enregistrer sans vérifier ».
+/// Un bouton texte (pas un `DonyButton`) : ce contenu vit aussi dans une
+/// bottom sheet, où les `DonyButton` appartiennent au `stickyBottom`.
+class _PhoneDeclareOffer extends StatelessWidget {
+  const _PhoneDeclareOffer({required this.onDeclare});
+
+  final VoidCallback onDeclare;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) => Padding(
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.lg,
+          DonySpacing.sm,
+          DonySpacing.lg,
+          0,
+        ),
+        child: DonyStatusBanner(
+          key: const Key('phone-declare-offer'),
+          type: DonyStatusBannerType.info,
+          title: l.contactPhoneDeclareTitle,
+          message: l.contactPhoneDeclareMessage,
+          action: TextButton(
+            key: const Key('phone-declare-cta'),
+            onPressed: state is AuthLoading ? null : onDeclare,
+            child: Text(
+              l.contactPhoneDeclareAction,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.visible,
+            ),
+          ),
+        ),
       ),
     );
   }

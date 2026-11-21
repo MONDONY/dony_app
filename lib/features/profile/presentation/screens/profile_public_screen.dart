@@ -1100,7 +1100,11 @@ class _VerificationsSection extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         _VerificationRow(
           label: l.profilePublicVerificationPhone,
-          verified: profile.phoneVerified,
+          // SMS d'abord ; sinon un numéro déclaré puis vérifié par l'équipe.
+          verified: profile.phoneVerified || profile.phoneYadonyVerified,
+          verifiedLabel: !profile.phoneVerified && profile.phoneYadonyVerified
+              ? l.phoneVerificationYadony
+              : null,
         ),
         _VerificationRow(
           label: l.profilePublicVerificationEmail,
@@ -1136,9 +1140,16 @@ class _VerificationsSection extends StatelessWidget {
 }
 
 class _VerificationRow extends StatelessWidget {
-  const _VerificationRow({required this.label, required this.verified});
+  const _VerificationRow({
+    required this.label,
+    required this.verified,
+    this.verifiedLabel,
+  });
   final String label;
   final bool verified;
+
+  /// Remplace « Vérifié » quand la vérification a une autre origine.
+  final String? verifiedLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -1147,7 +1158,7 @@ class _VerificationRow extends StatelessWidget {
     final l = context.l10n;
     return Semantics(
       label:
-          '$label, ${verified ? l.profilePublicVerifiedValue : l.profilePublicNotVerifiedValue}',
+          '$label, ${verified ? (verifiedLabel ?? l.profilePublicVerifiedValue) : l.profilePublicNotVerifiedValue}',
       excludeSemantics: true,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
@@ -1162,7 +1173,7 @@ class _VerificationRow extends StatelessWidget {
             Expanded(child: Text(label, style: tt.bodyMedium)),
             Text(
               verified
-                  ? l.profilePublicVerifiedValue
+                  ? (verifiedLabel ?? l.profilePublicVerifiedValue)
                   : l.profilePublicNotVerifiedValue,
               style: tt.bodySmall?.copyWith(
                 color: verified ? cs.success : cs.onSurfaceVariant,

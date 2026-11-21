@@ -524,6 +524,32 @@ void main() {
     expect(find.text('Réside en France'), findsOneWidget);
   });
 
+  testWidgets('téléphone vérifié par Yadony : libellé dédié', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: const ProfilePublicModel(
+          userId: _userId,
+          displayName: 'Fatou Diallo',
+          kycVerified: false,
+          isProAccount: false,
+          gpPro: false,
+          completedBidsCount: 0,
+          averageRating: 0,
+          ratingCount: 0,
+          memberSince: 'mars 2025',
+          badges: [],
+          phoneYadonyVerified: true,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Vérifié par Yadony'), findsOneWidget);
+  });
+
   testWidgets('dernière connexion et temps de réponse mesuré (4H partie 2)', (
     tester,
   ) async {

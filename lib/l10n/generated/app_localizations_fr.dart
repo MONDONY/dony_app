@@ -24367,4 +24367,26 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tripShareLoginInviteBody =>
       'Avec un compte Yadony, partagez l\'affiche du trajet : image, lien et légende prêts à envoyer.';
+
+  @override
+  String get phoneVerificationNone => 'Non vérifié';
+
+  @override
+  String get phoneVerificationYadony => 'Vérifié par Yadony';
+
+  @override
+  String get phoneVerificationSms => 'Vérifié';
+
+  @override
+  String get contactPhoneDeclareTitle => 'Pas de SMS dans ce pays';
+
+  @override
+  String get contactPhoneDeclareMessage =>
+      'Les SMS n\'arrivent pas dans ce pays. Vous pouvez enregistrer ce numéro sans le vérifier : il servira à vous appeler et à vous retrouver, jamais à vous connecter ni à payer.';
+
+  @override
+  String get contactPhoneDeclareAction => 'Enregistrer sans vérifier';
+
+  @override
+  String get contactPhoneDeclaredSuccess => 'Numéro enregistré.';
 }

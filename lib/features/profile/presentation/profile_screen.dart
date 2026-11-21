@@ -229,6 +229,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   gpPro: isGpPro,
                   avatarUrl: user.avatarUrl,
                   phoneNumber: user.phoneNumber,
+                  declaredPhoneLevel: user.declaredPhoneVerification,
                   email: user.email,
                   city: user.city,
                   topPadding: topPad,

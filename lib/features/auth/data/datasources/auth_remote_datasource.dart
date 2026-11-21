@@ -155,6 +155,18 @@ class AuthRemoteDatasource {
     );
   }
 
+  /// Enregistre un numéro SANS code SMS, pour un pays où le SMS n'arrive pas
+  /// (409 `phone-declare-not-allowed` sinon : le code SMS reste la voie). Le
+  /// numéro est de l'information seulement, jamais pour la connexion ni les
+  /// paiements. Pas de jeton de reconnexion : le compte Firebase ne change pas.
+  Future<UserModel> declarePhone(String e164) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/auth/sms-otp/declare',
+      data: {'phoneNumber': e164},
+    );
+    return UserModel.fromJson(response.data!);
+  }
+
   Future<void> markOnboardingSeen() async {
     await _apiClient.dio.put<void>('/auth/me/onboarding-seen');
   }

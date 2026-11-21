@@ -38964,25 +38964,25 @@ abstract class AppLocalizations {
   /// **'Limite de messages atteinte. Réservez pour continuer.'**
   String get inquirySendLimitError;
 
-  /// Infobulle et nom d'accessibilité du pouce d'une carte trajet, trajet pas encore aimé (trip_like_button.dart).
+  /// Infobulle et nom d'accessibilité du cœur d'une carte trajet, trajet pas encore aimé (trip_like_button.dart).
   ///
   /// In fr, this message translates to:
   /// **'J\'aime'**
   String get tripLikeTooltip;
 
-  /// Infobulle et nom d'accessibilité du pouce d'une carte trajet déjà aimé : le toucher retire le j'aime (trip_like_button.dart).
+  /// Infobulle et nom d'accessibilité du cœur d'une carte trajet déjà aimé : le toucher retire le j'aime (trip_like_button.dart).
   ///
   /// In fr, this message translates to:
   /// **'Je n\'aime plus'**
   String get tripUnlikeTooltip;
 
-  /// Lecture d'écran du compteur de j'aime d'une carte trajet (le nombre n'est exposé qu'après le j'aime de l'utilisateur, ou dès le premier j'aime au voyageur du trajet).
+  /// Lecture d'écran du compteur de j'aime d'une carte trajet (le nombre est exposé dès le premier j'aime, jamais à 0).
   ///
   /// In fr, this message translates to:
   /// **'{count, plural, =1{{count} personne aime ce trajet} other{{count} personnes aiment ce trajet}}'**
   String tripLikeCountSemantics(int count);
 
-  /// Feuille compte requis : un visiteur sans compte touche le pouce d'une carte trajet (sous-titre de la feuille).
+  /// Feuille compte requis : un visiteur sans compte touche le cœur d'une carte trajet (sous-titre de la feuille).
   ///
   /// In fr, this message translates to:
   /// **'Connectez-vous pour aimer ce trajet.'**
@@ -39005,6 +39005,48 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Avec un compte Yadony, partagez l\'affiche du trajet : image, lien et légende prêts à envoyer.'**
   String get tripShareLoginInviteBody;
+
+  /// Pastille d'un numéro seulement déclaré, vérifié par personne (phone_verification_badge.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non vérifié'**
+  String get phoneVerificationNone;
+
+  /// Pastille d'un numéro déclaré puis vérifié par l'équipe Yadony (phone_verification_badge.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifié par Yadony'**
+  String get phoneVerificationYadony;
+
+  /// Pastille d'un numéro vérifié par un code SMS (phone_verification_badge.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifié'**
+  String get phoneVerificationSms;
+
+  /// Titre du bandeau proposé quand le code SMS ne peut pas partir vers le pays du numéro (add_contact_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de SMS dans ce pays'**
+  String get contactPhoneDeclareTitle;
+
+  /// Explication du bandeau « Enregistrer sans vérifier » (add_contact_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les SMS n\'arrivent pas dans ce pays. Vous pouvez enregistrer ce numéro sans le vérifier : il servira à vous appeler et à vous retrouver, jamais à vous connecter ni à payer.'**
+  String get contactPhoneDeclareMessage;
+
+  /// Bouton du bandeau : enregistre le numéro sans code SMS (add_contact_sheets.dart). Une seule ligne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer sans vérifier'**
+  String get contactPhoneDeclareAction;
+
+  /// Confirmation après l'enregistrement d'un numéro sans vérification (add_contact_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro enregistré.'**
+  String get contactPhoneDeclaredSuccess;
 }
 
 class _AppLocalizationsDelegate
