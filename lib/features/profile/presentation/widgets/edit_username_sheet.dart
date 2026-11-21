@@ -2,7 +2,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/profile/bloc/username/username_cubit.dart';
 import 'package:dony/features/profile/data/models/username_availability.dart';
-import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,12 +21,11 @@ abstract final class EditUsernameSheet {
     final saved = await DonyBottomSheet.show<bool>(
       context,
       title: context.l10n.usernameSheetTitle,
-      analyticsName: 'edit_username',
+      analyticsName: 'profile/username',
       // Le cubit vit avec la feuille : BlocProvider le ferme quand la route
       // disparaît, après l'animation de sortie.
       wrapper: (child) => BlocProvider<UsernameCubit>(
-        create: (_) =>
-            (createCubit ?? () => UsernameCubit(getIt<ProfileRepository>()))(),
+        create: (_) => (createCubit ?? () => getIt<UsernameCubit>())(),
         child: child,
       ),
       stickyBottom: BlocBuilder<UsernameCubit, UsernameState>(
@@ -79,11 +77,11 @@ class _EditUsernameContentState extends State<_EditUsernameContent> {
         };
       case UsernameStatus.tooSoon:
         final at = state.nextChangeAt;
-        final date = at == null
-            ? ''
-            : DateFormat.yMMMMd(
-                Localizations.localeOf(context).toString(),
-              ).format(at.toLocal());
+        // Sans date lisible, une phrase qui n'en promet pas.
+        if (at == null) return l.usernameChangeTooSoonNoDate;
+        final date = DateFormat.yMMMMd(
+          Localizations.localeOf(context).toString(),
+        ).format(at.toLocal());
         return l.usernameChangeTooSoon(date);
       case UsernameStatus.quota:
         return l.usernameQuota;
@@ -198,7 +196,9 @@ class _EditUsernameContentState extends State<_EditUsernameContent> {
             ],
             const SizedBox(height: DonySpacing.base),
             Text(
-              l.usernameHelp,
+              state.status == UsernameStatus.available
+                  ? l.usernameHelpAvailable
+                  : l.usernameHelp,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],

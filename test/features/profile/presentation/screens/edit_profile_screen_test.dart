@@ -14,6 +14,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
 import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
 import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
+import 'package:dony/features/profile/bloc/username/username_cubit.dart';
 import 'package:dony/features/profile/data/models/username_availability.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/presentation/screens/edit_profile_screen.dart';
@@ -1367,6 +1368,19 @@ void main() {
         getIt.unregister<ProfileRepository>();
       }
       getIt.registerSingleton<ProfileRepository>(profileRepo);
+      final usernameAnalytics = _MockAnalyticsService();
+      when(
+        () => usernameAnalytics.logEvent(
+          any(),
+          properties: any(named: 'properties'),
+        ),
+      ).thenAnswer((_) async {});
+      if (getIt.isRegistered<UsernameCubit>()) {
+        getIt.unregister<UsernameCubit>();
+      }
+      getIt.registerFactory<UsernameCubit>(
+        () => UsernameCubit(profileRepo, usernameAnalytics),
+      );
       when(
         () => profileRepo.checkUsername(
           any(),
@@ -1378,6 +1392,9 @@ void main() {
       ).thenAnswer((_) async => withUsername);
     });
     tearDown(() {
+      if (getIt.isRegistered<UsernameCubit>()) {
+        getIt.unregister<UsernameCubit>();
+      }
       if (getIt.isRegistered<ProfileRepository>()) {
         getIt.unregister<ProfileRepository>();
       }

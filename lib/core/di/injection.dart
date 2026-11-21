@@ -258,6 +258,7 @@ import 'package:dony/features/profile/bloc/open_listings_cubit.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
+import 'package:dony/features/profile/bloc/username/username_cubit.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
@@ -1227,6 +1228,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Profile (upgrade PRO + statistiques PRO)
   getIt.registerLazySingleton<ProfileRepository>(
     () => ProfileRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<UsernameCubit>(
+    () => UsernameCubit(getIt<ProfileRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerFactory<UpgradeToProBloc>(
     () =>

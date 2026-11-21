@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/data/models/username_availability.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
@@ -80,8 +82,11 @@ class UsernameState extends Equatable {
 /// (moins de 3 caractères, caractères interdits) : le serveur reste l'autorité
 /// et son verdict est affiché tel quel.
 class UsernameCubit extends Cubit<UsernameState> {
-  UsernameCubit(this._repository, {this.debounce = defaultDebounce})
-    : super(const UsernameState());
+  UsernameCubit(
+    this._repository,
+    this._analytics, {
+    this.debounce = defaultDebounce,
+  }) : super(const UsernameState());
 
   static const defaultDebounce = Duration(milliseconds: 400);
 
@@ -93,7 +98,12 @@ class UsernameCubit extends Cubit<UsernameState> {
       value.length >= 3 && value.length <= 20 && _format.hasMatch(value);
 
   final ProfileRepository _repository;
+  final AnalyticsService _analytics;
   final Duration debounce;
+
+  /// La saisie courante vient d'une puce de suggestion (propriété
+  /// `from_suggestion` de `username_changed`).
+  var _fromSuggestion = false;
 
   Timer? _timer;
   CancelToken? _cancelToken;
@@ -103,6 +113,7 @@ class UsernameCubit extends Cubit<UsernameState> {
     if (state.status == UsernameStatus.saving) return;
     final value = raw.trim().toLowerCase();
     _cancelPending();
+    _fromSuggestion = false;
     if (value.isEmpty || !isValidFormat(value)) {
       emit(UsernameState(input: value));
       return;
@@ -117,6 +128,7 @@ class UsernameCubit extends Cubit<UsernameState> {
     if (state.status == UsernameStatus.saving) return;
     final value = suggestion.trim().toLowerCase();
     _cancelPending();
+    _fromSuggestion = true;
     if (!isValidFormat(value)) {
       emit(UsernameState(input: value));
       return;
@@ -140,9 +152,23 @@ class UsernameCubit extends Cubit<UsernameState> {
           savedUser: user,
         ),
       );
+      // Jamais la valeur de l'identifiant : seulement l'origine du choix.
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.usernameChanged,
+          properties: {'from_suggestion': _fromSuggestion},
+        ),
+      );
     } catch (e) {
       if (isClosed) return;
-      emit(_stateFromSubmitError(value, unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      emit(_stateFromSubmitError(value, error));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.usernameChangeFailed,
+          properties: {'error_code': usernameProblemSlug(error) ?? 'unknown'},
+        ),
+      );
     }
   }
 
@@ -186,6 +212,11 @@ class UsernameCubit extends Cubit<UsernameState> {
     // route absente (ancien back).
     if (error is NotFoundException &&
         !(usernameProblemSlug(error)?.endsWith('user-not-found') ?? false)) {
+      return UsernameStatus.unsupported;
+    }
+    // Le back de prod répond 405 (et non 404) sur une route que son ancien
+    // contrôleur ne sert pas : même verdict.
+    if (error is NetworkException && error.code == '405') {
       return UsernameStatus.unsupported;
     }
     return UsernameStatus.error;

@@ -1,4 +1,6 @@
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/bloc/username/username_cubit.dart';
 import 'package:dony/features/profile/data/models/username_availability.dart';
@@ -7,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockRepo extends Mock implements ProfileRepository {}
+
+class _MockAnalytics extends Mock implements AnalyticsService {}
 
 const _fast = Duration(milliseconds: 20);
 const _wait = Duration(milliseconds: 120);
@@ -21,11 +25,16 @@ UserModel _user(String username) => UserModel(
 
 void main() {
   late _MockRepo repo;
+  late _MockAnalytics analytics;
   late UsernameCubit cubit;
 
   setUp(() {
     repo = _MockRepo();
-    cubit = UsernameCubit(repo, debounce: _fast);
+    analytics = _MockAnalytics();
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+    cubit = UsernameCubit(repo, analytics, debounce: _fast);
   });
 
   tearDown(() => cubit.close());
@@ -224,7 +233,7 @@ void main() {
     await Future<void>.delayed(_wait);
     expect(cubit.state.status, UsernameStatus.quota);
 
-    final other = UsernameCubit(repo, debounce: _fast);
+    final other = UsernameCubit(repo, analytics, debounce: _fast);
     addTearDown(other.close);
     await Future<void>.delayed(Duration.zero);
     stubCheck(const UsernameAvailability(available: true));
@@ -262,6 +271,106 @@ void main() {
       expect(cubit.state.canSave, isFalse);
     },
   );
+
+  test('405 (prod) à la vérification : unsupported', () async {
+    when(
+      () => repo.checkUsername(any(), cancelToken: any(named: 'cancelToken')),
+    ).thenThrow(const NetworkException('Method Not Allowed', code: '405'));
+    cubit.inputChanged('awa');
+    await Future<void>.delayed(_wait);
+    expect(cubit.state.status, UsernameStatus.unsupported);
+    expect(cubit.state.canSave, isFalse);
+  });
+
+  test('405 de l enregistrement : unsupported', () async {
+    stubCheck(const UsernameAvailability(available: true));
+    when(
+      () => repo.changeUsername('awa'),
+    ).thenThrow(const NetworkException('x', code: '405'));
+    cubit.inputChanged('awa');
+    await Future<void>.delayed(_wait);
+    await cubit.submit();
+    expect(cubit.state.status, UsernameStatus.unsupported);
+  });
+
+  group('analytics', () {
+    test(
+      'succès saisi à la main : from_suggestion false, sans la valeur',
+      () async {
+        stubCheck(const UsernameAvailability(available: true));
+        when(
+          () => repo.changeUsername('awa.d'),
+        ).thenAnswer((_) async => _user('awa.d'));
+        cubit.inputChanged('awa.d');
+        await Future<void>.delayed(_wait);
+        await cubit.submit();
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.usernameChanged,
+            properties: {'from_suggestion': false},
+          ),
+        ).called(1);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.usernameChangeFailed,
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+
+    test('succès depuis une suggestion : from_suggestion true', () async {
+      stubCheck(const UsernameAvailability(available: true));
+      when(
+        () => repo.changeUsername('awa1'),
+      ).thenAnswer((_) async => _user('awa1'));
+      cubit.suggestionTapped('awa1');
+      await Future<void>.delayed(_wait);
+      await cubit.submit();
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.usernameChanged,
+          properties: {'from_suggestion': true},
+        ),
+      ).called(1);
+    });
+
+    test('échec : error_code = slug du problème, jamais la valeur', () async {
+      stubCheck(const UsernameAvailability(available: true));
+      when(
+        () => repo.changeUsername('awa'),
+      ).thenThrow(const ConflictException('x', code: 'username-taken'));
+      cubit.inputChanged('awa');
+      await Future<void>.delayed(_wait);
+      await cubit.submit();
+      final captured =
+          verify(
+                () => analytics.logEvent(
+                  AnalyticsEvents.usernameChangeFailed,
+                  properties: captureAny(named: 'properties'),
+                ),
+              ).captured.single
+              as Map<String, Object?>;
+      expect(captured, {'error_code': 'username-taken'});
+      expect(captured.values.contains('awa'), isFalse);
+    });
+
+    test('échec sans code lisible : unknown', () async {
+      stubCheck(const UsernameAvailability(available: true));
+      when(
+        () => repo.changeUsername('awa'),
+      ).thenThrow(const OfflineException());
+      cubit.inputChanged('awa');
+      await Future<void>.delayed(_wait);
+      await cubit.submit();
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.usernameChangeFailed,
+          properties: {'error_code': 'unknown'},
+        ),
+      ).called(1);
+    });
+  });
 
   test('404 sans corps (ancien back) : unsupported', () async {
     when(

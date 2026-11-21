@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/bloc/username/username_cubit.dart';
 import 'package:dony/features/profile/data/models/username_availability.dart';
@@ -14,13 +15,20 @@ import '../../../helpers/l10n_test_helpers.dart';
 
 class _MockRepo extends Mock implements ProfileRepository {}
 
+class _MockAnalytics extends Mock implements AnalyticsService {}
+
 void main() {
   late _MockRepo repo;
+  late _MockAnalytics analytics;
   bool? result;
 
   setUp(() {
     DonySnackbar.clearDedup();
     repo = _MockRepo();
+    analytics = _MockAnalytics();
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
     result = null;
   });
 
@@ -38,6 +46,7 @@ void main() {
                   context,
                   createCubit: () => UsernameCubit(
                     repo,
+                    analytics,
                     debounce: const Duration(milliseconds: 10),
                   ),
                 );
@@ -98,6 +107,57 @@ void main() {
       findsOneWidget,
     );
     expect(saveButton(tester).onPressed, isNull);
+  });
+
+  testWidgets('texte de la maquette : intro, aide « Disponible »', (
+    tester,
+  ) async {
+    when(
+      () => repo.checkUsername(any(), cancelToken: any(named: 'cancelToken')),
+    ).thenAnswer((_) async => const UsernameAvailability(available: true));
+    await open(tester);
+    expect(
+      find.text(
+        'C\'est ce que les autres saisissent pour vous ajouter comme '
+        'destinataire. Il ne montre ni votre nom ni votre numéro.',
+      ),
+      findsOneWidget,
+    );
+    await tester.enterText(field(), 'awa');
+    await settle(tester);
+    expect(
+      find.text(
+        '3 à 20 caractères : minuscules, chiffres, point et tiret bas. '
+        'Votre identifiant actuel reste réservé 30 jours.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Modifiable une fois'), findsNothing);
+  });
+
+  testWidgets('trop tôt sans date lisible : phrase de repli', (tester) async {
+    when(
+      () => repo.checkUsername(any(), cancelToken: any(named: 'cancelToken')),
+    ).thenAnswer((_) async => const UsernameAvailability(available: true));
+    when(() => repo.changeUsername(any())).thenThrow(
+      const ConflictException(
+        'x',
+        code: 'username-change-too-soon',
+        extensions: {'nextChangeAt': 'pas une date'},
+      ),
+    );
+    await open(tester);
+    await tester.enterText(field(), 'awa');
+    await settle(tester);
+    await tester.tap(save());
+    await settle(tester);
+    expect(
+      find.text(
+        'Vous avez déjà changé d\'identifiant récemment. Réessayez plus tard.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('possible le'), findsNothing);
   });
 
   testWidgets('identifiant pris : message et 3 puces, bouton désactivé', (
@@ -180,6 +240,17 @@ void main() {
     when(
       () => repo.checkUsername(any(), cancelToken: any(named: 'cancelToken')),
     ).thenThrow(const NotFoundException());
+    await open(tester);
+    await tester.enterText(field(), 'awa');
+    await settle(tester);
+    expect(find.text('Indisponible pour le moment'), findsOneWidget);
+    expect(saveButton(tester).onPressed, isNull);
+  });
+
+  testWidgets('405 (prod) : texte poli, Enregistrer désactivé', (tester) async {
+    when(
+      () => repo.checkUsername(any(), cancelToken: any(named: 'cancelToken')),
+    ).thenThrow(const NetworkException('x', code: '405'));
     await open(tester);
     await tester.enterText(field(), 'awa');
     await settle(tester);
