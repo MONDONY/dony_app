@@ -16799,7 +16799,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recipientInviteActionSubtitle =>
-      'Retrouvez-le par son numéro ou son e-mail : ses colis lui seront rattachés.';
+      'Retrouvez-le par son numéro, son e-mail ou son identifiant : ses colis lui seront rattachés.';
 
   @override
   String get recipientInviteSheetIntro =>
@@ -16958,6 +16958,35 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recipientInviteNameTooLong => '100 caractères au maximum.';
+
+  @override
+  String get recipientInviteChannelUsername => 'Identifiant';
+
+  @override
+  String get recipientInviteUsernameLabel => 'Identifiant Yadony';
+
+  @override
+  String get recipientInviteUsernameHelper =>
+      'Il le trouve dans son profil, sous son nom.';
+
+  @override
+  String recipientInviteUsernameFound(String initial) {
+    return 'Compte trouvé, prénom commençant par $initial';
+  }
+
+  @override
+  String get recipientInviteUsernameNotFound =>
+      'Cet utilisateur n\'existe pas. Vérifiez l\'identifiant.';
+
+  @override
+  String get recipientInviteUsernameAddByPhone => 'L\'ajouter avec son numéro';
+
+  @override
+  String get recipientInviteUsernameSelf => 'C\'est votre identifiant.';
+
+  @override
+  String get recipientInviteUsernameQuota =>
+      'Trop de recherches. Réessayez dans une heure.';
 
   @override
   String get negotiationViewNegotiationCta => 'Voir la négociation';

@@ -22,7 +22,7 @@ class RecipientInvitationDatasource {
   }) async {
     assert(
       [phone, email, username].where((v) => v != null).length == 1,
-      'phone, email ou username, un seul',
+      'phone, email or username, exactly one', // i18n-ignore
     );
     final trimmed = name?.trim();
     await _apiClient.dio.post(

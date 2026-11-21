@@ -10,6 +10,8 @@ import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/data/phone_validation.dart';
 import 'package:dony/features/recipients/data/recipient_filter.dart';
+import 'package:dony/features/recipients/presentation/widgets/invite_recipient_sheet.dart';
+import 'package:dony/features/recipients/presentation/widgets/sent_invitations_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -152,6 +154,21 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
     );
   }
 
+  /// « Ajouter un destinataire Yadony » : la même feuille que le carnet. Une
+  /// fois l'invitation partie, le même message de succès.
+  Future<void> _inviteYadony() async {
+    final sent = await InviteRecipientSheet.show(
+      context,
+      userCountry: recipientInviteUserCountry(),
+    );
+    if (!sent || !mounted) return;
+    DonySnackbar.show(
+      context,
+      message: context.l10n.recipientInviteSent,
+      type: DonySnackbarType.success,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -260,6 +277,12 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
                               ),
                               children: [
                                 _ActionTile(
+                                  key: const Key('picker-invite-yadony'),
+                                  icon: 'user-plus',
+                                  label: l.recipientInviteAction,
+                                  onTap: _inviteYadony,
+                                ),
+                                _ActionTile(
                                   icon: 'plus',
                                   label: l.recipientCreateTitle,
                                   onTap: () => _createNew(source: 'new'),
@@ -359,6 +382,7 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
 
 class _ActionTile extends StatelessWidget {
   const _ActionTile({
+    super.key,
     required this.icon,
     required this.label,
     this.onTap,

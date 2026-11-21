@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
+import 'package:dony/features/recipients/bloc/invite_recipient_cubit.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
+import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_picker_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,6 +25,9 @@ class FakeRecipientEvent extends Fake implements RecipientEvent {}
 class MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class MockContactPickerService extends Mock implements ContactPickerService {}
+
+class MockInvitationRepository extends Mock
+    implements RecipientInvitationRepository {}
 
 const _r1 = Recipient(
   id: 'r-1',
@@ -107,6 +113,9 @@ void main() {
     if (getIt.isRegistered<RecipientBloc>()) {
       getIt.unregister<RecipientBloc>();
     }
+    if (getIt.isRegistered<InviteRecipientCubit>()) {
+      getIt.unregister<InviteRecipientCubit>();
+    }
   });
 
   /// Ouvre la sheet via `.show()` (mêmes routes que `recipients_screen_test`)
@@ -186,6 +195,61 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
     }
   }
+
+  testWidgets('entrée « Ajouter un destinataire Yadony » en tête de liste', (
+    tester,
+  ) async {
+    DonySnackbar.clearDedup();
+    final invitations = MockInvitationRepository();
+    when(
+      () => invitations.sendToPhone(any(), name: any(named: 'name')),
+    ).thenAnswer((_) async {});
+    getIt.registerFactory<InviteRecipientCubit>(
+      () => InviteRecipientCubit(invitations, analytics),
+    );
+    final bloc = MockRecipientBloc();
+    when(() => bloc.state).thenReturn(
+      const RecipientState(status: RecipientStatus.success, recipients: [_r1]),
+    );
+    final results = <Recipient?>[];
+    await pumpSheet(tester, bloc, resultHolder: results);
+
+    final entry = find.byKey(const Key('picker-invite-yadony'));
+    expect(entry, findsOneWidget);
+    expect(
+      find.descendant(
+        of: entry,
+        matching: find.text('Ajouter un destinataire Yadony'),
+      ),
+      findsOneWidget,
+    );
+    // En tête : au-dessus de la première ligne de destinataire.
+    expect(
+      tester.getTopLeft(entry).dy,
+      lessThan(tester.getTopLeft(find.text('Mamadou Diallo')).dy),
+    );
+
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('invite-recipient-phone')),
+      '+221771234567',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('invite-recipient-submit')));
+    await tester.pumpAndSettle();
+
+    verify(() => invitations.sendToPhone('+221771234567')).called(1);
+    expect(
+      find.text(
+        'Invitation envoyée. Si cette personne a Yadony, elle pourra accepter.',
+      ),
+      findsOneWidget,
+    );
+    // Le sélecteur reste ouvert, aucun destinataire n'est rendu.
+    expect(results, isEmpty);
+    expect(find.byKey(const Key('picker-invite-yadony')), findsOneWidget);
+  });
 
   testWidgets('preselects default recipient and confirms it', (tester) async {
     final bloc = MockRecipientBloc();

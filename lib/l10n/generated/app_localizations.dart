@@ -27520,7 +27520,7 @@ abstract class AppLocalizations {
   /// Carnet de destinataires : sous-titre de l'action d'invitation.
   ///
   /// In fr, this message translates to:
-  /// **'Retrouvez-le par son numéro ou son e-mail : ses colis lui seront rattachés.'**
+  /// **'Retrouvez-le par son numéro, son e-mail ou son identifiant : ses colis lui seront rattachés.'**
   String get recipientInviteActionSubtitle;
 
   /// Feuille d'invitation : texte d'introduction.
@@ -27780,6 +27780,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'100 caractères au maximum.'**
   String get recipientInviteNameTooLong;
+
+  /// Feuille d'invitation : segment du moyen par identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant'**
+  String get recipientInviteChannelUsername;
+
+  /// Feuille d'invitation : libellé du champ identifiant (préfixe @).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant Yadony'**
+  String get recipientInviteUsernameLabel;
+
+  /// Feuille d'invitation : aide sous le champ identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il le trouve dans son profil, sous son nom.'**
+  String get recipientInviteUsernameHelper;
+
+  /// Feuille d'invitation : aperçu d'un identifiant trouvé ({initial} = initiale du prénom).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte trouvé, prénom commençant par {initial}'**
+  String recipientInviteUsernameFound(String initial);
+
+  /// Feuille d'invitation : identifiant inconnu (404 user-not-found).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet utilisateur n\'existe pas. Vérifiez l\'identifiant.'**
+  String get recipientInviteUsernameNotFound;
+
+  /// Feuille d'invitation : lien qui bascule sur l'onglet Numéro en gardant le nom.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'ajouter avec son numéro'**
+  String get recipientInviteUsernameAddByPhone;
+
+  /// Feuille d'invitation : l'identifiant saisi est celui de l'expéditeur.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est votre identifiant.'**
+  String get recipientInviteUsernameSelf;
+
+  /// Feuille d'invitation : quota de recherche d'identifiants atteint (429).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de recherches. Réessayez dans une heure.'**
+  String get recipientInviteUsernameQuota;
 
   /// CTA des écrans de succès qui ramènent au fil de négociation quand il n'y a encore rien à suivre : accord de prix, accord en espèces, commission réglée (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_commission_settled_screen.dart).
   ///

@@ -16688,7 +16688,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipientInviteActionSubtitle =>
-      'Find them by phone number or email: their parcels will be linked to them.';
+      'Find them by phone number, email or username: their parcels will be linked to them.';
 
   @override
   String get recipientInviteSheetIntro =>
@@ -16847,6 +16847,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipientInviteNameTooLong => '100 characters maximum.';
+
+  @override
+  String get recipientInviteChannelUsername => 'Username';
+
+  @override
+  String get recipientInviteUsernameLabel => 'Yadony username';
+
+  @override
+  String get recipientInviteUsernameHelper =>
+      'They can find it in their profile, under their name.';
+
+  @override
+  String recipientInviteUsernameFound(String initial) {
+    return 'Account found, first name starting with $initial';
+  }
+
+  @override
+  String get recipientInviteUsernameNotFound =>
+      'This user does not exist. Check the username.';
+
+  @override
+  String get recipientInviteUsernameAddByPhone =>
+      'Add them with their phone number';
+
+  @override
+  String get recipientInviteUsernameSelf => 'That is your own username.';
+
+  @override
+  String get recipientInviteUsernameQuota =>
+      'Too many searches. Try again in an hour.';
 
   @override
   String get negotiationViewNegotiationCta => 'View negotiation';
