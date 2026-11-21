@@ -28,11 +28,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///   (dès 1 j'aime) et partage, ni pouce actif ni signet. Sans rien à
 ///   montrer (trajet complet sans j'aime), la ligne et son filet
 ///   disparaissent.
-/// - Un autre utilisateur a toujours son pouce, donc jamais de ligne vide :
-///   le nombre n'apparaît qu'après son j'aime. Trajet que le back refuse
-///   d'aimer ([TripLikeButton.canLike] faux : en cours, brouillon, caché…) :
-///   pouce de lecture seule sans nombre, sauf si l'utilisateur l'avait déjà
-///   aimé : le pouce reste actif pour retirer son j'aime.
+/// - Un autre utilisateur voit le nombre seulement après son j'aime. Trajet
+///   que le back refuse d'aimer ([TripLikeButton.canLike] faux : en cours,
+///   brouillon, caché…) : aucun pouce, sauf si l'utilisateur l'avait déjà
+///   aimé : le pouce reste actif (avec le nombre) pour retirer son j'aime,
+///   puis disparaît.
 /// - [showBookmark] : signet affiché, par défaut sur le trajet d'un autre.
 ///   Les favoris le gardent sur son propre trajet, pour pouvoir le retirer.
 ///
@@ -67,10 +67,12 @@ class TripCardActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canShare = canShareTripPoster(announcement);
-    // Seul le pouce d'un autre utilisateur est toujours là : sur son propre
-    // trajet, sans partage ni signet, seul le compteur peut encore remplir
-    // la ligne, qui attend qu'il y ait au moins un j'aime.
-    if (isOwn && !canShare && !showBookmark) {
+    // Le pouce décide seul de sa lecture seule (j'aime déjà posé, retirable) ;
+    // ici, seul le remplissage de la ligne compte.
+    final likeInert = isOwn || !TripLikeButton.canLike(announcement);
+    // Sans partage ni signet, seul un nombre (son trajet) ou un j'aime posé
+    // (trajet plus aimable, retirable) remplit encore la ligne.
+    if (likeInert && !canShare && !showBookmark) {
       final likes = maybeRead<TripLikesCubit>(context);
       if (likes == null) return _empty();
       return BlocBuilder<TripLikesCubit, TripLikesState>(
@@ -78,7 +80,8 @@ class TripCardActions extends StatelessWidget {
         buildWhen: (prev, curr) =>
             prev.byTrip[announcement.id] != curr.byTrip[announcement.id],
         builder: (context, _) {
-          return likes.statusOf(announcement).likeCount > 0
+          final status = likes.statusOf(announcement);
+          return (isOwn ? status.likeCount > 0 : status.likedByMe)
               ? _row(context, canShare: canShare)
               : _empty();
         },

@@ -38928,7 +38928,7 @@ abstract class AppLocalizations {
   /// **'Je n\'aime plus'**
   String get tripUnlikeTooltip;
 
-  /// Lecture d'écran du compteur de j'aime d'une carte trajet (affiché à partir de 1).
+  /// Lecture d'écran du compteur de j'aime d'une carte trajet (le nombre n'est exposé qu'après le j'aime de l'utilisateur, ou dès le premier j'aime au voyageur du trajet).
   ///
   /// In fr, this message translates to:
   /// **'{count, plural, =1{{count} personne aime ce trajet} other{{count} personnes aiment ce trajet}}'**

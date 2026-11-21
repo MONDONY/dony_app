@@ -534,6 +534,8 @@ void main() {
           thumbIcon(tester).color,
           Theme.of(tester.element(find.byKey(_likeButton))).colorScheme.primary,
         );
+        // J'ai aimé : le total est visible AVANT de retirer mon j'aime.
+        expect(tester.widget<Text>(find.byKey(_likeCount)).data, '2');
 
         await tester.tap(find.byKey(_likeButton));
         await tester.pumpAndSettle();
@@ -541,16 +543,19 @@ void main() {
         verify(() => likeRepo.unlike('trip-1')).called(1);
         verifyNever(() => likeRepo.like(any()));
         expect(find.byKey(_likeButton), findsNothing);
-        // Plus aimé par moi : pouce de lecture seule, sans nombre.
-        expect(find.byKey(_readOnlyLikes), findsOneWidget);
+        // Plus aimé par moi, trajet non aimable : plus aucun élément de
+        // j'aime, ni pouce ni nombre.
+        expect(find.byKey(_readOnlyLikes), findsNothing);
         expect(find.byKey(_likeCount), findsNothing);
-        expect(find.byIcon(Icons.thumb_up_outlined), findsOneWidget);
+        expect(
+          find.byType(Icon).evaluate().map((e) => (e.widget as Icon).icon),
+          isNot(contains(Icons.thumb_up_outlined)),
+        );
       });
     }
 
     testWidgets(
-      'trajet en cours non aimé : pouce de lecture seule sans nombre, '
-      'aucun appel',
+      'trajet en cours non aimé : aucun élément de j\'aime, aucun appel',
       (tester) async {
         useSession(real: true);
         await pump(
@@ -561,11 +566,10 @@ void main() {
           ),
         );
         expect(find.byKey(_likeButton), findsNothing);
-        expect(find.byKey(_readOnlyLikes), findsOneWidget);
+        expect(find.byKey(_readOnlyLikes), findsNothing);
         expect(find.byKey(_likeCount), findsNothing);
-        expect(find.byIcon(Icons.thumb_up_outlined), findsOneWidget);
-        await tester.tap(find.byKey(_readOnlyLikes));
-        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.byIcon(Icons.thumb_up_outlined), findsNothing);
+        expect(find.byIcon(Icons.thumb_up), findsNothing);
         verifyNever(() => likeRepo.like(any()));
         verifyNever(() => likeRepo.unlike(any()));
       },
@@ -713,29 +717,93 @@ void main() {
       semantics.dispose();
     });
 
-    for (final (name, trip) in [
-      ('complet', _trip(status: 'FULL')),
-      ('en cours', _trip(status: 'IN_PROGRESS')),
-    ]) {
-      testWidgets('trajet $name d\'un autre sans partage ni signet : la ligne '
-          'garde son pouce', (tester) async {
-        useSession(real: true);
-        await pump(
-          tester,
-          TripCardActions(
-            announcement: trip,
-            isOwn: false,
-            showBookmark: false,
+    testWidgets('trajet complet d\'un autre sans partage ni signet : la ligne '
+        'garde son pouce', (tester) async {
+      useSession(real: true);
+      await pump(
+        tester,
+        TripCardActions(
+          announcement: _trip(status: 'FULL'),
+          isOwn: false,
+          showBookmark: false,
+        ),
+      );
+      expect(find.byKey(_actions), findsOneWidget);
+      expect(find.byKey(_shareButton), findsNothing);
+      expect(find.byType(FavoriteHeartButton), findsNothing);
+      expect(find.byType(Divider), findsOneWidget);
+      expect(find.byKey(_likeCount), findsNothing);
+      expect(find.byIcon(Icons.thumb_up_outlined), findsOneWidget);
+    });
+
+    testWidgets('trajet en cours d\'un autre sans partage ni signet : aucune '
+        'ligne ni filet, la carte garde sa marge', (tester) async {
+      useSession(real: true);
+      await pump(
+        tester,
+        TripCardActions(
+          announcement: _trip(status: 'IN_PROGRESS', likeCount: 2),
+          isOwn: false,
+          showBookmark: false,
+        ),
+      );
+      expect(find.byKey(_actions), findsNothing);
+      expect(find.byType(Divider), findsNothing);
+    });
+
+    testWidgets('trajet en cours déjà aimé sans partage ni signet : la ligne '
+        'attend le retrait du j\'aime', (tester) async {
+      useSession(real: true);
+      when(() => likeRepo.unlike('trip-1')).thenAnswer(
+        (_) async => const TripLikeStatus(likeCount: 1, likedByMe: false),
+      );
+      await pump(
+        tester,
+        TripCardActions(
+          announcement: _trip(
+            status: 'IN_PROGRESS',
+            likeCount: 2,
+            likedByMe: true,
           ),
-        );
-        expect(find.byKey(_actions), findsOneWidget);
-        expect(find.byKey(_shareButton), findsNothing);
-        expect(find.byType(FavoriteHeartButton), findsNothing);
-        expect(find.byType(Divider), findsOneWidget);
-        expect(find.byKey(_likeCount), findsNothing);
-        expect(find.byIcon(Icons.thumb_up_outlined), findsOneWidget);
-      });
-    }
+          isOwn: false,
+          showBookmark: false,
+        ),
+      );
+      expect(find.byKey(_actions), findsOneWidget);
+      await tester.tap(find.byKey(_likeButton));
+      await tester.pumpAndSettle();
+      expect(find.byKey(_actions), findsNothing);
+      expect(find.byType(Divider), findsNothing);
+    });
+
+    testWidgets('le partage ne saute pas quand le nombre apparaît : '
+        'AnimatedSize, et position stable une fois posé', (tester) async {
+      useSession(real: true);
+      when(() => likeRepo.like('trip-1')).thenAnswer(
+        (_) async => const TripLikeStatus(likeCount: 3, likedByMe: true),
+      );
+      await pump(
+        tester,
+        TripCardActions(announcement: _trip(likeCount: 2), isOwn: false),
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(_likeButton),
+          matching: find.byType(AnimatedSize),
+        ),
+        findsOneWidget,
+      );
+      final before = tester.getTopLeft(find.byKey(_shareButton)).dx;
+      await tester.tap(find.byKey(_likeButton));
+      // Une image après le toucher : le glissement est en cours, pas fini.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      final during = tester.getTopLeft(find.byKey(_shareButton)).dx;
+      await tester.pumpAndSettle();
+      final after = tester.getTopLeft(find.byKey(_shareButton)).dx;
+      expect(after, greaterThan(before));
+      expect(during, lessThan(after));
+    });
 
     testWidgets('son trajet sans j\'aime : partage seul', (tester) async {
       useSession(real: true);
@@ -1223,8 +1291,9 @@ void main() {
       ('caché', _trip(likeCount: 3, hidden: true)),
       ('complet et caché', _trip(status: 'FULL', likeCount: 3, hidden: true)),
     ]) {
-      testWidgets('favori $name d\'un autre : pouce en lecture seule sans '
-          'nombre, signet gardé', (tester) async {
+      testWidgets('favori $name d\'un autre : aucun j\'aime, signet gardé', (
+        tester,
+      ) async {
         useSession(real: true);
         await pump(
           tester,
@@ -1235,13 +1304,12 @@ void main() {
             onTap: () {},
           ),
         );
+        // Non aimable, pas aimé par moi : aucun élément de j'aime, le
+        // signet seul reste.
         expect(find.byKey(_likeButton), findsNothing);
-        expect(find.byKey(_readOnlyLikes), findsOneWidget);
+        expect(find.byKey(_readOnlyLikes), findsNothing);
         expect(find.byKey(_likeCount), findsNothing);
         expect(find.byType(FavoriteHeartButton), findsOneWidget);
-
-        await tester.tap(find.byKey(_readOnlyLikes));
-        await tester.pump(const Duration(milliseconds: 300));
         verifyNever(() => likeRepo.like(any()));
         verifyNever(() => likeRepo.unlike(any()));
         expect(

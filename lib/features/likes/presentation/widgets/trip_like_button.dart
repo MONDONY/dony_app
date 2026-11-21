@@ -80,13 +80,10 @@ class TripLikeButton extends StatelessWidget {
         if (locked) {
           // Seul le voyageur voit le nombre sur son trajet, dès 1 ; sans
           // rien à lui montrer, il n'a pas de pouce. Un autre utilisateur
-          // garde un pouce neutre sans nombre : il n'a pas aimé.
-          if (readOnly) {
-            return status.likeCount > 0
-                ? _ReadOnlyLikes(count: status.likeCount)
-                : const SizedBox.shrink();
-          }
-          return const _ReadOnlyLikes(count: 0);
+          // sur un trajet non aimable, sans j'aime à lui : rien du tout.
+          return readOnly && status.likeCount > 0
+              ? _ReadOnlyLikes(count: status.likeCount)
+              : const SizedBox.shrink();
         }
         return _LikeToggle(status: status, onTap: () => _onTap(context, cubit));
       },
@@ -194,10 +191,7 @@ class _LikeToggle extends StatelessWidget {
 }
 
 /// Pouce sans geste : le voyageur sur son propre trajet voit combien
-/// l'aiment ([count] > 0), sans pouvoir aimer ; sur un trajet que le back
-/// refuse d'aimer, l'autre utilisateur voit le même pouce sans nombre
-/// ([count] à 0, décoratif pour le lecteur d'écran). Pouce au contour
-/// neutre : un pouce plein se lirait « j'ai aimé ce trajet ».
+/// l'aiment ([count] > 0), sans pouvoir aimer. Pouce au contour neutre : un pouce plein se lirait « j'ai aimé ce trajet ».
 class _ReadOnlyLikes extends StatelessWidget {
   const _ReadOnlyLikes({required this.count});
 
@@ -209,7 +203,7 @@ class _ReadOnlyLikes extends StatelessWidget {
     return Semantics(
       key: const Key('trip-like-count-readonly'),
       container: true,
-      label: count > 0 ? context.l10n.tripLikeCountSemantics(count) : null,
+      label: context.l10n.tripLikeCountSemantics(count),
       excludeSemantics: true,
       child: _LikeLayout(
         count: count,
@@ -239,34 +233,43 @@ class _LikeLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final animate = !MediaQuery.disableAnimationsOf(context);
     return ConstrainedBox(
       constraints: const BoxConstraints(
         minWidth: kDonyMinTapTarget,
         minHeight: kDonyMinTapTarget,
       ),
-      child: Padding(
-        padding: EdgeInsetsDirectional.only(
-          end: count > 0 ? DonySpacing.sm : 0,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            icon,
-            if (count > 0) ...[
-              const SizedBox(width: DonySpacing.xs),
-              Text(
-                _formatCount(context, count),
-                key: const Key('trip-like-count'),
-                maxLines: 1,
-                softWrap: false,
-                style: tt.labelLarge?.copyWith(
-                  color: countColor,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
-          ],
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          icon,
+          // Le nombre entre et sort en douceur : le partage voisin glisse
+          // au lieu de sauter quand on aime ou retire son j'aime.
+          AnimatedSize(
+            duration: animate
+                ? const Duration(milliseconds: 150)
+                : Duration.zero,
+            alignment: AlignmentDirectional.centerStart,
+            child: count > 0
+                ? Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      start: DonySpacing.xs,
+                      end: DonySpacing.sm,
+                    ),
+                    child: Text(
+                      _formatCount(context, count),
+                      key: const Key('trip-like-count'),
+                      maxLines: 1,
+                      softWrap: false,
+                      style: tt.labelLarge?.copyWith(
+                        color: countColor,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
       ),
     );
   }
