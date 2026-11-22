@@ -70,24 +70,27 @@ class ColisDestinataireCard extends StatelessWidget {
       bid.recipientAppStatus != 'CONFIRMED' &&
       bid.recipientAppStatus != 'DECLINED';
 
-  /// Vue voyageur : le back ne donne ni nom ni numéro tant que le lien d'un
-  /// destinataire désigné par identifiant est en attente.
-  bool get _isTravelerUnconfirmed {
-    if (isSender || bid.recipientDeclined) return false;
-    final name = bid.recipientName ?? '';
-    if (name.startsWith('@')) return true;
-    final phone = bid.recipientPhone ?? '';
-    return name.isEmpty && phone.isEmpty && !bid.recipientPhoneHidden;
-  }
+  /// Vue voyageur : pour un destinataire désigné par identifiant dont le lien
+  /// est absent ou en attente, le back sert « @identifiant » brut, sans numéro
+  /// ni statut, et jamais le drapeau de désignation (réservé à l'expéditeur).
+  bool get _isTravelerUnconfirmed =>
+      !isSender &&
+      !bid.recipientDeclined &&
+      (bid.recipientName ?? '').startsWith('@') &&
+      bid.recipientAppStatus != 'CONFIRMED' &&
+      (bid.recipientPhone ?? '').isEmpty;
 
   bool get _showPhoneRow {
     if (_isPendingDesignation || _isTravelerUnconfirmed) return false;
+    final noPhone = (bid.recipientPhone ?? '').isEmpty;
     // Désigné par identifiant et confirmé, numéro masqué : pas de ligne vide.
-    if (isSender &&
-        bid.recipientDesignatedByUsername &&
-        !bid.recipientPhoneHidden &&
-        (bid.recipientPhone == null || bid.recipientPhone!.isEmpty)) {
-      return false;
+    // Un colis par numéro a toujours un numéro saisi, il n'est pas concerné.
+    if (noPhone && !bid.recipientPhoneHidden) {
+      if (isSender && bid.recipientDesignatedByUsername) return false;
+      if (bid.recipientAppStatus == 'CONFIRMED' &&
+          !(bid.recipientName ?? '').startsWith('@')) {
+        return false;
+      }
     }
     return isSender ||
         (bidAllowsRecipientContact(bid.status) && !bid.recipientDeclined);

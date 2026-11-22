@@ -142,6 +142,7 @@ void main() {
       expect(find.text(_title), findsOneWidget);
       expect(find.text(_body), findsOneWidget);
       expect(find.text(_requestLabel), findsOneWidget);
+      expect(find.text('Destinataire non confirmé'), findsNothing);
       expect(find.text('Destinataire'), findsNothing);
       expect(find.text('Téléphone'), findsNothing);
       expect(find.text('-'), findsNothing);

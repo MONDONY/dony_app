@@ -125,7 +125,12 @@ void main() {
       testWidgets(
         'lien en attente : destinataire non confirmé (${loc.languageCode})',
         (tester) async {
-          await _pump(tester, _bid(), isSender: false, locale: loc);
+          await _pump(
+            tester,
+            _bid(name: '@awa.diallo'),
+            isSender: false,
+            locale: loc,
+          );
           expect(
             find.text(
               fr ? 'Destinataire non confirmé' : 'Recipient not confirmed',
@@ -145,6 +150,38 @@ void main() {
       );
       expect(find.text('Awa Diallo'), findsOneWidget);
       expect(find.text('Destinataire non confirmé'), findsNothing);
+    });
+
+    testWidgets('confirmé, numéro nul sans @ : nom et pas de ligne téléphone', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(name: 'Awa D.', appStatus: 'CONFIRMED'),
+        isSender: false,
+      );
+      expect(find.text('Awa D.'), findsOneWidget);
+      expect(find.text('Téléphone'), findsNothing);
+      expect(find.text('Destinataire non confirmé'), findsNothing);
+    });
+
+    testWidgets('nom libre @bob en mode numéro, numéro saisi : rendu ancien', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(name: '@bob', phone: '+221770000000', appStatus: 'CONFIRMED'),
+        isSender: false,
+      );
+      expect(find.text('@bob'), findsOneWidget);
+      expect(find.text('+221770000000'), findsOneWidget);
+      expect(find.text('Destinataire non confirmé'), findsNothing);
+    });
+
+    testWidgets('colis sans destinataire : rendu ancien', (tester) async {
+      await _pump(tester, _bid(), isSender: false);
+      expect(find.text('Destinataire non confirmé'), findsNothing);
+      expect(find.text('Téléphone'), findsOneWidget);
     });
   });
 }
