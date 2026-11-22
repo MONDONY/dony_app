@@ -5,7 +5,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/phone_verification_badge.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/phone/phone_verification_level.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -502,12 +501,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 // Le numéro vérifié par SMS prime ; sinon le
                                 // numéro déclaré (pays sans SMS), corrigeable
                                 // par le même écran.
-                                value: _phoneShown(user),
+                                value: user.displayPhone,
                                 editing: _editing,
                                 onTap: () =>
                                     context.push('/profile/edit/phone'),
                               ),
-                              if (_phoneLevel(user) case final level?) ...[
+                              if (user.phoneBadgeLevel case final level?) ...[
                                 const SizedBox(height: DonySpacing.xs),
                                 Align(
                                   alignment: AlignmentDirectional.centerStart,
@@ -875,22 +874,6 @@ class _UsernameRow extends StatelessWidget {
 /// Ligne email/téléphone : simple lecture (`_StaticInfoRow`) hors édition ;
 /// en édition, devient une carte cliquable avec badge « Modifier »/« Ajouter »
 /// qui ouvre l'écran OTP dédié — jamais un champ de saisie directe.
-/// Numéro à montrer au propriétaire : celui vérifié par SMS, sinon le déclaré.
-String? _phoneShown(UserModel user) {
-  final verified = user.phoneNumber;
-  if (verified != null && verified.isNotEmpty) return verified;
-  return user.declaredPhone;
-}
-
-/// Fiabilité du numéro montré ; `null` sans numéro.
-PhoneVerificationLevel? _phoneLevel(UserModel user) {
-  final verified = user.phoneNumber;
-  if (verified != null && verified.isNotEmpty) {
-    return PhoneVerificationLevel.sms;
-  }
-  return user.declaredPhoneVerification;
-}
-
 class _ContactInfoRow extends StatelessWidget {
   const _ContactInfoRow({
     required this.iconAsset,
