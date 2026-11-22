@@ -2,8 +2,11 @@ import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../../helpers/l10n_test_helpers.dart';
 
 Widget _buildHeader({
@@ -16,11 +19,16 @@ Widget _buildHeader({
   String? phoneNumber,
   String? email,
   String? city,
+  String? username,
+  Locale locale = AppL10n.fr,
   String displayName = 'Ibrahima Diallo',
   double trailingInset = 0,
   VoidCallback? onTap,
 }) {
   return MaterialApp(
+    locale: locale,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
     theme: AppTheme.light(),
     home: Scaffold(
       body: ProfileHeader(
@@ -34,6 +42,7 @@ Widget _buildHeader({
         phoneNumber: phoneNumber,
         email: email,
         city: city,
+        username: username,
         trailingInset: trailingInset,
         onTap: onTap,
       ),
@@ -234,9 +243,11 @@ void main() {
 
     testWidgets('chips en anglais', (tester) async {
       useEnglish();
+      enableEnglish();
       setSmsAuthEnabled(true);
       await tester.pumpWidget(
         _buildHeader(
+          locale: AppL10n.en,
           phoneNumber: '+33612345678',
           email: 'test@example.com',
           isKycVerified: true,
@@ -297,6 +308,124 @@ void main() {
       expect((box.decoration! as BoxDecoration).color, DonyColors.kycBadgeGold);
       final text = tester.widget<Text>(find.text('PRO'));
       expect(text.style?.color, const Color(0xFF2B1B00));
+    });
+
+    group('puce identifiant', () {
+      final copied = <String>[];
+
+      setUp(() {
+        DonySnackbar.clearDedup();
+        copied.clear();
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+              if (call.method == 'Clipboard.setData') {
+                copied.add((call.arguments as Map)['text'] as String);
+              }
+              return null;
+            });
+      });
+      tearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(SystemChannels.platform, null);
+      });
+
+      Future<void> settle(WidgetTester tester) async {
+        for (var i = 0; i < 6; i++) {
+          await tester.pump(const Duration(milliseconds: 400));
+        }
+      }
+
+      testWidgets('affiche l identifiant', (tester) async {
+        await tester.pumpWidget(_buildHeader(username: 'awa.diallo'));
+        await settle(tester);
+        expect(find.text('awa.diallo'), findsOneWidget);
+        expect(find.byKey(const Key('profile-username-chip')), findsOneWidget);
+      });
+
+      testWidgets('absente quand l identifiant est vide ou nul', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_buildHeader(username: ''));
+        await settle(tester);
+        expect(find.byKey(const Key('profile-username-chip')), findsNothing);
+        await tester.pumpWidget(_buildHeader());
+        await settle(tester);
+        expect(find.byKey(const Key('profile-username-chip')), findsNothing);
+      });
+
+      testWidgets(
+        'un tap copie l identifiant et confirme, sans ouvrir le profil',
+        (tester) async {
+          var opened = 0;
+          await tester.pumpWidget(
+            _buildHeader(username: 'awa.diallo', onTap: () => opened++),
+          );
+          await settle(tester);
+          await tester.tap(find.byKey(const Key('profile-username-chip')));
+          await tester.pump();
+          await settle(tester);
+          expect(copied, ['awa.diallo']);
+          expect(find.text('Identifiant copié'), findsOneWidget);
+          expect(opened, 0);
+        },
+      );
+
+      testWidgets('la puce garde la hauteur des autres puces, un tap copie', (
+        tester,
+      ) async {
+        var opened = 0;
+        await tester.pumpWidget(
+          _buildHeader(username: 'awa.diallo', onTap: () => opened++),
+        );
+        await settle(tester);
+        final chip = tester.getRect(
+          find.byKey(const Key('profile-username-chip')),
+        );
+        // Pas de zone tactile élargie : la rangée ne grandit pas.
+        expect(chip.height, lessThan(32));
+        await tester.tapAt(chip.center);
+        await tester.pump();
+        await settle(tester);
+        expect(copied, ['awa.diallo']);
+        expect(find.text('Identifiant copié'), findsOneWidget);
+        expect(opened, 0);
+      });
+
+      testWidgets('un tap sur l avatar appelle toujours onTap', (tester) async {
+        var opened = 0;
+        await tester.pumpWidget(
+          _buildHeader(username: 'awa.diallo', onTap: () => opened++),
+        );
+        await settle(tester);
+        await tester.tap(find.byType(DonyAvatar));
+        await tester.pump();
+        expect(opened, 1);
+        expect(copied, isEmpty);
+      });
+
+      for (final locale in [AppL10n.fr, AppL10n.en]) {
+        testWidgets('360 dp ${locale.languageCode} : pas de débordement', (
+          tester,
+        ) async {
+          if (locale == AppL10n.en) enableEnglish();
+          tester.view.physicalSize = const Size(360, 800);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.reset);
+          await tester.pumpWidget(
+            _buildHeader(
+              locale: locale,
+              username: 'awa.diallo.tres.long',
+              email: 'a@b.c',
+              phoneNumber: '+221700000000',
+              isKycVerified: true,
+              trailingInset: 80,
+            ),
+          );
+          await settle(tester);
+          expect(tester.takeException(), isNull);
+          expect(find.text('awa.diallo.tres.long'), findsOneWidget);
+        });
+      }
     });
   });
 }

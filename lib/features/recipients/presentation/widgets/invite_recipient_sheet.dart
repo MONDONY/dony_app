@@ -8,10 +8,11 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/recipients/bloc/invite_recipient_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Feuille « Ajouter un destinataire Yadony » : l'expéditeur invite par numéro
-/// ou par e-mail. Rend `true` quand l'invitation est partie : l'appelant
+/// Feuille « Ajouter un destinataire Yadony » : l'expéditeur invite par numéro,
+/// par e-mail ou par identifiant Yadony. Rend `true` quand l'invitation est partie : l'appelant
 /// affiche alors le message, identique que le compte existe ou non.
 ///
 /// [userCountry] (code ISO du pays de l'utilisateur) sert à mettre au format
@@ -72,12 +73,14 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
   // feuille reste affichée pendant son animation de sortie.
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _usernameCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
 
   @override
   void dispose() {
     _phoneCtrl.dispose();
     _emailCtrl.dispose();
+    _usernameCtrl.dispose();
     _nameCtrl.dispose();
     super.dispose();
   }
@@ -94,8 +97,173 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
 
   void _onChannel(InviteRecipientCubit cubit, InvitationChannel channel) {
     cubit.selectChannel(channel);
-    final ctrl = channel == InvitationChannel.phone ? _phoneCtrl : _emailCtrl;
-    cubit.inputChanged(ctrl.text);
+    cubit.inputChanged(_controllerFor(channel).text);
+  }
+
+  TextEditingController _controllerFor(InvitationChannel channel) =>
+      switch (channel) {
+        InvitationChannel.phone => _phoneCtrl,
+        InvitationChannel.email => _emailCtrl,
+        InvitationChannel.username => _usernameCtrl,
+      };
+
+  static bool _hasInitial(String initial) {
+    final v = initial.trim();
+    return v.isNotEmpty && v != '?';
+  }
+
+  /// Message d'erreur du champ identifiant pour l'état courant.
+  String? _usernameError(InviteRecipientState state) {
+    final l = context.l10n;
+    switch (state.lookup) {
+      case UsernameLookupStatus.notFound:
+        return l.recipientInviteUsernameNotFound;
+      case UsernameLookupStatus.self:
+        return l.recipientInviteUsernameSelf;
+      case UsernameLookupStatus.quota:
+        return l.recipientInviteUsernameQuota;
+      case UsernameLookupStatus.failed:
+        return l.usernameCheckFailed;
+      case UsernameLookupStatus.idle:
+        return state.showsError ? l.usernameInvalidFormat : null;
+      case UsernameLookupStatus.searching:
+      case UsernameLookupStatus.found:
+      case UsernameLookupStatus.unsupported:
+        return null;
+    }
+  }
+
+  Widget _usernameField(
+    InviteRecipientState state,
+    InviteRecipientCubit cubit,
+  ) {
+    return DonyTextField(
+      key: const Key('invite-recipient-username'),
+      controller: _usernameCtrl,
+      label: context.l10n.recipientInviteUsernameLabel,
+      autofocus: true,
+      autocorrect: false,
+      enableSuggestions: false,
+      keyboardType: TextInputType.visiblePassword,
+      // La recherche part à la validation du clavier ou à la perte de focus,
+      // jamais à la frappe : le seau serveur est de 30 par heure.
+      textInputAction: TextInputAction.search,
+      onSubmitted: (_) => unawaited(cubit.usernameCommitted()),
+      prefixWidget: const Padding(
+        padding: EdgeInsetsDirectional.only(start: DonySpacing.base),
+        child: Center(
+          widthFactor: 1,
+          child: Text('@', style: TextStyle(fontSize: 16)),
+        ),
+      ),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9._]')),
+        TextInputFormatter.withFunction(
+          (old, value) => value.copyWith(text: value.text.toLowerCase()),
+        ),
+      ],
+      onChanged: cubit.inputChanged,
+      errorText: _usernameError(state),
+      errorMaxLines: 3,
+    );
+  }
+
+  /// Sous le champ identifiant : recherche en cours, compte trouvé, lien vers
+  /// le numéro quand l'identifiant n'existe pas, sinon l'aide.
+  List<Widget> _usernameStatus(
+    InviteRecipientState state,
+    InviteRecipientCubit cubit,
+  ) {
+    final l = context.l10n;
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    switch (state.lookup) {
+      case UsernameLookupStatus.searching:
+        return [
+          const SizedBox(height: DonySpacing.sm),
+          const Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: SizedBox(
+              key: Key('invite-recipient-username-searching'),
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        ];
+      case UsernameLookupStatus.found:
+        return [
+          const SizedBox(height: DonySpacing.sm),
+          Container(
+            key: const Key('invite-recipient-username-preview'),
+            padding: const EdgeInsets.all(DonySpacing.md),
+            decoration: BoxDecoration(
+              color: cs.success.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+              border: Border.all(color: cs.success.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              children: [
+                DonyIcon('circle-check', size: 20, color: cs.success),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '@${state.foundTarget}',
+                        style: tt.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        // Sans initiale lisible (« ? » ou vide), pas de
+                        // « prénom commençant par ? ».
+                        _hasInitial(state.foundInitial)
+                            ? l.recipientInviteUsernameFound(state.foundInitial)
+                            : l.recipientInviteUsernameFoundNoInitial,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ];
+      case UsernameLookupStatus.notFound:
+        return [
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton(
+              key: const Key('invite-recipient-username-by-phone'),
+              onPressed: () => _onChannel(cubit, InvitationChannel.phone),
+              child: Text(
+                l.recipientInviteUsernameAddByPhone,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ];
+      case UsernameLookupStatus.idle:
+        if (state.showsError) return const [];
+        return [
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            l.recipientInviteUsernameHelper,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ];
+      case UsernameLookupStatus.self:
+      case UsernameLookupStatus.quota:
+      case UsernameLookupStatus.unsupported:
+      case UsernameLookupStatus.failed:
+        return const [];
+    }
   }
 
   @override
@@ -106,8 +274,21 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
     final cubit = context.read<InviteRecipientCubit>();
 
     return BlocConsumer<InviteRecipientCubit, InviteRecipientState>(
-      listenWhen: (p, c) => p.status != c.status,
+      listenWhen: (p, c) =>
+          p.status != c.status ||
+          (!p.usernameUnsupported && c.usernameUnsupported),
       listener: (context, state) {
+        // Back sans la recherche d'identifiant : l'onglet disparaît, la
+        // feuille revient au numéro, avec une phrase pour l'expliquer (une
+        // fois : le verdict est mémorisé pour la session).
+        if (state.usernameUnsupported &&
+            state.channel == InvitationChannel.username) {
+          _onChannel(cubit, InvitationChannel.phone);
+          DonySnackbar.show(
+            context,
+            message: l.recipientInviteUsernameUnsupported,
+          );
+        }
         if (state.status == InviteRecipientStatus.sent) {
           widget.onSent?.call();
           Navigator.of(context).pop(true);
@@ -125,6 +306,7 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
       },
       builder: (context, state) {
         final isPhone = state.channel == InvitationChannel.phone;
+        final isUsername = state.channel == InvitationChannel.username;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -145,6 +327,11 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
                   value: InvitationChannel.email,
                   label: Text(l.recipientInviteChannelEmail),
                 ),
+                if (!state.usernameUnsupported)
+                  ButtonSegment(
+                    value: InvitationChannel.username,
+                    label: Text(l.recipientInviteChannelUsername),
+                  ),
               ],
               selected: {state.channel},
               onSelectionChanged: (s) => _onChannel(cubit, s.first),
@@ -164,9 +351,13 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
             ],
             Focus(
               onFocusChange: (focused) {
-                if (!focused) cubit.fieldBlurred();
+                if (focused) return;
+                cubit.fieldBlurred();
+                if (isUsername) unawaited(cubit.usernameCommitted());
               },
-              child: isPhone
+              child: isUsername
+                  ? _usernameField(state, cubit)
+                  : isPhone
                   ? DonyTextField(
                       key: const Key('invite-recipient-phone'),
                       controller: _phoneCtrl,
@@ -192,6 +383,7 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
                           : null,
                     ),
             ),
+            if (isUsername) ..._usernameStatus(state, cubit),
             const SizedBox(height: DonySpacing.base),
             DonyTextField(
               key: const Key('invite-recipient-name'),

@@ -550,12 +550,14 @@ AppException mapHttpError(DioException err) {
     return NotFoundException(
       message: detail ?? l.networkFallbackNotFound,
       apiCode: apiCode,
+      extensions: data is Map ? Map<String, Object?>.from(data) : null,
     );
   }
   if (statusCode == 409) {
     return ConflictException(
       detail ?? l.networkFallbackConflict,
       code: apiCode,
+      extensions: data is Map ? Map<String, Object?>.from(data) : null,
     );
   }
   if (statusCode == 422) {
@@ -567,9 +569,13 @@ AppException mapHttpError(DioException err) {
     );
   }
   if (statusCode == 429) {
+    // Sans `code`, le dernier segment du `type` RFC 7807 identifie le quota
+    // (`recipient-lookup-quota` ou `recipient-invitation-quota`).
+    final type = data is Map ? data['type'] : null;
+    final typeSlug = type is String ? type.split('/').last : '';
     return RateLimitException(
       detail ?? l.networkFallbackTooManyAttempts,
-      apiCode,
+      apiCode ?? (typeSlug.isEmpty ? null : typeSlug),
     );
   }
   // Fichier refusé pour sa taille : définitif (rejouer l'envoi échouerait à

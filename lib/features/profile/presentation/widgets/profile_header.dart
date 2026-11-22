@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({
@@ -17,6 +20,7 @@ class ProfileHeader extends StatelessWidget {
     this.phoneNumber,
     this.email,
     this.city,
+    this.username,
     this.topPadding,
     this.trailingInset = 0,
     this.onTap,
@@ -34,6 +38,10 @@ class ProfileHeader extends StatelessWidget {
   final String? phoneNumber;
   final String? email;
   final String? city;
+
+  /// Identifiant public (`awa.diallo`), sans arobase : la puce le montre et
+  /// un tap le copie. Absent ou vide : pas de puce.
+  final String? username;
 
   /// Padding haut (zone status bar) — passé explicitement pour que la sonde de
   /// mesure et le rendu réel utilisent une valeur identique (les deux vivent
@@ -135,6 +143,7 @@ class ProfileHeader extends StatelessWidget {
                         phoneNumber: phoneNumber,
                         email: email,
                         isKycVerified: isKycVerified,
+                        username: username,
                       ),
                     ],
                   ),
@@ -212,11 +221,13 @@ class _ContactChips extends StatelessWidget {
     this.phoneNumber,
     this.email,
     required this.isKycVerified,
+    this.username,
   });
 
   final String? phoneNumber;
   final String? email;
   final bool isKycVerified;
+  final String? username;
 
   @override
   Widget build(BuildContext context) {
@@ -230,6 +241,8 @@ class _ContactChips extends StatelessWidget {
         spacing: DonySpacing.xs,
         runSpacing: DonySpacing.xs,
         children: [
+          if (username != null && username!.isNotEmpty)
+            _UsernameChip(username: username!),
           // Tant que le SMS OTP backend n'est pas confirmé, personne ne peut
           // plus ajouter/vérifier de numéro : le chip "manquant" serait une
           // relance permanente pour une action devenue impossible.
@@ -312,6 +325,74 @@ class _Chip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Puce de l'identifiant : un tap le copie dans le presse-papiers.
+///
+/// Le header est le fond d'une `SliverAppBar` et son avatar/nom ouvrent le
+/// profil : la puce a son propre `InkWell`, qui gagne l'arène de gestes sur
+/// le toucher et n'appelle donc jamais `onTap` du header.
+class _UsernameChip extends StatelessWidget {
+  const _UsernameChip({required this.username});
+
+  final String username;
+
+  Future<void> _copy(BuildContext context) async {
+    final message = context.l10n.usernameCopied;
+    await Clipboard.setData(ClipboardData(text: username));
+    if (!context.mounted) return;
+    DonySnackbar.show(
+      context,
+      message: message,
+      type: DonySnackbarType.success,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const fg = DonyColors.blue700;
+    return Semantics(
+      button: true,
+      label: context.l10n.usernameCopySemantics(username),
+      excludeSemantics: true,
+      child: Material(
+        color: DonyColors.blue50,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        child: InkWell(
+          key: const Key('profile-username-chip'),
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          onTap: () => unawaited(_copy(context)),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.sm,
+              vertical: DonySpacing.xxs + 1,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const DonyIcon('at-sign', size: 11, color: fg),
+                const SizedBox(width: 3),
+                Flexible(
+                  child: Text(
+                    username,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: fg,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const DonyIcon('copy', size: 11, color: fg),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

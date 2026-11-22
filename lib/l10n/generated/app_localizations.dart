@@ -27520,7 +27520,7 @@ abstract class AppLocalizations {
   /// Carnet de destinataires : sous-titre de l'action d'invitation.
   ///
   /// In fr, this message translates to:
-  /// **'Retrouvez-le par son numéro ou son e-mail : ses colis lui seront rattachés.'**
+  /// **'Retrouvez-le par son numéro, son e-mail ou son identifiant : ses colis lui seront rattachés.'**
   String get recipientInviteActionSubtitle;
 
   /// Feuille d'invitation : texte d'introduction.
@@ -27780,6 +27780,66 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'100 caractères au maximum.'**
   String get recipientInviteNameTooLong;
+
+  /// Feuille d'invitation : segment du moyen par identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant'**
+  String get recipientInviteChannelUsername;
+
+  /// Feuille d'invitation : libellé du champ identifiant (préfixe @).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant Yadony'**
+  String get recipientInviteUsernameLabel;
+
+  /// Feuille d'invitation : aide sous le champ identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il le trouve dans son profil, sous son nom.'**
+  String get recipientInviteUsernameHelper;
+
+  /// Feuille d'invitation : aperçu d'un identifiant trouvé ({initial} = initiale du prénom).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte trouvé, prénom commençant par {initial}'**
+  String recipientInviteUsernameFound(String initial);
+
+  /// Feuille d'invitation : aperçu d'un identifiant trouvé quand le back ne donne pas l'initiale du prénom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte trouvé'**
+  String get recipientInviteUsernameFoundNoInitial;
+
+  /// Feuille d'invitation : message à la bascule vers Numéro quand le back ne connaît pas la recherche par identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'La recherche par identifiant n\'est pas encore disponible.'**
+  String get recipientInviteUsernameUnsupported;
+
+  /// Feuille d'invitation : identifiant inconnu (404 user-not-found).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet utilisateur n\'existe pas. Vérifiez l\'identifiant.'**
+  String get recipientInviteUsernameNotFound;
+
+  /// Feuille d'invitation : lien qui bascule sur l'onglet Numéro en gardant le nom.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'ajouter avec son numéro'**
+  String get recipientInviteUsernameAddByPhone;
+
+  /// Feuille d'invitation : l'identifiant saisi est celui de l'expéditeur.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est votre identifiant.'**
+  String get recipientInviteUsernameSelf;
+
+  /// Feuille d'invitation : quota de recherche d'identifiants atteint (429).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de recherches. Réessayez dans une heure.'**
+  String get recipientInviteUsernameQuota;
 
   /// CTA des écrans de succès qui ramènent au fil de négociation quand il n'y a encore rien à suivre : accord de prix, accord en espèces, commission réglée (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_commission_settled_screen.dart).
   ///
@@ -38964,25 +39024,25 @@ abstract class AppLocalizations {
   /// **'Limite de messages atteinte. Réservez pour continuer.'**
   String get inquirySendLimitError;
 
-  /// Infobulle et nom d'accessibilité du pouce d'une carte trajet, trajet pas encore aimé (trip_like_button.dart).
+  /// Infobulle et nom d'accessibilité du cœur d'une carte trajet, trajet pas encore aimé (trip_like_button.dart).
   ///
   /// In fr, this message translates to:
   /// **'J\'aime'**
   String get tripLikeTooltip;
 
-  /// Infobulle et nom d'accessibilité du pouce d'une carte trajet déjà aimé : le toucher retire le j'aime (trip_like_button.dart).
+  /// Infobulle et nom d'accessibilité du cœur d'une carte trajet déjà aimé : le toucher retire le j'aime (trip_like_button.dart).
   ///
   /// In fr, this message translates to:
   /// **'Je n\'aime plus'**
   String get tripUnlikeTooltip;
 
-  /// Lecture d'écran du compteur de j'aime d'une carte trajet (le nombre n'est exposé qu'après le j'aime de l'utilisateur, ou dès le premier j'aime au voyageur du trajet).
+  /// Lecture d'écran du compteur de j'aime d'une carte trajet (le nombre est exposé dès le premier j'aime, jamais à 0).
   ///
   /// In fr, this message translates to:
   /// **'{count, plural, =1{{count} personne aime ce trajet} other{{count} personnes aiment ce trajet}}'**
   String tripLikeCountSemantics(int count);
 
-  /// Feuille compte requis : un visiteur sans compte touche le pouce d'une carte trajet (sous-titre de la feuille).
+  /// Feuille compte requis : un visiteur sans compte touche le cœur d'une carte trajet (sous-titre de la feuille).
   ///
   /// In fr, this message translates to:
   /// **'Connectez-vous pour aimer ce trajet.'**
@@ -39005,6 +39065,144 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Avec un compte Yadony, partagez l\'affiche du trajet : image, lien et légende prêts à envoyer.'**
   String get tripShareLoginInviteBody;
+
+  /// Feuille « Mon identifiant » : titre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon identifiant'**
+  String get usernameSheetTitle;
+
+  /// Feuille « Mon identifiant » : phrase d'introduction.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est ce que les autres saisissent pour vous ajouter comme destinataire. Il ne montre ni votre nom ni votre numéro.'**
+  String get usernameSheetIntro;
+
+  /// Feuille « Mon identifiant » : libellé du champ (préfixe @ affiché devant).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant'**
+  String get usernameFieldLabel;
+
+  /// Identifiant déjà pris (TAKEN).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet identifiant est déjà pris.'**
+  String get usernameTaken;
+
+  /// Identifiant libéré depuis moins de 30 jours (RECENTLY_RELEASED).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet identifiant a servi récemment, il n\'est pas encore libre.'**
+  String get usernameRecentlyReleased;
+
+  /// Identifiant libre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible'**
+  String get usernameAvailable;
+
+  /// Titre de la rangée de puces de suggestions.
+  ///
+  /// In fr, this message translates to:
+  /// **'Essayez plutôt'**
+  String get usernameTrySuggestions;
+
+  /// Format refusé, localement ou par le serveur (INVALID_FORMAT).
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisez 3 à 20 caractères : minuscules, chiffres, point et tiret bas.'**
+  String get usernameInvalidFormat;
+
+  /// Mot réservé (RESERVED).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet identifiant est réservé. Choisissez-en un autre.'**
+  String get usernameReserved;
+
+  /// Suite de chiffres refusée (LOOKS_LIKE_PHONE).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un identifiant ne peut pas ressembler à un numéro de téléphone.'**
+  String get usernameLooksLikePhone;
+
+  /// Un seul changement tous les 30 jours ; {date} formatée (ex. « 20 décembre 2026 »).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification possible le {date}.'**
+  String usernameChangeTooSoon(String date);
+
+  /// Identifiant identique à l'actuel (UNCHANGED).
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est déjà votre identifiant.'**
+  String get usernameUnchanged;
+
+  /// Confirmation après l'enregistrement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant modifié'**
+  String get usernameSaved;
+
+  /// Aide sous le champ de l'identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'3 à 20 caractères : minuscules, chiffres, point et tiret bas. Modifiable une fois tous les 30 jours.'**
+  String get usernameHelp;
+
+  /// Feuille « Mon identifiant » : aide sous le champ quand l'identifiant saisi est disponible.
+  ///
+  /// In fr, this message translates to:
+  /// **'3 à 20 caractères : minuscules, chiffres, point et tiret bas. Votre identifiant actuel reste réservé 30 jours.'**
+  String get usernameHelpAvailable;
+
+  /// Un seul changement tous les 30 jours ; repli quand le back ne donne pas de date lisible.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà changé d\'identifiant récemment. Réessayez plus tard.'**
+  String get usernameChangeTooSoonNoDate;
+
+  /// 429 sur la vérification ou le changement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de vérifications pour le moment. Réessayez dans une heure.'**
+  String get usernameQuota;
+
+  /// Erreur réseau ou serveur pendant la vérification.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification impossible. Réessayez.'**
+  String get usernameCheckFailed;
+
+  /// Confirmation après copie de l'identifiant depuis le profil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant copié'**
+  String get usernameCopied;
+
+  /// Libellé accessibilité de la puce identifiant du profil ({username}).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant {username}, toucher pour copier'**
+  String usernameCopySemantics(String username);
+
+  /// Ligne « Identifiant » de Modifier le profil.
+  ///
+  /// In fr, this message translates to:
+  /// **'IDENTIFIANT YADONY'**
+  String get profileEditUsernameLabel;
+
+  /// Route absente (ancien back) : la feuille ne peut pas vérifier ni enregistrer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indisponible pour le moment'**
+  String get usernameUnavailableNow;
+
+  /// 403 : un invité ne peut pas choisir d'identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créez un compte pour choisir votre identifiant.'**
+  String get usernameGuestForbidden;
 }
 
 class _AppLocalizationsDelegate

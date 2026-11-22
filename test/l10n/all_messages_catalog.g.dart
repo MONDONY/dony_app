@@ -5961,6 +5961,20 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'recipientInviteNameLabel': (l) => l.recipientInviteNameLabel,
   'recipientInviteNameHint': (l) => l.recipientInviteNameHint,
   'recipientInviteNameTooLong': (l) => l.recipientInviteNameTooLong,
+  'recipientInviteChannelUsername': (l) => l.recipientInviteChannelUsername,
+  'recipientInviteUsernameLabel': (l) => l.recipientInviteUsernameLabel,
+  'recipientInviteUsernameHelper': (l) => l.recipientInviteUsernameHelper,
+  'recipientInviteUsernameFound': (l) =>
+      l.recipientInviteUsernameFound(placeholderMarker('initial')),
+  'recipientInviteUsernameFoundNoInitial': (l) =>
+      l.recipientInviteUsernameFoundNoInitial,
+  'recipientInviteUsernameUnsupported': (l) =>
+      l.recipientInviteUsernameUnsupported,
+  'recipientInviteUsernameNotFound': (l) => l.recipientInviteUsernameNotFound,
+  'recipientInviteUsernameAddByPhone': (l) =>
+      l.recipientInviteUsernameAddByPhone,
+  'recipientInviteUsernameSelf': (l) => l.recipientInviteUsernameSelf,
+  'recipientInviteUsernameQuota': (l) => l.recipientInviteUsernameQuota,
   'negotiationViewNegotiationCta': (l) => l.negotiationViewNegotiationCta,
   'negotiationOpenPartnerProfileSemantics': (l) =>
       l.negotiationOpenPartnerProfileSemantics(placeholderMarker('name')),
@@ -8414,6 +8428,31 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripLikeLoginInviteBody': (l) => l.tripLikeLoginInviteBody,
   'tripShareLoginInviteTitle': (l) => l.tripShareLoginInviteTitle,
   'tripShareLoginInviteBody': (l) => l.tripShareLoginInviteBody,
+  'usernameSheetTitle': (l) => l.usernameSheetTitle,
+  'usernameSheetIntro': (l) => l.usernameSheetIntro,
+  'usernameFieldLabel': (l) => l.usernameFieldLabel,
+  'usernameTaken': (l) => l.usernameTaken,
+  'usernameRecentlyReleased': (l) => l.usernameRecentlyReleased,
+  'usernameAvailable': (l) => l.usernameAvailable,
+  'usernameTrySuggestions': (l) => l.usernameTrySuggestions,
+  'usernameInvalidFormat': (l) => l.usernameInvalidFormat,
+  'usernameReserved': (l) => l.usernameReserved,
+  'usernameLooksLikePhone': (l) => l.usernameLooksLikePhone,
+  'usernameChangeTooSoon': (l) =>
+      l.usernameChangeTooSoon(placeholderMarker('date')),
+  'usernameUnchanged': (l) => l.usernameUnchanged,
+  'usernameSaved': (l) => l.usernameSaved,
+  'usernameHelp': (l) => l.usernameHelp,
+  'usernameHelpAvailable': (l) => l.usernameHelpAvailable,
+  'usernameChangeTooSoonNoDate': (l) => l.usernameChangeTooSoonNoDate,
+  'usernameQuota': (l) => l.usernameQuota,
+  'usernameCheckFailed': (l) => l.usernameCheckFailed,
+  'usernameCopied': (l) => l.usernameCopied,
+  'usernameCopySemantics': (l) =>
+      l.usernameCopySemantics(placeholderMarker('username')),
+  'profileEditUsernameLabel': (l) => l.profileEditUsernameLabel,
+  'usernameUnavailableNow': (l) => l.usernameUnavailableNow,
+  'usernameGuestForbidden': (l) => l.usernameGuestForbidden,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8839,6 +8878,7 @@ const textParameters = <String, List<String>>{
   'recipientInvitationConsent': ['name'],
   'recipientInvitationRemoveTitle': ['name'],
   'recipientInvitationAcceptedMessage': ['name'],
+  'recipientInviteUsernameFound': ['initial'],
   'negotiationOpenPartnerProfileSemantics': ['name'],
   'receptionViewSenderProfile': ['name'],
   'bidCreateGridSuggestionTitle': ['item', 'price'],
@@ -9112,4 +9152,6 @@ const textParameters = <String, List<String>>{
   'inquiryAskTileSubtitle': ['name'],
   'inquiryIntroNote': ['name'],
   'inquiryLockedBarMessage': ['name'],
+  'usernameChangeTooSoon': ['date'],
+  'usernameCopySemantics': ['username'],
 };

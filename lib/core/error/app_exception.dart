@@ -101,12 +101,17 @@ class NotFoundException extends AppException {
     String message = 'Ressource introuvable', // i18n-ignore
     String? apiCode,
     this.resourceType,
+    this.extensions,
   }) : super(message, code: apiCode ?? 'NOT_FOUND');
 
   final String? resourceType;
 
+  /// Corps ProblemDetail complet (`type` surtout : `user-not-found` d'un
+  /// identifiant inconnu se distingue d'une route absente). `null` sans corps.
+  final Map<String, Object?>? extensions;
+
   @override
-  List<Object?> get props => [message, code, resourceType];
+  List<Object?> get props => [message, code, resourceType, extensions];
 }
 
 class ValidationException extends AppException {
@@ -129,7 +134,14 @@ class ValidationException extends AppException {
 }
 
 class ConflictException extends AppException {
-  const ConflictException(super.message, {super.code});
+  const ConflictException(super.message, {super.code, this.extensions});
+
+  /// Corps ProblemDetail complet (`type`, propriétés posées par le back comme
+  /// `suggestions` ou `nextChangeAt`). `null` quand la réponse n'en porte pas.
+  final Map<String, Object?>? extensions;
+
+  @override
+  List<Object?> get props => [message, code, extensions];
 }
 
 class RateLimitException extends AppException {

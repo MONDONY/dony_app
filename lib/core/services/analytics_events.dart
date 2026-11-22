@@ -1233,6 +1233,10 @@ abstract final class AnalyticsEvents {
   static const recipientInvitationAppLinkShared =
       'recipient_invitation_app_link_shared';
 
+  // Identifiant Yadony (feuille « Mon identifiant »). Jamais la valeur.
+  static const usernameChanged = 'username_changed';
+  static const usernameChangeFailed = 'username_change_failed';
+
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';
 

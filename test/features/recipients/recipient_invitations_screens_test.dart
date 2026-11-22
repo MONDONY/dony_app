@@ -95,6 +95,7 @@ void main() {
   setUp(() {
     DonySnackbar.clearDedup();
     repo = _MockRepo();
+    when(() => repo.usernameChannelUnsupported).thenReturn(false);
     analytics = _MockAnalytics();
     visited = [];
     when(
@@ -228,6 +229,47 @@ void main() {
         expect(nameY, lessThan(targetY));
       },
     );
+
+    testWidgets(
+      'tuile : le sous-titre cite le numéro, l\'e-mail et l\'identifiant',
+      (tester) async {
+        when(() => repo.getSent()).thenAnswer((_) async => []);
+        await pumpCarnet(tester, recipients: [_plain]);
+        expect(
+          find.text(
+            'Retrouvez-le par son numéro, son e-mail ou son identifiant : '
+            'ses colis lui seront rattachés.',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('invitation par identifiant : « @pseudo » et puce en attente', (
+      tester,
+    ) async {
+      when(() => repo.getSent()).thenAnswer(
+        (_) async => const [
+          SentRecipientInvitation(
+            id: 's9',
+            channel: 'USERNAME',
+            maskedTarget: '@awa.diallo',
+            status: 'PENDING',
+          ),
+        ],
+      );
+      await pumpCarnet(tester, recipients: [_plain]);
+
+      final row = find.byKey(const Key('sent-invitation-s9'));
+      expect(
+        find.descendant(of: row, matching: find.text('@awa.diallo')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: row, matching: find.text('INVITATION ENVOYÉE')),
+        findsOneWidget,
+      );
+    });
 
     testWidgets('carnet vide : les invitations restent visibles', (
       tester,

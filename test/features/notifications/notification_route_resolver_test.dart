@@ -870,6 +870,13 @@ void main() {
       );
     });
 
+    test('RECIPIENT_INVITATION_DECLINED ouvre le carnet', () {
+      expect(
+        resolveNotificationRoute('RECIPIENT_INVITATION_DECLINED', {}),
+        '/profile/recipients',
+      );
+    });
+
     test('RECIPIENT_INVITATION_REMOVED ouvre les expéditeurs autorisés', () {
       expect(
         resolveNotificationRoute('RECIPIENT_INVITATION_REMOVED', {}),

@@ -28,7 +28,7 @@ class SentRecipientInvitation {
 
   final String id;
 
-  /// `PHONE` ou `EMAIL`.
+  /// `PHONE`, `EMAIL` ou `USERNAME`.
   final String channel;
   final String maskedTarget;
 
@@ -42,6 +42,7 @@ class SentRecipientInvitation {
 
   bool get isAccepted => status == 'ACCEPTED';
   bool get isEmail => channel == 'EMAIL';
+  bool get isUsername => channel == 'USERNAME';
 }
 
 /// Invitation reçue par le titulaire du compte
@@ -80,4 +81,18 @@ class IncomingRecipientInvitation {
         status: status ?? this.status,
         createdAt: createdAt,
       );
+}
+
+/// Aperçu d'un identifiant Yadony trouvé (`GET /recipient-invitations/lookup`) :
+/// l'identifiant et l'initiale du prénom, jamais plus.
+class UsernameLookup {
+  const UsernameLookup({required this.username, required this.initial});
+
+  factory UsernameLookup.fromJson(Map<String, dynamic> json) => UsernameLookup(
+    username: json['username'] as String? ?? '',
+    initial: json['initial'] as String? ?? '',
+  );
+
+  final String username;
+  final String initial;
 }
