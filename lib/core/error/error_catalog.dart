@@ -1892,6 +1892,32 @@ abstract final class ErrorCatalog {
       icon: Icons.person_off_rounded,
     ),
 
+    // ─── Destinataire d'un colis (désignation par identifiant) ─────────
+    'recipient-is-traveler': _Entry(
+      title: (l) => l.errorRecipientIsTravelerTitle,
+      message: (l) => l.errorRecipientIsTravelerMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.person_off_rounded,
+    ),
+    'recipient-lookup-quota': _Entry(
+      title: (l) => l.errorRecipientLookupQuotaTitle,
+      message: (l) => l.errorRecipientLookupQuotaMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_top_rounded,
+    ),
+    'recipient-mode-conflict': _Entry(
+      title: (l) => l.errorRecipientModeConflictTitle,
+      message: (l) => l.errorRecipientModeConflictMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.rule_rounded,
+    ),
+    'recipient-required': _Entry(
+      title: (l) => l.errorRecipientRequiredTitle,
+      message: (l) => l.errorRecipientRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.person_add_alt_rounded,
+    ),
+
     // ─── Synthétiques (transport / interceptor) ──────────────────────
     'OFFLINE': _Entry(
       title: (l) => l.errorOfflineTitle,

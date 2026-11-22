@@ -24509,4 +24509,32 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recipientNotConfirmedLabel => 'Destinataire non confirmé';
+
+  @override
+  String get errorRecipientIsTravelerTitle => 'Destinataire impossible';
+
+  @override
+  String get errorRecipientIsTravelerMessage =>
+      'Le voyageur de ce trajet ne peut pas être le destinataire du colis. Choisissez une autre personne.';
+
+  @override
+  String get errorRecipientLookupQuotaTitle => 'Trop de recherches';
+
+  @override
+  String get errorRecipientLookupQuotaMessage =>
+      'Trop de recherches. Réessayez dans une heure.';
+
+  @override
+  String get errorRecipientModeConflictTitle => 'Destinataire en double';
+
+  @override
+  String get errorRecipientModeConflictMessage =>
+      'Choisissez un identifiant Yadony ou saisissez un nom et un numéro, pas les deux.';
+
+  @override
+  String get errorRecipientRequiredTitle => 'Destinataire manquant';
+
+  @override
+  String get errorRecipientRequiredMessage =>
+      'Indiquez un destinataire pour ce colis.';
 }

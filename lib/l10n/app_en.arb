@@ -12057,5 +12057,21 @@
   "designatedUserPending": "Awaiting confirmation",
   "@designatedUserPending": {"description": "Carte du destinataire désigné par identifiant : il n'a pas encore confirmé."},
   "recipientNotConfirmedLabel": "Recipient not confirmed",
-  "@recipientNotConfirmedLabel": {"description": "Carte du colis, vue voyageur : le destinataire désigné par identifiant n'a pas encore confirmé, aucun nom ni numéro n'est donné."}
+  "@recipientNotConfirmedLabel": {"description": "Carte du colis, vue voyageur : le destinataire désigné par identifiant n'a pas encore confirmé, aucun nom ni numéro n'est donné."},
+  "errorRecipientIsTravelerTitle": "Recipient not allowed",
+  "@errorRecipientIsTravelerTitle": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientIsTravelerMessage": "The traveler on this trip cannot be the recipient of the parcel. Choose someone else.",
+  "@errorRecipientIsTravelerMessage": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientLookupQuotaTitle": "Too many searches",
+  "@errorRecipientLookupQuotaTitle": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientLookupQuotaMessage": "Too many searches. Try again in an hour.",
+  "@errorRecipientLookupQuotaMessage": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientModeConflictTitle": "Conflicting recipient",
+  "@errorRecipientModeConflictTitle": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientModeConflictMessage": "Choose a Yadony username or enter a name and number, not both.",
+  "@errorRecipientModeConflictMessage": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientRequiredTitle": "Recipient missing",
+  "@errorRecipientRequiredTitle": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientRequiredMessage": "Enter a recipient for this parcel.",
+  "@errorRecipientRequiredMessage": {"description": "Catalogue d'erreurs : destinataire d'un colis."}
 }

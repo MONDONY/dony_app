@@ -39245,6 +39245,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Destinataire non confirmé'**
   String get recipientNotConfirmedLabel;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire impossible'**
+  String get errorRecipientIsTravelerTitle;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur de ce trajet ne peut pas être le destinataire du colis. Choisissez une autre personne.'**
+  String get errorRecipientIsTravelerMessage;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de recherches'**
+  String get errorRecipientLookupQuotaTitle;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de recherches. Réessayez dans une heure.'**
+  String get errorRecipientLookupQuotaMessage;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire en double'**
+  String get errorRecipientModeConflictTitle;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un identifiant Yadony ou saisissez un nom et un numéro, pas les deux.'**
+  String get errorRecipientModeConflictMessage;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire manquant'**
+  String get errorRecipientRequiredTitle;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un destinataire pour ce colis.'**
+  String get errorRecipientRequiredMessage;
 }
 
 class _AppLocalizationsDelegate

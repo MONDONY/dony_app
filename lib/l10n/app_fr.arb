@@ -23715,5 +23715,21 @@
   "designatedUserPending": "En attente de confirmation",
   "@designatedUserPending": {"description": "Carte du destinataire désigné par identifiant : il n'a pas encore confirmé."},
   "recipientNotConfirmedLabel": "Destinataire non confirmé",
-  "@recipientNotConfirmedLabel": {"description": "Carte du colis, vue voyageur : le destinataire désigné par identifiant n'a pas encore confirmé, aucun nom ni numéro n'est donné."}
+  "@recipientNotConfirmedLabel": {"description": "Carte du colis, vue voyageur : le destinataire désigné par identifiant n'a pas encore confirmé, aucun nom ni numéro n'est donné."},
+  "errorRecipientIsTravelerTitle": "Destinataire impossible",
+  "@errorRecipientIsTravelerTitle": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientIsTravelerMessage": "Le voyageur de ce trajet ne peut pas être le destinataire du colis. Choisissez une autre personne.",
+  "@errorRecipientIsTravelerMessage": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientLookupQuotaTitle": "Trop de recherches",
+  "@errorRecipientLookupQuotaTitle": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientLookupQuotaMessage": "Trop de recherches. Réessayez dans une heure.",
+  "@errorRecipientLookupQuotaMessage": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientModeConflictTitle": "Destinataire en double",
+  "@errorRecipientModeConflictTitle": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientModeConflictMessage": "Choisissez un identifiant Yadony ou saisissez un nom et un numéro, pas les deux.",
+  "@errorRecipientModeConflictMessage": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientRequiredTitle": "Destinataire manquant",
+  "@errorRecipientRequiredTitle": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "errorRecipientRequiredMessage": "Indiquez un destinataire pour ce colis.",
+  "@errorRecipientRequiredMessage": {"description": "Catalogue d'erreurs : destinataire d'un colis."}
 }

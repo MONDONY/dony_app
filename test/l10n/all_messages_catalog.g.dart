@@ -8460,6 +8460,15 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'designateYadonyUserUnavailable': (l) => l.designateYadonyUserUnavailable,
   'designatedUserPending': (l) => l.designatedUserPending,
   'recipientNotConfirmedLabel': (l) => l.recipientNotConfirmedLabel,
+  'errorRecipientIsTravelerTitle': (l) => l.errorRecipientIsTravelerTitle,
+  'errorRecipientIsTravelerMessage': (l) => l.errorRecipientIsTravelerMessage,
+  'errorRecipientLookupQuotaTitle': (l) => l.errorRecipientLookupQuotaTitle,
+  'errorRecipientLookupQuotaMessage': (l) => l.errorRecipientLookupQuotaMessage,
+  'errorRecipientModeConflictTitle': (l) => l.errorRecipientModeConflictTitle,
+  'errorRecipientModeConflictMessage': (l) =>
+      l.errorRecipientModeConflictMessage,
+  'errorRecipientRequiredTitle': (l) => l.errorRecipientRequiredTitle,
+  'errorRecipientRequiredMessage': (l) => l.errorRecipientRequiredMessage,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
