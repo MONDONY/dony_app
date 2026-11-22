@@ -727,12 +727,18 @@ abstract final class AnalyticsEvents {
   static const returnConfirmed = 'return_confirmed';
 
   /// Aperçu des frais d'annulation de l'expéditeur illisible à l'ouverture du
-  /// dialogue d'annulation (`stage: load`) ou à sa relecture avant de
-  /// confirmer (`stage: refresh`). Propriété `error_code`
-  /// (`AppException.code`, `TIMEOUT`, `invalid_payload` pour un corps
-  /// illisible ou incohérent, `unknown`). Jamais sur un 404 (back antérieur à
-  /// la route).
+  /// dialogue d'annulation ou de la feuille « Confirmer votre absence »
+  /// (`stage: load`) ou à sa relecture avant de confirmer (`stage: refresh`).
+  /// Propriété `error_code` (`AppException.code`, `TIMEOUT`, `invalid_payload`
+  /// pour un corps illisible ou incohérent, `unknown`). Jamais sur un 404
+  /// (back antérieur à la route).
   static const cancellationFeePreviewFailed = 'cancellation_fee_preview_failed';
+
+  /// État public des frais d'annulation (`GET /config/cancellation-fee`)
+  /// illisible : les textes restent ceux d'avant la fonction. Propriété
+  /// `error_code` (`AppException.code`, `TIMEOUT`, `invalid_payload`,
+  /// `unknown`). Jamais sur un 404 (back antérieur à la route).
+  static const cancellationFeeConfigFailed = 'cancellation_fee_config_failed';
 
   // Profile
   static const upgradeToProStarted = 'upgrade_to_pro_started';

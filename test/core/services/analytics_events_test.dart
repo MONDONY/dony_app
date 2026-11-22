@@ -90,6 +90,7 @@ void main() {
       AnalyticsEvents.handoverBlockedAmendment,
       AnalyticsEvents.handoverBlockedSenderNoShow,
       AnalyticsEvents.cancellationFeePreviewFailed,
+      AnalyticsEvents.cancellationFeeConfigFailed,
       AnalyticsEvents.blocError,
     ];
     for (final e in events) {
@@ -143,6 +144,13 @@ void main() {
     expect(
       AnalyticsEvents.cancellationFeePreviewFailed,
       'cancellation_fee_preview_failed',
+    );
+  });
+
+  test('nom exact de l\'échec de la configuration des frais d\'annulation', () {
+    expect(
+      AnalyticsEvents.cancellationFeeConfigFailed,
+      'cancellation_fee_config_failed',
     );
   });
 }

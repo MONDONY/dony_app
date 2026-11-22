@@ -1,4 +1,5 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/cancellation/data/models/cancellation_fee_config_model.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_fee_preview_model.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/data/models/delivery_noshow_procedure_model.dart';
@@ -143,6 +144,18 @@ class CancellationRemoteDatasource {
       throw const FormatException('fee-preview: unexpected body');
     }
     return CancellationFeePreviewModel.fromJson(data);
+  }
+
+  /// État public des frais d'annulation (`GET /config/cancellation-fee`,
+  /// sans authentification) : l'app y choisit ses textes. 404 sur un back
+  /// antérieur à la route, remonté tel quel.
+  Future<CancellationFeeConfigModel> getFeeConfig() async {
+    final response = await _apiClient.dio.get('/config/cancellation-fee');
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw const FormatException('cancellation-fee config: unexpected body');
+    }
+    return CancellationFeeConfigModel.fromJson(data);
   }
 
   /// L'expéditeur consulte son code de retour + l'état de la restitution (D7).
