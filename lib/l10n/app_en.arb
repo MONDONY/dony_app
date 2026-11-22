@@ -12115,5 +12115,14 @@
   "designateYadonyUserAlreadyRecipient": "This person is already the recipient of this parcel.",
   "@designateYadonyUserAlreadyRecipient": {"description": "Feuille de désignation : le compte trouvé est déjà désigné sur ce colis."},
   "recipientChangeUsernameWarning": "This account replaces the previous recipient: the pickup code and tracking link will be renewed, and the previous recipient will lose access to them.",
-  "@recipientChangeUsernameWarning": {"description": "Feuille de changement de destinataire, mode identifiant Yadony : avertissement de renouvellement."}
+  "@recipientChangeUsernameWarning": {"description": "Feuille de changement de destinataire, mode identifiant Yadony : avertissement de renouvellement."},
+  "cancelScaleNoticeText": "Cancellation: a fee may apply once the traveler has accepted.",
+  "cancelScaleNoticeLink": "See the fee scale",
+  "cancelScaleSheetTitle": "Cancellation fee scale",
+  "cancelScaleMoreThan": "{days, plural, =1{More than 1 day before departure} other{More than {days} days before departure}}: {percent, plural, =0{no fee} other{{percent}%}}",
+  "cancelScaleBetween": "From {from, plural, =1{1 day} other{{from} days}} to {to, plural, =1{1 day} other{{to} days}}: {percent}%",
+  "cancelScaleLessThan": "Less than {days, plural, =1{1 day} other{{days} days}}, on the day of departure or after: {percent}%",
+  "cancelScaleCap": "Cap: {fee} per parcel",
+  "cancelScaleExactAmount": "The exact amount is shown before you confirm a cancellation.",
+  "cancelScaleCashNote": "Fees do not apply to cash payments."
 }

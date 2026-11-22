@@ -24698,4 +24698,72 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get recipientChangeUsernameWarning =>
       'Ce compte remplace l\'ancien destinataire : le code de retrait et le lien de suivi seront renouvelés, et l\'ancien destinataire n\'y aura plus accès.';
+
+  @override
+  String get cancelScaleNoticeText =>
+      'Annulation : des frais peuvent s\'appliquer après acceptation par le voyageur.';
+
+  @override
+  String get cancelScaleNoticeLink => 'Voir le barème';
+
+  @override
+  String get cancelScaleSheetTitle => 'Barème des frais d\'annulation';
+
+  @override
+  String cancelScaleMoreThan(int days, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Plus de $days jours avant le départ',
+      one: 'Plus de 1 jour avant le départ',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      percent,
+      locale: localeName,
+      other: '$percent %',
+      zero: 'aucun frais',
+    );
+    return '$_temp0 : $_temp1';
+  }
+
+  @override
+  String cancelScaleBetween(int from, int to, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      from,
+      locale: localeName,
+      other: '$from jours',
+      one: '1 jour',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      to,
+      locale: localeName,
+      other: '$to jours',
+      one: '1 jour',
+    );
+    return 'De $_temp0 à $_temp1 : $percent %';
+  }
+
+  @override
+  String cancelScaleLessThan(int days, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'de $days jours',
+      one: 'd\'un jour',
+    );
+    return 'Moins $_temp0, jour du départ ou après : $percent %';
+  }
+
+  @override
+  String cancelScaleCap(String fee) {
+    return 'Plafond : $fee par colis';
+  }
+
+  @override
+  String get cancelScaleExactAmount =>
+      'Le montant exact est affiché avant que vous confirmiez une annulation.';
+
+  @override
+  String get cancelScaleCashNote =>
+      'Les frais ne s\'appliquent pas aux paiements en espèces.';
 }

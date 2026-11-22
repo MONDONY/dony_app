@@ -166,7 +166,7 @@ void main() {
     };
 
     test('true : plafond, même si la déduction dirait le contraire', () {
-      final m = CancellationFeePreviewModel.fromJson({
+      final m = CancellationFeePreviewModel.fromJson(const {
         'rate': 0.2,
         'fee': 20,
         'refundAmount': 80,

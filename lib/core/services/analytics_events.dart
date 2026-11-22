@@ -740,6 +740,11 @@ abstract final class AnalyticsEvents {
   /// `unknown`). Jamais sur un 404 (back antérieur à la route).
   static const cancellationFeeConfigFailed = 'cancellation_fee_config_failed';
 
+  /// Feuille « Barème des frais d'annulation » ouverte depuis la ligne
+  /// d'information au-dessus du bouton de paiement (propriété `source` :
+  /// `bid_checkout`). Jamais de montant.
+  static const cancellationFeeScaleOpened = 'cancellation_fee_scale_opened';
+
   // Profile
   static const upgradeToProStarted = 'upgrade_to_pro_started';
   static const profilePhotoUpdated = 'profile_photo_updated';

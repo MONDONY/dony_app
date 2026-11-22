@@ -15,6 +15,7 @@ import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/money_keyword_warning.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_fee_scale_notice.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
@@ -64,6 +65,7 @@ class _BtnConfig {
     required this.iconAsset,
     this.onPressed,
     this.hint,
+    this.feeNotice = false,
   });
   final String label;
   final String iconAsset;
@@ -72,6 +74,11 @@ class _BtnConfig {
   /// Explication affichée au-dessus du bouton quand il est désactivé pour
   /// une raison que l'utilisateur ne devinerait pas (poids manquant).
   final String? hint;
+
+  /// Ligne « des frais d'annulation peuvent s'appliquer » au-dessus du
+  /// bouton : paiement en ligne (carte, mobile money) d'un colis qui se
+  /// crée ici, jamais en espèces ni en négociation.
+  final bool feeNotice;
 }
 
 /// Pas de saisie du poids : un téléphone (environ 300 g) se déclare 0,5 kg
@@ -807,6 +814,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       label: label,
       iconAsset: iconAsset,
       onPressed: _confirmPayment,
+      feeNotice: method != BidPaymentMethod.cash,
     );
   }
 
@@ -2307,6 +2315,10 @@ class _StickyBottom extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: DonySpacing.sm),
+                ],
+                if (config?.feeNotice ?? false) ...[
+                  const CancellationFeeScaleNotice(),
+                  const SizedBox(height: DonySpacing.xs),
                 ],
                 DonyButton(
                   key: const Key('bid-submit-btn'),
