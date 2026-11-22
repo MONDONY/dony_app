@@ -23891,5 +23891,35 @@
   "designateYadonyUserAlreadyRecipient": "C'est déjà le destinataire de ce colis.",
   "@designateYadonyUserAlreadyRecipient": {"description": "Feuille de désignation : le compte trouvé est déjà désigné sur ce colis."},
   "recipientChangeUsernameWarning": "Ce compte remplace l'ancien destinataire : le code de retrait et le lien de suivi seront renouvelés, et l'ancien destinataire n'y aura plus accès.",
-  "@recipientChangeUsernameWarning": {"description": "Feuille de changement de destinataire, mode identifiant Yadony : avertissement de renouvellement."}
+  "@recipientChangeUsernameWarning": {"description": "Feuille de changement de destinataire, mode identifiant Yadony : avertissement de renouvellement."},
+  "cancelScaleNoticeText": "Annulation : des frais peuvent s'appliquer après acceptation par le voyageur.",
+  "@cancelScaleNoticeText": {"description": "Ligne discrète au-dessus du bouton de paiement d'un colis (carte ou mobile money, frais d'annulation allumés) : annonce les frais, suivie du lien cancelScaleNoticeLink."},
+  "cancelScaleNoticeLink": "Voir le barème",
+  "@cancelScaleNoticeLink": {"description": "Lien de la ligne cancelScaleNoticeText, ouvre la feuille du barème."},
+  "cancelScaleSheetTitle": "Barème des frais d'annulation",
+  "@cancelScaleSheetTitle": {"description": "Titre de la feuille du barème des frais d'annulation de l'expéditeur."},
+  "cancelScaleMoreThan": "{days, plural, =1{Plus de 1 jour avant le départ} other{Plus de {days} jours avant le départ}} : {percent, plural, =0{aucun frais} other{{percent} %}}",
+  "@cancelScaleMoreThan": {
+    "description": "Barème, palier le plus lointain : plus de N jours avant le départ, taux (0 = aucun frais).",
+    "placeholders": {"days": {"type": "int"}, "percent": {"type": "int"}}
+  },
+  "cancelScaleBetween": "De {from, plural, =1{1 jour} other{{from} jours}} à {to, plural, =1{1 jour} other{{to} jours}} : {percent} %",
+  "@cancelScaleBetween": {
+    "description": "Barème, palier intermédiaire : de N jours à M jours avant le départ, taux.",
+    "placeholders": {"from": {"type": "int"}, "to": {"type": "int"}, "percent": {"type": "int"}}
+  },
+  "cancelScaleLessThan": "Moins {days, plural, =1{d'un jour} other{de {days} jours}}, jour du départ ou après : {percent} %",
+  "@cancelScaleLessThan": {
+    "description": "Barème, palier le plus proche : moins de N jours avant le départ, jour du départ ou après, taux.",
+    "placeholders": {"days": {"type": "int"}, "percent": {"type": "int"}}
+  },
+  "cancelScaleCap": "Plafond : {fee} par colis",
+  "@cancelScaleCap": {
+    "description": "Barème : plafond des frais par colis, en euros.",
+    "placeholders": {"fee": {"type": "String", "example": "30 €"}}
+  },
+  "cancelScaleExactAmount": "Le montant exact est affiché avant que vous confirmiez une annulation.",
+  "@cancelScaleExactAmount": {"description": "Barème : le montant exact est montré avant la confirmation."},
+  "cancelScaleCashNote": "Les frais ne s'appliquent pas aux paiements en espèces.",
+  "@cancelScaleCashNote": {"description": "Barème : exclusion des paiements en espèces."}
 }

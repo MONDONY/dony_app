@@ -39491,6 +39491,60 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce compte remplace l\'ancien destinataire : le code de retrait et le lien de suivi seront renouvelés, et l\'ancien destinataire n\'y aura plus accès.'**
   String get recipientChangeUsernameWarning;
+
+  /// Ligne discrète au-dessus du bouton de paiement d'un colis (carte ou mobile money, frais d'annulation allumés) : annonce les frais, suivie du lien cancelScaleNoticeLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulation : des frais peuvent s\'appliquer après acceptation par le voyageur.'**
+  String get cancelScaleNoticeText;
+
+  /// Lien de la ligne cancelScaleNoticeText, ouvre la feuille du barème.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le barème'**
+  String get cancelScaleNoticeLink;
+
+  /// Titre de la feuille du barème des frais d'annulation de l'expéditeur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Barème des frais d\'annulation'**
+  String get cancelScaleSheetTitle;
+
+  /// Barème, palier le plus lointain : plus de N jours avant le départ, taux (0 = aucun frais).
+  ///
+  /// In fr, this message translates to:
+  /// **'{days, plural, =1{Plus de 1 jour avant le départ} other{Plus de {days} jours avant le départ}} : {percent, plural, =0{aucun frais} other{{percent} %}}'**
+  String cancelScaleMoreThan(int days, int percent);
+
+  /// Barème, palier intermédiaire : de N jours à M jours avant le départ, taux.
+  ///
+  /// In fr, this message translates to:
+  /// **'De {from, plural, =1{1 jour} other{{from} jours}} à {to, plural, =1{1 jour} other{{to} jours}} : {percent} %'**
+  String cancelScaleBetween(int from, int to, int percent);
+
+  /// Barème, palier le plus proche : moins de N jours avant le départ, jour du départ ou après, taux.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moins {days, plural, =1{d\'un jour} other{de {days} jours}}, jour du départ ou après : {percent} %'**
+  String cancelScaleLessThan(int days, int percent);
+
+  /// Barème : plafond des frais par colis, en euros.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plafond : {fee} par colis'**
+  String cancelScaleCap(String fee);
+
+  /// Barème : le montant exact est montré avant la confirmation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant exact est affiché avant que vous confirmiez une annulation.'**
+  String get cancelScaleExactAmount;
+
+  /// Barème : exclusion des paiements en espèces.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les frais ne s\'appliquent pas aux paiements en espèces.'**
+  String get cancelScaleCashNote;
 }
 
 class _AppLocalizationsDelegate

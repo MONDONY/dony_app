@@ -24524,4 +24524,71 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get recipientChangeUsernameWarning =>
       'This account replaces the previous recipient: the pickup code and tracking link will be renewed, and the previous recipient will lose access to them.';
+
+  @override
+  String get cancelScaleNoticeText =>
+      'Cancellation: a fee may apply once the traveler has accepted.';
+
+  @override
+  String get cancelScaleNoticeLink => 'See the fee scale';
+
+  @override
+  String get cancelScaleSheetTitle => 'Cancellation fee scale';
+
+  @override
+  String cancelScaleMoreThan(int days, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'More than $days days before departure',
+      one: 'More than 1 day before departure',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      percent,
+      locale: localeName,
+      other: '$percent%',
+      zero: 'no fee',
+    );
+    return '$_temp0: $_temp1';
+  }
+
+  @override
+  String cancelScaleBetween(int from, int to, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      from,
+      locale: localeName,
+      other: '$from days',
+      one: '1 day',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      to,
+      locale: localeName,
+      other: '$to days',
+      one: '1 day',
+    );
+    return 'From $_temp0 to $_temp1: $percent%';
+  }
+
+  @override
+  String cancelScaleLessThan(int days, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return 'Less than $_temp0, on the day of departure or after: $percent%';
+  }
+
+  @override
+  String cancelScaleCap(String fee) {
+    return 'Cap: $fee per parcel';
+  }
+
+  @override
+  String get cancelScaleExactAmount =>
+      'The exact amount is shown before you confirm a cancellation.';
+
+  @override
+  String get cancelScaleCashNote => 'Fees do not apply to cash payments.';
 }
