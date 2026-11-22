@@ -717,6 +717,14 @@ abstract final class AnalyticsEvents {
   static const returnCodeEntryOpened = 'return_code_entry_opened';
   static const returnConfirmed = 'return_confirmed';
 
+  /// Aperçu des frais d'annulation de l'expéditeur illisible à l'ouverture du
+  /// dialogue d'annulation (`stage: load`) ou à sa relecture avant de
+  /// confirmer (`stage: refresh`) : le dialogue reste celui d'avant la
+  /// fonction. Propriété `error_code` (`AppException.code`, `TIMEOUT`,
+  /// `invalid_payload` pour un corps illisible, `unknown`). Jamais sur un 404
+  /// (back antérieur à la route).
+  static const cancellationFeePreviewFailed = 'cancellation_fee_preview_failed';
+
   // Profile
   static const upgradeToProStarted = 'upgrade_to_pro_started';
   static const profilePhotoUpdated = 'profile_photo_updated';
