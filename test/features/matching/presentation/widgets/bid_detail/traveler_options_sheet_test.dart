@@ -4,6 +4,13 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/media_service.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_fee_preview/cancellation_fee_preview_cubit.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/data/models/cancellation_fee_preview_model.dart';
+import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
+import 'package:dony/features/cancellation/presentation/widgets/sender_cancel_confirm_dialog.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -18,6 +25,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,6 +54,15 @@ class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _MockSupplementRepository extends Mock
     implements BidSupplementRepository {}
+
+class _MockCancellationRepository extends Mock
+    implements CancellationRepository {}
+
+class _MockCancellationBloc
+    extends MockBloc<CancellationEvent, CancellationState>
+    implements CancellationBloc {}
+
+class _FakeCancellationEvent extends Fake implements CancellationEvent {}
 
 BidModel _bid({
   String status = 'ACCEPTED',
@@ -165,6 +182,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(_FakeConversationOpenEvent());
     registerFallbackValue(_FakeBidEvent());
+    registerFallbackValue(_FakeCancellationEvent());
   });
 
   testWidgets(
@@ -475,6 +493,138 @@ void main() {
           find.text('Annuler').evaluate().isNotEmpty,
       isTrue,
     );
+  });
+
+  // Le voyageur n'a ni frais d'annulation ni aperçu (le serveur répondrait
+  // 403) : ses dialogues d'annulation ne lisent jamais l'aperçu.
+  group('voyageur : jamais d\'aperçu des frais d\'annulation', () {
+    late _MockCancellationRepository feeRepository;
+    late _MockCancellationBloc cancellationBloc;
+
+    setUp(() {
+      feeRepository = _MockCancellationRepository();
+      cancellationBloc = _MockCancellationBloc();
+      when(() => cancellationBloc.state).thenReturn(CancellationInitial());
+      when(() => feeRepository.getFeePreview(any())).thenAnswer(
+        (_) async => const CancellationFeePreviewModel(
+          rate: 0.2,
+          fee: 20,
+          refundAmount: 80,
+          currency: 'EUR',
+        ),
+      );
+      getIt.registerFactory<CancellationFeePreviewCubit>(
+        () =>
+            CancellationFeePreviewCubit(feeRepository, _MockAnalyticsService()),
+      );
+    });
+
+    tearDown(() async => getIt.reset());
+
+    Future<_MockBidBloc> openWithCancellation(
+      WidgetTester tester,
+      BidModel bid,
+    ) async {
+      final bidBloc = _MockBidBloc();
+      final conv = _MockConvBloc();
+      when(() => bidBloc.state).thenReturn(BidInitial());
+      when(() => conv.state).thenReturn(const ConversationOpenInitial());
+      await tester.pumpWidget(
+        MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: GoRouter(
+            routes: [
+              GoRoute(
+                path: '/',
+                builder: (_, _) => MultiBlocProvider(
+                  providers: [
+                    BlocProvider<BidBloc>.value(value: bidBloc),
+                    BlocProvider<ConversationOpenBloc>.value(value: conv),
+                    BlocProvider<CancellationBloc>.value(
+                      value: cancellationBloc,
+                    ),
+                  ],
+                  child: Builder(
+                    builder: (context) => Scaffold(
+                      body: Center(
+                        child: ElevatedButton(
+                          onPressed: () =>
+                              showTravelerOptionsSheet(context, bid),
+                          child: const Text('open'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Annuler ce transport'));
+      await tester.tap(find.text('Annuler ce transport'));
+      await tester.pumpAndSettle();
+      return bidBloc;
+    }
+
+    testWidgets('avant remise : annulation confirmée sans aperçu', (
+      tester,
+    ) async {
+      final l = lookupAppLocalizations(AppL10n.fr);
+      final bidBloc = await openWithCancellation(tester, _bid(token: null));
+
+      expect(find.byType(SenderCancelConfirmDialog), findsNothing);
+      expect(find.text(l.cancelFeeLaterCostsMore), findsNothing);
+      await tester.tap(find.text(l.bidCancelConfirmButton));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => bidBloc.add(
+          any(
+            that: isA<BidCancelRequested>().having(
+              (e) => e.actor,
+              'actor',
+              'traveler',
+            ),
+          ),
+        ),
+      ).called(1);
+      verifyNever(() => feeRepository.getFeePreview(any()));
+    });
+
+    testWidgets('après remise : annulation confirmée sans aperçu', (
+      tester,
+    ) async {
+      final l = lookupAppLocalizations(AppL10n.fr);
+      await openWithCancellation(
+        tester,
+        _bid(
+          status: 'HANDED_OVER',
+          token: null,
+          departureAt: DateTime.now().add(const Duration(days: 2)),
+        ),
+      );
+
+      expect(find.byType(SenderCancelConfirmDialog), findsNothing);
+      await tester.enterText(find.byType(TextField), 'Vol annulé');
+      await tester.tap(find.text(l.bidCancelConfirmButton));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => cancellationBloc.add(
+          any(
+            that: isA<CancelAfterHandoverRequested>().having(
+              (e) => e.actor,
+              'actor',
+              'traveler',
+            ),
+          ),
+        ),
+      ).called(1);
+      verifyNever(() => feeRepository.getFeePreview(any()));
+    });
   });
 
   testWidgets('tap Le colis ne correspond pas → feuille de refus ouverte', (

@@ -12592,6 +12592,96 @@ abstract class AppLocalizations {
   /// **'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.'**
   String get bidDetailCancelAfterHandoverBody;
 
+  /// Corps du dialog d'annulation après remise quand des frais d'annulation s'appliquent (bid_detail_action_bars.dart) : sans « intégralement remboursé », le bloc des frais dit ce qui est rendu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis est déjà chez le voyageur. Vous récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.'**
+  String get bidDetailCancelAfterHandoverBodyWithFee;
+
+  /// Corps du dialog d'annulation après remise quand l'aperçu des frais n'a pas pu être lu (réseau, délai, ancien back) : on ne promet pas un remboursement intégral.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis est déjà chez le voyageur. Vous serez remboursé, moins d\'éventuels frais d\'annulation, et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.'**
+  String get bidDetailCancelAfterHandoverBodyUnknownFee;
+
+  /// Bloc des frais d'annulation du dialog d'annulation de l'expéditeur (sender_cancel_confirm_dialog.dart) : frais bruts retenus, montant formaté dans la devise du paiement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Des frais d\'annulation de {fee} seront retenus.'**
+  String cancelFeeRetained(String fee);
+
+  /// Bloc des frais d'annulation : montant rendu à l'expéditeur (payé moins les frais). Masqué quand rien n'est rendu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous serez remboursé de {refund}.'**
+  String cancelFeeRefunded(String refund);
+
+  /// Bloc des frais d'annulation : pourquoi ce taux, départ dans au moins un jour (jours entiers restants).
+  ///
+  /// In fr, this message translates to:
+  /// **'{days, plural, =1{Le trajet part dans 1 jour : les frais sont de {percent} % du montant payé.} other{Le trajet part dans {days} jours : les frais sont de {percent} % du montant payé.}}'**
+  String cancelFeeReasonDays(int days, int percent);
+
+  /// Bloc des frais d'annulation : pourquoi ce taux, départ dans moins d'un jour (heures entières restantes).
+  ///
+  /// In fr, this message translates to:
+  /// **'{hours, plural, =1{Le trajet part dans 1 heure : les frais sont de {percent} % du montant payé.} other{Le trajet part dans {hours} heures : les frais sont de {percent} % du montant payé.}}'**
+  String cancelFeeReasonHours(int hours, int percent);
+
+  /// Bloc des frais d'annulation : pourquoi ce taux, départ dans moins d'une heure.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le trajet part dans moins d\'une heure : les frais sont de {percent} % du montant payé.'**
+  String cancelFeeReasonSoon(int percent);
+
+  /// Bloc des frais d'annulation : taux seul, quand l'heure de départ est inconnue ou déjà passée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les frais sont de {percent} % du montant payé.'**
+  String cancelFeeReasonRate(int percent);
+
+  /// Bloc des frais d'annulation : le taux montera au prochain palier (nextTierAt présent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler plus tard coûte plus cher.'**
+  String get cancelFeeLaterCostsMore;
+
+  /// Bloc des frais d'annulation, frais plafonnés : départ dans au moins un jour (jours entiers restants), suivi de cancelFeeCapped.
+  ///
+  /// In fr, this message translates to:
+  /// **'{days, plural, =1{Le trajet part dans 1 jour.} other{Le trajet part dans {days} jours.}}'**
+  String cancelFeeLeavesInDays(int days);
+
+  /// Bloc des frais d'annulation, frais plafonnés : départ dans moins d'un jour (heures entières restantes), suivi de cancelFeeCapped.
+  ///
+  /// In fr, this message translates to:
+  /// **'{hours, plural, =1{Le trajet part dans 1 heure.} other{Le trajet part dans {hours} heures.}}'**
+  String cancelFeeLeavesInHours(int hours);
+
+  /// Bloc des frais d'annulation, frais plafonnés : départ dans moins d'une heure, suivi de cancelFeeCapped.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le trajet part dans moins d\'une heure.'**
+  String get cancelFeeLeavesSoon;
+
+  /// Bloc des frais d'annulation : le plafond par colis s'applique (frais plus bas que le taux appliqué au montant payé), à la place du pourcentage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais plafonnés à {fee} par colis.'**
+  String cancelFeeCapped(String fee);
+
+  /// Dialog d'annulation de l'expéditeur : la relecture des frais faite à la confirmation (palier passé) a échoué ; l'appui suivant annule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant n\'a pas pu être relu et a pu augmenter. Confirmez de nouveau pour annuler.'**
+  String get cancelFeeRecheckFailed;
+
+  /// Bloc des frais d'annulation : le palier est passé pendant que le dialog était ouvert, le montant affiché vient d'être relu à la hausse ; une seconde confirmation est demandée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les frais viennent d\'augmenter. Vérifiez le montant avant de confirmer.'**
+  String get cancelFeeIncreased;
+
   /// Titre de la tuile Plus de détails et de son bottom sheet, vues expéditeur et voyageur (sender_tile_sheets.dart, traveler_tile_sheets.dart)
   ///
   /// In fr, this message translates to:
