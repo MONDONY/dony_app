@@ -276,6 +276,7 @@ import 'package:dony/features/receptions/bloc/receptions_prompt_cubit.dart';
 import 'package:dony/features/receptions/data/datasources/reception_remote_datasource.dart';
 import 'package:dony/features/receptions/data/receptions_prompt_store.dart';
 import 'package:dony/features/receptions/data/repositories/reception_repository.dart';
+import 'package:dony/features/recipients/bloc/designate_yadony_user_cubit.dart';
 import 'package:dony/features/recipients/bloc/incoming_invitations_cubit.dart';
 import 'package:dony/features/recipients/bloc/invite_recipient_cubit.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
@@ -1728,6 +1729,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<InviteRecipientCubit>(
     () => InviteRecipientCubit(
+      getIt<RecipientInvitationRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<DesignateYadonyUserCubit>(
+    () => DesignateYadonyUserCubit(
       getIt<RecipientInvitationRepository>(),
       getIt<AnalyticsService>(),
     ),

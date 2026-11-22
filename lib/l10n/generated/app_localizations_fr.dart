@@ -24486,4 +24486,24 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get usernameGuestForbidden =>
       'Créez un compte pour choisir votre identifiant.';
+
+  @override
+  String get designateYadonyUserChoice => 'Un utilisateur Yadony';
+
+  @override
+  String get designateYadonyUserTitle => 'Un utilisateur Yadony';
+
+  @override
+  String get designateYadonyUserIntro =>
+      'Saisissez son identifiant. Il confirmera qu\'il est bien le destinataire.';
+
+  @override
+  String get designateYadonyUserChoose => 'Choisir';
+
+  @override
+  String get designateYadonyUserUnavailable =>
+      'Cette désignation n\'est pas encore disponible.';
+
+  @override
+  String get designatedUserPending => 'En attente de confirmation';
 }

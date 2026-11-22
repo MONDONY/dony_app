@@ -271,7 +271,7 @@ class InviteRecipientCubit extends Cubit<InviteRecipientState> {
       );
     } catch (e) {
       if (isClosed || generation != _generation) return;
-      final status = _lookupStatusFor(unwrapDioError(e));
+      final status = lookupStatusFor(unwrapDioError(e));
       if (status == UsernameLookupStatus.unsupported) {
         _repository.usernameChannelUnsupported = true;
       }
@@ -287,7 +287,8 @@ class InviteRecipientCubit extends Cubit<InviteRecipientState> {
   }
 
   /// Verdict du serveur sur un identifiant, d'après le type du problème.
-  static UsernameLookupStatus _lookupStatusFor(AppException error) {
+  /// Partagé avec la désignation d'un destinataire de colis.
+  static UsernameLookupStatus lookupStatusFor(AppException error) {
     // Le back de prod répond 405 (et non 404) sur `GET …/lookup` : son ancien
     // contrôleur mappe `lookup` sur `/{id}` (DELETE seulement).
     if (error is NetworkException && error.code == '405') {
@@ -373,7 +374,7 @@ class InviteRecipientCubit extends Cubit<InviteRecipientState> {
           ? UsernameLookupStatus.quota
           : null;
     }
-    final status = _lookupStatusFor(error);
+    final status = lookupStatusFor(error);
     return status == UsernameLookupStatus.failed ? null : status;
   }
 }

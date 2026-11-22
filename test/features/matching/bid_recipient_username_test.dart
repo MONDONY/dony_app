@@ -112,16 +112,17 @@ void main() {
 
     test('checkoutBid avec identifiant : ni nom ni numéro', () async {
       Map<String, dynamic>? sent;
-      when(() => dio.post('/bids/checkout', data: any(named: 'data')))
-          .thenAnswer((i) async {
-            sent = body(i);
-            return _ok({
-              'bidId': 'b',
-              'clientSecret': 's',
-              'publishableKey': 'pk',
-              'expiresAt': '2030-01-01T00:00:00',
-            }, '/bids/checkout');
-          });
+      when(
+        () => dio.post('/bids/checkout', data: any(named: 'data')),
+      ).thenAnswer((i) async {
+        sent = body(i);
+        return _ok({
+          'bidId': 'b',
+          'clientSecret': 's',
+          'publishableKey': 'pk',
+          'expiresAt': '2030-01-01T00:00:00',
+        }, '/bids/checkout');
+      });
       await ds.checkoutBid(
         announcementId: 'ann-1',
         weightKg: 2,
@@ -136,16 +137,17 @@ void main() {
 
     test('checkoutBid sans identifiant : corps inchangé', () async {
       Map<String, dynamic>? sent;
-      when(() => dio.post('/bids/checkout', data: any(named: 'data')))
-          .thenAnswer((i) async {
-            sent = body(i);
-            return _ok({
-              'bidId': 'b',
-              'clientSecret': 's',
-              'publishableKey': 'pk',
-              'expiresAt': '2030-01-01T00:00:00',
-            }, '/bids/checkout');
-          });
+      when(
+        () => dio.post('/bids/checkout', data: any(named: 'data')),
+      ).thenAnswer((i) async {
+        sent = body(i);
+        return _ok({
+          'bidId': 'b',
+          'clientSecret': 's',
+          'publishableKey': 'pk',
+          'expiresAt': '2030-01-01T00:00:00',
+        }, '/bids/checkout');
+      });
       await ds.checkoutBid(
         announcementId: 'ann-1',
         weightKg: 2,
@@ -191,11 +193,12 @@ void main() {
 
     test('changeRecipient avec / sans identifiant', () async {
       final sent = <Map<String, dynamic>>[];
-      when(() => dio.put('/bids/bid-1/recipient', data: any(named: 'data')))
-          .thenAnswer((i) async {
-            sent.add(body(i));
-            return _ok(_bidJson, '/bids/bid-1/recipient');
-          });
+      when(
+        () => dio.put('/bids/bid-1/recipient', data: any(named: 'data')),
+      ).thenAnswer((i) async {
+        sent.add(body(i));
+        return _ok(_bidJson, '/bids/bid-1/recipient');
+      });
       await ds.changeRecipient('bid-1', recipientUsername: 'awa.n');
       await ds.changeRecipient(
         'bid-1',
@@ -258,27 +261,30 @@ void main() {
   });
 
   group('événements', () {
-    test('BidCheckoutRequested / BidCreateRequested : compat et identifiant', () {
-      final a = BidCheckoutRequested(
-        announcementId: 'a',
-        weightKg: 1,
-        description: 'd',
-        contentCategory: 'c',
-        recipientName: 'n',
-        recipientPhone: 'p',
-      );
-      expect(a.recipientName, 'n');
-      expect(a.recipientUsername, isNull);
-      final b = BidCreateRequested(
-        announcementId: 'a',
-        weightKg: 1,
-        description: 'd',
-        contentCategory: 'c',
-        recipientUsername: 'awa',
-      );
-      expect(b.recipientUsername, 'awa');
-      expect(b.recipientName, isNull);
-    });
+    test(
+      'BidCheckoutRequested / BidCreateRequested : compat et identifiant',
+      () {
+        final a = BidCheckoutRequested(
+          announcementId: 'a',
+          weightKg: 1,
+          description: 'd',
+          contentCategory: 'c',
+          recipientName: 'n',
+          recipientPhone: 'p',
+        );
+        expect(a.recipientName, 'n');
+        expect(a.recipientUsername, isNull);
+        final b = BidCreateRequested(
+          announcementId: 'a',
+          weightKg: 1,
+          description: 'd',
+          contentCategory: 'c',
+          recipientUsername: 'awa',
+        );
+        expect(b.recipientUsername, 'awa');
+        expect(b.recipientName, isNull);
+      },
+    );
 
     test('BidNegotiationProposeRequested : props contient l\'identifiant', () {
       const a = BidNegotiationProposeRequested(
@@ -487,10 +493,7 @@ void main() {
       );
       await cubit.submit(_bid(), username: 'awa.n');
       verify(
-        () => repo.changeRecipient(
-          'bid-1',
-          recipientUsername: 'awa.n',
-        ),
+        () => repo.changeRecipient('bid-1', recipientUsername: 'awa.n'),
       ).called(1);
       await cubit.close();
     });

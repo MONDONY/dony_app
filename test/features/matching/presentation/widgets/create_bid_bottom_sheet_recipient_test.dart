@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -16,7 +17,10 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/recipients/bloc/designate_yadony_user_cubit.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/recipients/data/models/recipient_invitation.dart';
+import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -61,6 +65,11 @@ class _MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
     implements RecipientBloc {}
 
 class _FakeRecipientEvent extends Fake implements RecipientEvent {}
+
+class _MockInvitationRepo extends Mock
+    implements RecipientInvitationRepository {}
+
+class _MockAnalytics extends Mock implements AnalyticsService {}
 
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
   @override
@@ -371,6 +380,98 @@ void main() {
       // still needs to confirm a payment method on the picker step).
       verifyNever(
         () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
+      );
+    });
+  });
+
+  group('Destinataire désigné par identifiant', () {
+    late _MockInvitationRepo repo;
+
+    setUp(() {
+      repo = _MockInvitationRepo();
+      when(() => repo.parcelDesignationOffered).thenReturn(true);
+      when(() => repo.usernameChannelUnsupported).thenReturn(false);
+      when(() => repo.parcelDesignationUnavailable).thenReturn(false);
+      when(() => repo.lookupUsername(any())).thenAnswer(
+        (_) async => const UsernameLookup(
+          username: 'awa.diallo',
+          initial: 'A',
+          parcelDesignation: true,
+        ),
+      );
+      final analytics = _MockAnalytics();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      if (getIt.isRegistered<RecipientInvitationRepository>()) {
+        getIt.unregister<RecipientInvitationRepository>();
+      }
+      getIt.registerSingleton<RecipientInvitationRepository>(repo);
+      if (getIt.isRegistered<DesignateYadonyUserCubit>()) {
+        getIt.unregister<DesignateYadonyUserCubit>();
+      }
+      getIt.registerFactory<DesignateYadonyUserCubit>(
+        () => DesignateYadonyUserCubit(repo, analytics),
+      );
+    });
+
+    tearDown(() {
+      getIt.unregister<RecipientInvitationRepository>();
+      getIt.unregister<DesignateYadonyUserCubit>();
+    });
+
+    Future<void> designate(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('recipient-section-yadony-user')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('designate-yadony-user-field')),
+        'awa.diallo',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('designate-yadony-user-choose')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('identifiant choisi : le colis part sans nom ni numéro', (
+      tester,
+    ) async {
+      await _openSheet(tester, _announcement());
+      await _enableSubmitButton(tester);
+      await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
+      await tester.pump();
+      await designate(tester);
+
+      expect(find.text('@awa.diallo'), findsOneWidget);
+      expect(find.text('En attente de confirmation'), findsOneWidget);
+
+      await tester.tap(find.text('Envoyer'));
+      await tester.pump();
+
+      final event =
+          verify(
+                () => _currentBidBloc.add(
+                  captureAny(that: isA<BidCheckoutRequested>()),
+                ),
+              ).captured.single
+              as BidCheckoutRequested;
+      expect(event.recipientUsername, 'awa.diallo');
+      expect(event.recipientName, isNull);
+      expect(event.recipientPhone, isNull);
+      verifyNever(
+        () => _currentRecipientBloc.add(any(that: isA<RecipientCreated>())),
+      );
+      expect(find.text('Nom du destinataire obligatoire'), findsNothing);
+    });
+
+    testWidgets('back sans désignation de colis : pas de choix', (
+      tester,
+    ) async {
+      when(() => repo.parcelDesignationOffered).thenReturn(false);
+      await _openSheet(tester, _announcement());
+      expect(
+        find.byKey(const Key('recipient-section-yadony-user')),
+        findsNothing,
       );
     });
   });

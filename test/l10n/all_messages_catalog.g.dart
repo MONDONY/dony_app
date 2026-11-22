@@ -8453,6 +8453,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'profileEditUsernameLabel': (l) => l.profileEditUsernameLabel,
   'usernameUnavailableNow': (l) => l.usernameUnavailableNow,
   'usernameGuestForbidden': (l) => l.usernameGuestForbidden,
+  'designateYadonyUserChoice': (l) => l.designateYadonyUserChoice,
+  'designateYadonyUserTitle': (l) => l.designateYadonyUserTitle,
+  'designateYadonyUserIntro': (l) => l.designateYadonyUserIntro,
+  'designateYadonyUserChoose': (l) => l.designateYadonyUserChoose,
+  'designateYadonyUserUnavailable': (l) => l.designateYadonyUserUnavailable,
+  'designatedUserPending': (l) => l.designatedUserPending,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

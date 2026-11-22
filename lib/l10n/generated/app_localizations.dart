@@ -39203,6 +39203,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Créez un compte pour choisir votre identifiant.'**
   String get usernameGuestForbidden;
+
+  /// Choix d'un destinataire de colis par identifiant (formulaire d'envoi, changement de destinataire).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un utilisateur Yadony'**
+  String get designateYadonyUserChoice;
+
+  /// Titre de la feuille de désignation d'un destinataire de colis par identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un utilisateur Yadony'**
+  String get designateYadonyUserTitle;
+
+  /// Feuille de désignation : introduction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez son identifiant. Il confirmera qu\'il est bien le destinataire.'**
+  String get designateYadonyUserIntro;
+
+  /// Feuille de désignation : bouton qui valide le compte trouvé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir'**
+  String get designateYadonyUserChoose;
+
+  /// Feuille de désignation : le back ne sait pas désigner un destinataire de colis par identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette désignation n\'est pas encore disponible.'**
+  String get designateYadonyUserUnavailable;
+
+  /// Carte du destinataire désigné par identifiant : il n'a pas encore confirmé.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de confirmation'**
+  String get designatedUserPending;
 }
 
 class _AppLocalizationsDelegate

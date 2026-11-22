@@ -24313,4 +24313,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get usernameGuestForbidden =>
       'Create an account to choose your username.';
+
+  @override
+  String get designateYadonyUserChoice => 'A Yadony user';
+
+  @override
+  String get designateYadonyUserTitle => 'A Yadony user';
+
+  @override
+  String get designateYadonyUserIntro =>
+      'Enter their username. They will confirm they are the recipient.';
+
+  @override
+  String get designateYadonyUserChoose => 'Choose';
+
+  @override
+  String get designateYadonyUserUnavailable =>
+      'This option is not available yet.';
+
+  @override
+  String get designatedUserPending => 'Awaiting confirmation';
 }

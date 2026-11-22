@@ -8,7 +8,10 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/recipient_change/recipient_change_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/recipients/data/phone_validation.dart';
+import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
+import 'package:dony/features/recipients/presentation/widgets/designate_yadony_user_sheet.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_picker_sheet.dart';
+import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -136,12 +139,17 @@ class _RecipientChangeSheetState extends State<RecipientChangeSheet> {
   /// format ne s'affiche qu'à partir de là (validation à la perte de focus).
   final ValueNotifier<bool> _phoneTouched = ValueNotifier<bool>(false);
 
+  /// Identifiant Yadony choisi à la place du nom et du numéro. Écrit par un
+  /// geste (feuille de désignation, « Changer »), disposé avec ce `State`.
+  final ValueNotifier<String?> _username = ValueNotifier<String?>(null);
+
   @override
   void initState() {
     super.initState();
     widget.onSubmitReady?.call(_submit);
     _nameCtrl.addListener(_notifyValidity);
     _phoneCtrl.addListener(_notifyValidity);
+    _username.addListener(_notifyValidity);
     _phoneFocus.addListener(_onPhoneFocusChanged);
     _notifyValidity();
   }
@@ -155,6 +163,8 @@ class _RecipientChangeSheetState extends State<RecipientChangeSheet> {
     _phoneCtrl.dispose();
     _phoneFocus.dispose();
     _phoneTouched.dispose();
+    _username.removeListener(_notifyValidity);
+    _username.dispose();
     widget.canSubmit.dispose();
     super.dispose();
   }
@@ -171,6 +181,10 @@ class _RecipientChangeSheetState extends State<RecipientChangeSheet> {
 
   /// Nom renseigné, numéro valide, et quelque chose a changé.
   void _notifyValidity() {
+    if (_username.value != null) {
+      widget.canSubmit.value = true;
+      return;
+    }
     final name = _nameCtrl.text.trim();
     final nameChanged = name != (widget.bid.recipientName ?? '').trim();
     widget.canSubmit.value =
@@ -190,8 +204,28 @@ class _RecipientChangeSheetState extends State<RecipientChangeSheet> {
     _phoneCtrl.text = recipient.phoneE164;
   }
 
+  /// Le choix « Un utilisateur Yadony » n'est offert que si le back sait
+  /// désigner un destinataire de colis.
+  bool get _yadonyUserOffered =>
+      getIt.isRegistered<RecipientInvitationRepository>() &&
+      getIt<RecipientInvitationRepository>().parcelDesignationOffered;
+
+  Future<void> _pickYadonyUser() async {
+    final user = await DesignateYadonyUserSheet.show(context);
+    if (user == null || !mounted) return;
+    _username.value = user.username;
+  }
+
   void _submit() {
     if (!widget.canSubmit.value) return;
+    final username = _username.value;
+    if (username != null) {
+      context.read<RecipientChangeCubit>().submit(
+        widget.bid,
+        username: username,
+      );
+      return;
+    }
     context.read<RecipientChangeCubit>().submit(
       widget.bid,
       name: _nameCtrl.text,
@@ -201,9 +235,6 @@ class _RecipientChangeSheetState extends State<RecipientChangeSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     return BlocListener<RecipientChangeCubit, RecipientChangeState>(
       listener: (context, state) {
         switch (state) {
@@ -223,79 +254,106 @@ class _RecipientChangeSheetState extends State<RecipientChangeSheet> {
       },
       child: Padding(
         padding: const EdgeInsets.only(bottom: DonySpacing.base),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            DonyTextField(
-              controller: _nameCtrl,
-              label: l.bidCreateRecipientNameLabel,
-              hint: l.bidCreateRecipientNameHint,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: DonySpacing.md),
-            ValueListenableBuilder<bool>(
-              valueListenable: _phoneTouched,
-              builder: (context, touched, _) => ListenableBuilder(
-                listenable: _phoneCtrl,
-                builder: (context, _) => DonyTextField(
-                  controller: _phoneCtrl,
-                  focusNode: _phoneFocus,
-                  label: l.bidCreateRecipientPhoneLabel,
-                  hint: l.bidCreateRecipientPhoneHint,
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.done,
-                  errorText:
-                      touched &&
-                          _phoneCtrl.text.trim().isNotEmpty &&
-                          !_phoneValid
-                      ? l.requestCreateRecipientPhoneFormat
-                      : null,
-                ),
-              ),
-            ),
-            const SizedBox(height: DonySpacing.xs),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: _pickFromBook,
-                icon: DonyIcon('contact', size: 18, color: cs.primary),
-                label: Text(l.recipientChangePickFromBook),
-              ),
-            ),
-            ListenableBuilder(
-              listenable: _phoneCtrl,
-              builder: (context, _) {
-                final show = _phoneCtrl.text.trim().isNotEmpty && _phoneChanged;
-                if (!show) return const SizedBox.shrink();
-                return Container(
-                  margin: const EdgeInsets.only(top: DonySpacing.sm),
-                  padding: const EdgeInsets.all(DonySpacing.md),
-                  decoration: BoxDecoration(
-                    color: cs.warning.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                    border: Border.all(
-                      color: cs.warning.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DonyIcon('triangle-alert', size: 18, color: cs.warning),
-                      const SizedBox(width: DonySpacing.sm),
-                      Expanded(
-                        child: Text(
-                          l.recipientChangePhoneWarning,
-                          style: tt.bodySmall?.copyWith(color: cs.onSurface),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
+        child: ValueListenableBuilder<String?>(
+          valueListenable: _username,
+          builder: (context, username, _) => username != null
+              ? DesignatedUserCard(
+                  key: const Key('recipient-change-designated'),
+                  username: username,
+                  onChange: () => _username.value = null,
+                )
+              : _manualFields(context),
         ),
       ),
+    );
+  }
+
+  Widget _manualFields(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DonyTextField(
+          controller: _nameCtrl,
+          label: l.bidCreateRecipientNameLabel,
+          hint: l.bidCreateRecipientNameHint,
+          textInputAction: TextInputAction.next,
+        ),
+        const SizedBox(height: DonySpacing.md),
+        ValueListenableBuilder<bool>(
+          valueListenable: _phoneTouched,
+          builder: (context, touched, _) => ListenableBuilder(
+            listenable: _phoneCtrl,
+            builder: (context, _) => DonyTextField(
+              controller: _phoneCtrl,
+              focusNode: _phoneFocus,
+              label: l.bidCreateRecipientPhoneLabel,
+              hint: l.bidCreateRecipientPhoneHint,
+              keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.done,
+              errorText:
+                  touched && _phoneCtrl.text.trim().isNotEmpty && !_phoneValid
+                  ? l.requestCreateRecipientPhoneFormat
+                  : null,
+            ),
+          ),
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _pickFromBook,
+            icon: DonyIcon('contact', size: 18, color: cs.primary),
+            label: Text(l.recipientChangePickFromBook),
+          ),
+        ),
+        if (_yadonyUserOffered)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              key: const Key('recipient-change-yadony-user'),
+              onPressed: _pickYadonyUser,
+              icon: DonyIcon('user', size: 18, color: cs.primary),
+              label: Text(
+                l.designateYadonyUserChoice,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ListenableBuilder(
+          listenable: _phoneCtrl,
+          builder: (context, _) {
+            final show = _phoneCtrl.text.trim().isNotEmpty && _phoneChanged;
+            if (!show) return const SizedBox.shrink();
+            return Container(
+              margin: const EdgeInsets.only(top: DonySpacing.sm),
+              padding: const EdgeInsets.all(DonySpacing.md),
+              decoration: BoxDecoration(
+                color: cs.warning.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                border: Border.all(color: cs.warning.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DonyIcon('triangle-alert', size: 18, color: cs.warning),
+                  const SizedBox(width: DonySpacing.sm),
+                  Expanded(
+                    child: Text(
+                      l.recipientChangePhoneWarning,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurface),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }

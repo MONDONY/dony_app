@@ -12,6 +12,16 @@ class RecipientInvitationRepository {
   /// masqué à chaque ouverture de la feuille sans refaire d'appel.
   bool usernameChannelUnsupported = false;
 
+  /// Le back connecté trouve les comptes mais ne sait pas désigner un
+  /// destinataire de colis par identifiant (`parcelDesignation` absent ou
+  /// faux dans la recherche) : il ignorerait l'identifiant en silence. Le
+  /// choix « Un utilisateur Yadony » d'un colis reste masqué pour la session.
+  bool parcelDesignationUnavailable = false;
+
+  /// Le choix « Un utilisateur Yadony » d'un colis est-il offert ?
+  bool get parcelDesignationOffered =>
+      !usernameChannelUnsupported && !parcelDesignationUnavailable;
+
   Future<void> sendToPhone(String phoneE164, {String? name}) =>
       _datasource.send(phone: phoneE164, name: name);
 

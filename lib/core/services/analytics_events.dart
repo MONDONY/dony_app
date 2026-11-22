@@ -1232,6 +1232,11 @@ abstract final class AnalyticsEvents {
   static const recipientInvitationRevoked = 'recipient_invitation_revoked';
   static const recipientInvitationAppLinkShared =
       'recipient_invitation_app_link_shared';
+  // Destinataire d'un colis désigné par identifiant. Jamais l'identifiant.
+  static const recipientDesignatedByUsername =
+      'recipient_designated_by_username';
+  static const recipientDesignationByUsernameFailed =
+      'recipient_designation_by_username_failed';
 
   // Identifiant Yadony (feuille « Mon identifiant »). Jamais la valeur.
   static const usernameChanged = 'username_changed';

@@ -23701,5 +23701,17 @@
   "usernameUnavailableNow": "Indisponible pour le moment",
   "@usernameUnavailableNow": {"description": "Route absente (ancien back) : la feuille ne peut pas vérifier ni enregistrer."},
   "usernameGuestForbidden": "Créez un compte pour choisir votre identifiant.",
-  "@usernameGuestForbidden": {"description": "403 : un invité ne peut pas choisir d'identifiant."}
+  "@usernameGuestForbidden": {"description": "403 : un invité ne peut pas choisir d'identifiant."},
+  "designateYadonyUserChoice": "Un utilisateur Yadony",
+  "@designateYadonyUserChoice": {"description": "Choix d'un destinataire de colis par identifiant (formulaire d'envoi, changement de destinataire)."},
+  "designateYadonyUserTitle": "Un utilisateur Yadony",
+  "@designateYadonyUserTitle": {"description": "Titre de la feuille de désignation d'un destinataire de colis par identifiant."},
+  "designateYadonyUserIntro": "Saisissez son identifiant. Il confirmera qu'il est bien le destinataire.",
+  "@designateYadonyUserIntro": {"description": "Feuille de désignation : introduction."},
+  "designateYadonyUserChoose": "Choisir",
+  "@designateYadonyUserChoose": {"description": "Feuille de désignation : bouton qui valide le compte trouvé."},
+  "designateYadonyUserUnavailable": "Cette désignation n'est pas encore disponible.",
+  "@designateYadonyUserUnavailable": {"description": "Feuille de désignation : le back ne sait pas désigner un destinataire de colis par identifiant."},
+  "designatedUserPending": "En attente de confirmation",
+  "@designatedUserPending": {"description": "Carte du destinataire désigné par identifiant : il n'a pas encore confirmé."}
 }
