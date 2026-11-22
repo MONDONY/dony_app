@@ -420,4 +420,95 @@ void main() {
       );
     });
   });
+
+  // Mobile money annulé avec une retenue : le dépôt n'est pas rendu en entier.
+  group('PaiementCard — mobile money annulé avec retenue', () {
+    BidModel mm(String status) =>
+        _bid(status: status, paymentMethod: BidPaymentMethod.mobileMoney);
+
+    for (final status in ['CANCELLED', 'NO_SHOW', 'EXPIRED']) {
+      testWidgets('$status + refundedAmount < total → montant rendu (FR)', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _wrap(
+            mm(status),
+            payment: _payment(PaymentStatus.refunded, refundedAmount: 170),
+            locale: const Locale('fr'),
+          ),
+        );
+        expect(
+          find.text('${formatPriceIn(170, 'EUR')} remboursé'),
+          findsOneWidget,
+        );
+        expect(find.byType(DonyBadge), findsNothing);
+        expect(find.textContaining('gardé en sécurité'), findsNothing);
+      });
+    }
+
+    testWidgets('EN : « refunded »', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mm('CANCELLED'),
+          payment: _payment(PaymentStatus.refunded, refundedAmount: 170),
+          locale: const Locale('en'),
+        ),
+      );
+      expect(
+        find.text('${formatPriceIn(170, 'EUR')} refunded'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('devise du paiement respectée (XOF)', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mm('CANCELLED'),
+          payment: _payment(
+            PaymentStatus.refunded,
+            refundedAmount: 100,
+            currency: 'XOF',
+          ),
+        ),
+      );
+      expect(
+        find.text('${formatPriceIn(100, 'XOF')} remboursé'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('refundedAmount absent → affichage d\'avant', (tester) async {
+      await tester.pumpWidget(
+        _wrap(mm('CANCELLED'), payment: _payment(PaymentStatus.refunded)),
+      );
+      expect(find.textContaining('remboursé'), findsNothing);
+      expect(find.byType(DonyBadge), findsOneWidget);
+    });
+
+    testWidgets('refundedAmount égal au total → affichage d\'avant', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          mm('CANCELLED'),
+          payment: _payment(PaymentStatus.refunded, refundedAmount: 200),
+        ),
+      );
+      expect(find.textContaining('remboursé'), findsNothing);
+      expect(find.byType(DonyBadge), findsOneWidget);
+    });
+
+    testWidgets('autre statut (ACCEPTED) → inchangé même avec le champ', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          mm('ACCEPTED'),
+          payment: _payment(PaymentStatus.escrow, refundedAmount: 170),
+        ),
+      );
+      expect(find.textContaining('remboursé'), findsNothing);
+      expect(find.byType(DonyBadge), findsOneWidget);
+    });
+  });
 }

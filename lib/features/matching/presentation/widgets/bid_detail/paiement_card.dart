@@ -75,6 +75,21 @@ class PaiementCard extends StatelessWidget {
     if (bid.paymentMethod == BidPaymentMethod.stripe) {
       body = _stripeBody(context, cs, tt, senderLabel);
     } else if (bid.paymentMethod == BidPaymentMethod.mobileMoney) {
+      final retained = _mobileMoneyRetainedRefund();
+      if (retained != null) {
+        // Colis annulé avec des frais d'annulation retenus : le dépôt n'est
+        // pas rendu en entier, on dit ce qui l'est vraiment.
+        return DetailCard(
+          title: l.bidDetailPaymentCardTitle,
+          child: _refundedRow(
+            cs,
+            tt,
+            l.bidDetailAmountRefundedLabel(
+              _fmt(retained, existingPayment!.currency),
+            ),
+          ),
+        );
+      }
       // Mobile money (pawaPay) — séquestré par Yadony comme Stripe, mais
       // sans le détail par statut (pas de distinction libéré/remboursé).
       body = Row(
@@ -113,6 +128,31 @@ class PaiementCard extends StatelessWidget {
 
     return DetailCard(title: l.bidDetailPaymentCardTitle, child: body);
   }
+
+  /// Montant réellement remboursé d'un colis mobile money annulé dont une
+  /// partie du dépôt a été retenue (`refundedAmount` strictement sous le
+  /// total payé, même lecture `GET /payments/bid/{bidId}` que la carte).
+  /// `null` : affichage d'avant (autre statut, champ absent, rendu en entier).
+  double? _mobileMoneyRetainedRefund() {
+    final payment = existingPayment;
+    final refunded = payment?.refundedAmount;
+    if (payment == null || refunded == null) return null;
+    if (!cancelledStatuses.contains(bid.status)) return null;
+    return refunded < payment.amount ? refunded : null;
+  }
+
+  Widget _refundedRow(ColorScheme cs, TextTheme tt, String text) => Row(
+    children: [
+      DonyIcon('refresh-cw', color: cs.onSurfaceVariant, size: 20),
+      const SizedBox(width: DonySpacing.sm),
+      Expanded(
+        child: Text(
+          text,
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+      ),
+    ],
+  );
 
   Widget _stripeBody(
     BuildContext context,
