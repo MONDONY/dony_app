@@ -42,12 +42,14 @@ CancellationFeePreviewModel _fee({
   double refund = 80,
   String? currency = 'EUR',
   DateTime? nextTierAt,
+  bool? capped,
 }) => CancellationFeePreviewModel(
   rate: rate,
   fee: fee,
   refundAmount: refund,
   currency: currency,
   nextTierAt: nextTierAt,
+  capped: capped,
 );
 
 String _eur(double v) => CurrencyFormatter.format(v, SupportedCurrency.eur);
@@ -262,6 +264,35 @@ void main() {
         );
         expect(find.text(l.cancelFeeReasonDays(2, 20)), findsNothing);
         expectConfirmOnOneLine(tester, l);
+      });
+
+      testWidgets('`capped: true` du serveur : même texte plafonné', (
+        tester,
+      ) async {
+        when(
+          () => repo.getFeePreview('bid-42'),
+        ).thenAnswer((_) async => _fee(fee: 30, refund: 170, capped: true));
+        final l = await open(tester, locale: locale);
+
+        expect(
+          find.text(
+            '${l.cancelFeeLeavesInDays(2)} ${l.cancelFeeCapped(_eur(30))}',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text(l.cancelFeeReasonDays(2, 20)), findsNothing);
+      });
+
+      testWidgets('`capped: false` du serveur : « 20 % du montant payé »', (
+        tester,
+      ) async {
+        when(
+          () => repo.getFeePreview('bid-42'),
+        ).thenAnswer((_) async => _fee(fee: 30, refund: 170, capped: false));
+        final l = await open(tester, locale: locale);
+
+        expect(find.text(l.cancelFeeReasonDays(2, 20)), findsOneWidget);
+        expect(find.text(l.cancelFeeCapped(_eur(30))), findsNothing);
       });
 
       testWidgets('« Non » ferme sans annuler', (tester) async {

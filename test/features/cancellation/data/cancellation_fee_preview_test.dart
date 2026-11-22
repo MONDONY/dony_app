@@ -156,6 +156,54 @@ void main() {
     }
   });
 
+  group('CancellationFeePreviewModel `capped` du serveur', () {
+    Map<String, dynamic> json({Object? capped = #absent}) => {
+      'rate': 0.2,
+      'fee': 30,
+      'refundAmount': 170,
+      'currency': 'EUR',
+      if (capped != #absent) 'capped': capped,
+    };
+
+    test('true : plafond, même si la déduction dirait le contraire', () {
+      final m = CancellationFeePreviewModel.fromJson({
+        'rate': 0.2,
+        'fee': 20,
+        'refundAmount': 80,
+        'capped': true,
+      });
+      expect(m.capped, isTrue);
+      expect(m.isCapped(), isTrue);
+    });
+
+    test(
+      'false : pas de plafond, même si la déduction dirait le contraire',
+      () {
+        final m = CancellationFeePreviewModel.fromJson(json(capped: false));
+        expect(m.capped, isFalse);
+        expect(m.isCapped(), isFalse);
+      },
+    );
+
+    test('absent : repli sur la déduction (200 € / 0.20 / 30 / 170)', () {
+      final m = CancellationFeePreviewModel.fromJson(json());
+      expect(m.capped, isNull);
+      expect(m.isCapped(), isTrue);
+    });
+
+    test('illisible (texte) : traité comme absent', () {
+      final m = CancellationFeePreviewModel.fromJson(json(capped: 'yes'));
+      expect(m.capped, isNull);
+      expect(m.isCapped(), isTrue);
+    });
+
+    test('présent et cohérent avec la déduction : même résultat', () {
+      final withFlag = CancellationFeePreviewModel.fromJson(json(capped: true));
+      final without = CancellationFeePreviewModel.fromJson(json());
+      expect(withFlag.isCapped(), without.isCapped());
+    });
+  });
+
   group('CancellationFeePreviewModel.isCapped', () {
     CancellationFeePreviewModel m({
       required double rate,

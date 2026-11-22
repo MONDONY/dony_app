@@ -19,6 +19,7 @@ class CancellationFeePreviewModel extends Equatable {
     required this.refundAmount,
     this.currency,
     this.nextTierAt,
+    this.capped,
   });
 
   factory CancellationFeePreviewModel.fromJson(Map<String, dynamic> json) {
@@ -40,6 +41,7 @@ class CancellationFeePreviewModel extends Equatable {
           ? rawCurrency.trim().toUpperCase()
           : null,
       nextTierAt: rawNext is String ? DateTime.tryParse(rawNext) : null,
+      capped: json['capped'] is bool ? json['capped'] as bool : null,
     );
   }
 
@@ -62,6 +64,11 @@ class CancellationFeePreviewModel extends Equatable {
   /// monte. Absent au palier le plus cher ou quand aucun frais n'est possible.
   final DateTime? nextTierAt;
 
+  /// Le plafond par colis s'applique, dit par le serveur (`capped`, toujours
+  /// présent une fois yadony-back déployé). `null` sur un back antérieur ou
+  /// une valeur illisible : [isCapped] déduit alors le plafond lui-même.
+  final bool? capped;
+
   /// Des frais s'appliquent : seul cas où le dialogue change.
   bool get hasFee => fee > 0;
 
@@ -79,6 +86,8 @@ class CancellationFeePreviewModel extends Equatable {
   /// ne jamais prendre un arrondi à l'unité pour un plafond.
   /// [fallbackCurrency] : devise du colis quand l'aperçu n'en donne pas.
   bool isCapped({String? fallbackCurrency}) {
+    final fromServer = capped;
+    if (fromServer != null) return fromServer;
     if (!hasFee || rate <= 0) return false;
     final digits = SupportedCurrency.fromCodeOrDefault(
       currency ?? fallbackCurrency,
@@ -93,7 +102,14 @@ class CancellationFeePreviewModel extends Equatable {
   static const _tolerance = 1e-6;
 
   @override
-  List<Object?> get props => [rate, fee, refundAmount, currency, nextTierAt];
+  List<Object?> get props => [
+    rate,
+    fee,
+    refundAmount,
+    currency,
+    nextTierAt,
+    capped,
+  ];
 
   static double? _decimalOrNull(Object? raw) {
     if (raw is num) return raw.toDouble();
