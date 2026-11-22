@@ -17,6 +17,8 @@ import 'package:flutter/material.dart';
 /// — Stripe (le statut du colis prime sur celui du paiement) :
 ///   • COMPLETED / DELIVERED → montant libéré au voyageur (check vert)
 ///   • CANCELLED / REJECTED / NO_SHOW / EXPIRED / PARCEL_REFUSED → remboursé
+///     (montant réellement remboursé du paiement s'il est connu, frais
+///     d'annulation déduits ; sinon le total payé)
 ///   • paiement [PaymentStatus.failed] → « Paiement échoué » (rouge)
 ///   • AWAITING_PAYMENT → montant à régler (rien n'est encore payé)
 ///   • sinon → séquestré, libéré à la livraison (lock)
@@ -37,7 +39,9 @@ class PaiementCard extends StatelessWidget {
 
   static const _terminalStatuses = {'COMPLETED', 'DELIVERED'};
 
-  static const _cancelledStatuses = {
+  /// Statuts où le paiement carte de l'expéditeur lui est rendu (en entier,
+  /// ou moins des frais d'annulation retenus).
+  static const cancelledStatuses = {
     'CANCELLED',
     'REJECTED',
     'NO_SHOW',
@@ -136,15 +140,22 @@ class PaiementCard extends StatelessWidget {
       );
     }
 
-    if (_cancelledStatuses.contains(status)) {
-      // L'expéditeur récupère ce qu'il a payé = net + commission.
+    if (cancelledStatuses.contains(status)) {
+      // L'expéditeur récupère ce qu'il a payé = net + commission, moins les
+      // frais d'annulation retenus : le montant réellement remboursé du
+      // paiement (`refundedAmount`, dans sa devise) quand le serveur le
+      // donne ; sinon (back antérieur, rien encore remboursé) le total payé.
+      final refunded = existingPayment?.refundedAmount;
+      final refundedLabel = refunded != null
+          ? _fmt(refunded, existingPayment!.currency)
+          : senderLabel;
       return Row(
         children: [
           DonyIcon('refresh-cw', color: cs.onSurfaceVariant, size: 20),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              l.bidDetailAmountRefundedLabel(senderLabel),
+              l.bidDetailAmountRefundedLabel(refundedLabel),
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),

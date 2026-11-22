@@ -94,6 +94,64 @@ void main() {
       expect(PaymentModel.fromJson(json).currency, 'EUR');
     });
 
+    // Montant réellement remboursé (frais d'annulation déduits) : champ
+    // facultatif, absent d'un back antérieur.
+    test('refundedAmount absent (back antérieur) ou nul → null', () {
+      expect(PaymentModel.fromJson(_paymentJson).refundedAmount, isNull);
+      expect(
+        PaymentModel.fromJson({
+          ..._paymentJson,
+          'refundedAmount': null,
+        }).refundedAmount,
+        isNull,
+      );
+    });
+
+    test('refundedAmount en nombre ou en texte décimal', () {
+      expect(
+        PaymentModel.fromJson({
+          ..._paymentJson,
+          'refundedAmount': 96.5,
+        }).refundedAmount,
+        96.5,
+      );
+      expect(
+        PaymentModel.fromJson({
+          ..._paymentJson,
+          'refundedAmount': 100,
+        }).refundedAmount,
+        100,
+      );
+      expect(
+        PaymentModel.fromJson({
+          ..._paymentJson,
+          'refundedAmount': ' 84.00 ',
+        }).refundedAmount,
+        84,
+      );
+    });
+
+    test('refundedAmount illisible → null, le reste du paiement est lu', () {
+      final m = PaymentModel.fromJson({
+        ..._paymentJson,
+        'refundedAmount': 'beaucoup',
+      });
+      expect(m.refundedAmount, isNull);
+      expect(m.amount, 120.0);
+      expect(
+        PaymentModel.fromJson({
+          ..._paymentJson,
+          'refundedAmount': true,
+        }).refundedAmount,
+        isNull,
+      );
+    });
+
+    test('toJson garde refundedAmount', () {
+      final m = PaymentModel.fromJson({..._paymentJson, 'refundedAmount': 84});
+      expect(m.toJson()['refundedAmount'], 84);
+    });
+
     test('toJson round-trips correctly', () {
       final m = PaymentModel.fromJson(_paymentJson);
       final json = m.toJson();

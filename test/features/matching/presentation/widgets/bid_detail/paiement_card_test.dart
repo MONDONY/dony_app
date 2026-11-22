@@ -31,12 +31,18 @@ BidModel _bid({
   );
 }
 
-PaymentModel _payment(PaymentStatus status) => PaymentModel(
+PaymentModel _payment(
+  PaymentStatus status, {
+  double? refundedAmount,
+  String currency = 'EUR',
+}) => PaymentModel(
   id: 'pay-1',
   bidId: 'bid-pc-1',
   amount: 200,
   commissionAmount: 18,
+  currency: currency,
   status: status,
+  refundedAmount: refundedAmount,
 );
 
 Widget _wrap(BidModel bid, {PaymentModel? payment, Locale? locale}) {
@@ -310,6 +316,108 @@ void main() {
       await tester.pumpWidget(_wrap(toPay, locale: const Locale('en')));
       await tester.pump();
       expect(find.text('${amount(toPay)} to pay'), findsOneWidget);
+    });
+  });
+
+  // G : montant réellement remboursé (`refundedAmount` du paiement, frais
+  // d'annulation déduits). Absent (back antérieur, rien encore remboursé) :
+  // la carte reste celle d'aujourd'hui, le total payé.
+  group('PaiementCard — montant réellement remboursé', () {
+    for (final status in ['CANCELLED', 'NO_SHOW', 'REJECTED', 'EXPIRED']) {
+      testWidgets('$status + refundedAmount → ce montant, pas le total payé', (
+        tester,
+      ) async {
+        final bid = _bid(status: status);
+        await tester.pumpWidget(
+          _wrap(
+            bid,
+            payment: _payment(PaymentStatus.refunded, refundedAmount: 140),
+          ),
+        );
+
+        expect(
+          find.text('${formatPriceIn(140, 'EUR')} remboursé'),
+          findsOneWidget,
+        );
+        expect(
+          find.text('${formatPriceIn(200, 'EUR')} remboursé'),
+          findsNothing,
+        );
+      });
+
+      testWidgets('$status sans refundedAmount → total payé (comme '
+          'aujourd\'hui)', (tester) async {
+        final bid = _bid(status: status);
+        await tester.pumpWidget(
+          _wrap(bid, payment: _payment(PaymentStatus.refunded)),
+        );
+
+        expect(
+          find.text('${formatPriceIn(200, 'EUR')} remboursé'),
+          findsOneWidget,
+        );
+      });
+    }
+
+    testWidgets('paiement non lu (null) → total payé', (tester) async {
+      final bid = _bid(status: 'CANCELLED');
+      await tester.pumpWidget(_wrap(bid));
+      expect(
+        find.text('${formatPriceIn(200, 'EUR')} remboursé'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('devise du paiement (minuscules du back) : franc CFA sans '
+        'décimales', (tester) async {
+      final bid = _bid(status: 'CANCELLED', currency: 'XOF');
+      await tester.pumpWidget(
+        _wrap(
+          bid,
+          payment: _payment(
+            PaymentStatus.refunded,
+            refundedAmount: 45922,
+            currency: 'xof',
+          ),
+        ),
+      );
+      expect(
+        find.text('${formatPriceIn(45922, 'XOF')} remboursé'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('colis en cours : refundedAmount ignoré', (tester) async {
+      final bid = _bid();
+      await tester.pumpWidget(
+        _wrap(bid, payment: _payment(PaymentStatus.escrow, refundedAmount: 5)),
+      );
+      expect(find.textContaining('remboursé'), findsNothing);
+      expect(
+        find.text(
+          '${formatPriceIn(200, 'EUR')} séquestré : libéré à la livraison',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('anglais : « {amount} refunded » avec le montant remboursé', (
+      tester,
+    ) async {
+      enableEnglish();
+      final bid = _bid(status: 'CANCELLED');
+      await tester.pumpWidget(
+        _wrap(
+          bid,
+          payment: _payment(PaymentStatus.refunded, refundedAmount: 140),
+          locale: const Locale('en'),
+        ),
+      );
+      await tester.pump();
+      expect(
+        find.text('${formatPriceIn(140, 'EUR')} refunded'),
+        findsOneWidget,
+      );
     });
   });
 }
