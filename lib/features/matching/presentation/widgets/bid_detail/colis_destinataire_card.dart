@@ -63,12 +63,33 @@ class ColisDestinataireCard extends StatelessWidget {
     return n.startsWith('@') ? n.substring(1) : n;
   }
 
-  /// Vue expéditeur : désigné par identifiant, lien ni confirmé ni refusé.
+  /// Statuts où une désignation en attente a encore un sens : demande ou colis
+  /// en cours, jamais refusée, annulée, expirée ni terminée.
+  static const _activeStatuses = <String>{
+    'PENDING',
+    'AWAITING_PAYMENT',
+    'PAYMENT_ESCROWED',
+    'ACCEPTED',
+    'HANDED_OVER',
+    'IN_TRANSIT',
+    'ARRIVED',
+  };
+
+  /// Vue expéditeur : désigné par identifiant, lien ni confirmé ni refusé, sur
+  /// une demande ou un colis encore en cours.
   bool get _isPendingDesignation =>
       isSender &&
       bid.recipientDesignatedByUsername &&
+      _activeStatuses.contains(bid.status) &&
       bid.recipientAppStatus != 'CONFIRMED' &&
       bid.recipientAppStatus != 'DECLINED';
+
+  /// Vue expéditeur : le compte désigné par identifiant a refusé. Le nom du
+  /// colis garde l'ancien « @identifiant », périmé : l'état remplace le nom.
+  bool get _isDeclinedDesignation =>
+      isSender &&
+      bid.recipientDesignatedByUsername &&
+      bid.recipientAppStatus == 'DECLINED';
 
   /// Vue voyageur : pour un destinataire désigné par identifiant dont le lien
   /// est absent ou en attente, le back sert « @identifiant » brut, sans numéro
@@ -81,7 +102,11 @@ class ColisDestinataireCard extends StatelessWidget {
       (bid.recipientPhone ?? '').isEmpty;
 
   bool get _showPhoneRow {
-    if (_isPendingDesignation || _isTravelerUnconfirmed) return false;
+    if (_isPendingDesignation ||
+        _isDeclinedDesignation ||
+        _isTravelerUnconfirmed) {
+      return false;
+    }
     final noPhone = (bid.recipientPhone ?? '').isEmpty;
     // Désigné par identifiant et confirmé, numéro masqué : pas de ligne vide.
     // Un colis par numéro a toujours un numéro saisi, il n'est pas concerné.
@@ -125,6 +150,11 @@ class ColisDestinataireCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           const _PendingConfirmationPill(),
+        ] else if (_isDeclinedDesignation) ...[
+          InfoRow(
+            label: l.bidDetailRecipientLabel,
+            value: l.recipientAppDeclined,
+          ),
         ] else if (_isTravelerUnconfirmed) ...[
           InfoRow(
             label: l.bidDetailRecipientLabel,

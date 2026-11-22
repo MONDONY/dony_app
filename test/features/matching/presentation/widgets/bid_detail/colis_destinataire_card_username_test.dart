@@ -119,6 +119,55 @@ void main() {
     });
   });
 
+  group('états et statuts', () {
+    for (final status in ['REJECTED', 'CANCELLED', 'EXPIRED', 'COMPLETED']) {
+      testWidgets('désignation en attente sur $status : pas de pastille', (
+        tester,
+      ) async {
+        await _pump(
+          tester,
+          _bid(
+            status: status,
+            name: '@awa.diallo',
+            appStatus: 'PENDING',
+            byUsername: true,
+            username: 'awa.diallo',
+          ),
+        );
+        expect(find.text('En attente de confirmation'), findsNothing);
+      });
+    }
+
+    testWidgets('désignation en attente, repli sans recipientUsername', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(name: '@awa.diallo', appStatus: 'PENDING', byUsername: true),
+      );
+      expect(find.text('@awa.diallo'), findsOneWidget);
+      expect(find.text('En attente de confirmation'), findsOneWidget);
+    });
+
+    testWidgets(
+      'désignation refusée : état refusé, pas l\'ancien identifiant',
+      (tester) async {
+        await _pump(
+          tester,
+          _bid(
+            name: '@awa.diallo',
+            appStatus: 'DECLINED',
+            byUsername: true,
+            username: 'awa.diallo',
+          ),
+        );
+        expect(find.text('Ce destinataire a refusé le colis.'), findsOneWidget);
+        expect(find.text('@awa.diallo'), findsNothing);
+        expect(find.text('Téléphone'), findsNothing);
+      },
+    );
+  });
+
   group('vue voyageur', () {
     for (final loc in const [Locale('fr'), Locale('en')]) {
       final fr = loc.languageCode == 'fr';
@@ -182,6 +231,39 @@ void main() {
       await _pump(tester, _bid(), isSender: false);
       expect(find.text('Destinataire non confirmé'), findsNothing);
       expect(find.text('Téléphone'), findsOneWidget);
+    });
+
+    testWidgets('confirmé, numéro masqué (phoneHidden) : libellé « masqué »', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(name: 'Awa D.', appStatus: 'CONFIRMED', phoneHidden: true),
+        isSender: false,
+      );
+      expect(find.text('Awa D.'), findsOneWidget);
+      expect(find.text('Téléphone'), findsOneWidget);
+    });
+
+    testWidgets('@xxx confirmé sans numéro : rendu ancien avec la ligne', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(name: '@bob', appStatus: 'CONFIRMED'),
+        isSender: false,
+      );
+      expect(find.text('@bob'), findsOneWidget);
+      expect(find.text('Destinataire non confirmé'), findsNothing);
+    });
+
+    testWidgets('PENDING côté voyageur : non confirmé', (tester) async {
+      await _pump(
+        tester,
+        _bid(name: '@awa.diallo', appStatus: 'PENDING'),
+        isSender: false,
+      );
+      expect(find.text('Destinataire non confirmé'), findsOneWidget);
     });
   });
 }

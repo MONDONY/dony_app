@@ -67,7 +67,13 @@ abstract final class PrevenirDestinataire {
   /// Le lien de suivi existe, le colis n'est pas encore remis et le
   /// destinataire n'a pas refusé : le message peut partir. Un destinataire
   /// qui a refusé ne reçoit rien, même si le colis n'est plus modifiable.
+  ///
+  /// Un destinataire désigné par identifiant qui n'a pas confirmé n'a ni numéro
+  /// ni compte rattaché : rien à lui envoyer, le message partirait en partage
+  /// libre avec « Bonjour @identifiant ».
   static bool canNotify(BidModel bid) =>
+      !(bid.recipientDesignatedByUsername &&
+          bid.recipientAppStatus != 'CONFIRMED') &&
       bid.trackingToken != null &&
       _statuses.contains(bid.status) &&
       !isDeclinedActionable(bid) &&
