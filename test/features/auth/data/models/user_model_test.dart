@@ -18,6 +18,60 @@ void main() {
       status: 'ACTIVE',
     );
 
+    group('hasAnyPhone / displayPhone / phoneBadgeLevel', () {
+      UserModel u({String? phone, String? declared, String? level}) =>
+          UserModel(
+            id: 'u',
+            roles: const ['SENDER'],
+            kycStatus: 'NOT_STARTED',
+            status: 'ACTIVE',
+            phoneNumber: phone,
+            declaredPhone: declared,
+            declaredPhoneLevel: level,
+          );
+
+      test('numéro SMS : prime, badge sms', () {
+        final user = u(
+          phone: '+33612345678',
+          declared: '+225',
+          level: 'DECLARED',
+        );
+        expect(user.hasAnyPhone, isTrue);
+        expect(user.displayPhone, '+33612345678');
+        expect(user.phoneBadgeLevel, PhoneVerificationLevel.sms);
+      });
+
+      test(
+        'déclaré seul : DECLARED = non vérifié, YADONY_VERIFIED = yadony',
+        () {
+          final d = u(declared: '+22507000000', level: 'DECLARED');
+          expect(d.hasAnyPhone, isTrue);
+          expect(d.displayPhone, '+22507000000');
+          expect(d.phoneBadgeLevel, PhoneVerificationLevel.none);
+          final y = u(declared: '+22507000000', level: 'YADONY_VERIFIED');
+          expect(y.phoneBadgeLevel, PhoneVerificationLevel.yadony);
+        },
+      );
+
+      test('aucun numéro (nul ou vide) : rien', () {
+        for (final user in [u(), u(phone: '', declared: '')]) {
+          expect(user.hasAnyPhone, isFalse);
+          expect(user.displayPhone, isNull);
+          expect(user.phoneBadgeLevel, isNull);
+        }
+      });
+
+      test('profileCompletionSteps compte le numéro déclaré', () {
+        expect(u().profileCompletionSteps(), 0);
+        expect(u(declared: '+225').profileCompletionSteps(), 1);
+        expect(u(phone: '+33612345678').profileCompletionSteps(), 1);
+        expect(
+          u(declared: '+225').profileCompletionSteps(countPhone: false),
+          0,
+        );
+      });
+    });
+
     group('numéro déclaré (sans SMS)', () {
       test('JSON sans les nouveaux champs : aucun crash, valeurs nulles', () {
         final user = UserModel.fromJson(const {

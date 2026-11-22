@@ -67,6 +67,46 @@ void main() {
     },
   );
 
+  for (final level in ['DECLARED', 'YADONY_VERIFIED']) {
+    testWidgets(
+      'numéro déclaré ($level) : plus de ligne « ajouter un numéro »',
+      (tester) async {
+        setSmsAuthEnabled(true);
+        await tester.pumpWidget(
+          _app(
+            UserModel(
+              id: 'user-3',
+              roles: const ['SENDER'],
+              kycStatus: 'VERIFIED',
+              status: 'ACTIVE',
+              email: 'a@b.com',
+              declaredPhone: '+22507000000',
+              declaredPhoneLevel: level,
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('TÉLÉPHONE'), findsNothing);
+        expect(find.text('Non ajouté'), findsNothing);
+        expect(
+          ProfileAccountSection.isVisible(
+            UserModel(
+              id: 'user-3',
+              roles: const ['SENDER'],
+              kycStatus: 'VERIFIED',
+              status: 'ACTIVE',
+              email: 'a@b.com',
+              declaredPhone: '+22507000000',
+              declaredPhoneLevel: level,
+            ),
+          ),
+          isFalse,
+        );
+      },
+    );
+  }
+
   testWidgets('affiche la ligne E-MAIL tant qu\'aucun email n\'est renseigné', (
     tester,
   ) async {

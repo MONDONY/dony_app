@@ -136,6 +136,24 @@ void main() {
     }
   });
 
+  testWidgets('numéro déclaré seul : la case Téléphone n\'est plus réclamée', (
+    tester,
+  ) async {
+    const declared = UserModel(
+      id: 'u1',
+      roles: [],
+      kycStatus: 'NOT_STARTED',
+      status: 'ACTIVE',
+      declaredPhone: '+22507000000',
+      declaredPhoneLevel: 'DECLARED',
+    );
+    await tester.pumpWidget(_app(declared));
+    await tester.pump();
+
+    expect(find.text('Téléphone'), findsNothing);
+    expect(find.text('11% complété · Compléter maintenant'), findsOneWidget);
+  });
+
   testWidgets('7/9 : profil rempli mais identité manquante → 78 %, la '
       'bannière reste et réclame l\'identité', (tester) async {
     await tester.pumpWidget(_app(_allProfileFields));

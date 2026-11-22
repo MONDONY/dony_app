@@ -374,13 +374,34 @@ class UserModel extends Equatable {
     if (firstName?.isNotEmpty ?? false) steps++;
     if (lastName?.isNotEmpty ?? false) steps++;
     if (email?.isNotEmpty ?? false) steps++;
-    if (countPhone && (phoneNumber?.isNotEmpty ?? false)) steps++;
+    if (countPhone && hasAnyPhone) steps++;
     if (city?.isNotEmpty ?? false) steps++;
     if (bio?.isNotEmpty ?? false) steps++;
     return steps;
   }
 
   static int profileTotalSteps({bool countPhone = true}) => countPhone ? 7 : 6;
+
+  /// Numéro vérifié par SMS, ou à défaut numéro déclaré (pays sans SMS) :
+  /// l'unique réponse à « cet utilisateur a-t-il un téléphone ? » pour les
+  /// écrans du profil.
+  String? get displayPhone {
+    final verified = phoneNumber;
+    if (verified != null && verified.isNotEmpty) return verified;
+    final declared = declaredPhone;
+    return (declared != null && declared.isNotEmpty) ? declared : null;
+  }
+
+  bool get hasAnyPhone => displayPhone != null;
+
+  /// Fiabilité du numéro montré par [displayPhone] ; `null` sans numéro.
+  PhoneVerificationLevel? get phoneBadgeLevel {
+    final verified = phoneNumber;
+    if (verified != null && verified.isNotEmpty) {
+      return PhoneVerificationLevel.sms;
+    }
+    return declaredPhoneVerification;
+  }
 
   /// Niveau du numéro déclaré ; `null` sans numéro déclaré. Un niveau absent
   /// avec un numéro présent (back intermédiaire) n'est jamais « vérifié ».

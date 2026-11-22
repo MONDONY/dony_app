@@ -43,7 +43,7 @@ class ProfileAccountSection extends StatelessWidget {
   static bool _computeVisible(UserModel? user, bool phoneAuthEnabled) {
     final showKyc = user?.kycStatus != 'VERIFIED';
     final hasEmail = user?.email != null && user!.email!.isNotEmpty;
-    final hasPhone = user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty;
+    final hasPhone = user?.hasAnyPhone ?? false;
     final showPhoneRow = phoneAuthEnabled && !hasPhone;
     final showEmailRow = !hasEmail;
     return showKyc || showPhoneRow || showEmailRow;
@@ -68,8 +68,7 @@ class ProfileAccountSection extends StatelessWidget {
       builder: (_, phoneEnabled, _) {
         final showKyc = user?.kycStatus != 'VERIFIED';
         final hasEmail = user?.email != null && user!.email!.isNotEmpty;
-        final hasPhone =
-            user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty;
+        final hasPhone = user?.hasAnyPhone ?? false;
         final showPhoneRow = phoneEnabled && !hasPhone;
         final showEmailRow = !hasEmail;
 
@@ -847,7 +846,7 @@ class ProfileCompletionBanner extends StatelessWidget {
     if (!(user.email?.isNotEmpty ?? false)) {
       missing.add(_MissingItem(l.profileFieldEmailShort));
     }
-    if (phoneAuthEnabled && !(user.phoneNumber?.isNotEmpty ?? false)) {
+    if (phoneAuthEnabled && !user.hasAnyPhone) {
       missing.add(_MissingItem(l.profileFieldPhone));
     }
     if (!(user.city?.isNotEmpty ?? false)) {
