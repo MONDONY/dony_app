@@ -12016,6 +12016,12 @@ abstract class AppLocalizations {
   /// **'Le dépôt était possible {window}. Vous pouvez annuler votre demande sans frais. Si le voyageur ne s\'est pas présenté, signalez son absence.'**
   String bidDetailSenderWindowExpiredSubtitle(String window);
 
+  /// _WindowExpiredHero, sous-titre quand le colis est couvert par les frais d'annulation (frais allumés, colis créé après la date d'effet, carte ou mobile money ; sender_hero_card.dart). Sinon bidDetailSenderWindowExpiredSubtitle
+  ///
+  /// In fr, this message translates to:
+  /// **'Le dépôt était possible {window}. Vous pouvez annuler votre demande : des frais d\'annulation peuvent s\'appliquer selon la date de départ. Si le voyageur ne s\'est pas présenté, signalez son absence.'**
+  String bidDetailSenderWindowExpiredSubtitleWithFee(String window);
+
   /// _WindowExpiredHero, bouton d'ouverture de la feuille de signalement (sender_hero_card.dart)
   ///
   /// In fr, this message translates to:
@@ -12111,6 +12117,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'En confirmant votre absence, l\'envoi sera annulé et vous ne serez pas débité.'**
   String get bidDetailSenderConfirmSheetBody;
+
+  /// Corps de la feuille « Confirmer votre absence », colis couvert par les frais d'annulation (sender_noshow_confirm_sheet.dart). Sinon bidDetailSenderConfirmSheetBody
+  ///
+  /// In fr, this message translates to:
+  /// **'En confirmant votre absence, l\'envoi sera annulé. Des frais d\'annulation peuvent être retenus sur votre remboursement selon la date de départ.'**
+  String get bidDetailSenderConfirmSheetBodyWithFee;
 
   /// PENDING, titre (traveler_hero_card.dart)
   ///
@@ -12364,6 +12376,12 @@ abstract class AppLocalizations {
   /// **'Absence confirmée. L\'envoi a été annulé, vous ne serez pas débité.'**
   String get bidDetailNoShowConfirmedSnackbar;
 
+  /// Snackbar NoShowConfirmed, colis couvert par les frais d'annulation : aucune promesse de ne pas être débité (bid_detail_screen.dart). Sinon bidDetailNoShowConfirmedSnackbar
+  ///
+  /// In fr, this message translates to:
+  /// **'Absence confirmée. L\'envoi a été annulé.'**
+  String get bidDetailNoShowConfirmedSnackbarWithFee;
+
   /// Snackbar CancelledAfterHandover (bid_detail_screen.dart)
   ///
   /// In fr, this message translates to:
@@ -12550,11 +12568,23 @@ abstract class AppLocalizations {
   /// **'Votre paiement sera remboursé automatiquement'**
   String get bidDetailCancelRefundAutoSubtitle;
 
+  /// Sous-titre annulation avant remise d'un colis ACCEPTÉ couvert par les frais d'annulation (bid_detail_action_bars.dart). PENDING / PAYMENT_ESCROWED ou non couvert : bidDetailCancelRefundAutoSubtitle
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement automatique, moins d\'éventuels frais d\'annulation'**
+  String get bidDetailCancelRefundAutoSubtitleWithFee;
+
   /// Sous-titre annulation après remise, tuile d'options (bid_detail_action_bars.dart)
   ///
   /// In fr, this message translates to:
   /// **'Remboursement intégral · vous récupérez votre colis'**
   String get bidDetailCancelAfterHandoverOptionSubtitle;
+
+  /// Sous-titre annulation après remise, tuile d'options, colis couvert par les frais d'annulation (bid_detail_action_bars.dart). Sinon bidDetailCancelAfterHandoverOptionSubtitle
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous récupérez votre colis · frais d\'annulation possibles'**
+  String get bidDetailCancelAfterHandoverOptionSubtitleWithFee;
 
   /// Sous-titre commun des tuiles de suppression (bid_detail_action_bars.dart, traveler_options_sheet.dart)
   ///
@@ -20292,6 +20322,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le remboursement dépend du moyen de paiement et du moment de l\'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l\'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement.'**
   String get faqPaymentsRefundA;
+
+  /// Réponse FAQ payments/refund quand les frais d'annulation sont allumés (faq_screen.dart). Sinon faqPaymentsRefundA
+  ///
+  /// In fr, this message translates to:
+  /// **'Le remboursement dépend du moyen de paiement et du moment de l\'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l\'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement. Si vous annulez un colis déjà accepté, des frais d\'annulation peuvent être retenus selon le délai avant le départ.'**
+  String get faqPaymentsRefundAWithFee;
 
   /// Question FAQ payments/commission (faq_screen.dart), sans taux (FLUTTER-R6)
   ///
@@ -31032,6 +31068,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Votre paiement vient d\'être validé. Le colis est à jour : annulez-le depuis sa fiche, vous serez remboursé.'**
   String get errorPaymentAlreadyAuthorizedMessage;
+
+  /// Message de l'erreur 409 payment-already-authorized quand les frais d'annulation sont allumés (error_catalog.dart). Sinon errorPaymentAlreadyAuthorizedMessage
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre paiement vient d\'être validé. Le colis est à jour : annulez-le depuis sa fiche, vous serez remboursé, moins d\'éventuels frais d\'annulation.'**
+  String get errorPaymentAlreadyAuthorizedMessageWithFee;
 
   /// Titre de l'erreur 409 payment-in-progress (dépôt mobile money ou paiement carte en cours de validation).
   ///

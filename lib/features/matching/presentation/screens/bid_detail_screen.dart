@@ -11,7 +11,9 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/data/cancellation_fee_coverage.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_errors_shown_above.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_fee_config_builder.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
@@ -21,6 +23,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_sticky_bar.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
@@ -177,6 +180,10 @@ class _BidDetailViewState extends State<_BidDetailView>
     _skeletonLoading = _bid.isSkeleton;
     _lastUserId = context.read<AuthBloc>().state.currentUserId;
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+    // Textes des annulations de l'expéditeur (frais d'annulation allumés ou
+    // non) : configuration lue dès l'ouverture, pour qu'elle soit là quand
+    // le menu, une feuille ou une snackbar la demande.
+    warmUpCancellationFeeConfig();
     // Colis squelette (notification, lien profond) : le rôle n'est connu qu'au
     // chargement, la lecture du paiement attend `BidDetailLoaded`.
     if (!_bid.isSkeleton) _loadPaymentStatus();
@@ -260,7 +267,11 @@ class _BidDetailViewState extends State<_BidDetailView>
   bool _paymentRequestInFlight = false;
 
   Future<void> _loadPaymentStatus() async {
-    if (_bid.status == 'REJECTED' || _bid.status == 'CANCELLED') {
+    // Refusé par le voyageur : remboursé en entier, rien à relire. Un colis
+    // annulé est relu : la carte Paiement y prend le montant réellement
+    // remboursé (`refundedAmount`, frais d'annulation retenus), absent d'un
+    // back antérieur (la carte reste alors celle d'avant).
+    if (_bid.status == 'REJECTED') {
       return;
     }
     // Cette lecture ne nourrit que la vue expéditeur (carte Paiement, barre
@@ -539,7 +550,16 @@ class _BidDetailViewState extends State<_BidDetailView>
           } else if (state is NoShowConfirmed) {
             DonySnackbar.show(
               context,
-              message: l.bidDetailNoShowConfirmedSnackbar,
+              // Colis couvert par les frais d'annulation : le serveur peut
+              // retenir des frais sur l'absence confirmée, plus de promesse
+              // « vous ne serez pas débité ».
+              message:
+                  isCoveredByCancellationFee(
+                    _bid,
+                    currentCancellationFeeConfig(),
+                  )
+                  ? l.bidDetailNoShowConfirmedSnackbarWithFee
+                  : l.bidDetailNoShowConfirmedSnackbar,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is CancelledAfterHandover) {
@@ -680,6 +700,7 @@ class _BidDetailViewState extends State<_BidDetailView>
                   _skeletonLoading = false;
                 } else if (state is BidDetailLoaded) {
                   final previousBidId = _bid.id;
+                  final previousStatus = _bid.status;
                   final wasSkeleton = _bid.isSkeleton;
                   _bid = state.bid;
                   _skeletonLoading = false;
@@ -695,6 +716,14 @@ class _BidDetailViewState extends State<_BidDetailView>
                           state.bid.status == 'PENDING' ||
                           state.bid.status == 'ACCEPTED') &&
                       !_paymentLoadedNotifier.value) {
+                    _loadPaymentStatus();
+                  } else if (previousStatus != state.bid.status &&
+                      PaiementCard.cancelledStatuses.contains(
+                        state.bid.status,
+                      )) {
+                    // Colis annulé sous les yeux de l'expéditeur (absence
+                    // confirmée) : le paiement est relu pour le montant
+                    // réellement remboursé.
                     _loadPaymentStatus();
                   }
                   // Restart timer if bid transitioned to a still-live status

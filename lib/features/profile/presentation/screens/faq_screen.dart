@@ -1,9 +1,11 @@
+import 'package:dony/core/config/cancellation_fee_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_fee_config_builder.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/support/presentation/widgets/support_whatsapp_card.dart';
@@ -25,8 +27,9 @@ class _FaqScreenState extends State<FaqScreen> {
   // les valeurs courantes chargées depuis le backend, et tout le contenu suit
   // la langue active — jamais de texte traduit gardé dans le State.
   static List<_FaqSectionData> _sections(
-    AppLocalizations l,
-  ) => <_FaqSectionData>[
+    AppLocalizations l, {
+    required bool cancellationFeeActive,
+  }) => <_FaqSectionData>[
     _FaqSectionData(
       id: 'account',
       title: l.faqAccountTitle,
@@ -89,7 +92,11 @@ class _FaqScreenState extends State<FaqScreen> {
         _FaqItem(
           id: 'refund',
           q: l.faqPaymentsRefundQ,
-          a: l.faqPaymentsRefundA,
+          // Frais d'annulation allumés : la réponse dit aussi qu'un colis
+          // accepté puis annulé peut porter des frais.
+          a: cancellationFeeActive
+              ? l.faqPaymentsRefundAWithFee
+              : l.faqPaymentsRefundA,
         ),
         _FaqItem(
           id: 'commission',
@@ -175,9 +182,10 @@ class _FaqScreenState extends State<FaqScreen> {
 
   static List<_FaqSectionData> _filterSections(
     String rawQuery,
-    AppLocalizations l,
-  ) {
-    final sections = _sections(l);
+    AppLocalizations l, {
+    required bool cancellationFeeActive,
+  }) {
+    final sections = _sections(l, cancellationFeeActive: cancellationFeeActive);
     final query = _normalize(rawQuery);
     if (query.isEmpty) {
       return sections;
@@ -204,6 +212,8 @@ class _FaqScreenState extends State<FaqScreen> {
   @override
   void initState() {
     super.initState();
+    // Réponse sur le remboursement : frais d'annulation allumés ou non.
+    warmUpCancellationFeeConfig();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<HelpCenterBloc>().add(const HelpCenterOpenRequested());
@@ -219,67 +229,74 @@ class _FaqScreenState extends State<FaqScreen> {
 
     return ValueListenableBuilder<double>(
       valueListenable: donyReimbursementCapListenable,
-      builder: (context, _, _) => BlocBuilder<FaqBloc, FaqState>(
-        builder: (context, state) {
-          final sections = _filterSections(state.query, l);
-          return DonyPageScaffold(
-            title: l.profileHelpFaq,
-            body: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SupportWhatsAppCard(source: 'faq', faqVariant: true),
-                Text(
-                  l.faqFindAnswerTitle,
-                  style: tt.titleLarge?.copyWith(
-                    color: cs.onSurface,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                Text(
-                  l.faqFindAnswerSubtitle,
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                const SizedBox(height: DonySpacing.base),
-                DonyTextField(
-                  key: const Key('faq-search-field'),
-                  hint: l.faqSearchHint,
-                  prefixWidget: Padding(
-                    padding: const EdgeInsets.all(DonySpacing.md),
-                    child: DonyIcon(
-                      'search',
-                      size: 20,
-                      color: cs.onSurfaceVariant,
+      builder: (context, _, _) => ValueListenableBuilder<bool>(
+        valueListenable: cancellationFeeActiveListenable,
+        builder: (context, feeActive, _) => BlocBuilder<FaqBloc, FaqState>(
+          builder: (context, state) {
+            final sections = _filterSections(
+              state.query,
+              l,
+              cancellationFeeActive: feeActive,
+            );
+            return DonyPageScaffold(
+              title: l.profileHelpFaq,
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SupportWhatsAppCard(source: 'faq', faqVariant: true),
+                  Text(
+                    l.faqFindAnswerTitle,
+                    style: tt.titleLarge?.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  textInputAction: TextInputAction.search,
-                  onChanged: (query) =>
-                      context.read<FaqBloc>().add(FaqSearchChanged(query)),
-                ),
-                const SizedBox(height: DonySpacing.xl),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: sections.isEmpty
-                      ? const _FaqEmptyState(key: Key('faq-empty-state'))
-                      : Column(
-                          key: ValueKey(state.query),
-                          children: List.generate(sections.length, (i) {
-                            return _FaqSection(data: sections[i])
-                                .animate()
-                                .fadeIn(delay: (i * 60).ms, duration: 280.ms)
-                                .slideY(
-                                  begin: 0.04,
-                                  curve: Curves.easeOutCubic,
-                                );
-                          }),
-                        ),
-                ),
-                const SizedBox(height: DonySpacing.md),
-                const _ContactSupportCard(),
-              ],
-            ),
-          );
-        },
+                  const SizedBox(height: DonySpacing.xs),
+                  Text(
+                    l.faqFindAnswerSubtitle,
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: DonySpacing.base),
+                  DonyTextField(
+                    key: const Key('faq-search-field'),
+                    hint: l.faqSearchHint,
+                    prefixWidget: Padding(
+                      padding: const EdgeInsets.all(DonySpacing.md),
+                      child: DonyIcon(
+                        'search',
+                        size: 20,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    textInputAction: TextInputAction.search,
+                    onChanged: (query) =>
+                        context.read<FaqBloc>().add(FaqSearchChanged(query)),
+                  ),
+                  const SizedBox(height: DonySpacing.xl),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: sections.isEmpty
+                        ? const _FaqEmptyState(key: Key('faq-empty-state'))
+                        : Column(
+                            key: ValueKey(state.query),
+                            children: List.generate(sections.length, (i) {
+                              return _FaqSection(data: sections[i])
+                                  .animate()
+                                  .fadeIn(delay: (i * 60).ms, duration: 280.ms)
+                                  .slideY(
+                                    begin: 0.04,
+                                    curve: Curves.easeOutCubic,
+                                  );
+                            }),
+                          ),
+                  ),
+                  const SizedBox(height: DonySpacing.md),
+                  const _ContactSupportCard(),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

@@ -7266,6 +7266,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String bidDetailSenderWindowExpiredSubtitleWithFee(String window) {
+    return 'Le dépôt était possible $window. Vous pouvez annuler votre demande : des frais d\'annulation peuvent s\'appliquer selon la date de départ. Si le voyageur ne s\'est pas présenté, signalez son absence.';
+  }
+
+  @override
   String get bidDetailSenderReportNoShowButton =>
       'Signaler l\'absence du voyageur';
 
@@ -7323,6 +7328,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidDetailSenderConfirmSheetBody =>
       'En confirmant votre absence, l\'envoi sera annulé et vous ne serez pas débité.';
+
+  @override
+  String get bidDetailSenderConfirmSheetBodyWithFee =>
+      'En confirmant votre absence, l\'envoi sera annulé. Des frais d\'annulation peuvent être retenus sur votre remboursement selon la date de départ.';
 
   @override
   String get bidDetailTravelerPendingTitle => '📨 Nouvelle demande d\'envoi';
@@ -7481,6 +7490,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Absence confirmée. L\'envoi a été annulé, vous ne serez pas débité.';
 
   @override
+  String get bidDetailNoShowConfirmedSnackbarWithFee =>
+      'Absence confirmée. L\'envoi a été annulé.';
+
+  @override
   String get bidDetailCancelledAfterHandoverSnackbar =>
       'Trajet annulé. Restituez le colis sous 3 jours avec le code de retour.';
 
@@ -7588,8 +7601,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre paiement sera remboursé automatiquement';
 
   @override
+  String get bidDetailCancelRefundAutoSubtitleWithFee =>
+      'Remboursement automatique, moins d\'éventuels frais d\'annulation';
+
+  @override
   String get bidDetailCancelAfterHandoverOptionSubtitle =>
       'Remboursement intégral · vous récupérez votre colis';
+
+  @override
+  String get bidDetailCancelAfterHandoverOptionSubtitleWithFee =>
+      'Vous récupérez votre colis · frais d\'annulation possibles';
 
   @override
   String get bidDetailRemoveFromHistorySubtitle =>
@@ -12322,6 +12343,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get faqPaymentsRefundA =>
       'Le remboursement dépend du moyen de paiement et du moment de l\'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l\'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement.';
+
+  @override
+  String get faqPaymentsRefundAWithFee =>
+      'Le remboursement dépend du moyen de paiement et du moment de l\'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l\'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement. Si vous annulez un colis déjà accepté, des frais d\'annulation peuvent être retenus selon le délai avant le départ.';
 
   @override
   String get faqPaymentsCommissionQ => 'Pourquoi des frais de service ?';
@@ -19107,6 +19132,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorPaymentAlreadyAuthorizedMessage =>
       'Votre paiement vient d\'être validé. Le colis est à jour : annulez-le depuis sa fiche, vous serez remboursé.';
+
+  @override
+  String get errorPaymentAlreadyAuthorizedMessageWithFee =>
+      'Votre paiement vient d\'être validé. Le colis est à jour : annulez-le depuis sa fiche, vous serez remboursé, moins d\'éventuels frais d\'annulation.';
 
   @override
   String get errorPaymentInProgressTitle => 'Paiement en cours';

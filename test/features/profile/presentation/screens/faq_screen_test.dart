@@ -1,21 +1,27 @@
+import 'package:dony/core/config/cancellation_fee_flag.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_fee_config/cancellation_fee_config_cubit.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/currency_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/support_contact_test_helpers.dart';
+import '../../../cancellation/cancellation_fee_test_support.dart';
 
 const _emptyConfigJson = '''
 {
@@ -312,6 +318,95 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('minimum de'), findsNothing);
+    });
+  });
+
+  // I : réponse sur le remboursement. Frais d'annulation allumés : elle dit
+  // aussi qu'un colis accepté puis annulé peut porter des frais. Éteints, back
+  // antérieur ou configuration pas encore lue : la réponse d'aujourd'hui.
+  group('réponse sur le remboursement selon les frais d\'annulation', () {
+    tearDown(() async {
+      resetCancellationFeeFlagForTest();
+      await getIt.reset();
+    });
+
+    for (final english in [false, true]) {
+      final l = lookupAppLocalizations(english ? AppL10n.en : AppL10n.fr);
+      final lang = english ? 'en' : 'fr';
+
+      Future<void> openRefundAnswer(WidgetTester tester) async {
+        if (english) {
+          enableEnglish();
+          useEnglish();
+        }
+        await tester.pumpWidget(_wrap());
+        await tester.pump(const Duration(milliseconds: 600));
+        final question = find.text(l.faqPaymentsRefundQ);
+        await tester.ensureVisible(question);
+        await tester.tap(question);
+        await tester.pump(const Duration(milliseconds: 500));
+      }
+
+      testWidgets('[$lang] frais éteints : réponse d\'aujourd\'hui', (
+        tester,
+      ) async {
+        await openRefundAnswer(tester);
+        expect(find.text(l.faqPaymentsRefundA), findsOneWidget);
+        expect(find.text(l.faqPaymentsRefundAWithFee), findsNothing);
+      });
+
+      testWidgets('[$lang] frais allumés : la réponse ajoute les frais', (
+        tester,
+      ) async {
+        setCancellationFeeActive(true);
+        await openRefundAnswer(tester);
+        expect(find.text(l.faqPaymentsRefundAWithFee), findsOneWidget);
+        expect(find.text(l.faqPaymentsRefundA), findsNothing);
+      });
+
+      testWidgets('[$lang] configuration arrivée après l\'ouverture : la '
+          'réponse bascule', (tester) async {
+        await openRefundAnswer(tester);
+        expect(find.text(l.faqPaymentsRefundA), findsOneWidget);
+
+        setCancellationFeeActive(true);
+        await tester.pump();
+
+        expect(find.text(l.faqPaymentsRefundAWithFee), findsOneWidget);
+      });
+    }
+
+    testWidgets('ouverture du Centre d\'aide : la configuration est lue', (
+      tester,
+    ) async {
+      final repository = MockFeeConfigRepository();
+      when(repository.getFeeConfig).thenAnswer((_) async => kActiveFeeConfig);
+      final cubit = CancellationFeeConfigCubit(
+        repository,
+        MockFeeConfigAnalytics(),
+      );
+      getIt.registerSingleton<CancellationFeeConfigCubit>(cubit);
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(_wrap());
+      await tester.pump(const Duration(milliseconds: 600));
+
+      verify(repository.getFeeConfig).called(1);
+      expect(cancellationFeeActive, isTrue);
+    });
+
+    testWidgets('back antérieur (404) : réponse d\'aujourd\'hui', (
+      tester,
+    ) async {
+      final l = lookupAppLocalizations(AppL10n.fr);
+      await registerFeeConfig();
+      await tester.pumpWidget(_wrap());
+      await tester.pump(const Duration(milliseconds: 600));
+      final question = find.text(l.faqPaymentsRefundQ);
+      await tester.ensureVisible(question);
+      await tester.tap(question);
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text(l.faqPaymentsRefundA), findsOneWidget);
     });
   });
 

@@ -2651,6 +2651,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidDetailSenderWindowExpiredTitle,
   'bidDetailSenderWindowExpiredSubtitle': (l) =>
       l.bidDetailSenderWindowExpiredSubtitle(placeholderMarker('window')),
+  'bidDetailSenderWindowExpiredSubtitleWithFee': (l) => l
+      .bidDetailSenderWindowExpiredSubtitleWithFee(placeholderMarker('window')),
   'bidDetailSenderReportNoShowButton': (l) =>
       l.bidDetailSenderReportNoShowButton,
   'bidDetailSenderNoShowSheetTitle': (l) => l.bidDetailSenderNoShowSheetTitle,
@@ -2675,6 +2677,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailSenderConfirmSheetButton': (l) =>
       l.bidDetailSenderConfirmSheetButton,
   'bidDetailSenderConfirmSheetBody': (l) => l.bidDetailSenderConfirmSheetBody,
+  'bidDetailSenderConfirmSheetBodyWithFee': (l) =>
+      l.bidDetailSenderConfirmSheetBodyWithFee,
   'bidDetailTravelerPendingTitle': (l) => l.bidDetailTravelerPendingTitle,
   'bidDetailTravelerPendingSubtitle': (l) =>
       l.bidDetailTravelerPendingSubtitle(placeholderMarker('amount')),
@@ -2740,6 +2744,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidDetailDeliveryNoShowReportedSnackbar,
   'bidDetailContestSentSnackbar': (l) => l.bidDetailContestSentSnackbar,
   'bidDetailNoShowConfirmedSnackbar': (l) => l.bidDetailNoShowConfirmedSnackbar,
+  'bidDetailNoShowConfirmedSnackbarWithFee': (l) =>
+      l.bidDetailNoShowConfirmedSnackbarWithFee,
   'bidDetailCancelledAfterHandoverSnackbar': (l) =>
       l.bidDetailCancelledAfterHandoverSnackbar,
   'bidDetailReturnConfirmedSnackbar': (l) => l.bidDetailReturnConfirmedSnackbar,
@@ -2777,8 +2783,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailShareTrackingSubtitle': (l) => l.bidDetailShareTrackingSubtitle,
   'bidDetailCancelRefundAutoSubtitle': (l) =>
       l.bidDetailCancelRefundAutoSubtitle,
+  'bidDetailCancelRefundAutoSubtitleWithFee': (l) =>
+      l.bidDetailCancelRefundAutoSubtitleWithFee,
   'bidDetailCancelAfterHandoverOptionSubtitle': (l) =>
       l.bidDetailCancelAfterHandoverOptionSubtitle,
+  'bidDetailCancelAfterHandoverOptionSubtitleWithFee': (l) =>
+      l.bidDetailCancelAfterHandoverOptionSubtitleWithFee,
   'bidDetailRemoveFromHistorySubtitle': (l) =>
       l.bidDetailRemoveFromHistorySubtitle,
   'bidDetailCancelConfirmBody': (l) => l.bidDetailCancelConfirmBody,
@@ -4376,6 +4386,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'faqPaymentsPaymentTimingA': (l) => l.faqPaymentsPaymentTimingA,
   'faqPaymentsRefundQ': (l) => l.faqPaymentsRefundQ,
   'faqPaymentsRefundA': (l) => l.faqPaymentsRefundA,
+  'faqPaymentsRefundAWithFee': (l) => l.faqPaymentsRefundAWithFee,
   'faqPaymentsCommissionQ': (l) => l.faqPaymentsCommissionQ,
   'faqPaymentsCommissionA': (l) => l.faqPaymentsCommissionA,
   'faqPaymentsPaymentSecurityQ': (l) => l.faqPaymentsPaymentSecurityQ,
@@ -6658,6 +6669,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorPaymentAlreadyAuthorizedTitle,
   'errorPaymentAlreadyAuthorizedMessage': (l) =>
       l.errorPaymentAlreadyAuthorizedMessage,
+  'errorPaymentAlreadyAuthorizedMessageWithFee': (l) =>
+      l.errorPaymentAlreadyAuthorizedMessageWithFee,
   'errorPaymentInProgressTitle': (l) => l.errorPaymentInProgressTitle,
   'errorPaymentInProgressMessage': (l) => l.errorPaymentInProgressMessage,
   'errorCapacityInsufficientTitle': (l) => l.errorCapacityInsufficientTitle,
@@ -8448,6 +8461,16 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripLikeLoginInviteBody': (l) => l.tripLikeLoginInviteBody,
   'tripShareLoginInviteTitle': (l) => l.tripShareLoginInviteTitle,
   'tripShareLoginInviteBody': (l) => l.tripShareLoginInviteBody,
+  'phoneVerificationNone': (l) => l.phoneVerificationNone,
+  'phoneVerificationYadony': (l) => l.phoneVerificationYadony,
+  'phoneVerificationSms': (l) => l.phoneVerificationSms,
+  'contactPhoneDeclareTitle': (l) => l.contactPhoneDeclareTitle,
+  'contactPhoneDeclareMessage': (l) => l.contactPhoneDeclareMessage,
+  'contactPhoneDeclareAction': (l) => l.contactPhoneDeclareAction,
+  'contactPhoneDeclaredSuccess': (l) => l.contactPhoneDeclaredSuccess,
+  'errorPhoneDeclareNotAllowedTitle': (l) => l.errorPhoneDeclareNotAllowedTitle,
+  'errorPhoneDeclareNotAllowedMessage': (l) =>
+      l.errorPhoneDeclareNotAllowedMessage,
   'usernameSheetTitle': (l) => l.usernameSheetTitle,
   'usernameSheetIntro': (l) => l.usernameSheetIntro,
   'usernameFieldLabel': (l) => l.usernameFieldLabel,
@@ -8659,6 +8682,7 @@ const textParameters = <String, List<String>>{
   'bidDetailSenderInTransitEta': ['time', 'city'],
   'bidDetailSenderInTransitEnRoute': ['city'],
   'bidDetailSenderWindowExpiredSubtitle': ['window'],
+  'bidDetailSenderWindowExpiredSubtitleWithFee': ['window'],
   'bidDetailSenderContestCountdown': ['timeLeft'],
   'bidDetailTravelerPendingSubtitle': ['amount'],
   'bidDetailTravelerWindowExpiredSubtitleWithWindow': ['window'],
