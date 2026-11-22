@@ -74,10 +74,16 @@ void main() {
       cubit.close();
     });
 
-    test('indisponible : rien à montrer, bouton libre', () {
+    test('indisponible : rien à montrer, bouton libre, frais inconnus', () {
       const s = CancellationFeePreviewUnavailable();
       expect(s.busy, isFalse);
       expect(s.shownFee, isNull);
+      expect(s.feeUnknown, isTrue);
+      expect(const CancellationFeePreviewLoading().feeUnknown, isFalse);
+      expect(
+        CancellationFeePreviewLoaded(_preview(), now: _t0).feeUnknown,
+        isFalse,
+      );
     });
 
     test('chargé : frais montrés seulement s\'ils sont positifs', () {
@@ -263,15 +269,68 @@ void main() {
       await cubit.close();
     });
 
-    test('palier pas encore passé : part sans relire', () async {
-      when(() => repo.getFeePreview('bid-1')).thenAnswer(
-        (_) async => _preview(nextTierAt: _t0.add(const Duration(minutes: 10))),
-      );
+    test('palier à plus de 2 minutes : part sans relire', () async {
+      final next = _t0.add(const Duration(minutes: 10));
+      when(
+        () => repo.getFeePreview('bid-1'),
+      ).thenAnswer((_) async => _preview(nextTierAt: next));
       final cubit = build();
       await cubit.load('bid-1');
-      now = _t0.add(const Duration(minutes: 10));
+      // Une seconde avant la marge : pas de relecture.
+      now = next
+          .subtract(CancellationFeePreviewCubit.refreshMargin)
+          .subtract(const Duration(seconds: 1));
       expect(await cubit.confirm(), isTrue);
       verify(() => repo.getFeePreview('bid-1')).called(1);
+      await cubit.close();
+    });
+
+    test('marge de 2 minutes : constante attendue', () {
+      expect(
+        CancellationFeePreviewCubit.refreshMargin,
+        const Duration(minutes: 2),
+      );
+    });
+
+    // Téléphone en retard sur le serveur : à 2 minutes du palier (bornes
+    // comprises), le montant est relu avant de confirmer.
+    for (final (label, before) in [
+      ('pile à 2 minutes', CancellationFeePreviewCubit.refreshMargin),
+      ('à 1 minute', const Duration(minutes: 1)),
+      ('pile au palier', Duration.zero),
+    ]) {
+      test('palier $label : relu avant de confirmer', () async {
+        final next = _t0.add(const Duration(minutes: 10));
+        var calls = 0;
+        when(() => repo.getFeePreview('bid-1')).thenAnswer((_) async {
+          calls++;
+          return calls == 1
+              ? _preview(nextTierAt: next)
+              : _preview(rate: 0.3, fee: 30, refund: 70);
+        });
+        final cubit = build();
+        await cubit.load('bid-1');
+        now = next.subtract(before);
+        expect(await cubit.confirm(), isFalse);
+        expect(calls, 2);
+        final s = cubit.state as CancellationFeePreviewLoaded;
+        expect(s.increased, isTrue);
+        expect(s.shownFee?.fee, 30);
+        await cubit.close();
+      });
+    }
+
+    test('dans la marge, frais inchangés (palier pas encore passé côté '
+        'serveur) : part', () async {
+      final next = _t0.add(const Duration(minutes: 10));
+      when(
+        () => repo.getFeePreview('bid-1'),
+      ).thenAnswer((_) async => _preview(nextTierAt: next));
+      final cubit = build();
+      await cubit.load('bid-1');
+      now = next.subtract(const Duration(minutes: 1));
+      expect(await cubit.confirm(), isTrue);
+      verify(() => repo.getFeePreview('bid-1')).called(2);
       await cubit.close();
     });
 
@@ -367,28 +426,57 @@ void main() {
       await cubit.close();
     });
 
-    test(
-      'palier passé, relecture ratée : part quand même, échec signalé',
-      () async {
-        final next = _t0.add(const Duration(minutes: 10));
-        var calls = 0;
-        when(() => repo.getFeePreview('bid-1')).thenAnswer((_) async {
-          calls++;
-          if (calls == 1) return _preview(nextTierAt: next);
-          throw _dio(const OfflineException());
-        });
-        final cubit = build();
-        await cubit.load('bid-1');
-        now = next.add(const Duration(seconds: 1));
-        expect(await cubit.confirm(), isTrue);
-        expect(
-          cubit.state,
-          CancellationFeePreviewLoaded(_preview(nextTierAt: next), now: _t0),
-        );
-        verifyFailure('OFFLINE', stage: 'refresh');
-        await cubit.close();
-      },
-    );
+    test('palier passé, relecture ratée : avertissement, puis la seconde '
+        'confirmation annule sans relire', () async {
+      final next = _t0.add(const Duration(minutes: 10));
+      var calls = 0;
+      when(() => repo.getFeePreview('bid-1')).thenAnswer((_) async {
+        calls++;
+        if (calls == 1) return _preview(nextTierAt: next);
+        throw _dio(const OfflineException());
+      });
+      final cubit = build();
+      await cubit.load('bid-1');
+      now = next.add(const Duration(seconds: 1));
+
+      expect(await cubit.confirm(), isFalse);
+      expect(
+        cubit.state,
+        CancellationFeePreviewLoaded(
+          _preview(nextTierAt: next),
+          now: _t0,
+          recheckFailed: true,
+        ),
+      );
+      expect(cubit.state.feeUnknown, isFalse, reason: 'frais affichés');
+      verifyFailure('OFFLINE', stage: 'refresh');
+
+      // Jamais bloquant : le second appui annule, sans nouvelle lecture.
+      expect(await cubit.confirm(), isTrue);
+      expect(calls, 2);
+      await cubit.close();
+    });
+
+    test('fenêtre gratuite, relecture ratée : frais inconnus', () async {
+      final next = _t0.add(const Duration(minutes: 10));
+      var calls = 0;
+      when(() => repo.getFeePreview('bid-1')).thenAnswer((_) async {
+        calls++;
+        if (calls == 1) {
+          return _preview(rate: 0, fee: 0, refund: 100, nextTierAt: next);
+        }
+        throw _dio(const OfflineException());
+      });
+      final cubit = build();
+      await cubit.load('bid-1');
+      expect(cubit.state.feeUnknown, isFalse);
+      now = next.add(const Duration(seconds: 1));
+      expect(await cubit.confirm(), isFalse);
+      expect(cubit.state.feeUnknown, isTrue);
+      expect(cubit.state.shownFee, isNull);
+      expect(await cubit.confirm(), isTrue);
+      await cubit.close();
+    });
 
     test('double appui pendant la relecture : un seul envoi', () async {
       final next = _t0.add(const Duration(minutes: 10));

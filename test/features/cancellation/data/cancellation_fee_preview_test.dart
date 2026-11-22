@@ -136,6 +136,88 @@ void main() {
       );
       expect(a, b);
     });
+
+    // Un taux sans frais lisibles (ou des frais sans taux) serait affiché
+    // « sans frais » à tort : l'aperçu est refusé, le dialogue le traite
+    // comme indisponible.
+    for (final (label, json) in [
+      ('taux sans frais', {'rate': 0.2, 'refundAmount': 100}),
+      ('taux et frais illisibles', {'rate': 0.2, 'fee': 'vingt'}),
+      ('taux et frais à zéro', {'rate': 0.2, 'fee': 0, 'refundAmount': 100}),
+      ('frais sans taux', {'rate': 0, 'fee': 20, 'refundAmount': 80}),
+      ('frais et taux illisible', {'rate': 'x', 'fee': 20}),
+    ]) {
+      test('incohérent ($label) : FormatException', () {
+        expect(
+          () => CancellationFeePreviewModel.fromJson(json),
+          throwsA(isA<FormatException>()),
+        );
+      });
+    }
+  });
+
+  group('CancellationFeePreviewModel.isCapped', () {
+    CancellationFeePreviewModel m({
+      required double rate,
+      required double fee,
+      required double refund,
+      String? currency = 'EUR',
+    }) => CancellationFeePreviewModel(
+      rate: rate,
+      fee: fee,
+      refundAmount: refund,
+      currency: currency,
+    );
+
+    test('200 € payés à 20 %, frais de 30 € : plafond', () {
+      expect(m(rate: 0.2, fee: 30, refund: 170).isCapped(), isTrue);
+    });
+
+    test('100 € payés à 20 %, frais de 20 € : pas de plafond', () {
+      expect(m(rate: 0.2, fee: 20, refund: 80).isCapped(), isFalse);
+    });
+
+    test('euro : un centime d\'écart (arrondi) n\'est pas un plafond', () {
+      // 100 € × 20 % = 20,00 € ; 19,99 € : un centime.
+      expect(m(rate: 0.2, fee: 19.99, refund: 80.01).isCapped(), isFalse);
+      // 0,33 € × 10 % = 0,033 € arrondi à 0,03 € : bruit sous l'unité.
+      expect(m(rate: 0.1, fee: 0.03, refund: 0.3).isCapped(), isFalse);
+    });
+
+    test('euro : deux centimes d\'écart, plafond', () {
+      expect(m(rate: 0.2, fee: 19.98, refund: 80.02).isCapped(), isTrue);
+    });
+
+    test('franc CFA : un franc d\'écart n\'est pas un plafond', () {
+      // 65 600 F × 30 % = 19 680 F ; 19 679 F : un franc.
+      expect(
+        m(rate: 0.3, fee: 19679, refund: 45921, currency: 'XOF').isCapped(),
+        isFalse,
+      );
+      // 65 601 F × 30 % = 19 680,3 F arrondi à 19 680 F.
+      expect(
+        m(rate: 0.3, fee: 19680, refund: 45921, currency: 'XOF').isCapped(),
+        isFalse,
+      );
+    });
+
+    test('franc CFA : plafond de 30 € converti (19 678 F), plafond', () {
+      expect(
+        m(rate: 0.3, fee: 19678, refund: 45922, currency: 'XOF').isCapped(),
+        isTrue,
+      );
+    });
+
+    test('devise absente : celle du colis fait l\'unité', () {
+      final p = m(rate: 0.3, fee: 19679, refund: 45921, currency: null);
+      // En euro (repli), un franc d'écart vaudrait cent centimes.
+      expect(p.isCapped(), isTrue);
+      expect(p.isCapped(fallbackCurrency: 'XOF'), isFalse);
+    });
+
+    test('aucun frais : jamais plafonné', () {
+      expect(m(rate: 0, fee: 0, refund: 100).isCapped(), isFalse);
+    });
   });
 
   group('CancellationRemoteDatasource.getFeePreview', () {
@@ -167,6 +249,16 @@ void main() {
       expect(m.refundAmount, 80);
       expect(m.nextTierAt, isNotNull);
       verify(() => dio.get(_path)).called(1);
+    });
+
+    test('taux sans frais lisibles → FormatException', () async {
+      when(() => dio.get(_path)).thenAnswer(
+        (_) async => _ok({'rate': 0.2, 'fee': null, 'currency': 'EUR'}),
+      );
+      expect(
+        () => datasource.getFeePreview('bid-1'),
+        throwsA(isA<FormatException>()),
+      );
     });
 
     test('corps qui n\'est pas un objet → FormatException', () async {

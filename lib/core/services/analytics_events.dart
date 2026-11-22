@@ -719,10 +719,10 @@ abstract final class AnalyticsEvents {
 
   /// Aperçu des frais d'annulation de l'expéditeur illisible à l'ouverture du
   /// dialogue d'annulation (`stage: load`) ou à sa relecture avant de
-  /// confirmer (`stage: refresh`) : le dialogue reste celui d'avant la
-  /// fonction. Propriété `error_code` (`AppException.code`, `TIMEOUT`,
-  /// `invalid_payload` pour un corps illisible, `unknown`). Jamais sur un 404
-  /// (back antérieur à la route).
+  /// confirmer (`stage: refresh`). Propriété `error_code`
+  /// (`AppException.code`, `TIMEOUT`, `invalid_payload` pour un corps
+  /// illisible ou incohérent, `unknown`). Jamais sur un 404 (back antérieur à
+  /// la route).
   static const cancellationFeePreviewFailed = 'cancellation_fee_preview_failed';
 
   // Profile

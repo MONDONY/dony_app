@@ -18,6 +18,11 @@ sealed class CancellationFeePreviewState extends Equatable {
   /// Une lecture est en cours : le bouton de confirmation attend.
   bool get busy => false;
 
+  /// On ne sait pas si des frais s'appliquent (aperçu illisible, ou relecture
+  /// ratée sans frais affichés) : un corps qui promet un remboursement
+  /// intégral serait peut-être faux.
+  bool get feeUnknown => false;
+
   @override
   List<Object?> get props => const [];
 }
@@ -31,10 +36,12 @@ class CancellationFeePreviewLoading extends CancellationFeePreviewState {
 }
 
 /// Aperçu illisible : back antérieur à la route (404), 403, réseau, délai,
-/// corps inattendu. Le dialogue reste celui d'avant la fonction et
-/// l'annulation reste possible.
+/// corps inattendu. Aucun bloc des frais, l'annulation reste possible.
 class CancellationFeePreviewUnavailable extends CancellationFeePreviewState {
   const CancellationFeePreviewUnavailable();
+
+  @override
+  bool get feeUnknown => true;
 }
 
 class CancellationFeePreviewLoaded extends CancellationFeePreviewState {
@@ -43,6 +50,7 @@ class CancellationFeePreviewLoaded extends CancellationFeePreviewState {
     required this.now,
     this.increased = false,
     this.refreshing = false,
+    this.recheckFailed = false,
   });
 
   final CancellationFeePreviewModel preview;
@@ -54,8 +62,12 @@ class CancellationFeePreviewLoaded extends CancellationFeePreviewState {
   /// que le dialogue était ouvert) : l'expéditeur doit confirmer de nouveau.
   final bool increased;
 
-  /// Relecture avant de confirmer, palier passé.
+  /// Relecture avant de confirmer, palier passé ou tout proche.
   final bool refreshing;
+
+  /// La relecture avant de confirmer a échoué : le montant affiché a pu
+  /// augmenter. Le dialogue le dit, et l'appui suivant annule.
+  final bool recheckFailed;
 
   @override
   CancellationFeePreviewModel? get shownFee => preview.hasFee ? preview : null;
@@ -64,16 +76,26 @@ class CancellationFeePreviewLoaded extends CancellationFeePreviewState {
   bool get busy => refreshing;
 
   @override
-  List<Object?> get props => [preview, now, increased, refreshing];
+  bool get feeUnknown => recheckFailed && !preview.hasFee;
+
+  @override
+  List<Object?> get props => [
+    preview,
+    now,
+    increased,
+    refreshing,
+    recheckFailed,
+  ];
 }
 
 /// Aperçu des frais d'annulation montré à l'expéditeur avant qu'il confirme
 /// l'annulation de son colis (yadony-back #779). Lu à chaque ouverture du
-/// dialogue, relu à la confirmation si le palier [CancellationFeePreviewModel.nextTierAt]
-/// est passé entre-temps.
+/// dialogue, relu à la confirmation dès que le palier
+/// [CancellationFeePreviewModel.nextTierAt] est passé ou à moins de
+/// [refreshMargin] (l'horloge du téléphone peut retarder sur le serveur).
 ///
-/// Jamais bloquant : toute erreur rend [CancellationFeePreviewUnavailable], et
-/// une relecture ratée laisse confirmer.
+/// Jamais bloquant : toute erreur rend [CancellationFeePreviewUnavailable] ;
+/// une relecture ratée demande une seconde confirmation, qui annule.
 class CancellationFeePreviewCubit extends Cubit<CancellationFeePreviewState> {
   CancellationFeePreviewCubit(
     this._repository,
@@ -87,6 +109,11 @@ class CancellationFeePreviewCubit extends Cubit<CancellationFeePreviewState> {
   /// Au-delà, l'aperçu est abandonné : le bouton de confirmation ne doit pas
   /// attendre le délai réseau complet (30 s et ses relances).
   static const defaultTimeout = Duration(seconds: 6);
+
+  /// Relecture avant de confirmer dès `nextTierAt − refreshMargin` : un
+  /// téléphone en retard sur le serveur confirmerait sinon l'ancien montant
+  /// alors que le serveur applique déjà le palier suivant.
+  static const refreshMargin = Duration(minutes: 2);
 
   final CancellationRepository _repository;
   final AnalyticsService _analytics;
@@ -109,8 +136,9 @@ class CancellationFeePreviewCubit extends Cubit<CancellationFeePreviewState> {
   }
 
   /// Vrai quand l'annulation peut partir maintenant. Faux pendant une
-  /// lecture, ou quand les frais viennent d'augmenter : le dialogue montre
-  /// alors le nouveau montant et attend une seconde confirmation.
+  /// lecture, quand les frais viennent d'augmenter (le dialogue montre le
+  /// nouveau montant) ou quand la relecture a échoué (le dialogue prévient
+  /// que le montant a pu augmenter) : la confirmation suivante annule.
   Future<bool> confirm() async {
     final current = state;
     switch (current) {
@@ -120,9 +148,14 @@ class CancellationFeePreviewCubit extends Cubit<CancellationFeePreviewState> {
         return true;
       case CancellationFeePreviewLoaded():
         if (current.refreshing) return false;
+        if (current.recheckFailed) return true;
         final next = current.preview.nextTierAt;
         final id = _bidId;
-        if (next == null || id == null || !_clock().isAfter(next)) return true;
+        if (next == null ||
+            id == null ||
+            _clock().isBefore(next.subtract(refreshMargin))) {
+          return true;
+        }
         emit(
           CancellationFeePreviewLoaded(
             current.preview,
@@ -134,16 +167,17 @@ class CancellationFeePreviewCubit extends Cubit<CancellationFeePreviewState> {
         final fresh = await _fetch(id, stage: 'refresh');
         if (isClosed) return false;
         if (fresh == null) {
-          // Relecture ratée : on ne bloque pas. L'expéditeur a vu les frais
-          // et la mention « Annuler plus tard coûte plus cher ».
+          // Relecture ratée : le montant affiché a pu augmenter. On prévient
+          // une fois, la confirmation suivante annule (jamais bloquant).
           emit(
             CancellationFeePreviewLoaded(
               current.preview,
               now: current.now,
               increased: current.increased,
+              recheckFailed: true,
             ),
           );
-          return true;
+          return false;
         }
         final increased = fresh.fee > current.preview.fee;
         emit(
