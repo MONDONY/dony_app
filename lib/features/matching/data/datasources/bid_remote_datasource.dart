@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/bid_checkout_response_model.d
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/data/models/commission_allocation_preview.dart';
+import 'package:dony/features/matching/data/models/contact_phone_model.dart';
 import 'package:dony/features/matching/data/models/traveler_bids_page.dart';
 
 class BidRemoteDatasource {
@@ -202,9 +203,14 @@ class BidRemoteDatasource {
   /// Le numéro ne fait plus partie des réponses de colis : le serveur ne le
   /// communique que par cet appel, vérifie que l'appelant est bien partie au colis
   /// et journalise la révélation. Renvoie null si le compte n'a pas de numéro.
-  Future<String?> getCounterpartyPhone(String bidId) async {
+  Future<String?> getCounterpartyPhone(String bidId) async =>
+      (await getCounterpartyContact(bidId)).phoneNumber;
+
+  /// Comme [getCounterpartyPhone], avec le niveau de vérification du numéro
+  /// (SMS, Yadony ou aucun pour un numéro seulement déclaré).
+  Future<ContactPhoneModel> getCounterpartyContact(String bidId) async {
     final response = await _apiClient.dio.get('/bids/$bidId/contact');
-    return (response.data as Map<String, dynamic>)['phoneNumber'] as String?;
+    return ContactPhoneModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   /// Demandes reçues sur tous les trajets du voyageur, en un seul appel.

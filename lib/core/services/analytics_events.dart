@@ -34,6 +34,15 @@ abstract final class AnalyticsEvents {
   /// `phone-otp-invalid`, …) ou `unknown`. Jamais le numéro.
   static const phoneAttachFailed = 'phone_attach_failed';
 
+  /// Numéro enregistré sans code SMS (`POST /auth/sms-otp/declare`, pays où le
+  /// SMS n'arrive pas). Aucune propriété : jamais le numéro.
+  static const phoneDeclared = 'phone_declared';
+
+  /// Enregistrement sans SMS refusé ou impossible. Propriété `error_code` :
+  /// code métier du back (`phone-declare-not-allowed`, `phone-already-set`,
+  /// `declared-phone-unavailable`, …) ou `unknown`. Jamais le numéro.
+  static const phoneDeclareFailed = 'phone_declare_failed';
+
   // KYC
   static const kycStarted = 'kyc_started';
   static const kycCompleted = 'kyc_completed';

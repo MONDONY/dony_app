@@ -18,6 +18,7 @@ class ProfilePublicModel {
     this.bio,
     this.languages = const [],
     this.phoneVerified = false,
+    this.phoneYadonyVerified = false,
     this.emailVerified = false,
     this.residenceCountry,
     this.measuredResponseMinutes,
@@ -47,6 +48,10 @@ class ProfilePublicModel {
   /// Vérifications du compte (FLUTTER-4H). Booléens seulement : le serveur
   /// n'envoie jamais le numéro ni l'e-mail.
   final bool phoneVerified;
+
+  /// Numéro déclaré sans SMS et vérifié par l'équipe Yadony. `phoneVerified`
+  /// ne couvre que le SMS. Absent sur un ancien back : faux.
+  final bool phoneYadonyVerified;
   final bool emailVerified;
 
   /// Code ISO2 du pays de résidence, présent seulement si l'utilisateur a
@@ -96,6 +101,7 @@ class ProfilePublicModel {
               .toList() ??
           const [],
       phoneVerified: json['phoneVerified'] as bool? ?? false,
+      phoneYadonyVerified: json['phoneYadonyVerified'] as bool? ?? false,
       emailVerified: json['emailVerified'] as bool? ?? false,
       residenceCountry: json['residenceCountry'] as String?,
       measuredResponseMinutes: (json['measuredResponseMinutes'] as num?)

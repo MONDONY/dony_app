@@ -1,3 +1,4 @@
+import 'package:dony/core/phone/phone_verification_level.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:equatable/equatable.dart';
@@ -12,6 +13,15 @@ class UserModel extends Equatable {
   /// le serveur le renvoie toujours.
   final String? username;
   final String? phoneNumber;
+
+  /// Numéro déclaré sans code SMS (pays où le SMS n'arrive pas), visible du
+  /// seul propriétaire ; `null` dès qu'un numéro vérifié par SMS existe, ou
+  /// avec un back antérieur. Information seulement : jamais pour la connexion
+  /// ni les paiements.
+  final String? declaredPhone;
+
+  /// `DECLARED` ou `YADONY_VERIFIED` ; `null` sans numéro déclaré.
+  final String? declaredPhoneLevel;
   final String? email;
   final String? firstName;
   final String? lastName;
@@ -77,6 +87,8 @@ class UserModel extends Equatable {
     required this.id,
     this.username,
     this.phoneNumber,
+    this.declaredPhone,
+    this.declaredPhoneLevel,
     this.email,
     this.firstName,
     this.lastName,
@@ -111,6 +123,8 @@ class UserModel extends Equatable {
     id: json['id'] as String,
     username: json['username'] as String?,
     phoneNumber: json['phoneNumber'] as String?,
+    declaredPhone: json['declaredPhone'] as String?,
+    declaredPhoneLevel: json['declaredPhoneLevel'] as String?,
     email: json['email'] as String?,
     firstName: json['firstName'] as String?,
     lastName: json['lastName'] as String?,
@@ -156,6 +170,8 @@ class UserModel extends Equatable {
     'id': id,
     'username': username,
     'phoneNumber': phoneNumber,
+    'declaredPhone': declaredPhone,
+    'declaredPhoneLevel': declaredPhoneLevel,
     'email': email,
     'firstName': firstName,
     'lastName': lastName,
@@ -190,6 +206,8 @@ class UserModel extends Equatable {
     String? id,
     String? username,
     String? phoneNumber,
+    String? declaredPhone,
+    String? declaredPhoneLevel,
     String? email,
     String? firstName,
     String? lastName,
@@ -222,6 +240,8 @@ class UserModel extends Equatable {
     id: id ?? this.id,
     username: username ?? this.username,
     phoneNumber: phoneNumber ?? this.phoneNumber,
+    declaredPhone: declaredPhone ?? this.declaredPhone,
+    declaredPhoneLevel: declaredPhoneLevel ?? this.declaredPhoneLevel,
     email: email ?? this.email,
     firstName: firstName ?? this.firstName,
     lastName: lastName ?? this.lastName,
@@ -268,6 +288,8 @@ class UserModel extends Equatable {
       id: id,
       username: username,
       phoneNumber: phoneNumber,
+      declaredPhone: declaredPhone,
+      declaredPhoneLevel: declaredPhoneLevel,
       email: email,
       firstName: firstName,
       lastName: lastName,
@@ -360,6 +382,14 @@ class UserModel extends Equatable {
 
   static int profileTotalSteps({bool countPhone = true}) => countPhone ? 7 : 6;
 
+  /// Niveau du numéro déclaré ; `null` sans numéro déclaré. Un niveau absent
+  /// avec un numéro présent (back intermédiaire) n'est jamais « vérifié ».
+  PhoneVerificationLevel? get declaredPhoneVerification =>
+      (declaredPhone == null || declaredPhone!.isEmpty)
+      ? null
+      : PhoneVerificationLevel.parseDeclared(declaredPhoneLevel) ??
+            PhoneVerificationLevel.none;
+
   bool get isKycVerified => kycStatus == 'VERIFIED';
   bool get isSender => roles.contains('SENDER');
   bool get isTraveler => roles.contains('TRAVELER');
@@ -370,6 +400,8 @@ class UserModel extends Equatable {
     id,
     username,
     phoneNumber,
+    declaredPhone,
+    declaredPhoneLevel,
     email,
     firstName,
     lastName,

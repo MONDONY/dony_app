@@ -4,7 +4,9 @@ import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/design/widgets/phone_verification_badge.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/phone/phone_verification_level.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -414,6 +416,66 @@ void main() {
         expect(find.text('EditPhoneScreen'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'numéro déclaré : affiché avec le badge, ligne éditable pour le corriger',
+      (tester) async {
+        setSmsAuthEnabled(true);
+        const user = UserModel(
+          id: 'u-declared',
+          firstName: 'Ibrahima',
+          lastName: 'Diallo',
+          email: 'ibra@test.com',
+          declaredPhone: '+22507000000',
+          declaredPhoneLevel: 'DECLARED',
+          roles: ['SENDER'],
+          kycStatus: 'NOT_STARTED',
+          status: 'ACTIVE',
+        );
+        whenListen<AuthState>(
+          mockAuthBloc,
+          const Stream.empty(),
+          initialState: const AuthAuthenticated(user),
+        );
+
+        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+        await tester.pumpAndSettle();
+
+        expect(find.text('+22507000000'), findsOneWidget);
+        expect(
+          tester
+              .widget<PhoneVerificationBadge>(
+                find.byType(PhoneVerificationBadge),
+              )
+              .level,
+          PhoneVerificationLevel.none,
+        );
+
+        await _enterEditMode(tester);
+        await tester.ensureVisible(find.text('+22507000000'));
+        await tester.tap(find.text('+22507000000'));
+        await tester.pumpAndSettle();
+        expect(find.text('EditPhoneScreen'), findsOneWidget);
+      },
+    );
+
+    testWidgets('numéro vérifié par SMS : badge Vérifié', (tester) async {
+      setSmsAuthEnabled(true);
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(_senderUser),
+      );
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<PhoneVerificationBadge>(find.byType(PhoneVerificationBadge))
+            .level,
+        PhoneVerificationLevel.sms,
+      );
+    });
 
     testWidgets('badge "Ajouter" (pas "Modifier") quand l\'email est absent', (
       tester,

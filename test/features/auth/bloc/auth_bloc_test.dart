@@ -1403,6 +1403,78 @@ void main() {
     );
   });
 
+  // ─── AuthPhoneDeclared (numéro sans SMS, pays bloqués) ──────────────────────
+
+  group('AuthPhoneDeclared', () {
+    const declaredUser = UserModel(
+      id: 'user-123',
+      roles: ['SENDER'],
+      kycStatus: 'PENDING',
+      status: 'ACTIVE',
+      declaredPhone: '+22507000000',
+      declaredPhoneLevel: 'DECLARED',
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'AuthPhoneDeclared_success_emitsUserWithDeclaredPhone',
+      build: () {
+        when(
+          () => mockRepo.declarePhone('+22507000000'),
+        ).thenAnswer((_) async => declaredUser);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneDeclared('+22507000000')),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthProfileUpdated>()
+            .having(
+              (s) => s.user.declaredPhone,
+              'declaredPhone',
+              '+22507000000',
+            )
+            .having((s) => s.user.phoneNumber, 'phoneNumber', isNull),
+      ],
+      verify: (_) {
+        verify(() => mockRepo.declarePhone('+22507000000')).called(1);
+        verifyNever(
+          () => mockRepo.attachPhone(
+            phoneNumber: any(named: 'phoneNumber'),
+            code: any(named: 'code'),
+          ),
+        );
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'AuthPhoneDeclared_failure_409NotAllowed_emitsAuthErrorWithCode',
+      build: () {
+        when(() => mockRepo.declarePhone(any())).thenThrow(
+          const ConflictException('x', code: 'phone-declare-not-allowed'),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneDeclared('+33612345678')),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthError>().having(
+          (s) => s.error.code,
+          'code',
+          'phone-declare-not-allowed',
+        ),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'AuthPhoneDeclared_failure_unexpected_emitsAuthError',
+      build: () {
+        when(() => mockRepo.declarePhone(any())).thenThrow(Exception('boom'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneDeclared('+22507000000')),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
   // Reconnexion après rattachement (FLUTTER-4C) : le backend écrit la
   // coordonnée sur le compte Firebase, ce qui révoque le jeton de
   // rafraîchissement. Sans reconnexion, l'utilisateur était déconnecté au

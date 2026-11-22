@@ -1,5 +1,7 @@
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/design/widgets/phone_verification_badge.dart';
+import 'package:dony/core/phone/phone_verification_level.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -17,6 +19,7 @@ Widget _buildHeader({
   bool gpPro = false,
   String? avatarUrl,
   String? phoneNumber,
+  PhoneVerificationLevel? declaredPhoneLevel,
   String? email,
   String? city,
   String? username,
@@ -40,6 +43,7 @@ Widget _buildHeader({
         gpPro: gpPro,
         avatarUrl: avatarUrl,
         phoneNumber: phoneNumber,
+        declaredPhoneLevel: declaredPhoneLevel,
         email: email,
         city: city,
         username: username,
@@ -308,6 +312,30 @@ void main() {
       expect((box.decoration! as BoxDecoration).color, DonyColors.kycBadgeGold);
       final text = tester.widget<Text>(find.text('PRO'));
       expect(text.style?.color, const Color(0xFF2B1B00));
+    });
+    testWidgets(
+      'numéro déclaré seulement : pastille de niveau à la place du chip',
+      (tester) async {
+        setSmsAuthEnabled(true);
+        await tester.pumpWidget(
+          _buildHeader(declaredPhoneLevel: PhoneVerificationLevel.yadony),
+        );
+        expect(find.byType(PhoneVerificationBadge), findsOneWidget);
+        expect(find.text('Vérifié par Yadony'), findsOneWidget);
+      },
+    );
+
+    testWidgets('numéro vérifié par SMS : le chip prime sur le déclaré', (
+      tester,
+    ) async {
+      setSmsAuthEnabled(true);
+      await tester.pumpWidget(
+        _buildHeader(
+          phoneNumber: '+33612345678',
+          declaredPhoneLevel: PhoneVerificationLevel.none,
+        ),
+      );
+      expect(find.byType(PhoneVerificationBadge), findsNothing);
     });
 
     group('puce identifiant', () {

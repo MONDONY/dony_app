@@ -593,6 +593,7 @@ AppException mapHttpError(DioException err) {
     return ServiceUnavailableException(
       detail ?? l.errorServiceUnavailableMessage,
       apiCode,
+      data is Map ? Map<String, Object?>.from(data) : null,
     );
   }
   if (statusCode != null && statusCode >= 500) {

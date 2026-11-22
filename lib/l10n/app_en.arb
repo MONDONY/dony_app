@@ -12015,6 +12015,15 @@
   "@tripShareLoginInviteBody": {
       "description": "Sign-in required sheet, trip share: text under \"Protected actions\". The poster offers the image, the link and the caption."
   },
+  "phoneVerificationNone": "Not verified",
+  "phoneVerificationYadony": "Verified by Yadony",
+  "phoneVerificationSms": "Verified",
+  "contactPhoneDeclareTitle": "No SMS in this country",
+  "contactPhoneDeclareMessage": "Text messages can't reach this country. You can save this number without verifying it: it will be used to call you and to find you, never to sign in or to pay.",
+  "contactPhoneDeclareAction": "Save without verifying",
+  "contactPhoneDeclaredSuccess": "Number saved.",
+  "errorPhoneDeclareNotAllowedTitle": "SMS code available",
+  "errorPhoneDeclareNotAllowedMessage": "This number can receive an SMS code. Tap \"Send code\" to verify it.",
   "usernameSheetTitle": "My username",
   "@usernameSheetTitle": {"description": "Feuille « Mon identifiant » : titre."},
   "usernameSheetIntro": "This is what others type to add you as a recipient. It shows neither your name nor your phone number.",

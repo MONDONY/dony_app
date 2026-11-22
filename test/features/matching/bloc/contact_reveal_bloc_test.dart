@@ -1,8 +1,10 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/phone/phone_verification_level.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
+import 'package:dony/features/matching/data/models/contact_phone_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -18,9 +20,9 @@ void main() {
     blocTest<ContactRevealBloc, ContactRevealState>(
       'demande le numéro au repository et le publie',
       build: () {
-        when(
-          () => repository.getCounterpartyPhone('b1'),
-        ).thenAnswer((_) async => '+221701234567');
+        when(() => repository.getCounterpartyContact('b1')).thenAnswer(
+          (_) async => const ContactPhoneModel(phoneNumber: '+221701234567'),
+        );
         return ContactRevealBloc(repository);
       },
       act: (bloc) => bloc.add(const ContactRevealRequested('b1')),
@@ -33,15 +35,15 @@ void main() {
         ),
       ],
       verify: (_) =>
-          verify(() => repository.getCounterpartyPhone('b1')).called(1),
+          verify(() => repository.getCounterpartyContact('b1')).called(1),
     );
 
     blocTest<ContactRevealBloc, ContactRevealState>(
       'compte sans numéro → succès à null, pas une erreur',
       build: () {
         when(
-          () => repository.getCounterpartyPhone('b1'),
-        ).thenAnswer((_) async => null);
+          () => repository.getCounterpartyContact('b1'),
+        ).thenAnswer((_) async => const ContactPhoneModel());
         return ContactRevealBloc(repository);
       },
       act: (bloc) => bloc.add(const ContactRevealRequested('b1')),
@@ -59,7 +61,7 @@ void main() {
       'refus du serveur → état d\'erreur exploitable par l\'UI',
       build: () {
         when(
-          () => repository.getCounterpartyPhone('b1'),
+          () => repository.getCounterpartyContact('b1'),
         ).thenThrow(const ForbiddenException('Numéro non communicable'));
         return ContactRevealBloc(repository);
       },
@@ -77,9 +79,11 @@ void main() {
     blocTest<ContactRevealBloc, ContactRevealState>(
       'double tap pendant le chargement → une seule requête',
       build: () {
-        when(() => repository.getCounterpartyPhone('b1')).thenAnswer((_) async {
+        when(() => repository.getCounterpartyContact('b1')).thenAnswer((
+          _,
+        ) async {
           await Future<void>.delayed(const Duration(milliseconds: 20));
-          return '+221701234567';
+          return const ContactPhoneModel(phoneNumber: '+221701234567');
         });
         return ContactRevealBloc(repository);
       },
@@ -88,7 +92,45 @@ void main() {
         ..add(const ContactRevealRequested('b1')),
       wait: const Duration(milliseconds: 60),
       verify: (_) =>
-          verify(() => repository.getCounterpartyPhone('b1')).called(1),
+          verify(() => repository.getCounterpartyContact('b1')).called(1),
     );
+    blocTest<ContactRevealBloc, ContactRevealState>(
+      'publie le niveau de vérification renvoyé par le serveur',
+      build: () {
+        when(() => repository.getCounterpartyContact('b1')).thenAnswer(
+          (_) async => const ContactPhoneModel(
+            phoneNumber: '+22507000000',
+            verification: PhoneVerificationLevel.none,
+          ),
+        );
+        return ContactRevealBloc(repository);
+      },
+      act: (bloc) => bloc.add(const ContactRevealRequested('b1')),
+      expect: () => [
+        isA<ContactRevealLoading>(),
+        isA<ContactRevealSuccess>()
+            .having((s) => s.phoneNumber, 'phoneNumber', '+22507000000')
+            .having(
+              (s) => s.verification,
+              'verification',
+              PhoneVerificationLevel.none,
+            ),
+      ],
+    );
+
+    test('ContactPhoneModel : JSON sans verification = SMS (ancien back)', () {
+      final m = ContactPhoneModel.fromJson(const {
+        'phoneNumber': '+33600000000',
+      });
+      expect(m.verification, PhoneVerificationLevel.sms);
+      expect(
+        ContactPhoneModel.fromJson(const {
+          'phoneNumber': '+225',
+          'verification': 'YADONY',
+        }).verification,
+        PhoneVerificationLevel.yadony,
+      );
+      expect(ContactPhoneModel.fromJson(const {}).phoneNumber, isNull);
+    });
   });
 }

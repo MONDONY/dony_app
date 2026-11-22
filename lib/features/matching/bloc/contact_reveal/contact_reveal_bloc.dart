@@ -23,9 +23,11 @@ class ContactRevealBloc extends Bloc<ContactRevealEvent, ContactRevealState> {
     if (state is ContactRevealLoading) return;
     emit(const ContactRevealLoading());
     try {
+      final contact = await _repository.getCounterpartyContact(event.bidId);
       emit(
         ContactRevealSuccess(
-          await _repository.getCounterpartyPhone(event.bidId),
+          contact.phoneNumber,
+          verification: contact.verification,
         ),
       );
     } catch (e) {

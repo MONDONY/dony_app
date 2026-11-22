@@ -174,8 +174,29 @@ class ServiceUnavailableException extends ServerException {
   const ServiceUnavailableException([
     String message = 'Service unavailable', // i18n-ignore
     String? apiCode,
+    this.extensions,
   ]) : super(message, apiCode ?? 'SERVICE_UNAVAILABLE');
+
+  /// Membres d'extension du ProblemDetail RFC 7807 (propriétés posées par le
+  /// back à côté de `code`), par exemple `reason` et `callingCode` de
+  /// `sms-otp-disabled`. `null` quand la réponse n'en porte pas.
+  final Map<String, Object?>? extensions;
+
+  @override
+  List<Object?> get props => [message, code, extensions];
 }
+
+/// Code du 503 du back quand le code SMS ne peut pas partir.
+const smsOtpDisabledErrorCode = 'sms-otp-disabled';
+
+/// Vrai quand l'envoi du code SMS a été refusé parce que le pays du numéro est
+/// bloqué (les SMS n'y arrivent pas) : le signal pour proposer d'enregistrer le
+/// numéro sans le vérifier. Faux pour toute autre cause (SMS coupés, numéro
+/// réservé aux inscrits), et avec un back qui ne précise pas la raison.
+bool isSmsCountryBlocked(Object? error) =>
+    error is ServiceUnavailableException &&
+    error.code == smsOtpDisabledErrorCode &&
+    error.extensions?['reason'] == 'country-blocked';
 
 class StorageException extends AppException {
   const StorageException(super.message, {super.code});

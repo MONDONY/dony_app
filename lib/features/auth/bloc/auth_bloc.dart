@@ -95,6 +95,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRegisterWithEmailRequested>(_onRegisterWithEmailRequested);
     on<AuthAddPhoneFromProfileRequested>(_onAddPhoneFromProfileRequested);
     on<AuthAddEmailFromProfileRequested>(_onAddEmailFromProfileRequested);
+    on<AuthPhoneDeclared>(_onPhoneDeclared);
     on<AuthUserSynced>(_onUserSynced);
     on<AuthAvatarUploadRequested>(_onAvatarUploadRequested);
     on<AuthProfileRefreshRequested>(_onProfileRefreshRequested);
@@ -618,6 +619,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       unawaited(
         _analytics?.logEvent(
           AnalyticsEvents.phoneAttachFailed,
+          properties: {'error_code': error.code ?? 'unknown'},
+        ),
+      );
+      emit(AuthError(error));
+    }
+  }
+
+  // ─── Numéro déclaré sans SMS (pays bloqués) ─────────────────────────────────
+
+  Future<void> _onPhoneDeclared(
+    AuthPhoneDeclared event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      // Information seulement : ni preuve de possession, ni reconnexion (le
+      // compte Firebase ne change pas), ni effet sur la connexion ou les
+      // paiements.
+      final user = await _authRepository.declarePhone(event.phoneNumber);
+      emit(AuthProfileUpdated(user));
+      unawaited(_analytics?.logEvent(AnalyticsEvents.phoneDeclared));
+    } catch (e) {
+      final error = _friendlyError(e);
+      unawaited(
+        _analytics?.logEvent(
+          AnalyticsEvents.phoneDeclareFailed,
           properties: {'error_code': error.code ?? 'unknown'},
         ),
       );

@@ -4,6 +4,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -522,6 +523,44 @@ void main() {
     // Téléphone et identité vérifiés, e-mail non.
     expect(find.text('Non vérifié'), findsOneWidget);
     expect(find.text('Réside en France'), findsOneWidget);
+  });
+
+  testWidgets('téléphone vérifié par Yadony : libellé dédié', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: const ProfilePublicModel(
+          userId: _userId,
+          displayName: 'Fatou Diallo',
+          kycVerified: false,
+          isProAccount: false,
+          gpPro: false,
+          completedBidsCount: 0,
+          averageRating: 0,
+          ratingCount: 0,
+          memberSince: 'mars 2025',
+          badges: [],
+          phoneYadonyVerified: true,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Vérifié par Yadony'), findsOneWidget);
+    // Autre pastille que le SMS : bouclier bleu, pas coche verte.
+    final icons = tester.widgetList<DonyIcon>(find.byType(DonyIcon));
+    final shield = icons.where((i) => i.name == 'shield-check');
+    expect(shield, hasLength(1));
+    final context = tester.element(find.text('Vérifié par Yadony'));
+    final cs = Theme.of(context).colorScheme;
+    expect(shield.single.color, cs.info);
+    expect(shield.single.color, isNot(cs.success));
+    expect(
+      tester.widget<Text>(find.text('Vérifié par Yadony')).style?.color,
+      cs.info,
+    );
   });
 
   testWidgets('dernière connexion et temps de réponse mesuré (4H partie 2)', (

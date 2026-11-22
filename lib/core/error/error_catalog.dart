@@ -710,6 +710,15 @@ abstract final class ErrorCatalog {
     // n'arrivent pas dans ce pays). Le `detail` traduit côté back nomme le
     // pays et oriente vers l'e-mail, Google ou Apple, d'où sa place dans
     // `_serverDetailCodes` ; ce texte ne sert qu'en repli.
+    // 409 du back à l'enregistrement d'un numéro sans SMS : le pays n'est pas
+    // dans la liste des pays bloqués, donc le code SMS reste la seule voie.
+    // Message dédié : l'inverse du refus SMS (ici le SMS fonctionne).
+    'phone-declare-not-allowed': _Entry(
+      title: (l) => l.errorPhoneDeclareNotAllowedTitle,
+      message: (l) => l.errorPhoneDeclareNotAllowedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
     'sms-otp-disabled': _Entry(
       title: (l) => l.errorSmsOtpDisabledTitle,
       message: (l) => l.errorSmsOtpDisabledMessage,

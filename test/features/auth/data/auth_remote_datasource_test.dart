@@ -346,6 +346,41 @@ void main() {
     );
   });
 
+  group('declarePhone', () {
+    test(
+      'POST /auth/sms-otp/declare avec phoneNumber seul, renvoie le profil',
+      () async {
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/auth/sms-otp/declare',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer(
+          (_) async => Response(
+            data: {
+              ..._userJson,
+              'declaredPhone': '+22507000000',
+              'declaredPhoneLevel': 'DECLARED',
+            },
+            statusCode: 200,
+            requestOptions: RequestOptions(path: '/auth/sms-otp/declare'),
+          ),
+        );
+
+        final user = await datasource.declarePhone('+22507000000');
+
+        expect(user.declaredPhone, '+22507000000');
+        expect(user.declaredPhoneLevel, 'DECLARED');
+        verify(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/auth/sms-otp/declare',
+            data: {'phoneNumber': '+22507000000'},
+          ),
+        ).called(1);
+      },
+    );
+  });
+
   group('registerWithEmail', () {
     test('returns UserModel on success', () async {
       when(

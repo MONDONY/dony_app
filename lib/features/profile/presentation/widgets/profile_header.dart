@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/design/widgets/phone_verification_badge.dart';
+import 'package:dony/core/phone/phone_verification_level.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ class ProfileHeader extends StatelessWidget {
     this.gpPro = false,
     this.avatarUrl,
     this.phoneNumber,
+    this.declaredPhoneLevel,
     this.email,
     this.city,
     this.username,
@@ -36,6 +39,10 @@ class ProfileHeader extends StatelessWidget {
   final bool gpPro;
   final String? avatarUrl;
   final String? phoneNumber;
+
+  /// Niveau du numéro seulement déclaré (pays sans SMS) ; `null` sans numéro
+  /// déclaré. Ignoré dès qu'un [phoneNumber] vérifié par SMS existe.
+  final PhoneVerificationLevel? declaredPhoneLevel;
   final String? email;
   final String? city;
 
@@ -141,6 +148,7 @@ class ProfileHeader extends StatelessWidget {
                       // Chips tél / email / KYC
                       _ContactChips(
                         phoneNumber: phoneNumber,
+                        declaredPhoneLevel: declaredPhoneLevel,
                         email: email,
                         isKycVerified: isKycVerified,
                         username: username,
@@ -219,12 +227,14 @@ class _ProBadge extends StatelessWidget {
 class _ContactChips extends StatelessWidget {
   const _ContactChips({
     this.phoneNumber,
+    this.declaredPhoneLevel,
     this.email,
     required this.isKycVerified,
     this.username,
   });
 
   final String? phoneNumber;
+  final PhoneVerificationLevel? declaredPhoneLevel;
   final String? email;
   final bool isKycVerified;
   final String? username;
@@ -254,6 +264,8 @@ class _ContactChips extends StatelessWidget {
                 bg: DonyColors.success50,
                 fg: DonyColors.success700,
               )
+            else if (declaredPhoneLevel != null)
+              PhoneVerificationBadge(declaredPhoneLevel!)
             else
               _Chip(
                 label: l.profileChipPhoneMissing,

@@ -24325,6 +24325,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'With a Yadony account, share the trip poster: image, link and caption ready to send.';
 
   @override
+  String get phoneVerificationNone => 'Not verified';
+
+  @override
+  String get phoneVerificationYadony => 'Verified by Yadony';
+
+  @override
+  String get phoneVerificationSms => 'Verified';
+
+  @override
+  String get contactPhoneDeclareTitle => 'No SMS in this country';
+
+  @override
+  String get contactPhoneDeclareMessage =>
+      'Text messages can\'t reach this country. You can save this number without verifying it: it will be used to call you and to find you, never to sign in or to pay.';
+
+  @override
+  String get contactPhoneDeclareAction => 'Save without verifying';
+
+  @override
+  String get contactPhoneDeclaredSuccess => 'Number saved.';
+
+  @override
+  String get errorPhoneDeclareNotAllowedTitle => 'SMS code available';
+
+  @override
+  String get errorPhoneDeclareNotAllowedMessage =>
+      'This number can receive an SMS code. Tap \"Send code\" to verify it.';
+
+  @override
   String get usernameSheetTitle => 'My username';
 
   @override

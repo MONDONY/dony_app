@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/bid_checkout_response_model.d
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/data/models/commission_allocation_preview.dart';
+import 'package:dony/features/matching/data/models/contact_phone_model.dart';
 import 'package:dony/features/matching/data/models/traveler_bids_page.dart';
 
 class BidRepository {
@@ -100,6 +101,10 @@ class BidRepository {
   /// Numéro de la contrepartie, récupéré au moment de l'appel téléphonique.
   Future<String?> getCounterpartyPhone(String bidId) =>
       _datasource.getCounterpartyPhone(bidId);
+
+  /// Numéro de la contrepartie et son niveau de vérification.
+  Future<ContactPhoneModel> getCounterpartyContact(String bidId) =>
+      _datasource.getCounterpartyContact(bidId);
 
   Future<TravelerBidsPage> getTravelerBids({int page = 0, int size = 20}) =>
       _datasource.getTravelerBids(page: page, size: size);

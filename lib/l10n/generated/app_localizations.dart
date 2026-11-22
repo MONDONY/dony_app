@@ -39156,6 +39156,60 @@ abstract class AppLocalizations {
   /// **'Avec un compte Yadony, partagez l\'affiche du trajet : image, lien et légende prêts à envoyer.'**
   String get tripShareLoginInviteBody;
 
+  /// Pastille d'un numéro seulement déclaré, vérifié par personne (phone_verification_badge.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non vérifié'**
+  String get phoneVerificationNone;
+
+  /// Pastille d'un numéro déclaré puis vérifié par l'équipe Yadony (phone_verification_badge.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifié par Yadony'**
+  String get phoneVerificationYadony;
+
+  /// Pastille d'un numéro vérifié par un code SMS (phone_verification_badge.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifié'**
+  String get phoneVerificationSms;
+
+  /// Titre du bandeau proposé quand le code SMS ne peut pas partir vers le pays du numéro (add_contact_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de SMS dans ce pays'**
+  String get contactPhoneDeclareTitle;
+
+  /// Explication du bandeau « Enregistrer sans vérifier » (add_contact_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les SMS n\'arrivent pas dans ce pays. Vous pouvez enregistrer ce numéro sans le vérifier : il servira à vous appeler et à vous retrouver, jamais à vous connecter ni à payer.'**
+  String get contactPhoneDeclareMessage;
+
+  /// Bouton du bandeau : enregistre le numéro sans code SMS (add_contact_sheets.dart). Une seule ligne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer sans vérifier'**
+  String get contactPhoneDeclareAction;
+
+  /// Confirmation après l'enregistrement d'un numéro sans vérification (add_contact_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro enregistré.'**
+  String get contactPhoneDeclaredSuccess;
+
+  /// Titre de l'erreur 409 phone-declare-not-allowed : le pays du numéro reçoit les SMS (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code SMS disponible'**
+  String get errorPhoneDeclareNotAllowedTitle;
+
+  /// Message de l'erreur 409 phone-declare-not-allowed : la vérification par SMS reste la voie (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro peut recevoir un code par SMS. Touchez « Envoyer le code » pour le vérifier.'**
+  String get errorPhoneDeclareNotAllowedMessage;
+
   /// Feuille « Mon identifiant » : titre.
   ///
   /// In fr, this message translates to:
