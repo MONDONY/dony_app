@@ -61,12 +61,18 @@ class CancellationFeeScale {
     for (var i = 0; i < tiers.length; i++) {
       final t = tiers[i];
       if (t.minDaysBefore < 0 || t.rate < 0 || t.rate > 1) return null;
+      // Un taux à fraction de pourcent serait arrondi : un faux chiffre.
+      final pct = t.rate * 100;
+      if ((pct - pct.roundToDouble()).abs() > 1e-6) return null;
       if (i > 0) {
         final prev = tiers[i - 1];
         if (t.minDaysBefore >= prev.minDaysBefore) return null;
         if (t.rate < prev.rate) return null;
       }
     }
+    // Sans palier à 0 jour, rien ne dirait ce qui s'applique après le dernier
+    // seuil.
+    if (tiers.last.minDaysBefore != 0) return null;
     final rows = <CancellationFeeScaleRow>[];
     for (var i = 0; i < tiers.length; i++) {
       final t = tiers[i];

@@ -74,6 +74,8 @@ void main() {
       'taux au-dessus de 1': [_t(3, 0), _t(0, 1.5)],
       'taux négatif': [_t(3, -0.1), _t(0, 0.2)],
       'taux qui baisse près du départ': [_t(3, 0.2), _t(0, 0.1)],
+      'taux à fraction de pourcent (0.125)': [_t(3, 0), _t(0, 0.125)],
+      'dernier palier au-dessus de 0 jour': [_t(5, 0), _t(1, 0.2)],
     };
     malformed.forEach((label, tiers) {
       test('paliers incohérents ($label) : null', () {

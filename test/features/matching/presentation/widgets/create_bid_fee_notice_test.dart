@@ -199,6 +199,86 @@ Future<void> _goToPaymentPicker(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+// ── Harness (site négociation — formulaire puis étape paiement) ────────────────
+//
+// Copié/adapté de test/features/matching/presentation/create_bid_negotiation_test.dart
+// (helpers privés à ce fichier).
+
+const _kSettle = Duration(milliseconds: 600);
+
+Widget _negotiationApp(AnnouncementModel announcement) => MaterialApp.router(
+  theme: AppTheme.light(),
+  localizationsDelegates: const [
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ],
+  supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
+  routerConfig: GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, _) =>
+            CreateBidScreen(announcement: announcement, negotiation: true),
+      ),
+    ],
+  ),
+);
+
+Future<void> _openNegotiation(
+  WidgetTester tester,
+  AnnouncementModel announcement,
+) async {
+  tester.view.physicalSize = const Size(800, 6000);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(_negotiationApp(announcement));
+  await tester.pump(_kSettle);
+}
+
+/// Remplit le formulaire de proposition jusqu'au disclaimer, sans soumettre.
+Future<void> _fillNegotiationForm(WidgetTester tester) async {
+  await tester.drag(find.byType(Slider), const Offset(200, 0));
+  await tester.pump(_kSettle);
+
+  await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
+  await tester.tap(find.byKey(const Key('bid-content-field')));
+  await tester.pump(_kSettle);
+  await tester.pump(_kSettle);
+  await tester.enterText(
+    find.byKey(const Key('bid-content-field')),
+    'Chaussures',
+  );
+  await tester.pump(_kSettle);
+  await tester.pump(_kSettle);
+  await tester.tap(find.byKey(const Key('bid-content-item-Chaussures')));
+  await tester.pump(_kSettle);
+
+  await tester.enterText(
+    find.widgetWithText(
+      TextFormField,
+      'Médicaments pour diabète + 2 tee-shirts enfants',
+    ),
+    'Deux paires de chaussures',
+  );
+  await tester.pump(_kSettle);
+  await tester.enterText(
+    find.widgetWithText(TextFormField, 'Prénom et nom du destinataire'),
+    'Awa Diop',
+  );
+  await tester.pump(_kSettle);
+  await tester.enterText(
+    find.widgetWithText(TextFormField, 'Téléphone du destinataire'),
+    '+221700000000',
+  );
+  await tester.pump(_kSettle);
+
+  await tester.ensureVisible(find.text('Je signe & j\'accepte'));
+  await tester.tap(find.text('Je signe & j\'accepte'));
+  await tester.pump(_kSettle);
+  await tester.pump(_kSettle);
+}
+
 void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr');
@@ -400,6 +480,71 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Barème des frais d\'annulation'), findsOneWidget);
       expect(find.byKey(const Key('cancel-fee-scale-close')), findsOneWidget);
+    });
+  });
+
+  group('Mise en page et négociation', () {
+    testWidgets('360 dp, texte x2 : la ligne et le bouton coexistent', (
+      tester,
+    ) async {
+      await registerFeeConfig(config: inForce);
+      await _openSheet(
+        tester,
+        _announcement(
+          methods: {
+            BidPaymentMethod.stripe,
+            BidPaymentMethod.mobileMoney,
+            BidPaymentMethod.cash,
+          },
+          currency: 'EUR',
+        ),
+      );
+      await _goToPaymentPicker(tester);
+      // Étape de paiement atteinte (formulaire rempli à largeur normale),
+      // puis téléphone étroit et texte doublé.
+      tester.view.physicalSize = const Size(360, 5000);
+      addTearDown(tester.platformDispatcher.clearAllTestValues);
+      tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+      await tester.pumpAndSettle();
+      final button = find.byKey(const Key('bid-submit-btn'));
+
+      await tester.tap(find.byKey(const Key('payment-method-cash')));
+      await tester.pumpAndSettle();
+      expect(notice, findsNothing);
+      // Débordement de 30 px déjà présent à ce réglage extrême, sans la ligne
+      // (étape de paiement, hors périmètre) : on le purge pour ne juger que ce
+      // que l'ajout de la ligne provoque.
+      tester.takeException();
+      final heightWithout = tester.getSize(button).height;
+
+      await tester.tap(find.byKey(const Key('payment-method-stripe')));
+      await tester.pumpAndSettle();
+      expect(notice, findsOneWidget);
+      expect(tester.takeException(), isNull);
+      expect(button.hitTestable(), findsOneWidget);
+      final label = tester.widget<DonyButton>(button).label;
+      final text = find.descendant(of: button, matching: find.text(label));
+      expect(text, findsOneWidget);
+      final lineHeight = tester.getSize(text).height;
+      // Une ligne : le texte n'est pas plus haut que le bouton, qui garde sa
+      // hauteur avec la ligne au-dessus.
+      expect(lineHeight, lessThan(tester.getSize(button).height));
+      expect(tester.getSize(button).height, heightWithout);
+    });
+
+    testWidgets('mode négociation : aucune ligne', (tester) async {
+      await registerFeeConfig(config: inForce);
+      await _openNegotiation(
+        tester,
+        _announcement(
+          methods: {BidPaymentMethod.stripe, BidPaymentMethod.cash},
+          currency: 'EUR',
+          negotiable: true,
+        ),
+      );
+      await _fillNegotiationForm(tester);
+      expect(find.byKey(const Key('bid-submit-btn')), findsOneWidget);
+      expect(notice, findsNothing);
     });
   });
 }
