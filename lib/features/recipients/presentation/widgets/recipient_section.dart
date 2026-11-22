@@ -346,11 +346,14 @@ class _PickerButton extends StatelessWidget {
               // partageait la largeur restante à parts égales avec un
               // Flexible(flex:1), ce qui aurait fait passer le libellé à la
               // ligne même à 100 %. Expanded lui laisse toute la place
-              // disponible (rendu identique à 100 %), avec passage à la
-              // ligne seulement si besoin à 200 %.
+              // disponible ; le libellé reste sur une ligne (règle des
+              // libellés de bouton), tronqué par une ellipse si besoin.
               Expanded(
                 child: Text(
                   label ?? context.l10n.recipientSectionPickerButton,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
                   style: tt.bodyMedium?.copyWith(
                     color: cs.primary,
                     fontWeight: FontWeight.w600,

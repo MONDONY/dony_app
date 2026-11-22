@@ -145,4 +145,25 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  for (final loc in const [AppL10n.fr, AppL10n.en]) {
+    testWidgets(
+      'libellé du choix Yadony sur une ligne à 360 dp (${loc.languageCode})',
+      (tester) async {
+        await pump(tester, locale: loc, chosen: null);
+        final label = find.descendant(
+          of: choice(),
+          matching: find.byType(Text),
+        );
+        final text = tester.widget<Text>(label);
+        expect(text.maxLines, 1);
+        expect(text.softWrap, isFalse);
+        expect(text.overflow, TextOverflow.ellipsis);
+        expect(tester.takeException(), isNull);
+        // Une seule ligne : hauteur inférieure à deux lignes du style.
+        final lineHeight = (text.style?.fontSize ?? 14) * 1.6;
+        expect(tester.getSize(label).height, lessThan(lineHeight * 2));
+      },
+    );
+  }
 }
