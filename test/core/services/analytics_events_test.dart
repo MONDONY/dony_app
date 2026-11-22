@@ -89,6 +89,7 @@ void main() {
       AnalyticsEvents.bidAmendmentPaymentStarted,
       AnalyticsEvents.handoverBlockedAmendment,
       AnalyticsEvents.handoverBlockedSenderNoShow,
+      AnalyticsEvents.cancellationFeePreviewFailed,
       AnalyticsEvents.blocError,
     ];
     for (final e in events) {
@@ -135,6 +136,13 @@ void main() {
     expect(
       AnalyticsEvents.handoverBlockedSenderNoShow,
       'handover_blocked_sender_noshow',
+    );
+  });
+
+  test('nom exact de l\'échec de l\'aperçu des frais d\'annulation', () {
+    expect(
+      AnalyticsEvents.cancellationFeePreviewFailed,
+      'cancellation_fee_preview_failed',
     );
   });
 }

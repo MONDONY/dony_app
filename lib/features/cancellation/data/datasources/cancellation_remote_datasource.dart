@@ -1,4 +1,5 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/cancellation/data/models/cancellation_fee_preview_model.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/data/models/delivery_noshow_procedure_model.dart';
 
@@ -128,6 +129,20 @@ class CancellationRemoteDatasource {
       data: {'returnCode': code},
     );
     return ReturnCodeModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Aperçu des frais d'annulation de l'expéditeur avant qu'il confirme
+  /// (yadony-back #779). Expéditeur seul (403 sinon), 404 sur un colis inconnu
+  /// ou sur un back antérieur à la route. Lecture seule.
+  Future<CancellationFeePreviewModel> getFeePreview(String bidId) async {
+    final response = await _apiClient.dio.get(
+      '/cancellations/bids/$bidId/fee-preview',
+    );
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw const FormatException('fee-preview: unexpected body');
+    }
+    return CancellationFeePreviewModel.fromJson(data);
   }
 
   /// L'expéditeur consulte son code de retour + l'état de la restitution (D7).

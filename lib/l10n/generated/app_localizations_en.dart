@@ -7567,6 +7567,100 @@ class AppLocalizationsEn extends AppLocalizations {
       'The parcel is already with the traveler. You will be fully refunded and get your parcel back: the traveler will confirm the return by entering your return code.';
 
   @override
+  String get bidDetailCancelAfterHandoverBodyWithFee =>
+      'The parcel is already with the traveler. You will get your parcel back: the traveler will confirm the return by entering your return code.';
+
+  @override
+  String get bidDetailCancelAfterHandoverBodyUnknownFee =>
+      'The parcel is already with the traveler. You will be refunded, minus any cancellation fee, and get your parcel back: the traveler will confirm the return by entering your return code.';
+
+  @override
+  String cancelFeeRetained(String fee) {
+    return 'A cancellation fee of $fee will be deducted.';
+  }
+
+  @override
+  String cancelFeeRefunded(String refund) {
+    return 'You will get $refund back.';
+  }
+
+  @override
+  String cancelFeeReasonDays(int days, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other:
+          'The trip leaves in $days days: the fee is $percent% of the amount paid.',
+      one: 'The trip leaves in 1 day: the fee is $percent% of the amount paid.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cancelFeeReasonHours(int hours, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other:
+          'The trip leaves in $hours hours: the fee is $percent% of the amount paid.',
+      one:
+          'The trip leaves in 1 hour: the fee is $percent% of the amount paid.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cancelFeeReasonSoon(int percent) {
+    return 'The trip leaves in less than an hour: the fee is $percent% of the amount paid.';
+  }
+
+  @override
+  String cancelFeeReasonRate(int percent) {
+    return 'The fee is $percent% of the amount paid.';
+  }
+
+  @override
+  String get cancelFeeLaterCostsMore => 'Cancelling later costs more.';
+
+  @override
+  String cancelFeeLeavesInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'The trip leaves in $days days.',
+      one: 'The trip leaves in 1 day.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cancelFeeLeavesInHours(int hours) {
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other: 'The trip leaves in $hours hours.',
+      one: 'The trip leaves in 1 hour.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cancelFeeLeavesSoon => 'The trip leaves in less than an hour.';
+
+  @override
+  String cancelFeeCapped(String fee) {
+    return 'Fee capped at $fee per parcel.';
+  }
+
+  @override
+  String get cancelFeeRecheckFailed =>
+      'We couldn\'t re-check the amount and it may have gone up. Confirm again to cancel.';
+
+  @override
+  String get cancelFeeIncreased =>
+      'The fee just went up. Check the amount before you confirm.';
+
+  @override
   String get bidDetailMoreDetails => 'More details';
 
   @override

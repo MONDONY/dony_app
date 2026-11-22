@@ -5,6 +5,7 @@ import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
+import 'package:dony/features/cancellation/presentation/widgets/sender_cancel_confirm_dialog.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -41,47 +42,21 @@ void showSenderOptionsSheet(BuildContext context, BidModel bid) {
 }
 
 /// Confirmation d'annulation d'une demande par l'expéditeur, avant remise du
-/// colis (remboursement automatique). Partagée entre la feuille d'options et la
-/// carte « fenêtre de remise dépassée ». `context` doit voir le [BidBloc] de
+/// colis (remboursement automatique, moins les frais d'annulation éventuels
+/// que le dialogue annonce). Partagée entre la feuille d'options et la carte
+/// « fenêtre de remise dépassée ». `context` doit voir le [BidBloc] de
 /// l'écran de détail.
 void showSenderCancelBidDialog(BuildContext context, BidModel bid) {
-  final tt = Theme.of(context).textTheme;
-  final cs = Theme.of(context).colorScheme;
   final l = context.l10n;
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(DonyRadius.sheet),
-      ),
-      title: Text(l.bidDetailCancelRequestLabel, style: tt.headlineMedium),
-      content: Text(
-        l.bidDetailCancelConfirmBody,
-        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => ctx.pop(),
-          child: Text(
-            l.bidDetailNo,
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ),
-        FilledButton(
-          onPressed: () {
-            ctx.pop();
-            context.read<BidBloc>().add(
-              BidCancelRequested(bid.id, actor: 'sender'),
-            );
-          },
-          style: FilledButton.styleFrom(
-            backgroundColor: cs.error,
-            foregroundColor: DonyColors.white,
-            elevation: 0,
-          ),
-          child: Text(l.bidDetailConfirmCancelButton, style: tt.labelLarge),
-        ),
-      ],
+  final bidBloc = context.read<BidBloc>();
+  unawaited(
+    showSenderCancelConfirmDialog(
+      context,
+      bid: bid,
+      title: l.bidDetailCancelRequestLabel,
+      body: l.bidDetailCancelConfirmBody,
+      onConfirmed: () =>
+          bidBloc.add(BidCancelRequested(bid.id, actor: 'sender')),
     ),
   );
 }
@@ -374,47 +349,25 @@ class _SenderOptionsSheet extends StatelessWidget {
     );
   }
 
+  /// Annulation après remise (D5), avant le départ. Avec des frais, le corps
+  /// ne promet plus un remboursement intégral : le bloc des frais dit ce qui
+  /// est rendu. Aperçu illisible : « moins d'éventuels frais d'annulation ».
+  /// L'annulation avant remise n'a pas ce corps de repli : le sien ne promet
+  /// aucun remboursement.
   void _showAfterHandoverCancelDialog(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.sheet),
+    final cancellationBloc = context.read<CancellationBloc>();
+    unawaited(
+      showSenderCancelConfirmDialog(
+        context,
+        bid: bid,
+        title: l.bidDetailCancelAfterHandoverTitle,
+        body: l.bidDetailCancelAfterHandoverBody,
+        bodyWithFee: l.bidDetailCancelAfterHandoverBodyWithFee,
+        bodyUnknownFee: l.bidDetailCancelAfterHandoverBodyUnknownFee,
+        onConfirmed: () => cancellationBloc.add(
+          CancelAfterHandoverRequested(bid.id, actor: 'sender'),
         ),
-        title: Text(
-          l.bidDetailCancelAfterHandoverTitle,
-          style: tt.headlineMedium,
-        ),
-        content: Text(
-          l.bidDetailCancelAfterHandoverBody,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => ctx.pop(),
-            child: Text(
-              l.bidDetailNo,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ),
-          FilledButton(
-            onPressed: () {
-              ctx.pop();
-              context.read<CancellationBloc>().add(
-                CancelAfterHandoverRequested(bid.id, actor: 'sender'),
-              );
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: cs.error,
-              foregroundColor: DonyColors.white,
-              elevation: 0,
-            ),
-            child: Text(l.bidDetailConfirmCancelButton, style: tt.labelLarge),
-          ),
-        ],
       ),
     );
   }
