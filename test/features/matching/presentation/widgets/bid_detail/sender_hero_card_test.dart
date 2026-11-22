@@ -2,10 +2,15 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_fee_preview/cancellation_fee_preview_cubit.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -27,6 +32,11 @@ import '../../../../../helpers/l10n_test_helpers.dart';
 class _MockCancellationBloc
     extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
+
+class _MockCancellationRepository extends Mock
+    implements CancellationRepository {}
+
+class _MockAnalytics extends Mock implements AnalyticsService {}
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
@@ -347,6 +357,16 @@ void main() {
         status: 'ACCEPTED',
         handoverDeadline: DateTime.now().subtract(const Duration(hours: 2)),
       );
+      // Aperçu des frais indisponible (back antérieur) : dialogue inchangé.
+      final feeRepository = _MockCancellationRepository();
+      when(
+        () => feeRepository.getFeePreview('bid-001'),
+      ).thenThrow(const NotFoundException());
+      final analytics = _MockAnalytics();
+      getIt.registerFactory<CancellationFeePreviewCubit>(
+        () => CancellationFeePreviewCubit(feeRepository, analytics),
+      );
+      addTearDown(getIt.reset);
       // La confirmation se ferme via GoRouter (ctx.pop()), comme dans l'app.
       final router = GoRouter(
         routes: [

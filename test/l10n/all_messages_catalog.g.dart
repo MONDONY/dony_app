@@ -2787,6 +2787,18 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailCancelAfterHandoverTitle': (l) =>
       l.bidDetailCancelAfterHandoverTitle,
   'bidDetailCancelAfterHandoverBody': (l) => l.bidDetailCancelAfterHandoverBody,
+  'bidDetailCancelAfterHandoverBodyWithFee': (l) =>
+      l.bidDetailCancelAfterHandoverBodyWithFee,
+  'cancelFeeRetained': (l) => l.cancelFeeRetained(placeholderMarker('fee')),
+  'cancelFeeRefunded': (l) => l.cancelFeeRefunded(placeholderMarker('refund')),
+  'cancelFeeReasonDays': (l) =>
+      l.cancelFeeReasonDays(intPlaceholderValue, intPlaceholderValue),
+  'cancelFeeReasonHours': (l) =>
+      l.cancelFeeReasonHours(intPlaceholderValue, intPlaceholderValue),
+  'cancelFeeReasonSoon': (l) => l.cancelFeeReasonSoon(intPlaceholderValue),
+  'cancelFeeReasonRate': (l) => l.cancelFeeReasonRate(intPlaceholderValue),
+  'cancelFeeLaterCostsMore': (l) => l.cancelFeeLaterCostsMore,
+  'cancelFeeIncreased': (l) => l.cancelFeeIncreased,
   'bidDetailMoreDetails': (l) => l.bidDetailMoreDetails,
   'bidDetailSectionTodo': (l) => l.bidDetailSectionTodo,
   'bidDetailSectionShipment': (l) => l.bidDetailSectionShipment,
@@ -8627,6 +8639,8 @@ const textParameters = <String, List<String>>{
   'bidDetailGainCashAmount': ['amount'],
   'bidDetailGainCashGrossDetail': ['commission', 'net'],
   'bidRejectionReasonShown': ['reason'],
+  'cancelFeeRetained': ['fee'],
+  'cancelFeeRefunded': ['refund'],
   'senderTileColisSubtitle': ['weight', 'recipient'],
   'travelerTodoSupplementSummary': ['amount'],
   'senderTodoRescheduleSummary': ['deadline'],

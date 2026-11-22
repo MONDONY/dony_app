@@ -7613,6 +7613,63 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.';
 
   @override
+  String get bidDetailCancelAfterHandoverBodyWithFee =>
+      'Le colis est déjà chez le voyageur. Vous récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.';
+
+  @override
+  String cancelFeeRetained(String fee) {
+    return 'Des frais d\'annulation de $fee sont retenus.';
+  }
+
+  @override
+  String cancelFeeRefunded(String refund) {
+    return 'Vous êtes remboursé de $refund.';
+  }
+
+  @override
+  String cancelFeeReasonDays(int days, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other:
+          'Le trajet part dans $days jours : les frais sont de $percent % du montant payé.',
+      one:
+          'Le trajet part dans 1 jour : les frais sont de $percent % du montant payé.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cancelFeeReasonHours(int hours, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other:
+          'Le trajet part dans $hours heures : les frais sont de $percent % du montant payé.',
+      one:
+          'Le trajet part dans 1 heure : les frais sont de $percent % du montant payé.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cancelFeeReasonSoon(int percent) {
+    return 'Le trajet part dans moins d\'une heure : les frais sont de $percent % du montant payé.';
+  }
+
+  @override
+  String cancelFeeReasonRate(int percent) {
+    return 'Les frais sont de $percent % du montant payé.';
+  }
+
+  @override
+  String get cancelFeeLaterCostsMore => 'Annuler plus tard coûte plus cher.';
+
+  @override
+  String get cancelFeeIncreased =>
+      'Les frais viennent d\'augmenter. Vérifiez le montant avant de confirmer.';
+
+  @override
   String get bidDetailMoreDetails => 'Plus de détails';
 
   @override

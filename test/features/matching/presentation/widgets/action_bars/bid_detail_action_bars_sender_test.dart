@@ -1,10 +1,17 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_fee_preview/cancellation_fee_preview_cubit.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/data/models/cancellation_fee_preview_model.dart';
+import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
 import 'package:dony/features/matching/bloc/bid_amendment/amendment_request_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -31,6 +38,9 @@ class _MockAmendmentRepository extends Mock implements BidAmendmentRepository {}
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
+class _MockCancellationRepository extends Mock
+    implements CancellationRepository {}
+
 class _MockCancellationBloc
     extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
@@ -47,8 +57,10 @@ BidModel _bid({
   String? trackingToken,
   bool amendmentAllowed = false,
   BidMoneyBreakdown? moneyBreakdown,
+  DateTime? departureAt,
 }) => BidModel(
   moneyBreakdown: moneyBreakdown,
+  departureAt: departureAt,
   id: 'bid-42',
   announcementId: 'ann-1',
   senderId: 'sender-1',
@@ -71,15 +83,33 @@ void main() {
   late _MockBidBloc bidBloc;
   late _MockCancellationBloc cancellationBloc;
   late _MockConversationOpenBloc openBloc;
+  late _MockCancellationRepository feeRepository;
 
   setUp(() {
     bidBloc = _MockBidBloc();
     cancellationBloc = _MockCancellationBloc();
     openBloc = _MockConversationOpenBloc();
+    feeRepository = _MockCancellationRepository();
     when(() => bidBloc.state).thenReturn(BidInitial());
     when(() => cancellationBloc.state).thenReturn(CancellationInitial());
     when(() => openBloc.state).thenReturn(const ConversationOpenInitial());
+    // Back antérieur à l'aperçu des frais : 404, le dialogue reste inchangé.
+    when(() => feeRepository.getFeePreview(any())).thenThrow(
+      DioException(
+        requestOptions: RequestOptions(path: '/fee-preview'),
+        error: const NotFoundException(),
+      ),
+    );
+    final analytics = _MockAnalytics();
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+    getIt.registerFactory<CancellationFeePreviewCubit>(
+      () => CancellationFeePreviewCubit(feeRepository, analytics),
+    );
   });
+
+  tearDown(getIt.reset);
 
   Widget wrap(Widget Function(BuildContext) bar) => MaterialApp.router(
     theme: AppTheme.light(),
@@ -327,6 +357,87 @@ void main() {
 
       expect(find.byType(AlertDialog), findsNothing);
       verifyNever(() => cancellationBloc.add(any()));
+    });
+
+    group('frais d\'annulation', () {
+      String eur(double v) =>
+          CurrencyFormatter.format(v, SupportedCurrency.eur);
+      final departure = DateTime.now().add(const Duration(days: 2, hours: 6));
+
+      setUp(() {
+        when(() => feeRepository.getFeePreview('bid-42')).thenAnswer(
+          (_) async => CancellationFeePreviewModel(
+            rate: 0.2,
+            fee: 20,
+            refundAmount: 80,
+            currency: 'EUR',
+            nextTierAt: departure.subtract(const Duration(days: 1)),
+          ),
+        );
+      });
+
+      testWidgets(
+        'avant remise : aperçu lu à l\'ouverture, bloc des frais, puis '
+        'BidCancelRequested',
+        (tester) async {
+          await openOptions(
+            tester,
+            _bid(status: 'ACCEPTED', departureAt: departure),
+          );
+          await tester.tap(find.text(_l.bidDetailCancelRefundAutoSubtitle));
+          await tester.pumpAndSettle();
+
+          verify(() => feeRepository.getFeePreview('bid-42')).called(1);
+          expect(find.text(_l.bidDetailCancelConfirmBody), findsOneWidget);
+          expect(find.text(_l.cancelFeeRetained(eur(20))), findsOneWidget);
+          expect(find.text(_l.cancelFeeRefunded(eur(80))), findsOneWidget);
+          expect(find.text(_l.cancelFeeReasonDays(2, 20)), findsOneWidget);
+          expect(find.text(_l.cancelFeeLaterCostsMore), findsOneWidget);
+
+          await tester.tap(find.text(_l.bidDetailConfirmCancelButton));
+          await tester.pumpAndSettle();
+
+          verify(
+            () => bidBloc.add(any(that: isA<BidCancelRequested>())),
+          ).called(1);
+        },
+      );
+
+      testWidgets(
+        'après remise : plus de « remboursé intégralement », bloc des frais, '
+        'puis CancelAfterHandoverRequested',
+        (tester) async {
+          await openOptions(
+            tester,
+            _bid(status: 'HANDED_OVER', departureAt: departure),
+          );
+          await tester.tap(
+            find.text(_l.bidDetailCancelAfterHandoverOptionSubtitle),
+          );
+          await tester.pumpAndSettle();
+
+          verify(() => feeRepository.getFeePreview('bid-42')).called(1);
+          expect(
+            find.text(_l.bidDetailCancelAfterHandoverTitle),
+            findsOneWidget,
+          );
+          expect(find.text(_l.bidDetailCancelAfterHandoverBody), findsNothing);
+          expect(
+            find.text(_l.bidDetailCancelAfterHandoverBodyWithFee),
+            findsOneWidget,
+          );
+          expect(find.text(_l.cancelFeeRetained(eur(20))), findsOneWidget);
+
+          await tester.tap(find.text(_l.bidDetailConfirmCancelButton));
+          await tester.pumpAndSettle();
+
+          verify(
+            () => cancellationBloc.add(
+              any(that: isA<CancelAfterHandoverRequested>()),
+            ),
+          ).called(1);
+        },
+      );
     });
 
     // « Supprimer cette demande » a quitté le footer : le menu ⋮ la propose
