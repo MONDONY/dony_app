@@ -73,11 +73,14 @@ void main() {
 
   tearDown(getIt.reset);
 
+  /// Ouvre le dialogue tel que l'app l'ouvre : après remise par défaut (corps
+  /// avec frais et corps « frais inconnus »), ou avant remise
+  /// (`afterHandover: false`, corps unique qui ne promet aucun remboursement).
   Future<AppLocalizations> open(
     WidgetTester tester, {
     Locale locale = AppL10n.fr,
     BidModel? bid,
-    bool withFeeBody = true,
+    bool afterHandover = true,
   }) async {
     tester.view.physicalSize = const Size(360 * 3, 780 * 3);
     tester.view.devicePixelRatio = 3;
@@ -97,16 +100,25 @@ void main() {
               builder: (_, _) => Scaffold(
                 body: Builder(
                   builder: (context) => TextButton(
-                    onPressed: () => showSenderCancelConfirmDialog(
-                      context,
-                      bid: target,
-                      title: l.bidDetailCancelAfterHandoverTitle,
-                      body: l.bidDetailCancelAfterHandoverBody,
-                      bodyWithFee: withFeeBody
-                          ? l.bidDetailCancelAfterHandoverBodyWithFee
-                          : null,
-                      onConfirmed: () => confirmed++,
-                    ),
+                    onPressed: () => afterHandover
+                        ? showSenderCancelConfirmDialog(
+                            context,
+                            bid: target,
+                            title: l.bidDetailCancelAfterHandoverTitle,
+                            body: l.bidDetailCancelAfterHandoverBody,
+                            bodyWithFee:
+                                l.bidDetailCancelAfterHandoverBodyWithFee,
+                            bodyUnknownFee:
+                                l.bidDetailCancelAfterHandoverBodyUnknownFee,
+                            onConfirmed: () => confirmed++,
+                          )
+                        : showSenderCancelConfirmDialog(
+                            context,
+                            bid: target,
+                            title: l.bidDetailCancelRequestLabel,
+                            body: l.bidDetailCancelConfirmBody,
+                            onConfirmed: () => confirmed++,
+                          ),
                     child: const Text('open'),
                   ),
                 ),
@@ -119,6 +131,11 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     return l;
+  }
+
+  Future<void> tapConfirm(WidgetTester tester) async {
+    await tester.tap(find.byKey(SenderCancelConfirmDialog.confirmButtonKey));
+    await tester.pumpAndSettle();
   }
 
   /// Libellé du bouton de confirmation sur une ligne, à la taille du thème.
@@ -135,15 +152,48 @@ void main() {
     expect(button.height, lessThan(60));
   }
 
-  void expectUnchanged(WidgetTester tester, AppLocalizations l) {
-    expect(find.text(l.bidDetailCancelAfterHandoverTitle), findsOneWidget);
-    expect(find.text(l.bidDetailCancelAfterHandoverBody), findsOneWidget);
-    expect(find.text(l.bidDetailCancelAfterHandoverBodyWithFee), findsNothing);
+  void expectNoFeeBlock(WidgetTester tester, AppLocalizations l) {
     expect(find.byKey(const Key('cancel-fee-notice')), findsNothing);
     expect(find.text(l.cancelFeeLaterCostsMore), findsNothing);
     expect(find.text(l.bidDetailNo), findsOneWidget);
     expectConfirmOnOneLine(tester, l);
   }
+
+  /// Après remise, aucun frais : le dialogue d'aujourd'hui, mot pour mot.
+  void expectAfterHandoverToday(WidgetTester tester, AppLocalizations l) {
+    expect(find.text(l.bidDetailCancelAfterHandoverTitle), findsOneWidget);
+    expect(find.text(l.bidDetailCancelAfterHandoverBody), findsOneWidget);
+    expect(find.text(l.bidDetailCancelAfterHandoverBodyWithFee), findsNothing);
+    expect(
+      find.text(l.bidDetailCancelAfterHandoverBodyUnknownFee),
+      findsNothing,
+    );
+    expectNoFeeBlock(tester, l);
+  }
+
+  /// Après remise, frais inconnus : plus de « intégralement remboursé ».
+  void expectAfterHandoverUnknownFee(WidgetTester tester, AppLocalizations l) {
+    expect(find.text(l.bidDetailCancelAfterHandoverTitle), findsOneWidget);
+    expect(
+      find.text(l.bidDetailCancelAfterHandoverBodyUnknownFee),
+      findsOneWidget,
+    );
+    expect(find.text(l.bidDetailCancelAfterHandoverBody), findsNothing);
+    expect(find.text(l.bidDetailCancelAfterHandoverBodyWithFee), findsNothing);
+    expectNoFeeBlock(tester, l);
+  }
+
+  /// Avant remise : son corps ne promet aucun remboursement, il ne change pas.
+  void expectBeforeHandoverToday(WidgetTester tester, AppLocalizations l) {
+    expect(find.text(l.bidDetailCancelRequestLabel), findsOneWidget);
+    expect(find.text(l.bidDetailCancelConfirmBody), findsOneWidget);
+    expectNoFeeBlock(tester, l);
+  }
+
+  DioException notFound() => DioException(
+    requestOptions: RequestOptions(path: '/x'),
+    error: const NotFoundException(),
+  );
 
   for (final locale in [AppL10n.fr, AppL10n.en]) {
     final code = locale.languageCode;
@@ -168,12 +218,10 @@ void main() {
         expect(find.text(l.cancelFeeReasonDays(2, 20)), findsOneWidget);
         expect(find.text(l.cancelFeeLaterCostsMore), findsOneWidget);
         expect(find.text(l.cancelFeeIncreased), findsNothing);
+        expect(find.text(l.cancelFeeRecheckFailed), findsNothing);
         expectConfirmOnOneLine(tester, l);
 
-        await tester.tap(
-          find.byKey(SenderCancelConfirmDialog.confirmButtonKey),
-        );
-        await tester.pumpAndSettle();
+        await tapConfirm(tester);
 
         expect(confirmed, 1);
         expect(find.byType(AlertDialog), findsNothing);
@@ -197,6 +245,25 @@ void main() {
         expectConfirmOnOneLine(tester, l);
       });
 
+      testWidgets('plafond : 200 € à 20 %, frais de 30 € plafonnés, pas de '
+          '« 20 % du montant payé »', (tester) async {
+        when(
+          () => repo.getFeePreview('bid-42'),
+        ).thenAnswer((_) async => _fee(fee: 30, refund: 170));
+        final l = await open(tester, locale: locale);
+
+        expect(find.text(l.cancelFeeRetained(_eur(30))), findsOneWidget);
+        expect(find.text(l.cancelFeeRefunded(_eur(170))), findsOneWidget);
+        expect(
+          find.text(
+            '${l.cancelFeeLeavesInDays(2)} ${l.cancelFeeCapped(_eur(30))}',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text(l.cancelFeeReasonDays(2, 20)), findsNothing);
+        expectConfirmOnOneLine(tester, l);
+      });
+
       testWidgets('« Non » ferme sans annuler', (tester) async {
         when(
           () => repo.getFeePreview('bid-42'),
@@ -207,20 +274,70 @@ void main() {
         expect(find.byType(AlertDialog), findsNothing);
         expect(confirmed, 0);
       });
+
+      testWidgets('palier passé, relecture ratée : avertissement, puis le '
+          'second appui annule', (tester) async {
+        final next = _now.add(const Duration(minutes: 10));
+        var calls = 0;
+        when(() => repo.getFeePreview('bid-42')).thenAnswer((_) async {
+          calls++;
+          if (calls == 1) return _fee(nextTierAt: next);
+          throw const OfflineException();
+        });
+        final l = await open(tester, locale: locale);
+        expect(find.text(l.cancelFeeRecheckFailed), findsNothing);
+
+        now = next.add(const Duration(seconds: 1));
+        await tapConfirm(tester);
+
+        expect(confirmed, 0);
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text(l.cancelFeeRecheckFailed), findsOneWidget);
+        expect(find.text(l.cancelFeeRetained(_eur(20))), findsOneWidget);
+        expectConfirmOnOneLine(tester, l);
+
+        await tapConfirm(tester);
+        expect(confirmed, 1);
+        expect(calls, 2);
+      });
+
+      testWidgets('téléphone en retard (palier dans 1 minute) : montant relu, '
+          'hausse montrée avant d\'annuler', (tester) async {
+        final next = _now.add(const Duration(minutes: 10));
+        var calls = 0;
+        when(() => repo.getFeePreview('bid-42')).thenAnswer((_) async {
+          calls++;
+          return calls == 1
+              ? _fee(nextTierAt: next)
+              : _fee(rate: 0.3, fee: 30, refund: 70);
+        });
+        final l = await open(tester, locale: locale);
+
+        now = next.subtract(const Duration(minutes: 1));
+        await tapConfirm(tester);
+
+        expect(calls, 2);
+        expect(confirmed, 0);
+        expect(find.text(l.cancelFeeIncreased), findsOneWidget);
+        expect(find.text(l.cancelFeeRetained(_eur(30))), findsOneWidget);
+        expectConfirmOnOneLine(tester, l);
+
+        await tapConfirm(tester);
+        expect(confirmed, 1);
+      });
     });
 
-    group('[$code] dialogue inchangé', () {
-      testWidgets('aucun frais (fonction éteinte)', (tester) async {
+    group('[$code] aucun frais ou frais inconnus', () {
+      testWidgets('aucun frais (fonction éteinte) : dialogue d\'aujourd\'hui', (
+        tester,
+      ) async {
         when(
           () => repo.getFeePreview('bid-42'),
         ).thenAnswer((_) async => _fee(rate: 0, fee: 0, refund: 100));
         final l = await open(tester, locale: locale);
-        expectUnchanged(tester, l);
+        expectAfterHandoverToday(tester, l);
 
-        await tester.tap(
-          find.byKey(SenderCancelConfirmDialog.confirmButtonKey),
-        );
-        await tester.pumpAndSettle();
+        await tapConfirm(tester);
         expect(confirmed, 1);
       });
 
@@ -236,32 +353,80 @@ void main() {
           ),
         );
         final l = await open(tester, locale: locale);
-        expectUnchanged(tester, l);
+        expectAfterHandoverToday(tester, l);
       });
 
-      testWidgets('back antérieur (404)', (tester) async {
-        when(() => repo.getFeePreview('bid-42')).thenThrow(
-          DioException(
-            requestOptions: RequestOptions(path: '/x'),
-            error: const NotFoundException(),
-          ),
-        );
+      testWidgets('après remise, back antérieur (404) : « moins d\'éventuels '
+          'frais », annulation possible', (tester) async {
+        when(() => repo.getFeePreview('bid-42')).thenThrow(notFound());
         final l = await open(tester, locale: locale);
-        expectUnchanged(tester, l);
+        expectAfterHandoverUnknownFee(tester, l);
 
-        await tester.tap(
-          find.byKey(SenderCancelConfirmDialog.confirmButtonKey),
-        );
-        await tester.pumpAndSettle();
+        await tapConfirm(tester);
         expect(confirmed, 1);
       });
 
-      testWidgets('erreur réseau', (tester) async {
+      testWidgets(
+        'après remise, erreur réseau : « moins d\'éventuels frais »',
+        (tester) async {
+          when(
+            () => repo.getFeePreview('bid-42'),
+          ).thenThrow(const OfflineException());
+          final l = await open(tester, locale: locale);
+          expectAfterHandoverUnknownFee(tester, l);
+        },
+      );
+
+      testWidgets('avant remise, back antérieur (404) : dialogue '
+          'd\'aujourd\'hui, annulation possible', (tester) async {
+        when(() => repo.getFeePreview('bid-42')).thenThrow(notFound());
+        final l = await open(tester, locale: locale, afterHandover: false);
+        expectBeforeHandoverToday(tester, l);
+
+        await tapConfirm(tester);
+        expect(confirmed, 1);
+      });
+
+      testWidgets('avant remise, erreur réseau : dialogue d\'aujourd\'hui', (
+        tester,
+      ) async {
         when(
           () => repo.getFeePreview('bid-42'),
         ).thenThrow(const OfflineException());
+        final l = await open(tester, locale: locale, afterHandover: false);
+        expectBeforeHandoverToday(tester, l);
+      });
+
+      testWidgets('fenêtre gratuite, palier passé, relecture ratée : corps '
+          '« frais inconnus » et avertissement, puis annulation', (
+        tester,
+      ) async {
+        final next = _now.add(const Duration(minutes: 10));
+        var calls = 0;
+        when(() => repo.getFeePreview('bid-42')).thenAnswer((_) async {
+          calls++;
+          if (calls == 1) {
+            return _fee(rate: 0, fee: 0, refund: 100, nextTierAt: next);
+          }
+          throw const OfflineException();
+        });
         final l = await open(tester, locale: locale);
-        expectUnchanged(tester, l);
+        expectAfterHandoverToday(tester, l);
+
+        now = next.add(const Duration(seconds: 1));
+        await tapConfirm(tester);
+
+        expect(confirmed, 0);
+        expect(
+          find.text(l.bidDetailCancelAfterHandoverBodyUnknownFee),
+          findsOneWidget,
+        );
+        expect(find.text(l.cancelFeeRecheckFailed), findsOneWidget);
+        expect(find.byKey(const Key('cancel-fee-notice')), findsNothing);
+        expectConfirmOnOneLine(tester, l);
+
+        await tapConfirm(tester);
+        expect(confirmed, 1);
       });
     });
   }
@@ -405,6 +570,31 @@ void main() {
       final l = await openWith(tester, null);
       expect(find.text(l.cancelFeeReasonRate(30)), findsOneWidget);
     });
+
+    // 200 € payés à 30 % = 60 € ; frais de 30 € : plafond.
+    Future<AppLocalizations> openCapped(
+      WidgetTester tester,
+      DateTime? departureAt,
+    ) async {
+      when(
+        () => repo.getFeePreview('bid-42'),
+      ).thenAnswer((_) async => _fee(rate: 0.3, fee: 30, refund: 170));
+      return open(tester, bid: _bid(departureAt: departureAt));
+    }
+
+    testWidgets('plafond, départ dans moins d\'une heure', (tester) async {
+      final l = await openCapped(tester, _now.add(const Duration(minutes: 20)));
+      expect(
+        find.text('${l.cancelFeeLeavesSoon} ${l.cancelFeeCapped(_eur(30))}'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('plafond, départ inconnu : plafond seul', (tester) async {
+      final l = await openCapped(tester, null);
+      expect(find.text(l.cancelFeeCapped(_eur(30))), findsOneWidget);
+      expect(find.text(l.cancelFeeReasonRate(30)), findsNothing);
+    });
   });
 
   testWidgets('franc CFA, devise absente de l\'aperçu : devise du colis', (
@@ -424,6 +614,14 @@ void main() {
     expect(find.text(l.cancelFeeRetained(xof(19678))), findsOneWidget);
     expect(find.text(l.cancelFeeRefunded(xof(45922))), findsOneWidget);
     expect(xof(19678), isNot(contains(',')));
+    // 65 600 F × 30 % = 19 680 F ; 19 678 F : le plafond de 30 € converti.
+    expect(
+      find.text(
+        '${l.cancelFeeLeavesInHours(3)} ${l.cancelFeeCapped(xof(19678))}',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text(l.cancelFeeReasonHours(3, 30)), findsNothing);
   });
 
   testWidgets('rien à rendre : pas de ligne « remboursé de 0 »', (

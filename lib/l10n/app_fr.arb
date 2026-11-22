@@ -7562,14 +7562,18 @@
   "@bidDetailCancelAfterHandoverBodyWithFee": {
     "description": "Corps du dialog d'annulation après remise quand des frais d'annulation s'appliquent (bid_detail_action_bars.dart) : sans « intégralement remboursé », le bloc des frais dit ce qui est rendu."
   },
-  "cancelFeeRetained": "Des frais d'annulation de {fee} sont retenus.",
+  "bidDetailCancelAfterHandoverBodyUnknownFee": "Le colis est déjà chez le voyageur. Vous serez remboursé, moins d'éventuels frais d'annulation, et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.",
+  "@bidDetailCancelAfterHandoverBodyUnknownFee": {
+    "description": "Corps du dialog d'annulation après remise quand l'aperçu des frais n'a pas pu être lu (réseau, délai, ancien back) : on ne promet pas un remboursement intégral."
+  },
+  "cancelFeeRetained": "Des frais d'annulation de {fee} seront retenus.",
   "@cancelFeeRetained": {
     "description": "Bloc des frais d'annulation du dialog d'annulation de l'expéditeur (sender_cancel_confirm_dialog.dart) : frais bruts retenus, montant formaté dans la devise du paiement.",
     "placeholders": {
       "fee": {"type": "String", "example": "20,00 €"}
     }
   },
-  "cancelFeeRefunded": "Vous êtes remboursé de {refund}.",
+  "cancelFeeRefunded": "Vous serez remboursé de {refund}.",
   "@cancelFeeRefunded": {
     "description": "Bloc des frais d'annulation : montant rendu à l'expéditeur (payé moins les frais). Masqué quand rien n'est rendu.",
     "placeholders": {
@@ -7607,6 +7611,35 @@
     }
   },
   "cancelFeeLaterCostsMore": "Annuler plus tard coûte plus cher.",
+  "cancelFeeLeavesInDays": "{days, plural, =1{Le trajet part dans 1 jour.} other{Le trajet part dans {days} jours.}}",
+  "@cancelFeeLeavesInDays": {
+    "description": "Bloc des frais d'annulation, frais plafonnés : départ dans au moins un jour (jours entiers restants), suivi de cancelFeeCapped.",
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "cancelFeeLeavesInHours": "{hours, plural, =1{Le trajet part dans 1 heure.} other{Le trajet part dans {hours} heures.}}",
+  "@cancelFeeLeavesInHours": {
+    "description": "Bloc des frais d'annulation, frais plafonnés : départ dans moins d'un jour (heures entières restantes), suivi de cancelFeeCapped.",
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "cancelFeeLeavesSoon": "Le trajet part dans moins d'une heure.",
+  "@cancelFeeLeavesSoon": {
+    "description": "Bloc des frais d'annulation, frais plafonnés : départ dans moins d'une heure, suivi de cancelFeeCapped."
+  },
+  "cancelFeeCapped": "Frais plafonnés à {fee} par colis.",
+  "@cancelFeeCapped": {
+    "description": "Bloc des frais d'annulation : le plafond par colis s'applique (frais plus bas que le taux appliqué au montant payé), à la place du pourcentage.",
+    "placeholders": {
+      "fee": {"type": "String", "example": "30,00 €"}
+    }
+  },
+  "cancelFeeRecheckFailed": "Le montant n'a pas pu être relu et a pu augmenter. Confirmez de nouveau pour annuler.",
+  "@cancelFeeRecheckFailed": {
+    "description": "Dialog d'annulation de l'expéditeur : la relecture des frais faite à la confirmation (palier passé) a échoué ; l'appui suivant annule."
+  },
   "@cancelFeeLaterCostsMore": {
     "description": "Bloc des frais d'annulation : le taux montera au prochain palier (nextTierAt présent)."
   },

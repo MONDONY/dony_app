@@ -2789,6 +2789,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailCancelAfterHandoverBody': (l) => l.bidDetailCancelAfterHandoverBody,
   'bidDetailCancelAfterHandoverBodyWithFee': (l) =>
       l.bidDetailCancelAfterHandoverBodyWithFee,
+  'bidDetailCancelAfterHandoverBodyUnknownFee': (l) =>
+      l.bidDetailCancelAfterHandoverBodyUnknownFee,
   'cancelFeeRetained': (l) => l.cancelFeeRetained(placeholderMarker('fee')),
   'cancelFeeRefunded': (l) => l.cancelFeeRefunded(placeholderMarker('refund')),
   'cancelFeeReasonDays': (l) =>
@@ -2798,6 +2800,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'cancelFeeReasonSoon': (l) => l.cancelFeeReasonSoon(intPlaceholderValue),
   'cancelFeeReasonRate': (l) => l.cancelFeeReasonRate(intPlaceholderValue),
   'cancelFeeLaterCostsMore': (l) => l.cancelFeeLaterCostsMore,
+  'cancelFeeLeavesInDays': (l) => l.cancelFeeLeavesInDays(intPlaceholderValue),
+  'cancelFeeLeavesInHours': (l) =>
+      l.cancelFeeLeavesInHours(intPlaceholderValue),
+  'cancelFeeLeavesSoon': (l) => l.cancelFeeLeavesSoon,
+  'cancelFeeCapped': (l) => l.cancelFeeCapped(placeholderMarker('fee')),
+  'cancelFeeRecheckFailed': (l) => l.cancelFeeRecheckFailed,
   'cancelFeeIncreased': (l) => l.cancelFeeIncreased,
   'bidDetailMoreDetails': (l) => l.bidDetailMoreDetails,
   'bidDetailSectionTodo': (l) => l.bidDetailSectionTodo,
@@ -8641,6 +8649,7 @@ const textParameters = <String, List<String>>{
   'bidRejectionReasonShown': ['reason'],
   'cancelFeeRetained': ['fee'],
   'cancelFeeRefunded': ['refund'],
+  'cancelFeeCapped': ['fee'],
   'senderTileColisSubtitle': ['weight', 'recipient'],
   'travelerTodoSupplementSummary': ['amount'],
   'senderTodoRescheduleSummary': ['deadline'],

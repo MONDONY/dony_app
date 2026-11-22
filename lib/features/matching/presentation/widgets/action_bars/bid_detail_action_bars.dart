@@ -351,7 +351,9 @@ class _SenderOptionsSheet extends StatelessWidget {
 
   /// Annulation après remise (D5), avant le départ. Avec des frais, le corps
   /// ne promet plus un remboursement intégral : le bloc des frais dit ce qui
-  /// est rendu.
+  /// est rendu. Aperçu illisible : « moins d'éventuels frais d'annulation ».
+  /// L'annulation avant remise n'a pas ce corps de repli : le sien ne promet
+  /// aucun remboursement.
   void _showAfterHandoverCancelDialog(BuildContext context) {
     final l = context.l10n;
     final cancellationBloc = context.read<CancellationBloc>();
@@ -362,6 +364,7 @@ class _SenderOptionsSheet extends StatelessWidget {
         title: l.bidDetailCancelAfterHandoverTitle,
         body: l.bidDetailCancelAfterHandoverBody,
         bodyWithFee: l.bidDetailCancelAfterHandoverBodyWithFee,
+        bodyUnknownFee: l.bidDetailCancelAfterHandoverBodyUnknownFee,
         onConfirmed: () => cancellationBloc.add(
           CancelAfterHandoverRequested(bid.id, actor: 'sender'),
         ),

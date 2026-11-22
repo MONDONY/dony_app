@@ -7617,13 +7617,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le colis est déjà chez le voyageur. Vous récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.';
 
   @override
+  String get bidDetailCancelAfterHandoverBodyUnknownFee =>
+      'Le colis est déjà chez le voyageur. Vous serez remboursé, moins d\'éventuels frais d\'annulation, et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.';
+
+  @override
   String cancelFeeRetained(String fee) {
-    return 'Des frais d\'annulation de $fee sont retenus.';
+    return 'Des frais d\'annulation de $fee seront retenus.';
   }
 
   @override
   String cancelFeeRefunded(String refund) {
-    return 'Vous êtes remboursé de $refund.';
+    return 'Vous serez remboursé de $refund.';
   }
 
   @override
@@ -7664,6 +7668,40 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cancelFeeLaterCostsMore => 'Annuler plus tard coûte plus cher.';
+
+  @override
+  String cancelFeeLeavesInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Le trajet part dans $days jours.',
+      one: 'Le trajet part dans 1 jour.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cancelFeeLeavesInHours(int hours) {
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other: 'Le trajet part dans $hours heures.',
+      one: 'Le trajet part dans 1 heure.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cancelFeeLeavesSoon => 'Le trajet part dans moins d\'une heure.';
+
+  @override
+  String cancelFeeCapped(String fee) {
+    return 'Frais plafonnés à $fee par colis.';
+  }
+
+  @override
+  String get cancelFeeRecheckFailed =>
+      'Le montant n\'a pas pu être relu et a pu augmenter. Confirmez de nouveau pour annuler.';
 
   @override
   String get cancelFeeIncreased =>

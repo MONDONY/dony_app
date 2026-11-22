@@ -14,20 +14,24 @@ import 'package:go_router/go_router.dart';
 /// Confirmation d'une annulation par l'EXPÉDITEUR, avec l'aperçu des frais
 /// d'annulation (yadony-back #779) lu à l'ouverture.
 ///
-/// - Frais > 0 : [bodyWithFee] (à défaut [body]) puis le bloc des frais
-///   ([CancellationFeeNotice]) avant les boutons.
-/// - Aucun frais, aperçu indisponible (back antérieur, 403, réseau, délai) :
-///   le dialogue d'avant la fonction, mot pour mot ; l'annulation reste
-///   possible.
+/// Corps :
+/// - frais > 0 : [bodyWithFee] (à défaut [body]) puis le bloc des frais
+///   ([CancellationFeeNotice]) avant les boutons ;
+/// - aucun frais : [body], le dialogue d'avant la fonction, mot pour mot ;
+/// - frais inconnus (aperçu illisible, ou relecture ratée sans frais
+///   affichés) : [bodyUnknownFee] (à défaut [body]), pour ne pas promettre un
+///   remboursement intégral peut-être faux.
 ///
-/// Jamais pour le voyageur : il n'a ni frais ni aperçu (le serveur répondrait
-/// 403). [onConfirmed] part une fois le dialogue fermé.
+/// L'annulation reste toujours possible. Jamais pour le voyageur : il n'a ni
+/// frais ni aperçu (le serveur répondrait 403). [onConfirmed] part une fois le
+/// dialogue fermé.
 Future<void> showSenderCancelConfirmDialog(
   BuildContext context, {
   required BidModel bid,
   required String title,
   required String body,
   String? bodyWithFee,
+  String? bodyUnknownFee,
   required VoidCallback onConfirmed,
 }) => showDialog<void>(
   context: context,
@@ -38,6 +42,7 @@ Future<void> showSenderCancelConfirmDialog(
       title: title,
       body: body,
       bodyWithFee: bodyWithFee,
+      bodyUnknownFee: bodyUnknownFee,
       onConfirmed: onConfirmed,
     ),
   ),
@@ -50,6 +55,7 @@ class SenderCancelConfirmDialog extends StatelessWidget {
     required this.title,
     required this.body,
     this.bodyWithFee,
+    this.bodyUnknownFee,
     required this.onConfirmed,
   });
 
@@ -59,6 +65,7 @@ class SenderCancelConfirmDialog extends StatelessWidget {
   final String title;
   final String body;
   final String? bodyWithFee;
+  final String? bodyUnknownFee;
   final VoidCallback onConfirmed;
 
   @override
@@ -73,6 +80,12 @@ class SenderCancelConfirmDialog extends StatelessWidget {
       builder: (context, state) {
         final fee = state.shownFee;
         final loaded = state is CancellationFeePreviewLoaded ? state : null;
+        final recheckFailed = loaded?.recheckFailed ?? false;
+        final text = fee != null
+            ? bodyWithFee ?? body
+            : state.feeUnknown
+            ? bodyUnknownFee ?? body
+            : body;
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.sheet),
@@ -90,7 +103,7 @@ class SenderCancelConfirmDialog extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    fee == null ? body : bodyWithFee ?? body,
+                    text,
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   if (fee != null && loaded != null) ...[
@@ -101,7 +114,13 @@ class SenderCancelConfirmDialog extends StatelessWidget {
                       departureAt: bid.resolvedDepartureAt,
                       now: loaded.now,
                       increased: loaded.increased,
+                      recheckFailed: recheckFailed,
                     ),
+                  ] else if (recheckFailed) ...[
+                    // Fenêtre gratuite dont le palier est passé, relecture
+                    // ratée : pas de bloc des frais, mais l'avertissement.
+                    const SizedBox(height: DonySpacing.base),
+                    CancellationFeeWarning(text: l.cancelFeeRecheckFailed),
                   ],
                 ],
               ),
@@ -180,9 +199,43 @@ class _BusyLabel extends StatelessWidget {
   }
 }
 
+/// Avertissement du dialogue (frais augmentés, montant non relu) : icône et
+/// texte, jamais la couleur seule.
+class CancellationFeeWarning extends StatelessWidget {
+  const CancellationFeeWarning({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 1),
+          child: DonyIcon('triangle-alert', size: 16, color: cs.warning),
+        ),
+        const SizedBox(width: DonySpacing.xs),
+        Expanded(
+          child: Text(
+            text,
+            style: tt.bodyMedium?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Bloc des frais d'annulation : frais retenus, montant rendu, pourquoi ce
-/// taux, et la hausse à venir. Montants dans la devise du paiement, à défaut
-/// celle du colis, par le formateur commun ([CurrencyFormatter]).
+/// taux (ou le plafond par colis), et la hausse à venir. Montants dans la
+/// devise du paiement, à défaut celle du colis, par le formateur commun
+/// ([CurrencyFormatter]).
 class CancellationFeeNotice extends StatelessWidget {
   const CancellationFeeNotice({
     super.key,
@@ -191,6 +244,7 @@ class CancellationFeeNotice extends StatelessWidget {
     required this.now,
     this.departureAt,
     this.increased = false,
+    this.recheckFailed = false,
   });
 
   final CancellationFeePreviewModel preview;
@@ -198,6 +252,7 @@ class CancellationFeeNotice extends StatelessWidget {
   final DateTime now;
   final DateTime? departureAt;
   final bool increased;
+  final bool recheckFailed;
 
   @override
   Widget build(BuildContext context) {
@@ -213,6 +268,11 @@ class CancellationFeeNotice extends StatelessWidget {
       fontWeight: FontWeight.w600,
     );
     final muted = tt.bodySmall?.copyWith(color: cs.onSurfaceVariant);
+    final warning = recheckFailed
+        ? l.cancelFeeRecheckFailed
+        : increased
+        ? l.cancelFeeIncreased
+        : null;
 
     return Container(
       key: const Key('cancel-fee-notice'),
@@ -225,22 +285,8 @@ class CancellationFeeNotice extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (increased) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 1),
-                  child: DonyIcon(
-                    'triangle-alert',
-                    size: 16,
-                    color: cs.warning,
-                  ),
-                ),
-                const SizedBox(width: DonySpacing.xs),
-                Expanded(child: Text(l.cancelFeeIncreased, style: strong)),
-              ],
-            ),
+          if (warning != null) ...[
+            CancellationFeeWarning(text: warning),
             const SizedBox(height: DonySpacing.sm),
           ],
           Text(l.cancelFeeRetained(money(preview.fee)), style: strong),
@@ -250,23 +296,36 @@ class CancellationFeeNotice extends StatelessWidget {
               style: tt.bodyMedium?.copyWith(color: cs.onSurface),
             ),
           const SizedBox(height: DonySpacing.xs),
-          Text(_reason(l), style: muted),
+          Text(_reason(l, money), style: muted),
           if (preview.willRise) Text(l.cancelFeeLaterCostsMore, style: muted),
         ],
       ),
     );
   }
 
-  /// Pourquoi ce taux : le temps qui reste avant le départ, en jours entiers
-  /// puis en heures. Le barème est décompté sur le départ par le serveur ;
-  /// l'écran ne fait que le dire.
-  String _reason(AppLocalizations l) {
+  /// Pourquoi ce montant : le temps qui reste avant le départ (jours entiers
+  /// puis heures), puis le taux, ou le plafond par colis quand il s'applique
+  /// (« 20 % du montant payé » serait faux). Le barème est décompté sur le
+  /// départ par le serveur ; l'écran ne fait que le dire.
+  String _reason(AppLocalizations l, String Function(double) money) {
     final percent = preview.ratePercent;
-    final at = departureAt;
-    final left = at?.difference(now);
-    if (left == null || left <= Duration.zero) {
-      return l.cancelFeeReasonRate(percent);
+    final diff = departureAt?.difference(now);
+    // Départ inconnu ou déjà passé : pas de temps restant à dire.
+    final left = diff != null && diff > Duration.zero ? diff : null;
+    if (preview.isCapped(fallbackCurrency: fallbackCurrency)) {
+      final cap = l.cancelFeeCapped(money(preview.fee));
+      if (left == null) return cap;
+      final String leaves;
+      if (left.inDays >= 1) {
+        leaves = l.cancelFeeLeavesInDays(left.inDays);
+      } else if (left.inHours >= 1) {
+        leaves = l.cancelFeeLeavesInHours(left.inHours);
+      } else {
+        leaves = l.cancelFeeLeavesSoon;
+      }
+      return '$leaves $cap';
     }
+    if (left == null) return l.cancelFeeReasonRate(percent);
     if (left.inDays >= 1) return l.cancelFeeReasonDays(left.inDays, percent);
     if (left.inHours >= 1) return l.cancelFeeReasonHours(left.inHours, percent);
     return l.cancelFeeReasonSoon(percent);

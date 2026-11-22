@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -10,6 +12,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_fee_preview/cancellation_fee_preview_cubit.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/data/models/cancellation_fee_preview_model.dart';
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -412,6 +415,75 @@ void main() {
           any(that: isA<TravelerNoShowReportRequested>()),
         ),
       );
+    },
+  );
+
+  testWidgets(
+    '5d · fenêtre passée, frais d\'annulation : bloc des frais dans la '
+    'confirmation, puis BidCancelRequested',
+    (tester) async {
+      final l = lookupAppLocalizations(AppL10n.fr);
+      final bidBloc = _MockBidBloc();
+      whenListen<BidState>(
+        bidBloc,
+        const Stream<BidState>.empty(),
+        initialState: BidInitial(),
+      );
+      final bid = _bid(
+        status: 'ACCEPTED',
+        handoverDeadline: DateTime.now().subtract(const Duration(hours: 2)),
+      );
+      final feeRepository = _MockCancellationRepository();
+      when(() => feeRepository.getFeePreview('bid-001')).thenAnswer(
+        (_) async => const CancellationFeePreviewModel(
+          rate: 0.2,
+          fee: 9,
+          refundAmount: 36,
+          currency: 'EUR',
+        ),
+      );
+      getIt.registerFactory<CancellationFeePreviewCubit>(
+        () => CancellationFeePreviewCubit(feeRepository, _MockAnalytics()),
+      );
+      addTearDown(getIt.reset);
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => Scaffold(
+              body: MultiBlocProvider(
+                providers: [
+                  BlocProvider<CancellationBloc>.value(value: cancellationBloc),
+                  BlocProvider<BidBloc>.value(value: bidBloc),
+                ],
+                child: SenderHeroCard(bid: bid),
+              ),
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      );
+      await tester.pump();
+
+      await tester.tap(find.text(l.bidDetailCancelRequestLabel));
+      await tester.pumpAndSettle();
+
+      String eur(double v) =>
+          CurrencyFormatter.format(v, SupportedCurrency.eur);
+      expect(find.text(l.bidDetailCancelConfirmBody), findsOneWidget);
+      expect(find.text(l.cancelFeeRetained(eur(9))), findsOneWidget);
+      expect(find.text(l.cancelFeeRefunded(eur(36))), findsOneWidget);
+      // Sans heure de départ connue : le taux seul.
+      expect(find.text(l.cancelFeeReasonRate(20)), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.text(l.bidDetailConfirmCancelButton));
+      await tester.pumpAndSettle();
+
+      verify(() => bidBloc.add(any(that: isA<BidCancelRequested>()))).called(1);
+      verify(() => feeRepository.getFeePreview('bid-001')).called(1);
     },
   );
 

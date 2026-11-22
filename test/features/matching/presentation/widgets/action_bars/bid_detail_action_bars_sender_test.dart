@@ -51,6 +51,10 @@ class _MockConversationOpenBloc
 
 final _l = lookupAppLocalizations(AppL10n.fr);
 
+/// Heure fixe du cubit de l'aperçu (raison « dans 2 jours » stable). Loin
+/// dans le futur : la fiche juge « parti » sur l'heure réelle.
+final _feeNow = DateTime.utc(2099, 6, 1, 10);
+
 BidModel _bid({
   String status = 'PENDING',
   BidPaymentMethod method = BidPaymentMethod.stripe,
@@ -105,7 +109,11 @@ void main() {
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
     getIt.registerFactory<CancellationFeePreviewCubit>(
-      () => CancellationFeePreviewCubit(feeRepository, analytics),
+      () => CancellationFeePreviewCubit(
+        feeRepository,
+        analytics,
+        clock: () => _feeNow,
+      ),
     );
   });
 
@@ -331,8 +339,14 @@ void main() {
         );
         await tester.pumpAndSettle();
 
+        // Aperçu indisponible (back antérieur, 404) : pas de promesse de
+        // remboursement intégral, l'annulation reste possible.
         expect(find.text(_l.bidDetailCancelAfterHandoverTitle), findsOneWidget);
-        expect(find.text(_l.bidDetailCancelAfterHandoverBody), findsOneWidget);
+        expect(
+          find.text(_l.bidDetailCancelAfterHandoverBodyUnknownFee),
+          findsOneWidget,
+        );
+        expect(find.text(_l.bidDetailCancelAfterHandoverBody), findsNothing);
         await tester.tap(find.text(_l.bidDetailConfirmCancelButton));
         await tester.pumpAndSettle();
 
@@ -362,7 +376,7 @@ void main() {
     group('frais d\'annulation', () {
       String eur(double v) =>
           CurrencyFormatter.format(v, SupportedCurrency.eur);
-      final departure = DateTime.now().add(const Duration(days: 2, hours: 6));
+      final departure = _feeNow.add(const Duration(days: 2, hours: 6));
 
       setUp(() {
         when(() => feeRepository.getFeePreview('bid-42')).thenAnswer(
