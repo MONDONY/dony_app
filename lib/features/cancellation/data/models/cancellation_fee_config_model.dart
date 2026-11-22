@@ -1,3 +1,4 @@
+import 'package:dony/core/utils/lenient_number.dart';
 import 'package:equatable/equatable.dart';
 
 /// Palier du barème des frais d'annulation : [rate] s'applique quand il reste
@@ -19,13 +20,12 @@ class CancellationFeeTier extends Equatable {
 /// `GET /config/cancellation-fee` (public, sans authentification). L'app n'en
 /// tire que le choix de ses textes : le serveur reste seul juge des frais.
 ///
-/// Lecture tolérante, champ par champ : `active` n'est vrai que pour le
-/// booléen `true` ; allumé sans date d'effet lisible, la configuration est
-/// traitée comme éteinte (même règle que le serveur, qui ne retient rien tant
-/// que la date n'est pas posée) ; plafond et paliers illisibles sont ignorés.
+/// Lecture tolérante, champ par champ : la configuration n'est allumée que si
+/// `active` est le booléen `true` ET que la date d'effet est lisible (même
+/// règle que le serveur, qui ne retient rien tant que la date n'est pas
+/// posée) ; plafond et paliers illisibles sont ignorés.
 class CancellationFeeConfigModel extends Equatable {
   const CancellationFeeConfigModel({
-    required this.active,
     this.effectiveFrom,
     this.capEur,
     this.tiers = const [],
@@ -36,12 +36,10 @@ class CancellationFeeConfigModel extends Equatable {
     final effectiveFrom = rawFrom is String
         ? DateTime.tryParse(rawFrom.trim())
         : null;
-    final active = json['active'] == true && effectiveFrom != null;
     final rawTiers = json['tiers'];
     return CancellationFeeConfigModel(
-      active: active,
-      effectiveFrom: active ? effectiveFrom : null,
-      capEur: _decimalOrNull(json['capEur']),
+      effectiveFrom: json['active'] == true ? effectiveFrom : null,
+      capEur: lenientDoubleOrNull(json['capEur']),
       tiers: rawTiers is List
           ? [for (final t in rawTiers) ?_tierOrNull(t)]
           : const [],
@@ -50,14 +48,14 @@ class CancellationFeeConfigModel extends Equatable {
 
   /// Back antérieur, hors ligne, lecture ratée : les textes d'avant la
   /// fonction.
-  static const inactive = CancellationFeeConfigModel(active: false);
-
-  /// Frais allumés ET date d'effet posée.
-  final bool active;
+  static const inactive = CancellationFeeConfigModel();
 
   /// Seuls les colis créés à cet instant ou après portent des frais. `null`
-  /// quand [active] est faux.
+  /// quand les frais sont éteints ou que la date n'est pas posée.
   final DateTime? effectiveFrom;
+
+  /// Frais allumés ET date d'effet posée.
+  bool get active => effectiveFrom != null;
 
   /// Plafond du frais par annulation, en euros.
   final double? capEur;
@@ -66,19 +64,13 @@ class CancellationFeeConfigModel extends Equatable {
   final List<CancellationFeeTier> tiers;
 
   @override
-  List<Object?> get props => [active, effectiveFrom, capEur, tiers];
+  List<Object?> get props => [effectiveFrom, capEur, tiers];
 
   static CancellationFeeTier? _tierOrNull(Object? raw) {
     if (raw is! Map) return null;
     final days = raw['minDaysBefore'];
-    final rate = _decimalOrNull(raw['rate']);
+    final rate = lenientDoubleOrNull(raw['rate']);
     if (days is! num || rate == null) return null;
     return CancellationFeeTier(minDaysBefore: days.toInt(), rate: rate);
-  }
-
-  static double? _decimalOrNull(Object? raw) {
-    if (raw is num) return raw.toDouble();
-    if (raw is String) return double.tryParse(raw.trim());
-    return null;
   }
 }

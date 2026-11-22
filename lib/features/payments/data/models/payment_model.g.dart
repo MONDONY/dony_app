@@ -20,7 +20,7 @@ PaymentModel _$PaymentModelFromJson(Map<String, dynamic> json) => PaymentModel(
           ?.map((e) => e as String)
           .toList() ??
       [],
-  refundedAmount: _amountOrNull(json['refundedAmount']),
+  refundedAmount: lenientDoubleOrNull(json['refundedAmount']),
 );
 
 Map<String, dynamic> _$PaymentModelToJson(PaymentModel instance) =>

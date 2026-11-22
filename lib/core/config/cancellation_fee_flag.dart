@@ -8,10 +8,10 @@ import 'package:flutter/foundation.dart';
 /// erreurs choisit ici son texte. Repli sûr : éteint, les textes d'avant la
 /// fonction, tant que la configuration n'est pas lue (back antérieur, hors
 /// ligne, lecture ratée).
-const bool kCancellationFeeActiveDefault = false;
+const bool _activeDefault = false;
 
 final ValueNotifier<bool> _cancellationFeeActiveNotifier = ValueNotifier(
-  kCancellationFeeActiveDefault,
+  _activeDefault,
 );
 
 /// Écoute le drapeau ; `.value` donne l'état courant.
@@ -28,5 +28,5 @@ void setCancellationFeeActive(bool active) {
 
 @visibleForTesting
 void resetCancellationFeeFlagForTest() {
-  _cancellationFeeActiveNotifier.value = kCancellationFeeActiveDefault;
+  _cancellationFeeActiveNotifier.value = _activeDefault;
 }

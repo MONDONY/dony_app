@@ -132,9 +132,9 @@ class CancellationRemoteDatasource {
     return ReturnCodeModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  /// Aperçu des frais d'annulation de l'expéditeur avant qu'il confirme
-  /// (yadony-back #779). Expéditeur seul (403 sinon), 404 sur un colis inconnu
-  /// ou sur un back antérieur à la route. Lecture seule.
+  /// Aperçu des frais d'annulation de l'expéditeur avant qu'il confirme.
+  /// Expéditeur seul (403 sinon), 404 sur un colis inconnu ou sur un back
+  /// antérieur à la route. Lecture seule.
   Future<CancellationFeePreviewModel> getFeePreview(String bidId) async {
     final response = await _apiClient.dio.get(
       '/cancellations/bids/$bidId/fee-preview',

@@ -12,7 +12,6 @@ CancellationFeeConfigModel _config({
   double? cap = 30,
   List<CancellationFeeTier>? tiers,
 }) => CancellationFeeConfigModel(
-  active: active,
   effectiveFrom: active ? (effectiveFrom ?? kFeeEffectiveFrom) : null,
   capEur: cap,
   tiers: tiers ?? kActiveFeeConfig.tiers,

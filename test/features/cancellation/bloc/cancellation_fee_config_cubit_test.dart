@@ -19,7 +19,6 @@ class _MockAnalytics extends Mock implements AnalyticsService {}
 final _t0 = DateTime.utc(2026, 12, 20, 10);
 
 final _active = CancellationFeeConfigModel(
-  active: true,
   effectiveFrom: DateTime.utc(2026, 12, 15),
   capEur: 30,
 );

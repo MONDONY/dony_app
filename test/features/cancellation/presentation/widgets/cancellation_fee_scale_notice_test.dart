@@ -18,7 +18,6 @@ CancellationFeeTier _t(int days, double rate) =>
     CancellationFeeTier(minDaysBefore: days, rate: rate);
 
 CancellationFeeConfigModel _custom() => CancellationFeeConfigModel(
-  active: true,
   effectiveFrom: kFeeEffectiveFrom,
   capEur: 45,
   tiers: [_t(7, 0), _t(2, 0.15), _t(0, 0.5)],
@@ -120,7 +119,6 @@ void main() {
     testWidgets('paliers vides : rien', (tester) async {
       await registerFeeConfig(
         config: CancellationFeeConfigModel(
-          active: true,
           effectiveFrom: kFeeEffectiveFrom,
           capEur: 30,
         ),
@@ -237,7 +235,6 @@ void main() {
     ) async {
       await registerFeeConfig(
         config: CancellationFeeConfigModel(
-          active: true,
           effectiveFrom: kFeeEffectiveFrom,
           tiers: kActiveFeeConfig.tiers,
         ),

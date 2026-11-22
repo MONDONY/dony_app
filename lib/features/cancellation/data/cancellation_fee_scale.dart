@@ -53,7 +53,6 @@ class CancellationFeeScale {
     CancellationFeeConfigModel config, {
     required DateTime now,
   }) {
-    if (!config.active) return null;
     final from = config.effectiveFrom;
     if (from == null || now.isBefore(from)) return null;
     final tiers = config.tiers;
@@ -85,7 +84,7 @@ class CancellationFeeScale {
             percent: percent,
           ),
         );
-      } else if (i == tiers.length - 1 && t.minDaysBefore == 0) {
+      } else if (i == tiers.length - 1) {
         rows.add(
           CancellationFeeScaleRow(
             kind: CancellationFeeScaleKind.lessThan,

@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/core/utils/lenient_number.dart';
 import 'package:equatable/equatable.dart';
 
 /// Aperçu des frais d'annulation qu'un expéditeur perdrait s'il annulait son
-/// colis maintenant, servi par `GET /cancellations/bids/{bidId}/fee-preview`
-/// (yadony-back #779, fonction livrée éteinte).
+/// colis maintenant, servi par `GET /cancellations/bids/{bidId}/fee-preview`.
 ///
 /// Lecture tolérante : un montant arrive en nombre (`20.00`, `19678`, un zéro
 /// sans décimale `0`) ou en texte (`"20.00"`) ; un montant rendu absent ou
@@ -23,8 +23,8 @@ class CancellationFeePreviewModel extends Equatable {
   });
 
   factory CancellationFeePreviewModel.fromJson(Map<String, dynamic> json) {
-    final rate = _decimalOrNull(json['rate']) ?? 0;
-    final fee = _decimalOrNull(json['fee']);
+    final rate = lenientDoubleOrNull(json['rate']) ?? 0;
+    final fee = lenientDoubleOrNull(json['fee']);
     if (rate > 0 && (fee == null || fee <= 0)) {
       throw const FormatException('fee-preview: rate without a readable fee');
     }
@@ -36,7 +36,7 @@ class CancellationFeePreviewModel extends Equatable {
     return CancellationFeePreviewModel(
       rate: rate,
       fee: fee ?? 0,
-      refundAmount: _decimalOrNull(json['refundAmount']) ?? 0,
+      refundAmount: lenientDoubleOrNull(json['refundAmount']) ?? 0,
       currency: rawCurrency is String && rawCurrency.trim().isNotEmpty
           ? rawCurrency.trim().toUpperCase()
           : null,
@@ -64,9 +64,9 @@ class CancellationFeePreviewModel extends Equatable {
   /// monte. Absent au palier le plus cher ou quand aucun frais n'est possible.
   final DateTime? nextTierAt;
 
-  /// Le plafond par colis s'applique, dit par le serveur (`capped`, toujours
-  /// présent une fois yadony-back déployé). `null` sur un back antérieur ou
-  /// une valeur illisible : [isCapped] déduit alors le plafond lui-même.
+  /// Le plafond par colis s'applique, dit par le serveur (`capped`). `null`
+  /// quand le serveur ne l'envoie pas (back plus ancien) ou que la valeur est
+  /// illisible : [isCapped] déduit alors le plafond lui-même.
   final bool? capped;
 
   /// Des frais s'appliquent : seul cas où le dialogue change.
@@ -79,11 +79,12 @@ class CancellationFeePreviewModel extends Equatable {
   bool get willRise => nextTierAt != null;
 
   /// Le plafond par colis s'applique (côté back : frais = min(payé × taux,
-  /// plafond), 30 € convertis dans la devise du paiement). Le serveur ne le
-  /// dit pas : l'app le déduit. Payé = frais + rendu ; plafonné quand les
-  /// frais sont plus bas que payé × taux de PLUS d'une unité de la devise (un
-  /// centime en euro, un franc en franc CFA, qui n'a pas de décimale), pour
-  /// ne jamais prendre un arrondi à l'unité pour un plafond.
+  /// plafond), 30 € convertis dans la devise du paiement). La valeur du
+  /// serveur ([capped]) prime ; à défaut, l'app le déduit. Payé = frais +
+  /// rendu ; plafonné quand les frais sont plus bas que payé × taux de PLUS
+  /// d'une unité de la devise (un centime en euro, un franc en franc CFA, qui
+  /// n'a pas de décimale), pour ne jamais prendre un arrondi à l'unité pour un
+  /// plafond.
   /// [fallbackCurrency] : devise du colis quand l'aperçu n'en donne pas.
   bool isCapped({String? fallbackCurrency}) {
     final fromServer = capped;
@@ -110,10 +111,4 @@ class CancellationFeePreviewModel extends Equatable {
     nextTierAt,
     capped,
   ];
-
-  static double? _decimalOrNull(Object? raw) {
-    if (raw is num) return raw.toDouble();
-    if (raw is String) return double.tryParse(raw.trim());
-    return null;
-  }
 }

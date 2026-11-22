@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 final _from = DateTime.utc(2026, 12, 15);
 
-final _active = CancellationFeeConfigModel(active: true, effectiveFrom: _from);
+final _active = CancellationFeeConfigModel(effectiveFrom: _from);
 
 BidModel _bid({
   DateTime? createdAt,
@@ -25,17 +25,6 @@ void main() {
     test('frais éteints : jamais couvert', () {
       expect(
         isCoveredByCancellationFee(_bid(), CancellationFeeConfigModel.inactive),
-        isFalse,
-      );
-    });
-
-    test('allumé sans date d\'effet (modèle construit à la main) : non '
-        'couvert', () {
-      expect(
-        isCoveredByCancellationFee(
-          _bid(),
-          const CancellationFeeConfigModel(active: true),
-        ),
         isFalse,
       );
     });

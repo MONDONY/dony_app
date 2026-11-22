@@ -16,7 +16,7 @@ bool isCoveredByCancellationFee(
   CancellationFeeConfigModel config,
 ) {
   final from = config.effectiveFrom;
-  if (!config.active || from == null) return false;
+  if (from == null) return false;
   if (bid.isSkeleton || bid.createdAt.millisecondsSinceEpoch <= 0) {
     return false;
   }
