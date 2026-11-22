@@ -8459,6 +8459,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'designateYadonyUserChoose': (l) => l.designateYadonyUserChoose,
   'designateYadonyUserUnavailable': (l) => l.designateYadonyUserUnavailable,
   'designatedUserPending': (l) => l.designatedUserPending,
+  'recipientNotConfirmedLabel': (l) => l.recipientNotConfirmedLabel,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

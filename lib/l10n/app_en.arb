@@ -12055,5 +12055,7 @@
   "designateYadonyUserUnavailable": "This option is not available yet.",
   "@designateYadonyUserUnavailable": {"description": "Feuille de désignation : le back ne sait pas désigner un destinataire de colis par identifiant."},
   "designatedUserPending": "Awaiting confirmation",
-  "@designatedUserPending": {"description": "Carte du destinataire désigné par identifiant : il n'a pas encore confirmé."}
+  "@designatedUserPending": {"description": "Carte du destinataire désigné par identifiant : il n'a pas encore confirmé."},
+  "recipientNotConfirmedLabel": "Recipient not confirmed",
+  "@recipientNotConfirmedLabel": {"description": "Carte du colis, vue voyageur : le destinataire désigné par identifiant n'a pas encore confirmé, aucun nom ni numéro n'est donné."}
 }

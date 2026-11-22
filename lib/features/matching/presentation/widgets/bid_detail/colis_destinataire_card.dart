@@ -58,6 +58,41 @@ class ColisDestinataireCard extends StatelessWidget {
     return parts.isNotEmpty ? parts.join(' · ') : '-';
   }
 
+  String get _bareName {
+    final n = bid.recipientName ?? '';
+    return n.startsWith('@') ? n.substring(1) : n;
+  }
+
+  /// Vue expéditeur : désigné par identifiant, lien ni confirmé ni refusé.
+  bool get _isPendingDesignation =>
+      isSender &&
+      bid.recipientDesignatedByUsername &&
+      bid.recipientAppStatus != 'CONFIRMED' &&
+      bid.recipientAppStatus != 'DECLINED';
+
+  /// Vue voyageur : le back ne donne ni nom ni numéro tant que le lien d'un
+  /// destinataire désigné par identifiant est en attente.
+  bool get _isTravelerUnconfirmed {
+    if (isSender || bid.recipientDeclined) return false;
+    final name = bid.recipientName ?? '';
+    if (name.startsWith('@')) return true;
+    final phone = bid.recipientPhone ?? '';
+    return name.isEmpty && phone.isEmpty && !bid.recipientPhoneHidden;
+  }
+
+  bool get _showPhoneRow {
+    if (_isPendingDesignation || _isTravelerUnconfirmed) return false;
+    // Désigné par identifiant et confirmé, numéro masqué : pas de ligne vide.
+    if (isSender &&
+        bid.recipientDesignatedByUsername &&
+        !bid.recipientPhoneHidden &&
+        (bid.recipientPhone == null || bid.recipientPhone!.isEmpty)) {
+      return false;
+    }
+    return isSender ||
+        (bidAllowsRecipientContact(bid.status) && !bid.recipientDeclined);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -78,15 +113,27 @@ class ColisDestinataireCard extends StatelessWidget {
         if (!isSender && bid.recipientDeclined) ...[
           const SizedBox(height: DonySpacing.xs),
           RecipientDeclinedPanel(bid: bid),
+        ] else if (_isPendingDesignation) ...[
+          // Désigné par identifiant, lien pas encore confirmé : « @identifiant »
+          // et une pastille, sans numéro (il n'existe pas encore).
+          InfoRow(
+            label: l.bidDetailRecipientLabel,
+            value: '@${bid.recipientUsername ?? _bareName}',
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          const _PendingConfirmationPill(),
+        ] else if (_isTravelerUnconfirmed) ...[
+          InfoRow(
+            label: l.bidDetailRecipientLabel,
+            value: l.recipientNotConfirmedLabel,
+          ),
         ] else ...[
           InfoRow(
             label: l.bidDetailRecipientLabel,
             value: bid.recipientName ?? '-',
           ),
         ],
-        if (isSender ||
-            (bidAllowsRecipientContact(bid.status) &&
-                !bid.recipientDeclined)) ...[
+        if (_showPhoneRow) ...[
           const SizedBox(height: DonySpacing.sm),
           InfoRow(
             label: l.bidDetailPhoneLabel,
@@ -116,6 +163,46 @@ class ColisDestinataireCard extends StatelessWidget {
     );
     if (!framed) return content;
     return DetailCard(title: l.bidDetailParcelRecipientTitle, child: content);
+  }
+}
+
+/// Pastille « En attente de confirmation » du destinataire désigné par
+/// identifiant, alignée sur la colonne des valeurs.
+class _PendingConfirmationPill extends StatelessWidget {
+  const _PendingConfirmationPill();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 120),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(DonyRadius.full),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.sm,
+              vertical: DonySpacing.xs,
+            ),
+            child: Text(
+              context.l10n.designatedUserPending,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+              style: tt.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

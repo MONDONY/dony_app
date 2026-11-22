@@ -39239,6 +39239,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'En attente de confirmation'**
   String get designatedUserPending;
+
+  /// Carte du colis, vue voyageur : le destinataire désigné par identifiant n'a pas encore confirmé, aucun nom ni numéro n'est donné.
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire non confirmé'**
+  String get recipientNotConfirmedLabel;
 }
 
 class _AppLocalizationsDelegate

@@ -24506,4 +24506,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get designatedUserPending => 'En attente de confirmation';
+
+  @override
+  String get recipientNotConfirmedLabel => 'Destinataire non confirmé';
 }
