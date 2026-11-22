@@ -35,8 +35,11 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
   final double? weightKg;
   final String description;
   final String contentCategory;
-  final String recipientName;
-  final String recipientPhone;
+  final String? recipientName;
+  final String? recipientPhone;
+
+  /// Identifiant Yadony du destinataire, exclusif avec nom et numéro.
+  final String? recipientUsername;
   final double proposedTotalEur;
   final BidPaymentMethod paymentMethod;
   final String? countryCode;
@@ -49,8 +52,9 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
     required this.weightKg,
     required this.description,
     required this.contentCategory,
-    required this.recipientName,
-    required this.recipientPhone,
+    this.recipientName,
+    this.recipientPhone,
+    this.recipientUsername,
     required this.proposedTotalEur,
     this.paymentMethod = BidPaymentMethod.stripe,
     this.countryCode,
@@ -67,6 +71,7 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
     contentCategory,
     recipientName,
     recipientPhone,
+    recipientUsername,
     proposedTotalEur,
     paymentMethod,
     countryCode,

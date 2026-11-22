@@ -58,6 +58,69 @@ class ColisDestinataireCard extends StatelessWidget {
     return parts.isNotEmpty ? parts.join(' · ') : '-';
   }
 
+  String get _bareName {
+    final n = bid.recipientName ?? '';
+    return n.startsWith('@') ? n.substring(1) : n;
+  }
+
+  /// Statuts où une désignation en attente a encore un sens : demande ou colis
+  /// en cours, jamais refusée, annulée, expirée ni terminée.
+  static const _activeStatuses = <String>{
+    'PENDING',
+    'AWAITING_PAYMENT',
+    'PAYMENT_ESCROWED',
+    'ACCEPTED',
+    'HANDED_OVER',
+    'IN_TRANSIT',
+    'ARRIVED',
+  };
+
+  /// Vue expéditeur : désigné par identifiant, lien ni confirmé ni refusé, sur
+  /// une demande ou un colis encore en cours.
+  bool get _isPendingDesignation =>
+      isSender &&
+      bid.recipientDesignatedByUsername &&
+      _activeStatuses.contains(bid.status) &&
+      bid.recipientAppStatus != 'CONFIRMED' &&
+      bid.recipientAppStatus != 'DECLINED';
+
+  /// Vue expéditeur : le compte désigné par identifiant a refusé. Le nom du
+  /// colis garde l'ancien « @identifiant », périmé : l'état remplace le nom.
+  bool get _isDeclinedDesignation =>
+      isSender &&
+      bid.recipientDesignatedByUsername &&
+      bid.recipientAppStatus == 'DECLINED';
+
+  /// Vue voyageur : pour un destinataire désigné par identifiant dont le lien
+  /// est absent ou en attente, le back sert « @identifiant » brut, sans numéro
+  /// ni statut, et jamais le drapeau de désignation (réservé à l'expéditeur).
+  bool get _isTravelerUnconfirmed =>
+      !isSender &&
+      !bid.recipientDeclined &&
+      (bid.recipientName ?? '').startsWith('@') &&
+      bid.recipientAppStatus != 'CONFIRMED' &&
+      (bid.recipientPhone ?? '').isEmpty;
+
+  bool get _showPhoneRow {
+    if (_isPendingDesignation ||
+        _isDeclinedDesignation ||
+        _isTravelerUnconfirmed) {
+      return false;
+    }
+    final noPhone = (bid.recipientPhone ?? '').isEmpty;
+    // Désigné par identifiant et confirmé, numéro masqué : pas de ligne vide.
+    // Un colis par numéro a toujours un numéro saisi, il n'est pas concerné.
+    if (noPhone && !bid.recipientPhoneHidden) {
+      if (isSender && bid.recipientDesignatedByUsername) return false;
+      if (bid.recipientAppStatus == 'CONFIRMED' &&
+          !(bid.recipientName ?? '').startsWith('@')) {
+        return false;
+      }
+    }
+    return isSender ||
+        (bidAllowsRecipientContact(bid.status) && !bid.recipientDeclined);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -78,15 +141,32 @@ class ColisDestinataireCard extends StatelessWidget {
         if (!isSender && bid.recipientDeclined) ...[
           const SizedBox(height: DonySpacing.xs),
           RecipientDeclinedPanel(bid: bid),
+        ] else if (_isPendingDesignation) ...[
+          // Désigné par identifiant, lien pas encore confirmé : « @identifiant »
+          // et une pastille, sans numéro (il n'existe pas encore).
+          InfoRow(
+            label: l.bidDetailRecipientLabel,
+            value: '@${bid.recipientUsername ?? _bareName}',
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          const _PendingConfirmationPill(),
+        ] else if (_isDeclinedDesignation) ...[
+          InfoRow(
+            label: l.bidDetailRecipientLabel,
+            value: l.recipientAppDeclined,
+          ),
+        ] else if (_isTravelerUnconfirmed) ...[
+          InfoRow(
+            label: l.bidDetailRecipientLabel,
+            value: l.recipientNotConfirmedLabel,
+          ),
         ] else ...[
           InfoRow(
             label: l.bidDetailRecipientLabel,
             value: bid.recipientName ?? '-',
           ),
         ],
-        if (isSender ||
-            (bidAllowsRecipientContact(bid.status) &&
-                !bid.recipientDeclined)) ...[
+        if (_showPhoneRow) ...[
           const SizedBox(height: DonySpacing.sm),
           InfoRow(
             label: l.bidDetailPhoneLabel,
@@ -116,6 +196,46 @@ class ColisDestinataireCard extends StatelessWidget {
     );
     if (!framed) return content;
     return DetailCard(title: l.bidDetailParcelRecipientTitle, child: content);
+  }
+}
+
+/// Pastille « En attente de confirmation » du destinataire désigné par
+/// identifiant, alignée sur la colonne des valeurs.
+class _PendingConfirmationPill extends StatelessWidget {
+  const _PendingConfirmationPill();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 120),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(DonyRadius.full),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.sm,
+              vertical: DonySpacing.xs,
+            ),
+            child: Text(
+              context.l10n.designatedUserPending,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+              style: tt.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

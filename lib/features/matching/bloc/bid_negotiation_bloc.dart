@@ -126,6 +126,7 @@ class BidNegotiationBloc
         contentCategory: event.contentCategory,
         recipientName: event.recipientName,
         recipientPhone: event.recipientPhone,
+        recipientUsername: event.recipientUsername,
         proposedTotalEur: event.proposedTotalEur,
         paymentMethod: event.paymentMethod,
         countryCode: event.countryCode,

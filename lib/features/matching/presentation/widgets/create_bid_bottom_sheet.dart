@@ -106,6 +106,7 @@ class _CollectedFormData {
     required this.contentCategory,
     required this.recipientName,
     required this.recipientPhone,
+    this.recipientUsername,
     this.gridItems,
     this.promoCode,
     this.photoKeys,
@@ -113,8 +114,11 @@ class _CollectedFormData {
   final double weightKg;
   final String description;
   final String contentCategory;
-  final String recipientName;
-  final String recipientPhone;
+  final String? recipientName;
+  final String? recipientPhone;
+
+  /// Identifiant Yadony du destinataire : part à la place du nom et du numéro.
+  final String? recipientUsername;
   final List<Map<String, dynamic>>? gridItems;
   final String? promoCode;
   final List<String>? photoKeys;
@@ -240,6 +244,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _descCtrl.text,
     _recipientNameCtrl.text,
     _recipientPhoneCtrl.text,
+    _recipientSection.username ?? '',
     _promoCtrl.text,
     _weightNotifier.value,
     (_categoriesNotifier.value.toList()..sort()).join(','),
@@ -463,6 +468,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _descCtrl.addListener(_syncFormButtonState);
     _recipientPhoneCtrl.addListener(_syncFormButtonState);
     _recipientPhoneCtrl.addListener(_clearRecipientPhoneErrorIfFixed);
+    _recipientSection.designatedUsername.addListener(_syncFormButtonState);
 
     _weightNotifier.addListener(_invalidateQuote);
     _gridQuantitiesNotifier.addListener(_invalidateQuote);
@@ -531,6 +537,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _descCtrl,
     _recipientNameCtrl,
     _recipientPhoneCtrl,
+    _recipientSection.designatedUsername,
     _promoCtrl,
     _weightNotifier,
     _categoriesNotifier,
@@ -589,6 +596,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _recipientPhoneCtrl.removeListener(_clearRecipientPhoneErrorIfFixed);
     _recipientPhoneCtrl.dispose();
     _recipientPhoneErrorNotifier.dispose();
+    _recipientSection.designatedUsername.removeListener(_syncFormButtonState);
+    _recipientSection.dispose();
     _promoCtrl.dispose();
     _weightNotifier.removeListener(_syncFormButtonState);
     _categoriesNotifier.removeListener(_syncFormButtonState);
@@ -745,6 +754,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   /// Contrôle du numéro avant envoi : `false` (et message) s'il n'est pas
   /// international après préfixage.
+  /// Destinataire choisi par son identifiant Yadony : nom et numéro ne sont
+  /// ni demandés ni envoyés.
+  bool get _hasDesignatedUser => _recipientSection.username != null;
+
   bool _checkRecipientPhone() {
     _applyRecipientPhoneFormat();
     if (_recipientPhoneValid) return true;
@@ -872,15 +885,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _showError(context.l10n.bidCreateDescriptionRequiredError);
       return;
     }
-    if (_recipientNameCtrl.text.trim().isEmpty) {
-      _showError(context.l10n.bidCreateRecipientNameRequiredError);
-      return;
+    if (!_hasDesignatedUser) {
+      if (_recipientNameCtrl.text.trim().isEmpty) {
+        _showError(context.l10n.bidCreateRecipientNameRequiredError);
+        return;
+      }
+      if (_recipientPhoneCtrl.text.trim().isEmpty) {
+        _showError(context.l10n.bidCreateRecipientPhoneRequiredError);
+        return;
+      }
+      if (!_checkRecipientPhone()) return;
     }
-    if (_recipientPhoneCtrl.text.trim().isEmpty) {
-      _showError(context.l10n.bidCreateRecipientPhoneRequiredError);
-      return;
-    }
-    if (!_checkRecipientPhone()) return;
     if (_readProposal() == null) {
       _showError(context.l10n.bidCreatePriceRequiredError);
       return;
@@ -914,8 +929,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         weightKg: weight > 0 ? weight : null,
         description: _descriptionValue,
         contentCategory: _contentCategoryValue,
-        recipientName: _recipientNameCtrl.text.trim(),
-        recipientPhone: _recipientPhoneCtrl.text.trim(),
+        recipientName: _hasDesignatedUser
+            ? null
+            : _recipientNameCtrl.text.trim(),
+        recipientPhone: _hasDesignatedUser
+            ? null
+            : _recipientPhoneCtrl.text.trim(),
+        recipientUsername: _recipientSection.username,
         proposedTotalEur: proposed,
         // Figé sur le bid dès la proposition : c'est ce mode que le back
         // appliquera à l'accord (carte → escrow à payer, espèces → commission
@@ -1089,15 +1109,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _showError(context.l10n.bidCreateDescriptionRequiredError);
       return;
     }
-    if (_recipientNameCtrl.text.trim().isEmpty) {
-      _showError(context.l10n.bidCreateRecipientNameRequiredError);
-      return;
+    if (!_hasDesignatedUser) {
+      if (_recipientNameCtrl.text.trim().isEmpty) {
+        _showError(context.l10n.bidCreateRecipientNameRequiredError);
+        return;
+      }
+      if (_recipientPhoneCtrl.text.trim().isEmpty) {
+        _showError(context.l10n.bidCreateRecipientPhoneRequiredError);
+        return;
+      }
+      if (!_checkRecipientPhone()) return;
     }
-    if (_recipientPhoneCtrl.text.trim().isEmpty) {
-      _showError(context.l10n.bidCreateRecipientPhoneRequiredError);
-      return;
-    }
-    if (!_checkRecipientPhone()) return;
 
     // Validation passed — save the manually-entered recipient now, while
     // RecipientSection is still mounted. Unlike the single-step hosts, this
@@ -1117,8 +1139,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       weightKg: _weightNotifier.value,
       description: _descriptionValue,
       contentCategory: _contentCategoryValue,
-      recipientName: _recipientNameCtrl.text.trim(),
-      recipientPhone: _recipientPhoneCtrl.text.trim(),
+      recipientName: _hasDesignatedUser ? null : _recipientNameCtrl.text.trim(),
+      recipientPhone: _hasDesignatedUser
+          ? null
+          : _recipientPhoneCtrl.text.trim(),
+      recipientUsername: _recipientSection.username,
       gridItems: _selectedGridItems(),
       promoCode: promoCode,
       photoKeys: _photosCubit.readyKeys,
@@ -1148,6 +1173,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           contentCategory: data.contentCategory,
           recipientName: data.recipientName,
           recipientPhone: data.recipientPhone,
+          recipientUsername: data.recipientUsername,
           paymentMethod: method,
           promoCode: data.promoCode,
           gridItems: data.gridItems,
@@ -1163,6 +1189,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           contentCategory: data.contentCategory,
           recipientName: data.recipientName,
           recipientPhone: data.recipientPhone,
+          recipientUsername: data.recipientUsername,
           gridItems: data.gridItems,
           photoKeys: data.photoKeys,
         ),
@@ -1667,6 +1694,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               phoneCtrl: _recipientPhoneCtrl,
               fallbackCity: widget.announcement.arrivalCity,
               fallbackCountry: widget.announcement.arrivalCountryCode,
+              allowYadonyUser: true,
               children: [
                 DonyTextField(
                   controller: _recipientNameCtrl,

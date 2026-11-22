@@ -74,6 +74,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
     _recipientCityCtrl.dispose();
+    _recipientSection.dispose();
     _selectedMethod.dispose();
     super.dispose();
   }

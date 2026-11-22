@@ -4,6 +4,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/data/phone_validation.dart';
+import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
+import 'package:dony/features/recipients/presentation/widgets/designate_yadony_user_sheet.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_picker_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +33,18 @@ String countryFromPhone(String phoneE164) {
 class RecipientSectionController {
   VoidCallback? _saveHook;
   void maybeSaveManualEntry() => _saveHook?.call();
+
+  /// Identifiant Yadony choisi comme destinataire (sans `@`), `null` quand le
+  /// destinataire est saisi ou choisi dans le carnet. Quand il est posé, le
+  /// formulaire envoie `recipientUsername` à la place du nom et du numéro.
+  final ValueNotifier<String?> designatedUsername = ValueNotifier<String?>(
+    null,
+  );
+
+  String? get username => designatedUsername.value;
+
+  /// À appeler par le formulaire hôte quand il est détruit.
+  void dispose() => designatedUsername.dispose();
 }
 
 /// Bloc « Destinataire » partagé par les formulaires d'envoi :
@@ -46,7 +60,9 @@ class RecipientSection extends StatefulWidget {
     this.fallbackCity,
     this.fallbackCountry,
     required this.children,
+    this.allowYadonyUser = false,
     @visibleForTesting this.createBloc,
+    @visibleForTesting this.openDesignateSheet,
   });
 
   final RecipientSectionController controller;
@@ -57,9 +73,18 @@ class RecipientSection extends StatefulWidget {
   final String? fallbackCountry;
   final List<Widget> children;
 
+  /// Propose « Un utilisateur Yadony » (colis seulement : l'invitation d'une
+  /// demande d'envoi passe par le carnet). Le choix n'est offert que si le
+  /// back connecté sait désigner un destinataire de colis.
+  final bool allowYadonyUser;
+
   /// Override de test pour l'instanciation du bloc — par défaut `getIt`.
   @visibleForTesting
   final RecipientBloc Function()? createBloc;
+
+  /// Override de test de l'ouverture de la feuille de désignation.
+  @visibleForTesting
+  final Future<DesignatedUser?> Function(BuildContext)? openDesignateSheet;
 
   @override
   State<RecipientSection> createState() => _RecipientSectionState();
@@ -109,6 +134,36 @@ class _RecipientSectionState extends State<RecipientSection> {
     }
   }
 
+  bool get _yadonyUserOffered =>
+      widget.allowYadonyUser &&
+      getIt.isRegistered<RecipientInvitationRepository>() &&
+      getIt<RecipientInvitationRepository>().parcelDesignationOffered;
+
+  Future<void> _openDesignate() async {
+    final user =
+        await (widget.openDesignateSheet ?? DesignateYadonyUserSheet.show)(
+          context,
+        );
+    if (!mounted) return;
+    // La feuille a pu apprendre que le back ne désigne pas : le choix est
+    // relu, qu'un compte ait été choisi ou non.
+    setState(() {});
+    if (user == null) return;
+    // Le nom et le numéro saisis n'ont plus cours : le colis part avec
+    // l'identifiant seul.
+    _suppressListener = true;
+    widget.nameCtrl.clear();
+    widget.phoneCtrl.clear();
+    _suppressListener = false;
+    widget.controller.designatedUsername.value = user.username;
+    setState(() => _selected = null);
+  }
+
+  void _clearDesignated() {
+    widget.controller.designatedUsername.value = null;
+    setState(() {});
+  }
+
   Future<void> _openPicker() async {
     final recipient = await RecipientPickerSheet.show(
       context,
@@ -145,6 +200,7 @@ class _RecipientSectionState extends State<RecipientSection> {
       null;
 
   bool get _toggleVisible =>
+      widget.controller.username == null &&
       _selected == null &&
       _e164.hasMatch(widget.phoneCtrl.text.trim()) &&
       !_phoneIsKnown;
@@ -180,12 +236,29 @@ class _RecipientSectionState extends State<RecipientSection> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (_selected != null)
-                _SelectedCard(recipient: _selected!, onChange: _openPicker)
-              else
-                _PickerButton(onTap: _openPicker),
-              const SizedBox(height: DonySpacing.md),
-              ...widget.children,
+              if (widget.controller.username != null)
+                DesignatedUserCard(
+                  key: const Key('recipient-section-designated'),
+                  username: widget.controller.username!,
+                  onChange: _clearDesignated,
+                )
+              else ...[
+                if (_selected != null)
+                  _SelectedCard(recipient: _selected!, onChange: _openPicker)
+                else
+                  _PickerButton(onTap: _openPicker),
+                if (_yadonyUserOffered) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  _PickerButton(
+                    key: const Key('recipient-section-yadony-user'),
+                    label: context.l10n.designateYadonyUserChoice,
+                    icon: 'user',
+                    onTap: _openDesignate,
+                  ),
+                ],
+                const SizedBox(height: DonySpacing.md),
+                ...widget.children,
+              ],
               if (_selected?.linkedOnYadony ?? false) ...[
                 const SizedBox(height: DonySpacing.sm),
                 const _LinkedOnYadonyNote(),
@@ -242,8 +315,15 @@ class _LinkedOnYadonyNote extends StatelessWidget {
 }
 
 class _PickerButton extends StatelessWidget {
-  const _PickerButton({required this.onTap});
+  const _PickerButton({
+    super.key,
+    required this.onTap,
+    this.label,
+    this.icon = 'contact',
+  });
   final VoidCallback onTap;
+  final String? label;
+  final String icon;
 
   @override
   Widget build(BuildContext context) {
@@ -262,17 +342,20 @@ class _PickerButton extends StatelessWidget {
           ),
           child: Row(
             children: [
-              DonyIcon('contact', size: 18, color: cs.primary),
+              DonyIcon(icon, size: 18, color: cs.primary),
               const SizedBox(width: DonySpacing.sm),
               // Expanded plutôt que Text + Spacer : le Spacer (flex:1)
               // partageait la largeur restante à parts égales avec un
               // Flexible(flex:1), ce qui aurait fait passer le libellé à la
               // ligne même à 100 %. Expanded lui laisse toute la place
-              // disponible (rendu identique à 100 %), avec passage à la
-              // ligne seulement si besoin à 200 %.
+              // disponible ; le libellé reste sur une ligne (règle des
+              // libellés de bouton), tronqué par une ellipse si besoin.
               Expanded(
                 child: Text(
-                  context.l10n.recipientSectionPickerButton,
+                  label ?? context.l10n.recipientSectionPickerButton,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
                   style: tt.bodyMedium?.copyWith(
                     color: cs.primary,
                     fontWeight: FontWeight.w600,
@@ -283,6 +366,57 @@ class _PickerButton extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Destinataire désigné par son identifiant Yadony : il n'a pas encore
+/// confirmé que le colis est pour lui.
+class DesignatedUserCard extends StatelessWidget {
+  const DesignatedUserCard({
+    super.key,
+    required this.username,
+    required this.onChange,
+  });
+  final String username;
+  final VoidCallback onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.primary, width: 1.5),
+      ),
+      child: Row(
+        children: [
+          DonyAvatar(name: username, size: DonyAvatarSize.sm),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '@$username',
+                  style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  context.l10n.designatedUserPending,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: onChange,
+            child: Text(context.l10n.recipientSectionChangeButton),
+          ),
+        ],
       ),
     );
   }

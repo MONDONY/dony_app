@@ -24581,4 +24581,63 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get usernameGuestForbidden =>
       'Créez un compte pour choisir votre identifiant.';
+
+  @override
+  String get designateYadonyUserChoice => 'Un utilisateur Yadony';
+
+  @override
+  String get designateYadonyUserTitle => 'Un utilisateur Yadony';
+
+  @override
+  String get designateYadonyUserIntro =>
+      'Saisissez son identifiant. Il confirmera qu\'il est bien le destinataire.';
+
+  @override
+  String get designateYadonyUserChoose => 'Choisir';
+
+  @override
+  String get designateYadonyUserUnavailable =>
+      'Cette désignation n\'est pas encore disponible.';
+
+  @override
+  String get designatedUserPending => 'En attente de confirmation';
+
+  @override
+  String get recipientNotConfirmedLabel => 'Destinataire non confirmé';
+
+  @override
+  String get errorRecipientIsTravelerTitle => 'Destinataire impossible';
+
+  @override
+  String get errorRecipientIsTravelerMessage =>
+      'Le voyageur de ce trajet ne peut pas être le destinataire du colis. Choisissez une autre personne.';
+
+  @override
+  String get errorRecipientLookupQuotaTitle => 'Trop de recherches';
+
+  @override
+  String get errorRecipientLookupQuotaMessage =>
+      'Trop de recherches. Réessayez dans une heure.';
+
+  @override
+  String get errorRecipientModeConflictTitle => 'Destinataire en double';
+
+  @override
+  String get errorRecipientModeConflictMessage =>
+      'Choisissez un identifiant Yadony ou saisissez un nom et un numéro, pas les deux.';
+
+  @override
+  String get errorRecipientRequiredTitle => 'Destinataire manquant';
+
+  @override
+  String get errorRecipientRequiredMessage =>
+      'Indiquez un destinataire pour ce colis.';
+
+  @override
+  String get designateYadonyUserAlreadyRecipient =>
+      'C\'est déjà le destinataire de ce colis.';
+
+  @override
+  String get recipientChangeUsernameWarning =>
+      'Ce compte remplace l\'ancien destinataire : le code de retrait et le lien de suivi seront renouvelés, et l\'ancien destinataire n\'y aura plus accès.';
 }

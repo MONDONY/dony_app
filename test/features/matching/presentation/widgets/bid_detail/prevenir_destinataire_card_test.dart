@@ -28,7 +28,9 @@ BidModel _bid({
   String? arrivalCity = 'Dakar',
   String? recipientAppStatus,
   bool pickupCodeRenewalNeeded = false,
+  bool designatedByUsername = false,
 }) => BidModel(
+  recipientDesignatedByUsername: designatedByUsername,
   pickupCodeRenewalNeeded: pickupCodeRenewalNeeded,
   id: 'bid-001',
   announcementId: 'ann-001',
@@ -228,6 +230,28 @@ void main() {
         isFalse,
       );
       expect(PrevenirDestinataire.canNotify(_bid(status: 'PENDING')), isFalse);
+    });
+
+    test('désignation par identifiant non confirmée : pas de message', () {
+      for (final appStatus in [null, 'PENDING']) {
+        expect(
+          PrevenirDestinataire.canNotify(
+            _bid(
+              recipientName: '@awa.diallo',
+              recipientPhone: null,
+              designatedByUsername: true,
+              recipientAppStatus: appStatus,
+            ),
+          ),
+          isFalse,
+        );
+      }
+      expect(
+        PrevenirDestinataire.canNotify(
+          _bid(designatedByUsername: true, recipientAppStatus: 'CONFIRMED'),
+        ),
+        isTrue,
+      );
     });
 
     test('canNotify is false without tracking token', () {

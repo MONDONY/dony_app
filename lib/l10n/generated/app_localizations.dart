@@ -39293,6 +39293,108 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Créez un compte pour choisir votre identifiant.'**
   String get usernameGuestForbidden;
+
+  /// Choix d'un destinataire de colis par identifiant (formulaire d'envoi, changement de destinataire).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un utilisateur Yadony'**
+  String get designateYadonyUserChoice;
+
+  /// Titre de la feuille de désignation d'un destinataire de colis par identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un utilisateur Yadony'**
+  String get designateYadonyUserTitle;
+
+  /// Feuille de désignation : introduction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez son identifiant. Il confirmera qu\'il est bien le destinataire.'**
+  String get designateYadonyUserIntro;
+
+  /// Feuille de désignation : bouton qui valide le compte trouvé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir'**
+  String get designateYadonyUserChoose;
+
+  /// Feuille de désignation : le back ne sait pas désigner un destinataire de colis par identifiant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette désignation n\'est pas encore disponible.'**
+  String get designateYadonyUserUnavailable;
+
+  /// Carte du destinataire désigné par identifiant : il n'a pas encore confirmé.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de confirmation'**
+  String get designatedUserPending;
+
+  /// Carte du colis, vue voyageur : le destinataire désigné par identifiant n'a pas encore confirmé, aucun nom ni numéro n'est donné.
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire non confirmé'**
+  String get recipientNotConfirmedLabel;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire impossible'**
+  String get errorRecipientIsTravelerTitle;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur de ce trajet ne peut pas être le destinataire du colis. Choisissez une autre personne.'**
+  String get errorRecipientIsTravelerMessage;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de recherches'**
+  String get errorRecipientLookupQuotaTitle;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de recherches. Réessayez dans une heure.'**
+  String get errorRecipientLookupQuotaMessage;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire en double'**
+  String get errorRecipientModeConflictTitle;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un identifiant Yadony ou saisissez un nom et un numéro, pas les deux.'**
+  String get errorRecipientModeConflictMessage;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire manquant'**
+  String get errorRecipientRequiredTitle;
+
+  /// Catalogue d'erreurs : destinataire d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un destinataire pour ce colis.'**
+  String get errorRecipientRequiredMessage;
+
+  /// Feuille de désignation : le compte trouvé est déjà désigné sur ce colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est déjà le destinataire de ce colis.'**
+  String get designateYadonyUserAlreadyRecipient;
+
+  /// Feuille de changement de destinataire, mode identifiant Yadony : avertissement de renouvellement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte remplace l\'ancien destinataire : le code de retrait et le lien de suivi seront renouvelés, et l\'ancien destinataire n\'y aura plus accès.'**
+  String get recipientChangeUsernameWarning;
 }
 
 class _AppLocalizationsDelegate

@@ -19,8 +19,9 @@ class BidNegotiationRemoteDatasource {
     required double? weightKg,
     required String description,
     required String contentCategory,
-    required String recipientName,
-    required String recipientPhone,
+    String? recipientName,
+    String? recipientPhone,
+    String? recipientUsername,
     required double proposedTotalEur,
     BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
     String? countryCode,
@@ -31,8 +32,7 @@ class BidNegotiationRemoteDatasource {
     final body = <String, dynamic>{
       'description': description,
       'contentCategory': contentCategory,
-      'recipientName': recipientName,
-      'recipientPhone': recipientPhone,
+      ..._recipientFields(recipientName, recipientPhone, recipientUsername),
       'disclaimerSigned': true,
       'paymentMethod': paymentMethod.apiValue,
       'proposedTotalEur': proposedTotalEur,
@@ -156,4 +156,16 @@ class BidNegotiationRemoteDatasource {
   Future<void> delete(String bidId) async {
     await _apiClient.dio.delete('/bids/$bidId/negotiation');
   }
+}
+
+/// Champs « destinataire » : identifiant Yadony seul, ou nom et numéro (le
+/// back refuse le mélange, 422 `recipient-mode-conflict`).
+Map<String, dynamic> _recipientFields(
+  String? name,
+  String? phone,
+  String? username,
+) {
+  final u = username?.trim();
+  if (u != null && u.isNotEmpty) return {'recipientUsername': u};
+  return {'recipientName': ?name, 'recipientPhone': ?phone};
 }

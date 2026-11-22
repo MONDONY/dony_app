@@ -2277,4 +2277,20 @@ void main() {
       expect(en.message, contains('GP Pro application'));
     });
   });
+
+  group('ErrorCatalog — destinataire désigné par identifiant', () {
+    const expected = {
+      'recipient-is-traveler': 'Le voyageur de ce trajet ne peut pas être',
+      'recipient-lookup-quota': 'Trop de recherches. Réessayez dans une heure.',
+      'recipient-mode-conflict': 'pas les deux',
+      'recipient-required': 'Indiquez un destinataire',
+    };
+    expected.forEach((code, text) {
+      test('$code est connu et a son message', () {
+        final e = NetworkException('x', code: code);
+        expect(ErrorCatalog.isKnown(e), isTrue);
+        expect(ErrorCatalog.lookup(e).message, contains(text));
+      });
+    });
+  });
 }

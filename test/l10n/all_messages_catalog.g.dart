@@ -8473,6 +8473,25 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'profileEditUsernameLabel': (l) => l.profileEditUsernameLabel,
   'usernameUnavailableNow': (l) => l.usernameUnavailableNow,
   'usernameGuestForbidden': (l) => l.usernameGuestForbidden,
+  'designateYadonyUserChoice': (l) => l.designateYadonyUserChoice,
+  'designateYadonyUserTitle': (l) => l.designateYadonyUserTitle,
+  'designateYadonyUserIntro': (l) => l.designateYadonyUserIntro,
+  'designateYadonyUserChoose': (l) => l.designateYadonyUserChoose,
+  'designateYadonyUserUnavailable': (l) => l.designateYadonyUserUnavailable,
+  'designatedUserPending': (l) => l.designatedUserPending,
+  'recipientNotConfirmedLabel': (l) => l.recipientNotConfirmedLabel,
+  'errorRecipientIsTravelerTitle': (l) => l.errorRecipientIsTravelerTitle,
+  'errorRecipientIsTravelerMessage': (l) => l.errorRecipientIsTravelerMessage,
+  'errorRecipientLookupQuotaTitle': (l) => l.errorRecipientLookupQuotaTitle,
+  'errorRecipientLookupQuotaMessage': (l) => l.errorRecipientLookupQuotaMessage,
+  'errorRecipientModeConflictTitle': (l) => l.errorRecipientModeConflictTitle,
+  'errorRecipientModeConflictMessage': (l) =>
+      l.errorRecipientModeConflictMessage,
+  'errorRecipientRequiredTitle': (l) => l.errorRecipientRequiredTitle,
+  'errorRecipientRequiredMessage': (l) => l.errorRecipientRequiredMessage,
+  'designateYadonyUserAlreadyRecipient': (l) =>
+      l.designateYadonyUserAlreadyRecipient,
+  'recipientChangeUsernameWarning': (l) => l.recipientChangeUsernameWarning,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

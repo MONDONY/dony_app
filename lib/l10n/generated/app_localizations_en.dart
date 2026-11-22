@@ -24407,4 +24407,63 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get usernameGuestForbidden =>
       'Create an account to choose your username.';
+
+  @override
+  String get designateYadonyUserChoice => 'A Yadony user';
+
+  @override
+  String get designateYadonyUserTitle => 'A Yadony user';
+
+  @override
+  String get designateYadonyUserIntro =>
+      'Enter their username. They will confirm they are the recipient.';
+
+  @override
+  String get designateYadonyUserChoose => 'Choose';
+
+  @override
+  String get designateYadonyUserUnavailable =>
+      'This option is not available yet.';
+
+  @override
+  String get designatedUserPending => 'Awaiting confirmation';
+
+  @override
+  String get recipientNotConfirmedLabel => 'Recipient not confirmed';
+
+  @override
+  String get errorRecipientIsTravelerTitle => 'Recipient not allowed';
+
+  @override
+  String get errorRecipientIsTravelerMessage =>
+      'The traveler on this trip cannot be the recipient of the parcel. Choose someone else.';
+
+  @override
+  String get errorRecipientLookupQuotaTitle => 'Too many searches';
+
+  @override
+  String get errorRecipientLookupQuotaMessage =>
+      'Too many searches. Try again in an hour.';
+
+  @override
+  String get errorRecipientModeConflictTitle => 'Conflicting recipient';
+
+  @override
+  String get errorRecipientModeConflictMessage =>
+      'Choose a Yadony username or enter a name and number, not both.';
+
+  @override
+  String get errorRecipientRequiredTitle => 'Recipient missing';
+
+  @override
+  String get errorRecipientRequiredMessage =>
+      'Enter a recipient for this parcel.';
+
+  @override
+  String get designateYadonyUserAlreadyRecipient =>
+      'This person is already the recipient of this parcel.';
+
+  @override
+  String get recipientChangeUsernameWarning =>
+      'This account replaces the previous recipient: the pickup code and tracking link will be renewed, and the previous recipient will lose access to them.';
 }

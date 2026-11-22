@@ -59,18 +59,22 @@ class RecipientChangeCubit extends Cubit<RecipientChangeState> {
 
   Future<void> submit(
     BidModel bid, {
-    required String name,
-    required String phone,
+    String? name,
+    String? phone,
+    String? username,
   }) async {
     if (state is RecipientChangeSubmitting) return;
-    final normalized = normalizeRecipientPhone(phone);
-    final phoneChanged = isPhoneChanged(bid, normalized);
+    final byUsername = username != null && username.trim().isNotEmpty;
+    final normalized = normalizeRecipientPhone(phone ?? '');
+    // Désigner par identifiant : le serveur renouvelle lien et code.
+    final phoneChanged = byUsername || isPhoneChanged(bid, normalized);
     emit(const RecipientChangeSubmitting());
     try {
       final updated = await _repository.changeRecipient(
         bid.id,
-        recipientName: name.trim(),
-        recipientPhone: normalized,
+        recipientName: byUsername ? null : name?.trim(),
+        recipientPhone: byUsername ? null : normalized,
+        recipientUsername: byUsername ? username.trim() : null,
       );
       if (isClosed) return;
       emit(RecipientChangeSuccess(updated, phoneChanged: phoneChanged));
