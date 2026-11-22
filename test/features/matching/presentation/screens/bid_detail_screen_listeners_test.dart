@@ -959,5 +959,74 @@ void main() {
       verify(repository.getFeeConfig).called(1);
       expect(cubit.state.config, kActiveFeeConfig);
     });
+
+    // Le voyageur ne lit jamais la configuration des frais d'annulation
+    // (règle : les parcours du voyageur n'appellent ni l'aperçu ni la config).
+    group('configuration lue pour l\'expéditeur seulement', () {
+      MockFeeConfigRepository registerUnloadedConfig() {
+        final repository = MockFeeConfigRepository();
+        when(repository.getFeeConfig).thenAnswer((_) async => kActiveFeeConfig);
+        final cubit = CancellationFeeConfigCubit(
+          repository,
+          MockFeeConfigAnalytics(),
+        );
+        getIt.registerSingleton<CancellationFeeConfigCubit>(cubit);
+        addTearDown(() async {
+          await cubit.close();
+          resetCancellationFeeFlagForTest();
+        });
+        return repository;
+      }
+
+      BidModel ofOtherSender({String status = 'ACCEPTED'}) => BidModel(
+        id: 'bid-001',
+        announcementId: 'ann-001',
+        senderId: 'someone-else',
+        weightKg: 3,
+        status: status,
+        createdAt: kCoveredCreatedAt,
+        updatedAt: kCoveredCreatedAt,
+      );
+
+      testWidgets('voyageur : jamais lue, ni à l\'ouverture ni au '
+          'chargement du colis', (tester) async {
+        final repository = registerUnloadedConfig();
+
+        await pump(tester, ofOtherSender());
+        bidStates.add(BidDetailLoaded(ofOtherSender()));
+        await settle(tester);
+        bidStates.add(BidDetailLoaded(ofOtherSender(status: 'CANCELLED')));
+        await settle(tester);
+
+        verifyNever(repository.getFeeConfig);
+      });
+
+      testWidgets('voyageur, colis squelette (lien profond) : jamais lue', (
+        tester,
+      ) async {
+        final repository = registerUnloadedConfig();
+
+        await pump(tester, _bid(isSkeleton: true));
+        bidStates.add(BidDetailLoaded(ofOtherSender()));
+        await settle(tester);
+
+        verifyNever(repository.getFeeConfig);
+      });
+
+      testWidgets('expéditeur, colis squelette : lue au chargement du colis, '
+          'une seule fois', (tester) async {
+        final repository = registerUnloadedConfig();
+
+        await pump(tester, _bid(isSkeleton: true));
+        verifyNever(repository.getFeeConfig);
+
+        bidStates.add(BidDetailLoaded(paidOnline()));
+        await settle(tester);
+        bidStates.add(BidDetailLoaded(paidOnline()));
+        await settle(tester);
+
+        verify(repository.getFeeConfig).called(1);
+      });
+    });
   });
 }

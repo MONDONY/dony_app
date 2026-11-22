@@ -180,10 +180,7 @@ class _BidDetailViewState extends State<_BidDetailView>
     _skeletonLoading = _bid.isSkeleton;
     _lastUserId = context.read<AuthBloc>().state.currentUserId;
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
-    // Textes des annulations de l'expéditeur (frais d'annulation allumés ou
-    // non) : configuration lue dès l'ouverture, pour qu'elle soit là quand
-    // le menu, une feuille ou une snackbar la demande.
-    warmUpCancellationFeeConfig();
+    _maybeWarmUpFeeConfig(context);
     // Colis squelette (notification, lien profond) : le rôle n'est connu qu'au
     // chargement, la lecture du paiement attend `BidDetailLoaded`.
     if (!_bid.isSkeleton) _loadPaymentStatus();
@@ -461,6 +458,23 @@ class _BidDetailViewState extends State<_BidDetailView>
     });
   }
 
+  /// La configuration des frais d'annulation a été demandée pour cet écran.
+  bool _feeConfigWarmedUp = false;
+
+  /// Textes des annulations de l'expéditeur (frais d'annulation allumés ou
+  /// non) : configuration lue dès que le lecteur est connu comme
+  /// l'expéditeur, pour qu'elle soit là quand la snackbar de l'absence
+  /// confirmée la lit sans attendre. Le voyageur ne la lit jamais ; rôle
+  /// inconnu (colis squelette, lecteur pas encore connu) : rien, relancé au
+  /// chargement du colis. Une fois par écran.
+  void _maybeWarmUpFeeConfig(BuildContext context) {
+    if (_feeConfigWarmedUp || _bid.isSkeleton) return;
+    final viewerId = _resolveViewerId(context.read<AuthBloc>().state);
+    if (viewerId == null || viewerId != _bid.senderId) return;
+    _feeConfigWarmedUp = true;
+    warmUpCancellationFeeConfig();
+  }
+
   /// `true` seulement quand le lecteur est connu ET n'est pas l'expéditeur du
   /// colis. Un colis squelette n'a pas encore d'expéditeur : rôle non résolu.
   bool _viewerIsTraveler(BuildContext context) {
@@ -705,6 +719,7 @@ class _BidDetailViewState extends State<_BidDetailView>
                   _bid = state.bid;
                   _skeletonLoading = false;
                   _maybeOpenCodeRenewal(context, state.bid);
+                  _maybeWarmUpFeeConfig(context);
                   if (state.bid.id != previousBidId) {
                     _existingPaymentNotifier.value = null;
                     _paymentLoadedNotifier.value = false;
