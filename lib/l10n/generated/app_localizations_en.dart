@@ -16688,7 +16688,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipientInviteActionSubtitle =>
-      'Find them by phone number or email: their parcels will be linked to them.';
+      'Find them by phone number, email or username: their parcels will be linked to them.';
 
   @override
   String get recipientInviteSheetIntro =>
@@ -16847,6 +16847,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipientInviteNameTooLong => '100 characters maximum.';
+
+  @override
+  String get recipientInviteChannelUsername => 'Username';
+
+  @override
+  String get recipientInviteUsernameLabel => 'Yadony username';
+
+  @override
+  String get recipientInviteUsernameHelper =>
+      'They can find it in their profile, under their name.';
+
+  @override
+  String recipientInviteUsernameFound(String initial) {
+    return 'Account found, first name starting with $initial';
+  }
+
+  @override
+  String get recipientInviteUsernameFoundNoInitial => 'Account found';
+
+  @override
+  String get recipientInviteUsernameUnsupported =>
+      'Search by username isn\'t available yet.';
+
+  @override
+  String get recipientInviteUsernameNotFound =>
+      'This user does not exist. Check the username.';
+
+  @override
+  String get recipientInviteUsernameAddByPhone =>
+      'Add them with their phone number';
+
+  @override
+  String get recipientInviteUsernameSelf => 'That is your own username.';
+
+  @override
+  String get recipientInviteUsernameQuota =>
+      'Too many searches. Try again in an hour.';
 
   @override
   String get negotiationViewNegotiationCta => 'View negotiation';
@@ -24221,4 +24258,88 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorPhoneDeclareNotAllowedMessage =>
       'This number can receive an SMS code. Tap \"Send code\" to verify it.';
+
+  @override
+  String get usernameSheetTitle => 'My username';
+
+  @override
+  String get usernameSheetIntro =>
+      'This is what others type to add you as a recipient. It shows neither your name nor your phone number.';
+
+  @override
+  String get usernameFieldLabel => 'Username';
+
+  @override
+  String get usernameTaken => 'This username is already taken.';
+
+  @override
+  String get usernameRecentlyReleased =>
+      'This username was used recently and is not available yet.';
+
+  @override
+  String get usernameAvailable => 'Available';
+
+  @override
+  String get usernameTrySuggestions => 'Try instead';
+
+  @override
+  String get usernameInvalidFormat =>
+      'Use 3 to 20 characters: lowercase letters, digits, dot and underscore.';
+
+  @override
+  String get usernameReserved =>
+      'This username is reserved. Please choose another one.';
+
+  @override
+  String get usernameLooksLikePhone =>
+      'A username cannot look like a phone number.';
+
+  @override
+  String usernameChangeTooSoon(String date) {
+    return 'You can change it again on $date.';
+  }
+
+  @override
+  String get usernameUnchanged => 'This is already your username.';
+
+  @override
+  String get usernameSaved => 'Username updated';
+
+  @override
+  String get usernameHelp =>
+      '3 to 20 characters: lowercase letters, digits, dot and underscore. You can change it once every 30 days.';
+
+  @override
+  String get usernameHelpAvailable =>
+      '3 to 20 characters: lowercase letters, digits, dot and underscore. Your current username stays reserved for 30 days.';
+
+  @override
+  String get usernameChangeTooSoonNoDate =>
+      'You changed your username recently. Try again later.';
+
+  @override
+  String get usernameQuota =>
+      'Too many checks for now. Please try again in an hour.';
+
+  @override
+  String get usernameCheckFailed =>
+      'Could not check this username. Please try again.';
+
+  @override
+  String get usernameCopied => 'Username copied';
+
+  @override
+  String usernameCopySemantics(String username) {
+    return 'Username $username, tap to copy';
+  }
+
+  @override
+  String get profileEditUsernameLabel => 'YADONY USERNAME';
+
+  @override
+  String get usernameUnavailableNow => 'Unavailable right now';
+
+  @override
+  String get usernameGuestForbidden =>
+      'Create an account to choose your username.';
 }

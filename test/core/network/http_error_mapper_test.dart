@@ -34,6 +34,39 @@ void main() {
       },
     );
 
+    test(
+      '405 Dio (corps RFC 7807 method-not-allowed) : NetworkException 405',
+      () {
+        final e = mapHttpError(
+          _http(
+            405,
+            body: {
+              'type': 'https://yadony.com/problems/method-not-allowed',
+              'status': 405,
+            },
+          ),
+        );
+        expect(e, isA<NetworkException>());
+        expect(e.code, '405');
+      },
+    );
+
+    test('429 : le code du quota est conservé (code, sinon type)', () {
+      final byCode = mapHttpError(
+        _http(429, body: {'code': 'recipient-lookup-quota'}),
+      );
+      expect((byCode as RateLimitException).apiCode, 'recipient-lookup-quota');
+      final byType = mapHttpError(
+        _http(
+          429,
+          body: {'type': 'https://yadony.com/problems/recipient-lookup-quota'},
+        ),
+      );
+      expect((byType as RateLimitException).apiCode, 'recipient-lookup-quota');
+      final bare = mapHttpError(_http(429));
+      expect((bare as RateLimitException).apiCode, isNull);
+    });
+
     test('409 → ConflictException avec le code RFC 7807', () {
       final e = mapHttpError(
         _http(
@@ -44,6 +77,74 @@ void main() {
 
       expect(e, isA<ConflictException>());
       expect(e.code, 'depart-already-scanned');
+    });
+
+    test('409 → propriétés RFC 7807 conservées dans extensions', () {
+      final e = mapHttpError(
+        _http(
+          409,
+          body: {
+            'detail': 'Identifiant déjà pris',
+            'code': 'username-taken',
+            'suggestions': ['awa1', 'awa.d'],
+            'nextChangeAt': '2026-12-20T10:00:00Z',
+          },
+        ),
+      );
+
+      expect(e, isA<ConflictException>());
+      final c = e as ConflictException;
+      expect(c.code, 'username-taken');
+      expect(c.message, 'Identifiant déjà pris');
+      expect(c.extensions?['suggestions'], ['awa1', 'awa.d']);
+      expect(c.extensions?['nextChangeAt'], '2026-12-20T10:00:00Z');
+    });
+
+    test('404 → propriétés RFC 7807 conservées dans extensions', () {
+      final e = mapHttpError(
+        _http(
+          404,
+          body: {
+            'type': 'https://api.yadony.com/problems/user-not-found',
+            'detail': 'Introuvable',
+          },
+        ),
+      );
+
+      expect(e, isA<NotFoundException>());
+      final n = e as NotFoundException;
+      expect(n.message, 'Introuvable');
+      expect(n.extensions?['type'], endsWith('user-not-found'));
+    });
+
+    test('404 sans corps → extensions nulles, message de repli inchangé', () {
+      final e = mapHttpError(_http(404)) as NotFoundException;
+
+      expect(e.extensions, isNull);
+      expect(e.code, 'NOT_FOUND');
+      expect(e.message, isNotEmpty);
+    });
+
+    test('409 sans corps → extensions nulles, message de repli inchangé', () {
+      final e = mapHttpError(_http(409));
+
+      expect(e, isA<ConflictException>());
+      final c = e as ConflictException;
+      expect(c.extensions, isNull);
+      expect(c.code, isNull);
+      expect(c.message, isNotEmpty);
+    });
+
+    test('409 sans propriété en plus : mêmes message et code qu avant', () {
+      final e =
+          mapHttpError(
+                _http(409, body: {'detail': 'déjà scanné', 'code': 'x-y'}),
+              )
+              as ConflictException;
+
+      expect(e.message, 'déjà scanné');
+      expect(e.code, 'x-y');
+      expect(e.extensions, {'detail': 'déjà scanné', 'code': 'x-y'});
     });
 
     test('422 bid-below-min-price → propriétés RFC 7807 conservées', () {

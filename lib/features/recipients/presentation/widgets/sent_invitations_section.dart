@@ -26,7 +26,7 @@ Future<void> inviteYadonyRecipient(BuildContext context) async {
   final cubit = context.read<SentInvitationsCubit>();
   final sent = await InviteRecipientSheet.show(
     context,
-    userCountry: _userCountry(),
+    userCountry: recipientInviteUserCountry(),
     onSent: () {
       if (!cubit.isClosed) unawaited(cubit.load());
     },
@@ -48,7 +48,7 @@ Future<void> _shareWithSystemSheet(String text, Rect? origin) async {
 
 /// Pays de résidence de l'utilisateur, pour mettre au format international
 /// un numéro repris de ses contacts. `null` s'il n'est pas connu.
-String? _userCountry() => getIt.isRegistered<BusinessPrefsBloc>()
+String? recipientInviteUserCountry() => getIt.isRegistered<BusinessPrefsBloc>()
     ? getIt<BusinessPrefsBloc>().state.country
     : null;
 
@@ -189,7 +189,11 @@ class _SentInvitationRow extends StatelessWidget {
       child: Row(
         children: [
           DonyIcon(
-            invitation.isEmail ? 'mail' : 'phone',
+            invitation.isEmail
+                ? 'mail'
+                : invitation.isUsername
+                ? 'at-sign'
+                : 'phone',
             size: 18,
             color: cs.onSurfaceVariant,
           ),
@@ -238,7 +242,7 @@ class _SentInvitationRow extends StatelessWidget {
                       alignment: AlignmentDirectional.centerStart,
                     ),
                     onPressed: () => unawaited(_shareAppLink(buttonContext)),
-                    icon: DonyIcon('share-2', size: 16, color: cs.primary),
+                    icon: DonyIcon('share-curved', size: 16, color: cs.primary),
                     label: Text(l.recipientSentInvitationShareAction),
                   ),
                 ),

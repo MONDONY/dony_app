@@ -32,7 +32,7 @@ void main() {
     String? tertiaryLabel,
     VoidCallback? onTertiary,
     List<DonySuccessAction> extraActions = const [],
-    String? secondaryIconAsset = 'share-2',
+    String? secondaryIconAsset = 'share-curved',
     VideoModalMoment? modalMoment,
   }) => MaterialApp(
     theme: AppTheme.light(),
@@ -740,7 +740,7 @@ void main() {
       final secondary = tester.widget<DonyButton>(
         find.widgetWithText(DonyButton, 'Partager mon trajet'),
       );
-      expect(secondary.iconAsset, 'share-2');
+      expect(secondary.iconAsset, 'share-curved');
     });
 
     testWidgets('null : bouton secondaire sans icône', (tester) async {

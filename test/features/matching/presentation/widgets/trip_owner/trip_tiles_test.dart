@@ -364,7 +364,7 @@ void main() {
       'route',
       'credit-card',
       'clipboard-check',
-      'share-2',
+      'share-curved',
       'flag',
     ]);
   });

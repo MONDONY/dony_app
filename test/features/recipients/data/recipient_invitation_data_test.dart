@@ -122,6 +122,96 @@ void main() {
     });
   });
 
+  group('identifiant', () {
+    test('lookup : GET avec le paramètre username, aperçu lu', () async {
+      when(
+        () => dio.get<dynamic>(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _response({'username': 'awa.diallo', 'initial': 'A'}),
+      );
+
+      final result = await repository.lookupUsername('awa.diallo');
+
+      verify(
+        () => dio.get<dynamic>(
+          '/recipient-invitations/lookup',
+          queryParameters: {'username': 'awa.diallo'},
+        ),
+      ).called(1);
+      expect(result.username, 'awa.diallo');
+      expect(result.initial, 'A');
+    });
+
+    test('lookup : corps absent toléré', () async {
+      when(
+        () => dio.get<dynamic>(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((_) async => _response(null));
+      final result = await repository.lookupUsername('awa.diallo');
+      expect(result.initial, '');
+    });
+
+    test('lookup : l\'erreur du serveur remonte telle quelle', () async {
+      when(
+        () => dio.get<dynamic>(
+          any(),
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenThrow(
+        _dioError(const NotFoundException(apiCode: 'user-not-found')),
+      );
+      await expectLater(
+        repository.lookupUsername('awa.diallo'),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.error,
+            'error',
+            isA<NotFoundException>(),
+          ),
+        ),
+      );
+    });
+
+    test('envoi : POST avec le seul champ username, et le nom', () async {
+      when(
+        () => dio.post<dynamic>(any(), data: any(named: 'data')),
+      ).thenAnswer((_) async => _response({'status': 'SENT'}, status: 202));
+
+      await repository.sendToUsername('awa.diallo', name: ' Awa ');
+      await repository.sendToUsername('awa.diallo');
+
+      verify(
+        () => dio.post<dynamic>(
+          '/recipient-invitations',
+          data: {'username': 'awa.diallo', 'name': 'Awa'},
+        ),
+      ).called(1);
+      verify(
+        () => dio.post<dynamic>(
+          '/recipient-invitations',
+          data: {'username': 'awa.diallo'},
+        ),
+      ).called(1);
+    });
+
+    test('liste : canal USERNAME, cible « @pseudo » telle que servie', () {
+      final i = SentRecipientInvitation.fromJson({
+        'id': 'i3',
+        'channel': 'USERNAME',
+        'maskedTarget': '@awa.diallo',
+        'status': 'PENDING',
+      });
+      expect(i.isUsername, isTrue);
+      expect(i.isEmail, isFalse);
+      expect(i.maskedTarget, '@awa.diallo');
+    });
+  });
+
   group('listes', () {
     test('envoyées : cible masquée et statut', () async {
       when(() => dio.get<dynamic>('/recipient-invitations/sent')).thenAnswer(

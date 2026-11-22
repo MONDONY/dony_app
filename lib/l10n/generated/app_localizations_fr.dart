@@ -16799,7 +16799,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recipientInviteActionSubtitle =>
-      'Retrouvez-le par son numéro ou son e-mail : ses colis lui seront rattachés.';
+      'Retrouvez-le par son numéro, son e-mail ou son identifiant : ses colis lui seront rattachés.';
 
   @override
   String get recipientInviteSheetIntro =>
@@ -16958,6 +16958,42 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recipientInviteNameTooLong => '100 caractères au maximum.';
+
+  @override
+  String get recipientInviteChannelUsername => 'Identifiant';
+
+  @override
+  String get recipientInviteUsernameLabel => 'Identifiant Yadony';
+
+  @override
+  String get recipientInviteUsernameHelper =>
+      'Il le trouve dans son profil, sous son nom.';
+
+  @override
+  String recipientInviteUsernameFound(String initial) {
+    return 'Compte trouvé, prénom commençant par $initial';
+  }
+
+  @override
+  String get recipientInviteUsernameFoundNoInitial => 'Compte trouvé';
+
+  @override
+  String get recipientInviteUsernameUnsupported =>
+      'La recherche par identifiant n\'est pas encore disponible.';
+
+  @override
+  String get recipientInviteUsernameNotFound =>
+      'Cet utilisateur n\'existe pas. Vérifiez l\'identifiant.';
+
+  @override
+  String get recipientInviteUsernameAddByPhone => 'L\'ajouter avec son numéro';
+
+  @override
+  String get recipientInviteUsernameSelf => 'C\'est votre identifiant.';
+
+  @override
+  String get recipientInviteUsernameQuota =>
+      'Trop de recherches. Réessayez dans une heure.';
 
   @override
   String get negotiationViewNegotiationCta => 'Voir la négociation';
@@ -24396,4 +24432,87 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorPhoneDeclareNotAllowedMessage =>
       'Ce numéro peut recevoir un code par SMS. Touchez « Envoyer le code » pour le vérifier.';
+
+  @override
+  String get usernameSheetTitle => 'Mon identifiant';
+
+  @override
+  String get usernameSheetIntro =>
+      'C\'est ce que les autres saisissent pour vous ajouter comme destinataire. Il ne montre ni votre nom ni votre numéro.';
+
+  @override
+  String get usernameFieldLabel => 'Identifiant';
+
+  @override
+  String get usernameTaken => 'Cet identifiant est déjà pris.';
+
+  @override
+  String get usernameRecentlyReleased =>
+      'Cet identifiant a servi récemment, il n\'est pas encore libre.';
+
+  @override
+  String get usernameAvailable => 'Disponible';
+
+  @override
+  String get usernameTrySuggestions => 'Essayez plutôt';
+
+  @override
+  String get usernameInvalidFormat =>
+      'Utilisez 3 à 20 caractères : minuscules, chiffres, point et tiret bas.';
+
+  @override
+  String get usernameReserved =>
+      'Cet identifiant est réservé. Choisissez-en un autre.';
+
+  @override
+  String get usernameLooksLikePhone =>
+      'Un identifiant ne peut pas ressembler à un numéro de téléphone.';
+
+  @override
+  String usernameChangeTooSoon(String date) {
+    return 'Modification possible le $date.';
+  }
+
+  @override
+  String get usernameUnchanged => 'C\'est déjà votre identifiant.';
+
+  @override
+  String get usernameSaved => 'Identifiant modifié';
+
+  @override
+  String get usernameHelp =>
+      '3 à 20 caractères : minuscules, chiffres, point et tiret bas. Modifiable une fois tous les 30 jours.';
+
+  @override
+  String get usernameHelpAvailable =>
+      '3 à 20 caractères : minuscules, chiffres, point et tiret bas. Votre identifiant actuel reste réservé 30 jours.';
+
+  @override
+  String get usernameChangeTooSoonNoDate =>
+      'Vous avez déjà changé d\'identifiant récemment. Réessayez plus tard.';
+
+  @override
+  String get usernameQuota =>
+      'Trop de vérifications pour le moment. Réessayez dans une heure.';
+
+  @override
+  String get usernameCheckFailed => 'Vérification impossible. Réessayez.';
+
+  @override
+  String get usernameCopied => 'Identifiant copié';
+
+  @override
+  String usernameCopySemantics(String username) {
+    return 'Identifiant $username, toucher pour copier';
+  }
+
+  @override
+  String get profileEditUsernameLabel => 'IDENTIFIANT YADONY';
+
+  @override
+  String get usernameUnavailableNow => 'Indisponible pour le moment';
+
+  @override
+  String get usernameGuestForbidden =>
+      'Créez un compte pour choisir votre identifiant.';
 }

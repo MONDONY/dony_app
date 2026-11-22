@@ -232,6 +232,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   declaredPhoneLevel: user.declaredPhoneVerification,
                   email: user.email,
                   city: user.city,
+                  username: user.username,
                   topPadding: topPad,
                   trailingInset: _kHeaderActionsInset,
                   onTap: () {

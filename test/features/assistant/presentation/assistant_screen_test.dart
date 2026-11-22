@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/bloc/assistant_voice_cubit.dart';
 import 'package:dony/features/assistant/data/assistant_models.dart';
@@ -58,6 +59,10 @@ void main() {
   });
 
   setUp(() {
+    // `DonySnackbar` ignore un même message montré moins de 5 s plus tôt, à
+    // l'heure réelle : sans cette remise à zéro, l'issue d'un test dépendait
+    // du temps écoulé depuis un test précédent qui montrait le même message.
+    DonySnackbar.clearDedup();
     useAiConsent();
     bloc = MockAssistantBloc();
     speech = FakeSpeechService();

@@ -27,6 +27,7 @@ void main() {
   setUp(() {
     DonySnackbar.clearDedup();
     repo = _MockRepo();
+    when(() => repo.usernameChannelUnsupported).thenReturn(false);
     analytics = _MockAnalytics();
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),

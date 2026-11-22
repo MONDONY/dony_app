@@ -13,7 +13,10 @@ void main() {
 
   test('primaryButtonFor', () {
     expect(primaryButtonFor(fr, RequestPrimaryAction.publish).label, 'Publier');
-    expect(primaryButtonFor(fr, RequestPrimaryAction.share).icon, 'share-2');
+    expect(
+      primaryButtonFor(fr, RequestPrimaryAction.share).icon,
+      'share-curved',
+    );
     expect(
       primaryButtonFor(fr, RequestPrimaryAction.pay, amount: '28,00 €').label,
       'Payer 28,00 €',
