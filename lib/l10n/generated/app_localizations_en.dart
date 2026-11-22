@@ -24364,4 +24364,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorRecipientRequiredMessage =>
       'Enter a recipient for this parcel.';
+
+  @override
+  String get designateYadonyUserAlreadyRecipient =>
+      'This person is already the recipient of this parcel.';
+
+  @override
+  String get recipientChangeUsernameWarning =>
+      'This account replaces the previous recipient: the pickup code and tracking link will be renewed, and the previous recipient will lose access to them.';
 }

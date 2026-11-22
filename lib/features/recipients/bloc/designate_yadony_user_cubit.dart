@@ -27,6 +27,10 @@ enum DesignateLookup {
   /// sélection, sinon l'identifiant serait ignoré en silence.
   unavailable,
   failed,
+
+  /// Le compte trouvé est déjà le destinataire désigné de ce colis : le back
+  /// ne ferait rien, « Choisir » reste grisé.
+  sameAsCurrent,
 }
 
 /// Identifiant choisi comme destinataire d'un colis.
@@ -96,6 +100,9 @@ class DesignateYadonyUserCubit extends Cubit<DesignateYadonyUserState> {
   final AnalyticsService _analytics;
   var _generation = 0;
 
+  /// Identifiant déjà désigné sur le colis qu'on modifie, sinon `null`.
+  String? excludeUsername;
+
   void inputChanged(String value) {
     _generation++;
     emit(
@@ -132,6 +139,11 @@ class DesignateYadonyUserCubit extends Cubit<DesignateYadonyUserState> {
         _repository.parcelDesignationUnavailable = true;
         emit(state.copyWith(lookup: DesignateLookup.unavailable));
         _logFailure('parcel-designation-unavailable');
+        return;
+      }
+      if (excludeUsername != null &&
+          excludeUsername!.trim().toLowerCase() == target) {
+        emit(state.copyWith(lookup: DesignateLookup.sameAsCurrent));
         return;
       }
       emit(

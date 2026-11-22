@@ -8469,6 +8469,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorRecipientModeConflictMessage,
   'errorRecipientRequiredTitle': (l) => l.errorRecipientRequiredTitle,
   'errorRecipientRequiredMessage': (l) => l.errorRecipientRequiredMessage,
+  'designateYadonyUserAlreadyRecipient': (l) =>
+      l.designateYadonyUserAlreadyRecipient,
+  'recipientChangeUsernameWarning': (l) => l.recipientChangeUsernameWarning,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

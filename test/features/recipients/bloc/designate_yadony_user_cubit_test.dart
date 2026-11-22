@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -161,4 +163,47 @@ void main() {
       await c.close();
     },
   );
+
+  test('erreur technique : état failed, nouvel essai possible', () async {
+    when(
+      () => repo.lookupUsername(any()),
+    ).thenThrow(_dio(const NetworkException('x', code: 'unknown')));
+    final c = build()..inputChanged('awa.diallo');
+    await c.committed();
+    expect(c.state.lookup, DesignateLookup.failed);
+    expect(c.state.canChoose, isFalse);
+    when(() => repo.lookupUsername(any())).thenAnswer((_) async => _found);
+    await c.committed();
+    expect(c.state.lookup, DesignateLookup.found);
+    await c.close();
+  });
+
+  test(
+    'saisie modifiée pendant la recherche : la réponse est ignorée',
+    () async {
+      final pending = Completer<UsernameLookup>();
+      when(() => repo.lookupUsername(any())).thenAnswer((_) => pending.future);
+      final c = build()..inputChanged('awa.diallo');
+      final search = c.committed();
+      expect(c.state.lookup, DesignateLookup.searching);
+      c.inputChanged('awa.diall');
+      pending.complete(_found);
+      await search;
+      expect(c.state.lookup, DesignateLookup.idle);
+      expect(c.state.canChoose, isFalse);
+      await c.close();
+    },
+  );
+
+  test('même compte que le destinataire du colis : pas de sélection', () async {
+    when(() => repo.lookupUsername(any())).thenAnswer((_) async => _found);
+    final c = build()
+      ..excludeUsername = 'Awa.Diallo'
+      ..inputChanged('awa.diallo');
+    await c.committed();
+    expect(c.state.lookup, DesignateLookup.sameAsCurrent);
+    expect(c.state.canChoose, isFalse);
+    expect(c.choose(), isNull);
+    await c.close();
+  });
 }

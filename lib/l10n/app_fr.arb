@@ -23731,5 +23731,9 @@
   "errorRecipientRequiredTitle": "Destinataire manquant",
   "@errorRecipientRequiredTitle": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
   "errorRecipientRequiredMessage": "Indiquez un destinataire pour ce colis.",
-  "@errorRecipientRequiredMessage": {"description": "Catalogue d'erreurs : destinataire d'un colis."}
+  "@errorRecipientRequiredMessage": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "designateYadonyUserAlreadyRecipient": "C'est déjà le destinataire de ce colis.",
+  "@designateYadonyUserAlreadyRecipient": {"description": "Feuille de désignation : le compte trouvé est déjà désigné sur ce colis."},
+  "recipientChangeUsernameWarning": "Ce compte remplace l'ancien destinataire : le code de retrait et le lien de suivi seront renouvelés, et l'ancien destinataire n'y aura plus accès.",
+  "@recipientChangeUsernameWarning": {"description": "Feuille de changement de destinataire, mode identifiant Yadony : avertissement de renouvellement."}
 }

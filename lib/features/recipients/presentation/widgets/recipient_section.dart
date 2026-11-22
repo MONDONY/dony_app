@@ -144,9 +144,11 @@ class _RecipientSectionState extends State<RecipientSection> {
         await (widget.openDesignateSheet ?? DesignateYadonyUserSheet.show)(
           context,
         );
-    if (!mounted || user == null) {
-      return;
-    }
+    if (!mounted) return;
+    // La feuille a pu apprendre que le back ne désigne pas : le choix est
+    // relu, qu'un compte ait été choisi ou non.
+    setState(() {});
+    if (user == null) return;
     // Le nom et le numéro saisis n'ont plus cours : le colis part avec
     // l'identifiant seul.
     _suppressListener = true;

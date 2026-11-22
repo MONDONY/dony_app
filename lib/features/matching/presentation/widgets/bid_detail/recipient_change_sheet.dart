@@ -127,8 +127,18 @@ class RecipientChangeSheet extends StatefulWidget {
 }
 
 class _RecipientChangeSheetState extends State<RecipientChangeSheet> {
+  /// Colis désigné par identifiant dont le lien n'est pas confirmé : son nom
+  /// est « @identifiant », pas un nom à préremplir (il serait renvoyé tel
+  /// quel au back).
+  bool get _pendingDesignation =>
+      widget.bid.recipientDesignatedByUsername &&
+      widget.bid.recipientAppStatus != 'CONFIRMED';
+
+  String get _initialName =>
+      _pendingDesignation ? '' : (widget.bid.recipientName ?? '');
+
   late final TextEditingController _nameCtrl = TextEditingController(
-    text: widget.bid.recipientName ?? '',
+    text: _initialName,
   );
   late final TextEditingController _phoneCtrl = TextEditingController(
     text: widget.bid.recipientPhone ?? '',
@@ -186,7 +196,7 @@ class _RecipientChangeSheetState extends State<RecipientChangeSheet> {
       return;
     }
     final name = _nameCtrl.text.trim();
-    final nameChanged = name != (widget.bid.recipientName ?? '').trim();
+    final nameChanged = name != _initialName.trim();
     widget.canSubmit.value =
         name.isNotEmpty &&
         name.length <= kRecipientNameMaxLength &&
@@ -211,8 +221,15 @@ class _RecipientChangeSheetState extends State<RecipientChangeSheet> {
       getIt<RecipientInvitationRepository>().parcelDesignationOffered;
 
   Future<void> _pickYadonyUser() async {
-    final user = await DesignateYadonyUserSheet.show(context);
-    if (user == null || !mounted) return;
+    final user = await DesignateYadonyUserSheet.show(
+      context,
+      excludeUsername: widget.bid.recipientUsername,
+    );
+    if (!mounted) return;
+    // La feuille a pu apprendre que le back ne désigne pas (drapeaux du
+    // dépôt) : le choix est relu, qu'un compte ait été choisi ou non.
+    setState(() {});
+    if (user == null) return;
     _username.value = user.username;
   }
 
@@ -257,10 +274,20 @@ class _RecipientChangeSheetState extends State<RecipientChangeSheet> {
         child: ValueListenableBuilder<String?>(
           valueListenable: _username,
           builder: (context, username, _) => username != null
-              ? DesignatedUserCard(
-                  key: const Key('recipient-change-designated'),
-                  username: username,
-                  onChange: () => _username.value = null,
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    DesignatedUserCard(
+                      key: const Key('recipient-change-designated'),
+                      username: username,
+                      onChange: () => _username.value = null,
+                    ),
+                    _renewalWarning(
+                      context,
+                      context.l10n.recipientChangeUsernameWarning,
+                      const Key('recipient-change-username-warning'),
+                    ),
+                  ],
                 )
               : _manualFields(context),
         ),
@@ -271,7 +298,6 @@ class _RecipientChangeSheetState extends State<RecipientChangeSheet> {
   Widget _manualFields(BuildContext context) {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -329,31 +355,38 @@ class _RecipientChangeSheetState extends State<RecipientChangeSheet> {
           builder: (context, _) {
             final show = _phoneCtrl.text.trim().isNotEmpty && _phoneChanged;
             if (!show) return const SizedBox.shrink();
-            return Container(
-              margin: const EdgeInsets.only(top: DonySpacing.sm),
-              padding: const EdgeInsets.all(DonySpacing.md),
-              decoration: BoxDecoration(
-                color: cs.warning.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                border: Border.all(color: cs.warning.withValues(alpha: 0.4)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  DonyIcon('triangle-alert', size: 18, color: cs.warning),
-                  const SizedBox(width: DonySpacing.sm),
-                  Expanded(
-                    child: Text(
-                      l.recipientChangePhoneWarning,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurface),
-                    ),
-                  ),
-                ],
-              ),
-            );
+            return _renewalWarning(context, l.recipientChangePhoneWarning);
           },
         ),
       ],
+    );
+  }
+
+  Widget _renewalWarning(BuildContext context, String text, [Key? key]) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      key: key,
+      margin: const EdgeInsets.only(top: DonySpacing.sm),
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.warning.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.warning.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DonyIcon('triangle-alert', size: 18, color: cs.warning),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Text(
+              text,
+              style: tt.bodySmall?.copyWith(color: cs.onSurface),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

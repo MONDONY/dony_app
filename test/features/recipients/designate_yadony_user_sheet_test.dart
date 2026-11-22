@@ -138,6 +138,62 @@ void main() {
     expect(button(tester).onPressed, isNull);
   });
 
+  Future<void> failWith(WidgetTester tester, AppException e) async {
+    when(() => repo.lookupUsername(any())).thenThrow(
+      DioException(
+        requestOptions: RequestOptions(path: '/x'),
+        error: e,
+      ),
+    );
+    await open(tester);
+    await typeAndSubmit(tester, 'awa.diallo');
+  }
+
+  testWidgets('quota : message d\'attente d\'une heure', (tester) async {
+    await failWith(
+      tester,
+      const RateLimitException('x', 'recipient-lookup-quota'),
+    );
+    expect(
+      find.text('Trop de recherches. Réessayez dans une heure.'),
+      findsOneWidget,
+    );
+    expect(button(tester).onPressed, isNull);
+  });
+
+  testWidgets('route absente : message dédié', (tester) async {
+    await failWith(tester, const NetworkException('x', code: '405'));
+    expect(
+      find.text('La recherche par identifiant n\'est pas encore disponible.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('échec technique : message de vérification impossible', (
+    tester,
+  ) async {
+    await failWith(tester, const NetworkException('x', code: 'unknown'));
+    expect(find.text('Vérification impossible. Réessayez.'), findsOneWidget);
+  });
+
+  testWidgets('format invalide après la perte de focus : message de format', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.enterText(field(), 'ab');
+    await tester.pump();
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+    verifyNever(() => repo.lookupUsername(any()));
+    expect(
+      find.text(
+        'Utilisez 3 à 20 caractères : minuscules, chiffres, point et tiret bas.',
+      ),
+      findsOneWidget,
+    );
+    expect(button(tester).onPressed, isNull);
+  });
+
   for (final locale in [AppL10n.fr, AppL10n.en]) {
     testWidgets(
       'libellé du bouton sur une ligne à 360 dp (${locale.languageCode})',

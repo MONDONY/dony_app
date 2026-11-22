@@ -39293,6 +39293,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Indiquez un destinataire pour ce colis.'**
   String get errorRecipientRequiredMessage;
+
+  /// Feuille de désignation : le compte trouvé est déjà désigné sur ce colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est déjà le destinataire de ce colis.'**
+  String get designateYadonyUserAlreadyRecipient;
+
+  /// Feuille de changement de destinataire, mode identifiant Yadony : avertissement de renouvellement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte remplace l\'ancien destinataire : le code de retrait et le lien de suivi seront renouvelés, et l\'ancien destinataire n\'y aura plus accès.'**
+  String get recipientChangeUsernameWarning;
 }
 
 class _AppLocalizationsDelegate

@@ -12073,5 +12073,9 @@
   "errorRecipientRequiredTitle": "Recipient missing",
   "@errorRecipientRequiredTitle": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
   "errorRecipientRequiredMessage": "Enter a recipient for this parcel.",
-  "@errorRecipientRequiredMessage": {"description": "Catalogue d'erreurs : destinataire d'un colis."}
+  "@errorRecipientRequiredMessage": {"description": "Catalogue d'erreurs : destinataire d'un colis."},
+  "designateYadonyUserAlreadyRecipient": "This person is already the recipient of this parcel.",
+  "@designateYadonyUserAlreadyRecipient": {"description": "Feuille de désignation : le compte trouvé est déjà désigné sur ce colis."},
+  "recipientChangeUsernameWarning": "This account replaces the previous recipient: the pickup code and tracking link will be renewed, and the previous recipient will lose access to them.",
+  "@recipientChangeUsernameWarning": {"description": "Feuille de changement de destinataire, mode identifiant Yadony : avertissement de renouvellement."}
 }

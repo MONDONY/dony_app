@@ -23,6 +23,7 @@ export 'package:dony/features/recipients/bloc/designate_yadony_user_cubit.dart'
 abstract final class DesignateYadonyUserSheet {
   static Future<DesignatedUser?> show(
     BuildContext context, {
+    String? excludeUsername,
     @visibleForTesting DesignateYadonyUserCubit Function()? createCubit,
   }) {
     return DonyBottomSheet.show<DesignatedUser>(
@@ -32,7 +33,8 @@ abstract final class DesignateYadonyUserSheet {
       // disparaît, après l'animation de sortie.
       wrapper: (child) => BlocProvider<DesignateYadonyUserCubit>(
         create: (_) =>
-            (createCubit ?? () => getIt<DesignateYadonyUserCubit>())(),
+            (createCubit ?? () => getIt<DesignateYadonyUserCubit>())()
+              ..excludeUsername = excludeUsername,
         child: child,
       ),
       stickyBottom:
@@ -88,6 +90,8 @@ class _DesignateContentState extends State<_DesignateContent> {
         return l.designateYadonyUserUnavailable;
       case DesignateLookup.failed:
         return l.usernameCheckFailed;
+      case DesignateLookup.sameAsCurrent:
+        return l.designateYadonyUserAlreadyRecipient;
       case DesignateLookup.idle:
         return state.showsFormatError ? l.usernameInvalidFormat : null;
       case DesignateLookup.searching:

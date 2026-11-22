@@ -24537,4 +24537,12 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorRecipientRequiredMessage =>
       'Indiquez un destinataire pour ce colis.';
+
+  @override
+  String get designateYadonyUserAlreadyRecipient =>
+      'C\'est déjà le destinataire de ce colis.';
+
+  @override
+  String get recipientChangeUsernameWarning =>
+      'Ce compte remplace l\'ancien destinataire : le code de retrait et le lien de suivi seront renouvelés, et l\'ancien destinataire n\'y aura plus accès.';
 }
