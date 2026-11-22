@@ -5,6 +5,9 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/data/cancellation_fee_coverage.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_fee_config_builder.dart';
+import 'package:dony/features/cancellation/presentation/widgets/sender_noshow_confirm_sheet.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
@@ -393,8 +396,21 @@ class _WindowExpiredHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final window = _formatDeadline(context, bid.handoverDeadline);
-    final subtitle = l.bidDetailSenderWindowExpiredSubtitle(window);
 
+    // Colis couvert par les frais d'annulation : l'annulation n'est plus
+    // « sans frais » (le colis est accepté, le barème s'applique).
+    return CancellationFeeConfigBuilder(
+      builder: (context, config) => _build(
+        context,
+        isCoveredByCancellationFee(bid, config)
+            ? l.bidDetailSenderWindowExpiredSubtitleWithFee(window)
+            : l.bidDetailSenderWindowExpiredSubtitle(window),
+      ),
+    );
+  }
+
+  Widget _build(BuildContext context, String subtitle) {
+    final l = context.l10n;
     return BlocBuilder<CancellationBloc, CancellationState>(
       builder: (context, state) {
         final isLoading = state is CancellationLoading;
@@ -617,27 +633,14 @@ class _ContestationHeroState extends State<_ContestationHero> {
     context.read<CancellationBloc>().add(NoShowContestRequested(widget.bid.id));
   }
 
+  /// Feuille « Confirmer votre absence » : texte et aperçu des frais
+  /// d'annulation quand le colis est couvert ([showSenderNoShowConfirmSheet]).
   Future<void> _showConfirmSheet(BuildContext context) async {
-    final l = context.l10n;
-    final confirmed = await DonyBottomSheet.show<bool>(
+    final confirmed = await showSenderNoShowConfirmSheet(
       context,
-      title: l.bidDetailSenderConfirmSheetTitle,
-      stickyBottom: Builder(
-        builder: (ctx) => DonyButton(
-          label: l.bidDetailSenderConfirmSheetButton,
-          onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
-        child: Text(
-          l.bidDetailSenderConfirmSheetBody,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ),
+      bid: widget.bid,
     );
-
-    if (confirmed != true || !context.mounted) {
+    if (!confirmed || !context.mounted) {
       return;
     }
     context.read<CancellationBloc>().add(NoShowConfirmRequested(widget.bid.id));

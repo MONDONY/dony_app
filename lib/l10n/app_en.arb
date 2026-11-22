@@ -3567,6 +3567,14 @@
       }
     }
   },
+  "bidDetailSenderWindowExpiredSubtitleWithFee": "Drop-off was possible {window}. You can cancel your request: a cancellation fee may apply depending on the departure date. If the traveler did not show up, report their absence.",
+  "@bidDetailSenderWindowExpiredSubtitleWithFee": {
+    "placeholders": {
+      "window": {
+        "type": "String"
+      }
+    }
+  },
   "bidDetailSenderReportNoShowButton": "Report the traveler's no-show",
   "@bidDetailSenderReportNoShowButton": {
     "description": "_WindowExpiredHero, bouton d'ouverture de la feuille de signalement (sender_hero_card.dart)"
@@ -3636,6 +3644,7 @@
   "@bidDetailSenderConfirmSheetBody": {
     "description": "Corps de la feuille de confirmation d'absence (sender_hero_card.dart, _showConfirmSheet)"
   },
+  "bidDetailSenderConfirmSheetBodyWithFee": "By confirming your no-show, the shipment will be canceled. A cancellation fee may be deducted from your refund depending on the departure date.",
   "bidDetailTravelerPendingTitle": "📨 New shipment request",
   "@bidDetailTravelerPendingTitle": {
     "description": "PENDING, titre (traveler_hero_card.dart)"
@@ -3795,6 +3804,7 @@
   "bidDetailDeliveryNoShowReportedSnackbar": "No-show reported. The other party has 24 hours to contest.",
   "bidDetailContestSentSnackbar": "Contest sent. Our team will review your request.",
   "bidDetailNoShowConfirmedSnackbar": "No-show confirmed. The shipment has been canceled, you will not be charged.",
+  "bidDetailNoShowConfirmedSnackbarWithFee": "No-show confirmed. The shipment has been canceled.",
   "bidDetailCancelledAfterHandoverSnackbar": "Trip canceled. Return the parcel within 3 days using the return code.",
   "bidDetailReturnConfirmedSnackbar": "Return confirmed. The parcel has been returned.",
   "bidDetailAcceptedSnackbar": "Request accepted!",
@@ -3826,7 +3836,9 @@
   "bidDetailContactTravelerSubtitle": "Send a message to the traveler",
   "bidDetailShareTrackingSubtitle": "Send the tracking link to the recipient",
   "bidDetailCancelRefundAutoSubtitle": "Your payment will be refunded automatically",
+  "bidDetailCancelRefundAutoSubtitleWithFee": "Automatic refund, minus any cancellation fee",
   "bidDetailCancelAfterHandoverOptionSubtitle": "Full refund · you get your parcel back",
+  "bidDetailCancelAfterHandoverOptionSubtitleWithFee": "You get your parcel back · cancellation fee may apply",
   "bidDetailRemoveFromHistorySubtitle": "Permanently remove from your history",
   "bidDetailCancelConfirmBody": "Are you sure you want to cancel your shipment request? This action is final.",
   "bidDetailNo": "No",
@@ -7148,6 +7160,7 @@
   "faqPaymentsPaymentTimingA": "For a card payment, the funds are held and secured when the offer is accepted, then released as the delivery progresses. For cash and Mobile Money, follow the instructions shown when you choose your payment method.",
   "faqPaymentsRefundQ": "How does the refund work if I cancel?",
   "faqPaymentsRefundA": "The refund depends on the payment method and when the cancellation happens. A card payment is credited back to the original method after processing. For Mobile Money, the timing depends on the operator. In cash, Yadony doesn't hold the funds and can't process the refund automatically.",
+  "faqPaymentsRefundAWithFee": "The refund depends on the payment method and when the cancellation happens. A card payment is credited back to the original method after processing. For Mobile Money, the timing depends on the operator. In cash, Yadony doesn't hold the funds and can't process the refund automatically. If you cancel a parcel that has already been accepted, a cancellation fee may be deducted depending on the time left before departure.",
   "faqPaymentsCommissionQ": "Why is there a service fee?",
   "faqPaymentsCommissionA": "The service fee covers payment costs, support, fraud prevention and the development of the platform.",
   "faqPaymentsPaymentSecurityQ": "Are payments secure?",
@@ -9871,6 +9884,7 @@
   "billetTeamCancelledSupportMessage": "Hello, my parcel was cancelled by the Yadony team. I would like to know more.",
   "errorPaymentAlreadyAuthorizedTitle": "Payment already confirmed",
   "errorPaymentAlreadyAuthorizedMessage": "Your payment has just been confirmed. The parcel is up to date: cancel it from its page and you will be refunded.",
+  "errorPaymentAlreadyAuthorizedMessageWithFee": "Your payment has just been confirmed. The parcel is up to date: cancel it from its page and you will be refunded, minus any cancellation fee.",
   "errorPaymentInProgressTitle": "Payment in progress",
   "errorPaymentInProgressMessage": "A payment is being confirmed. Please try again in a few minutes.",
   "errorCapacityInsufficientTitle": "Not enough space left",

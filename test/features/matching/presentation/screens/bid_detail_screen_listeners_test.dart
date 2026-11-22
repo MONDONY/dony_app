@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/cancellation_fee_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -11,6 +12,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_fee_config/cancellation_fee_config_cubit.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/bloc/delivery_noshow_procedure/delivery_noshow_procedure_cubit.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
@@ -43,6 +45,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/tracking_consent_test_helpers.dart';
+import '../../../cancellation/cancellation_fee_test_support.dart';
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
@@ -204,6 +207,7 @@ void main() {
     BidModel bid, {
     bool pushed = true,
     bool fromPayment = false,
+    Locale locale = AppL10n.fr,
   }) async {
     await initializeDateFormatting('fr_FR');
     tester.view.physicalSize = const Size(800, 3000);
@@ -253,7 +257,7 @@ void main() {
       MaterialApp.router(
         routerConfig: router,
         theme: AppTheme.light(),
-        locale: AppL10n.fr,
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
       ),
@@ -819,5 +823,210 @@ void main() {
         expect(find.text(uuidTitle), findsOneWidget);
       });
     }
+  });
+
+  // G : carte Paiement d'un colis annulé. Le paiement est relu pour son
+  // montant réellement remboursé (`refundedAmount`) ; un colis refusé par le
+  // voyageur (remboursé en entier) ne l'est pas.
+  group('paiement d\'un colis annulé : relu pour le montant remboursé', () {
+    testWidgets('colis carte annulé, expéditeur : lu à l\'ouverture', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        _bid(status: 'CANCELLED', method: BidPaymentMethod.stripe),
+      );
+      verify(() => payments.getPaymentForBid('bid-001')).called(1);
+    });
+
+    testWidgets('colis refusé par le voyageur : jamais lu', (tester) async {
+      await pump(
+        tester,
+        _bid(status: 'REJECTED', method: BidPaymentMethod.stripe),
+      );
+      verifyNever(() => payments.getPaymentForBid(any()));
+    });
+
+    testWidgets('colis annulé pendant que la fiche est ouverte : relu', (
+      tester,
+    ) async {
+      await pump(tester, _bid(method: BidPaymentMethod.stripe));
+      verify(() => payments.getPaymentForBid('bid-001')).called(1);
+
+      bidStates.add(
+        BidDetailLoaded(
+          _bid(status: 'NO_SHOW', method: BidPaymentMethod.stripe),
+        ),
+      );
+      await settle(tester);
+      verify(() => payments.getPaymentForBid('bid-001')).called(1);
+
+      // Même statut relu : pas de nouvelle lecture.
+      bidStates.add(
+        BidDetailLoaded(
+          _bid(status: 'NO_SHOW', method: BidPaymentMethod.stripe),
+        ),
+      );
+      await settle(tester);
+      verifyNever(() => payments.getPaymentForBid(any()));
+    });
+  });
+
+  // F : absence confirmée par l'expéditeur. Colis couvert par les frais
+  // d'annulation (frais allumés, créé après la date d'effet, payé en ligne) :
+  // plus de promesse « vous ne serez pas débité ». Sinon, le texte d'avant.
+  group('absence confirmée : texte selon les frais d\'annulation', () {
+    BidModel paidOnline({
+      BidPaymentMethod method = BidPaymentMethod.stripe,
+      DateTime? createdAt,
+    }) => BidModel(
+      id: 'bid-001',
+      announcementId: 'ann-001',
+      senderId: _senderId,
+      weightKg: 3,
+      status: 'COMPLETED',
+      paymentMethod: method,
+      createdAt: createdAt ?? kCoveredCreatedAt,
+      updatedAt: kCoveredCreatedAt,
+    );
+
+    for (final locale in [AppL10n.fr, AppL10n.en]) {
+      final l = lookupAppLocalizations(locale);
+      final lang = locale.languageCode;
+
+      testWidgets('[$lang] colis couvert : sans promesse de ne pas être '
+          'débité', (tester) async {
+        await registerFeeConfig(config: kActiveFeeConfig);
+        await pump(tester, paidOnline(), locale: locale);
+
+        cancellationStates.add(NoShowConfirmed());
+        await settle(tester);
+
+        expect(
+          find.text(l.bidDetailNoShowConfirmedSnackbarWithFee),
+          findsOneWidget,
+        );
+        expect(find.text(l.bidDetailNoShowConfirmedSnackbar), findsNothing);
+        await tester.pumpAndSettle(const Duration(seconds: 5));
+      });
+
+      testWidgets('[$lang] back antérieur (404) : texte d\'aujourd\'hui', (
+        tester,
+      ) async {
+        await registerFeeConfig();
+        await pump(tester, paidOnline(), locale: locale);
+
+        cancellationStates.add(NoShowConfirmed());
+        await settle(tester);
+
+        expect(find.text(l.bidDetailNoShowConfirmedSnackbar), findsOneWidget);
+        await tester.pumpAndSettle(const Duration(seconds: 5));
+      });
+
+      testWidgets('[$lang] frais allumés, colis ancien ou espèces : texte '
+          'd\'aujourd\'hui', (tester) async {
+        await registerFeeConfig(config: kActiveFeeConfig);
+        await pump(
+          tester,
+          paidOnline(createdAt: DateTime.utc(2026, 12, 2)),
+          locale: locale,
+        );
+        cancellationStates.add(NoShowConfirmed());
+        await settle(tester);
+        expect(find.text(l.bidDetailNoShowConfirmedSnackbar), findsOneWidget);
+        await tester.pumpAndSettle(const Duration(seconds: 5));
+      });
+    }
+
+    testWidgets('fiche ouverte : la configuration est lue dès l\'ouverture', (
+      tester,
+    ) async {
+      final repository = MockFeeConfigRepository();
+      when(repository.getFeeConfig).thenAnswer((_) async => kActiveFeeConfig);
+      final cubit = CancellationFeeConfigCubit(
+        repository,
+        MockFeeConfigAnalytics(),
+      );
+      getIt.registerSingleton<CancellationFeeConfigCubit>(cubit);
+      addTearDown(() async {
+        await cubit.close();
+        resetCancellationFeeFlagForTest();
+      });
+      expect(cubit.state.config, isNot(kActiveFeeConfig));
+
+      await pump(tester, paidOnline());
+
+      verify(repository.getFeeConfig).called(1);
+      expect(cubit.state.config, kActiveFeeConfig);
+    });
+
+    // Le voyageur ne lit jamais la configuration des frais d'annulation
+    // (règle : les parcours du voyageur n'appellent ni l'aperçu ni la config).
+    group('configuration lue pour l\'expéditeur seulement', () {
+      MockFeeConfigRepository registerUnloadedConfig() {
+        final repository = MockFeeConfigRepository();
+        when(repository.getFeeConfig).thenAnswer((_) async => kActiveFeeConfig);
+        final cubit = CancellationFeeConfigCubit(
+          repository,
+          MockFeeConfigAnalytics(),
+        );
+        getIt.registerSingleton<CancellationFeeConfigCubit>(cubit);
+        addTearDown(() async {
+          await cubit.close();
+          resetCancellationFeeFlagForTest();
+        });
+        return repository;
+      }
+
+      BidModel ofOtherSender({String status = 'ACCEPTED'}) => BidModel(
+        id: 'bid-001',
+        announcementId: 'ann-001',
+        senderId: 'someone-else',
+        weightKg: 3,
+        status: status,
+        createdAt: kCoveredCreatedAt,
+        updatedAt: kCoveredCreatedAt,
+      );
+
+      testWidgets('voyageur : jamais lue, ni à l\'ouverture ni au '
+          'chargement du colis', (tester) async {
+        final repository = registerUnloadedConfig();
+
+        await pump(tester, ofOtherSender());
+        bidStates.add(BidDetailLoaded(ofOtherSender()));
+        await settle(tester);
+        bidStates.add(BidDetailLoaded(ofOtherSender(status: 'CANCELLED')));
+        await settle(tester);
+
+        verifyNever(repository.getFeeConfig);
+      });
+
+      testWidgets('voyageur, colis squelette (lien profond) : jamais lue', (
+        tester,
+      ) async {
+        final repository = registerUnloadedConfig();
+
+        await pump(tester, _bid(isSkeleton: true));
+        bidStates.add(BidDetailLoaded(ofOtherSender()));
+        await settle(tester);
+
+        verifyNever(repository.getFeeConfig);
+      });
+
+      testWidgets('expéditeur, colis squelette : lue au chargement du colis, '
+          'une seule fois', (tester) async {
+        final repository = registerUnloadedConfig();
+
+        await pump(tester, _bid(isSkeleton: true));
+        verifyNever(repository.getFeeConfig);
+
+        bidStates.add(BidDetailLoaded(paidOnline()));
+        await settle(tester);
+        bidStates.add(BidDetailLoaded(paidOnline()));
+        await settle(tester);
+
+        verify(repository.getFeeConfig).called(1);
+      });
+    });
   });
 }

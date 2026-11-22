@@ -27,6 +27,14 @@ class PaymentModel {
   @JsonKey(defaultValue: [])
   final List<String> paymentMethodTypes;
 
+  /// Montant déjà remboursé à l'expéditeur, en unités de [currency] comme
+  /// [amount] (jamais en centimes) : plus bas que [amount] quand des frais
+  /// d'annulation ont été retenus. `null` tant que rien n'est remboursé, et
+  /// sur un back antérieur (champ absent). Lecture tolérante : nombre ou
+  /// texte, illisible = `null`.
+  @JsonKey(fromJson: _amountOrNull)
+  final double? refundedAmount;
+
   const PaymentModel({
     required this.id,
     this.bidId,
@@ -37,10 +45,17 @@ class PaymentModel {
     required this.status,
     this.disputed = false,
     this.paymentMethodTypes = const [],
+    this.refundedAmount,
   });
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) =>
       _$PaymentModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$PaymentModelToJson(this);
+}
+
+double? _amountOrNull(Object? raw) {
+  if (raw is num) return raw.toDouble();
+  if (raw is String) return double.tryParse(raw.trim());
+  return null;
 }

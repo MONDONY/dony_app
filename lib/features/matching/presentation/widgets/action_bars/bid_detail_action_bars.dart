@@ -5,6 +5,8 @@ import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
+import 'package:dony/features/cancellation/data/cancellation_fee_coverage.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_fee_config_builder.dart';
 import 'package:dony/features/cancellation/presentation/widgets/sender_cancel_confirm_dialog.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -183,7 +185,14 @@ class _SenderOptionsSheet extends StatelessWidget {
   const _SenderOptionsSheet({required this.bid, required this.outerContext});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => CancellationFeeConfigBuilder(
+    builder: (context, config) =>
+        _build(context, covered: isCoveredByCancellationFee(bid, config)),
+  );
+
+  /// [covered] : le colis peut porter des frais d'annulation, les
+  /// sous-titres des annulations ne promettent plus un remboursement entier.
+  Widget _build(BuildContext context, {required bool covered}) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
@@ -291,7 +300,11 @@ class _SenderOptionsSheet extends StatelessWidget {
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
                 label: l.bidDetailCancelRequestLabel,
-                subtitle: l.bidDetailCancelRefundAutoSubtitle,
+                // Avant l'acceptation (PENDING, PAYMENT_ESCROWED), aucun
+                // frais n'est possible : le texte d'avant reste vrai.
+                subtitle: covered && bid.status == 'ACCEPTED'
+                    ? l.bidDetailCancelRefundAutoSubtitleWithFee
+                    : l.bidDetailCancelRefundAutoSubtitle,
                 onTap: () {
                   context.pop();
                   showSenderCancelBidDialog(outerContext, bid);
@@ -307,7 +320,9 @@ class _SenderOptionsSheet extends StatelessWidget {
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
                 label: l.bidDetailCancelRequestLabel,
-                subtitle: l.bidDetailCancelAfterHandoverOptionSubtitle,
+                subtitle: covered
+                    ? l.bidDetailCancelAfterHandoverOptionSubtitleWithFee
+                    : l.bidDetailCancelAfterHandoverOptionSubtitle,
                 onTap: () {
                   context.pop();
                   _showAfterHandoverCancelDialog(outerContext);

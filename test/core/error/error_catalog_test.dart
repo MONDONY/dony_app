@@ -1,3 +1,4 @@
+import 'package:dony/core/config/cancellation_fee_flag.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -7,6 +8,39 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../helpers/l10n_test_helpers.dart';
 
 void main() {
+  // H : annulation avant paiement croisée par la validation du paiement
+  // (409 `payment-already-authorized`). Frais d'annulation allumés : plus de
+  // remboursement entier promis. Éteints (ou back antérieur) : le texte
+  // d'aujourd'hui.
+  group('ErrorCatalog — payment-already-authorized selon les frais', () {
+    tearDown(resetCancellationFeeFlagForTest);
+
+    for (final locale in [AppL10n.fr, AppL10n.en]) {
+      final l = lookupAppLocalizations(locale);
+      const error = ConflictException('x', code: 'payment-already-authorized');
+
+      test(
+        '[${locale.languageCode}] frais éteints : texte d\'aujourd\'hui',
+        () {
+          final p = ErrorCatalog.lookup(error, l10n: l);
+          expect(p.title, l.errorPaymentAlreadyAuthorizedTitle);
+          expect(p.message, l.errorPaymentAlreadyAuthorizedMessage);
+        },
+      );
+
+      test(
+        '[${locale.languageCode}] frais allumés : moins d\'éventuels frais',
+        () {
+          setCancellationFeeActive(true);
+          final p = ErrorCatalog.lookup(error, l10n: l);
+          expect(p.title, l.errorPaymentAlreadyAuthorizedTitle);
+          expect(p.message, l.errorPaymentAlreadyAuthorizedMessageWithFee);
+          expect(p.message, isNot(l.errorPaymentAlreadyAuthorizedMessage));
+        },
+      );
+    }
+  });
+
   group('ErrorCatalog — ValidationException', () {
     test(
       'avec violations → message liste les messages de champ (regression)',

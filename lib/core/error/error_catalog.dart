@@ -1,3 +1,4 @@
+import 'package:dony/core/config/cancellation_fee_flag.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -1436,9 +1437,13 @@ abstract final class ErrorCatalog {
     // 409 de l'annulation avant paiement (POST /bids/{id}/cancel-before-payment) :
     // le paiement vient d'être autorisé, le colis rechargé montre l'annulation
     // avec remboursement ; ou un paiement est en cours de validation.
+    // Frais d'annulation allumés : le colis payé peut être accepté, son
+    // annulation retient alors des frais, plus de remboursement entier promis.
     'payment-already-authorized': _Entry(
       title: (l) => l.errorPaymentAlreadyAuthorizedTitle,
-      message: (l) => l.errorPaymentAlreadyAuthorizedMessage,
+      message: (l) => cancellationFeeActive
+          ? l.errorPaymentAlreadyAuthorizedMessageWithFee
+          : l.errorPaymentAlreadyAuthorizedMessage,
       severity: ErrorSeverity.info,
       icon: Icons.check_circle_outline_rounded,
     ),

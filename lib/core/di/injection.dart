@@ -71,6 +71,7 @@ import 'package:dony/features/calls/data/ringback_tone.dart';
 import 'package:dony/features/calls/data/stream_call_gateway.dart';
 import 'package:dony/features/calls/data/stream_video_push.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_fee_config/cancellation_fee_config_cubit.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_fee_preview/cancellation_fee_preview_cubit.dart';
 import 'package:dony/features/cancellation/bloc/delivery_noshow_procedure/delivery_noshow_procedure_cubit.dart';
 import 'package:dony/features/cancellation/data/datasources/cancellation_remote_datasource.dart';
@@ -998,6 +999,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<DeliveryNoShowProcedureCubit>(
     () => DeliveryNoShowProcedureCubit(
+      getIt<CancellationRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  // État public des frais d'annulation, gardé pour la session.
+  getIt.registerLazySingleton<CancellationFeeConfigCubit>(
+    () => CancellationFeeConfigCubit(
       getIt<CancellationRepository>(),
       getIt<AnalyticsService>(),
     ),

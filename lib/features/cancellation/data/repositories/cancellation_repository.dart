@@ -1,4 +1,5 @@
 import 'package:dony/features/cancellation/data/datasources/cancellation_remote_datasource.dart';
+import 'package:dony/features/cancellation/data/models/cancellation_fee_config_model.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_fee_preview_model.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/data/models/delivery_noshow_procedure_model.dart';
@@ -68,4 +69,7 @@ class CancellationRepository {
 
   Future<CancellationFeePreviewModel> getFeePreview(String bidId) =>
       _datasource.getFeePreview(bidId);
+
+  Future<CancellationFeeConfigModel> getFeeConfig() =>
+      _datasource.getFeeConfig();
 }

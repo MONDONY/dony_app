@@ -7224,6 +7224,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String bidDetailSenderWindowExpiredSubtitleWithFee(String window) {
+    return 'Drop-off was possible $window. You can cancel your request: a cancellation fee may apply depending on the departure date. If the traveler did not show up, report their absence.';
+  }
+
+  @override
   String get bidDetailSenderReportNoShowButton =>
       'Report the traveler\'s no-show';
 
@@ -7280,6 +7285,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidDetailSenderConfirmSheetBody =>
       'By confirming your no-show, the shipment will be canceled and you won\'t be charged.';
+
+  @override
+  String get bidDetailSenderConfirmSheetBodyWithFee =>
+      'By confirming your no-show, the shipment will be canceled. A cancellation fee may be deducted from your refund depending on the departure date.';
 
   @override
   String get bidDetailTravelerPendingTitle => '📨 New shipment request';
@@ -7436,6 +7445,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No-show confirmed. The shipment has been canceled, you will not be charged.';
 
   @override
+  String get bidDetailNoShowConfirmedSnackbarWithFee =>
+      'No-show confirmed. The shipment has been canceled.';
+
+  @override
   String get bidDetailCancelledAfterHandoverSnackbar =>
       'Trip canceled. Return the parcel within 3 days using the return code.';
 
@@ -7542,8 +7555,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your payment will be refunded automatically';
 
   @override
+  String get bidDetailCancelRefundAutoSubtitleWithFee =>
+      'Automatic refund, minus any cancellation fee';
+
+  @override
   String get bidDetailCancelAfterHandoverOptionSubtitle =>
       'Full refund · you get your parcel back';
+
+  @override
+  String get bidDetailCancelAfterHandoverOptionSubtitleWithFee =>
+      'You get your parcel back · cancellation fee may apply';
 
   @override
   String get bidDetailRemoveFromHistorySubtitle =>
@@ -12245,6 +12266,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get faqPaymentsRefundA =>
       'The refund depends on the payment method and when the cancellation happens. A card payment is credited back to the original method after processing. For Mobile Money, the timing depends on the operator. In cash, Yadony doesn\'t hold the funds and can\'t process the refund automatically.';
+
+  @override
+  String get faqPaymentsRefundAWithFee =>
+      'The refund depends on the payment method and when the cancellation happens. A card payment is credited back to the original method after processing. For Mobile Money, the timing depends on the operator. In cash, Yadony doesn\'t hold the funds and can\'t process the refund automatically. If you cancel a parcel that has already been accepted, a cancellation fee may be deducted depending on the time left before departure.';
 
   @override
   String get faqPaymentsCommissionQ => 'Why is there a service fee?';
@@ -18966,6 +18991,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorPaymentAlreadyAuthorizedMessage =>
       'Your payment has just been confirmed. The parcel is up to date: cancel it from its page and you will be refunded.';
+
+  @override
+  String get errorPaymentAlreadyAuthorizedMessageWithFee =>
+      'Your payment has just been confirmed. The parcel is up to date: cancel it from its page and you will be refunded, minus any cancellation fee.';
 
   @override
   String get errorPaymentInProgressTitle => 'Payment in progress';

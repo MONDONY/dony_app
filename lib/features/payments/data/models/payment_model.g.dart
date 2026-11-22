@@ -20,6 +20,7 @@ PaymentModel _$PaymentModelFromJson(Map<String, dynamic> json) => PaymentModel(
           ?.map((e) => e as String)
           .toList() ??
       [],
+  refundedAmount: _amountOrNull(json['refundedAmount']),
 );
 
 Map<String, dynamic> _$PaymentModelToJson(PaymentModel instance) =>
@@ -33,6 +34,7 @@ Map<String, dynamic> _$PaymentModelToJson(PaymentModel instance) =>
       'status': _$PaymentStatusEnumMap[instance.status]!,
       'disputed': instance.disputed,
       'paymentMethodTypes': instance.paymentMethodTypes,
+      'refundedAmount': instance.refundedAmount,
     };
 
 const _$PaymentStatusEnumMap = {

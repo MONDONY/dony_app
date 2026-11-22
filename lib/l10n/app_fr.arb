@@ -7131,6 +7131,15 @@
       }
     }
   },
+  "bidDetailSenderWindowExpiredSubtitleWithFee": "Le dépôt était possible {window}. Vous pouvez annuler votre demande : des frais d'annulation peuvent s'appliquer selon la date de départ. Si le voyageur ne s'est pas présenté, signalez son absence.",
+  "@bidDetailSenderWindowExpiredSubtitleWithFee": {
+    "description": "_WindowExpiredHero, sous-titre quand le colis est couvert par les frais d'annulation (frais allumés, colis créé après la date d'effet, carte ou mobile money ; sender_hero_card.dart). Sinon bidDetailSenderWindowExpiredSubtitle",
+    "placeholders": {
+      "window": {
+        "type": "String"
+      }
+    }
+  },
   "bidDetailSenderReportNoShowButton": "Signaler l'absence du voyageur",
   "@bidDetailSenderReportNoShowButton": {
     "description": "_WindowExpiredHero, bouton d'ouverture de la feuille de signalement (sender_hero_card.dart)"
@@ -7199,6 +7208,10 @@
   "bidDetailSenderConfirmSheetBody": "En confirmant votre absence, l'envoi sera annulé et vous ne serez pas débité.",
   "@bidDetailSenderConfirmSheetBody": {
     "description": "Corps de la feuille de confirmation d'absence (sender_hero_card.dart, _showConfirmSheet)"
+  },
+  "bidDetailSenderConfirmSheetBodyWithFee": "En confirmant votre absence, l'envoi sera annulé. Des frais d'annulation peuvent être retenus sur votre remboursement selon la date de départ.",
+  "@bidDetailSenderConfirmSheetBodyWithFee": {
+    "description": "Corps de la feuille « Confirmer votre absence », colis couvert par les frais d'annulation (sender_noshow_confirm_sheet.dart). Sinon bidDetailSenderConfirmSheetBody"
   },
   "bidDetailTravelerPendingTitle": "📨 Nouvelle demande d'envoi",
   "@bidDetailTravelerPendingTitle": {
@@ -7401,6 +7414,10 @@
   "@bidDetailNoShowConfirmedSnackbar": {
     "description": "Snackbar NoShowConfirmed (bid_detail_screen.dart)"
   },
+  "bidDetailNoShowConfirmedSnackbarWithFee": "Absence confirmée. L'envoi a été annulé.",
+  "@bidDetailNoShowConfirmedSnackbarWithFee": {
+    "description": "Snackbar NoShowConfirmed, colis couvert par les frais d'annulation : aucune promesse de ne pas être débité (bid_detail_screen.dart). Sinon bidDetailNoShowConfirmedSnackbar"
+  },
   "bidDetailCancelledAfterHandoverSnackbar": "Trajet annulé. Restituez le colis sous 3 jours avec le code de retour.",
   "@bidDetailCancelledAfterHandoverSnackbar": {
     "description": "Snackbar CancelledAfterHandover (bid_detail_screen.dart)"
@@ -7530,9 +7547,17 @@
   "@bidDetailCancelRefundAutoSubtitle": {
     "description": "Sous-titre annulation avant remise (bid_detail_action_bars.dart)"
   },
+  "bidDetailCancelRefundAutoSubtitleWithFee": "Remboursement automatique, moins d'éventuels frais d'annulation",
+  "@bidDetailCancelRefundAutoSubtitleWithFee": {
+    "description": "Sous-titre annulation avant remise d'un colis ACCEPTÉ couvert par les frais d'annulation (bid_detail_action_bars.dart). PENDING / PAYMENT_ESCROWED ou non couvert : bidDetailCancelRefundAutoSubtitle"
+  },
   "bidDetailCancelAfterHandoverOptionSubtitle": "Remboursement intégral · vous récupérez votre colis",
   "@bidDetailCancelAfterHandoverOptionSubtitle": {
     "description": "Sous-titre annulation après remise, tuile d'options (bid_detail_action_bars.dart)"
+  },
+  "bidDetailCancelAfterHandoverOptionSubtitleWithFee": "Vous récupérez votre colis · frais d'annulation possibles",
+  "@bidDetailCancelAfterHandoverOptionSubtitleWithFee": {
+    "description": "Sous-titre annulation après remise, tuile d'options, colis couvert par les frais d'annulation (bid_detail_action_bars.dart). Sinon bidDetailCancelAfterHandoverOptionSubtitle"
   },
   "bidDetailRemoveFromHistorySubtitle": "Retirer définitivement de votre historique",
   "@bidDetailRemoveFromHistorySubtitle": {
@@ -13397,6 +13422,10 @@
   "faqPaymentsRefundA": "Le remboursement dépend du moyen de paiement et du moment de l'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement.",
   "@faqPaymentsRefundA": {
     "description": "Réponse FAQ payments/refund (faq_screen.dart)"
+  },
+  "faqPaymentsRefundAWithFee": "Le remboursement dépend du moyen de paiement et du moment de l'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement. Si vous annulez un colis déjà accepté, des frais d'annulation peuvent être retenus selon le délai avant le départ.",
+  "@faqPaymentsRefundAWithFee": {
+    "description": "Réponse FAQ payments/refund quand les frais d'annulation sont allumés (faq_screen.dart). Sinon faqPaymentsRefundA"
   },
   "faqPaymentsCommissionQ": "Pourquoi des frais de service ?",
   "@faqPaymentsCommissionQ": {
@@ -20767,6 +20796,8 @@
   "@errorPaymentAlreadyAuthorizedTitle": {"description": "Titre de l'erreur 409 payment-already-authorized (annulation avant paiement refusée)."},
   "errorPaymentAlreadyAuthorizedMessage": "Votre paiement vient d'être validé. Le colis est à jour : annulez-le depuis sa fiche, vous serez remboursé.",
   "@errorPaymentAlreadyAuthorizedMessage": {"description": "Message de l'erreur 409 payment-already-authorized."},
+  "errorPaymentAlreadyAuthorizedMessageWithFee": "Votre paiement vient d'être validé. Le colis est à jour : annulez-le depuis sa fiche, vous serez remboursé, moins d'éventuels frais d'annulation.",
+  "@errorPaymentAlreadyAuthorizedMessageWithFee": {"description": "Message de l'erreur 409 payment-already-authorized quand les frais d'annulation sont allumés (error_catalog.dart). Sinon errorPaymentAlreadyAuthorizedMessage"},
   "errorPaymentInProgressTitle": "Paiement en cours",
   "@errorPaymentInProgressTitle": {"description": "Titre de l'erreur 409 payment-in-progress (dépôt mobile money ou paiement carte en cours de validation)."},
   "errorPaymentInProgressMessage": "Un paiement est en cours de validation. Réessayez dans quelques minutes.",
