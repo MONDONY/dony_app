@@ -24,6 +24,9 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   recipientPhone: json['recipientPhone'] as String?,
   recipientAppStatus: json['recipientAppStatus'] as String?,
   recipientPhoneHidden: json['recipientPhoneHidden'] as bool? ?? false,
+  recipientDesignatedByUsername:
+      json['recipientDesignatedByUsername'] as bool? ?? false,
+  recipientUsername: json['recipientUsername'] as String?,
   recipientDeclined: json['recipientDeclined'] as bool? ?? false,
   pickupCodeRenewalNeeded: json['pickupCodeRenewalNeeded'] as bool? ?? false,
   recipientReplacementRequestedAt:
@@ -178,6 +181,8 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'recipientPhone': instance.recipientPhone,
   'recipientAppStatus': instance.recipientAppStatus,
   'recipientPhoneHidden': instance.recipientPhoneHidden,
+  'recipientDesignatedByUsername': instance.recipientDesignatedByUsername,
+  'recipientUsername': instance.recipientUsername,
   'recipientDeclined': instance.recipientDeclined,
   'pickupCodeRenewalNeeded': instance.pickupCodeRenewalNeeded,
   'recipientReplacementRequestedAt': instance.recipientReplacementRequestedAt

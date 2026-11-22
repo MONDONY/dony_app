@@ -26,8 +26,9 @@ class BidRemoteDatasource {
     required double weightKg,
     required String description,
     required String contentCategory,
-    required String recipientName,
-    required String recipientPhone,
+    String? recipientName,
+    String? recipientPhone,
+    String? recipientUsername,
     List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
   }) async {
@@ -35,8 +36,7 @@ class BidRemoteDatasource {
       'announcementId': announcementId,
       'description': description,
       'contentCategory': contentCategory,
-      'recipientName': recipientName,
-      'recipientPhone': recipientPhone,
+      ..._recipientFields(recipientName, recipientPhone, recipientUsername),
       'disclaimerSigned': true,
     };
     // Poids omis en mode GRID pur (le backend exige ≥ 0.1 kg s'il est présent).
@@ -79,8 +79,9 @@ class BidRemoteDatasource {
     required double weightKg,
     required String description,
     required String contentCategory,
-    required String recipientName,
-    required String recipientPhone,
+    String? recipientName,
+    String? recipientPhone,
+    String? recipientUsername,
     BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
     String? countryCode,
     String? promoCode,
@@ -90,8 +91,7 @@ class BidRemoteDatasource {
     final body = <String, dynamic>{
       'description': description,
       'contentCategory': contentCategory,
-      'recipientName': recipientName,
-      'recipientPhone': recipientPhone,
+      ..._recipientFields(recipientName, recipientPhone, recipientUsername),
       'disclaimerSigned': true,
       'paymentMethod': paymentMethod.apiValue,
     };
@@ -294,12 +294,13 @@ class BidRemoteDatasource {
   /// (`recipient-change-not-allowed`).
   Future<BidModel> changeRecipient(
     String bidId, {
-    required String recipientName,
-    required String recipientPhone,
+    String? recipientName,
+    String? recipientPhone,
+    String? recipientUsername,
   }) async {
     final response = await _apiClient.dio.put(
       '/bids/$bidId/recipient',
-      data: {'recipientName': recipientName, 'recipientPhone': recipientPhone},
+      data: _recipientFields(recipientName, recipientPhone, recipientUsername),
     );
     return BidModel.fromJson(response.data as Map<String, dynamic>);
   }
@@ -414,4 +415,17 @@ class BidRemoteDatasource {
       rethrow;
     }
   }
+}
+
+/// Champs « destinataire » d'un corps de requête. Avec un identifiant Yadony,
+/// seul `recipientUsername` part (le back refuse le mélange avec nom et numéro,
+/// 422 `recipient-mode-conflict`) ; sinon nom et numéro, comme avant.
+Map<String, dynamic> _recipientFields(
+  String? name,
+  String? phone,
+  String? username,
+) {
+  final u = username?.trim();
+  if (u != null && u.isNotEmpty) return {'recipientUsername': u};
+  return {'recipientName': ?name, 'recipientPhone': ?phone};
 }

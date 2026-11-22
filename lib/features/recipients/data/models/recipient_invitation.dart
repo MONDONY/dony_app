@@ -86,13 +86,22 @@ class IncomingRecipientInvitation {
 /// Aperçu d'un identifiant Yadony trouvé (`GET /recipient-invitations/lookup`) :
 /// l'identifiant et l'initiale du prénom, jamais plus.
 class UsernameLookup {
-  const UsernameLookup({required this.username, required this.initial});
+  const UsernameLookup({
+    required this.username,
+    required this.initial,
+    this.parcelDesignation = false,
+  });
 
   factory UsernameLookup.fromJson(Map<String, dynamic> json) => UsernameLookup(
     username: json['username'] as String? ?? '',
     initial: json['initial'] as String? ?? '',
+    parcelDesignation: json['parcelDesignation'] as bool? ?? false,
   );
 
   final String username;
   final String initial;
+
+  /// Ce compte accepte d'être désigné destinataire d'un colis par son
+  /// identifiant. `false` si le back ne le dit pas (ancien back).
+  final bool parcelDesignation;
 }

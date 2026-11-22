@@ -9,8 +9,11 @@ class BidCheckoutRequested extends BidEvent {
   final double weightKg;
   final String description;
   final String contentCategory;
-  final String recipientName;
-  final String recipientPhone;
+  final String? recipientName;
+  final String? recipientPhone;
+
+  /// Identifiant Yadony du destinataire, exclusif avec nom et numéro.
+  final String? recipientUsername;
 
   /// Articles de la grille sélectionnés (mode MIXED). Null si aucun article.
   /// Format: [{'announcementGridItemId': String, 'quantity': int}]
@@ -24,8 +27,9 @@ class BidCheckoutRequested extends BidEvent {
     required this.weightKg,
     required this.description,
     required this.contentCategory,
-    required this.recipientName,
-    required this.recipientPhone,
+    this.recipientName,
+    this.recipientPhone,
+    this.recipientUsername,
     this.gridItems,
     this.photoKeys,
   });
@@ -36,8 +40,11 @@ class BidCreateRequested extends BidEvent {
   final double weightKg;
   final String description;
   final String contentCategory;
-  final String recipientName;
-  final String recipientPhone;
+  final String? recipientName;
+  final String? recipientPhone;
+
+  /// Identifiant Yadony du destinataire, exclusif avec nom et numéro.
+  final String? recipientUsername;
   final BidPaymentMethod paymentMethod;
 
   /// Code pays ISO 3166-1 alpha-2 (requis si WAVE ou ORANGE_MONEY).
@@ -59,8 +66,9 @@ class BidCreateRequested extends BidEvent {
     required this.weightKg,
     required this.description,
     required this.contentCategory,
-    required this.recipientName,
-    required this.recipientPhone,
+    this.recipientName,
+    this.recipientPhone,
+    this.recipientUsername,
     this.paymentMethod = BidPaymentMethod.stripe,
     this.countryCode,
     this.promoCode,

@@ -99,6 +99,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         contentCategory: event.contentCategory,
         recipientName: event.recipientName,
         recipientPhone: event.recipientPhone,
+        recipientUsername: event.recipientUsername,
         photoKeys: event.photoKeys,
         gridItems: event.gridItems,
       );
@@ -140,6 +141,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         contentCategory: event.contentCategory,
         recipientName: event.recipientName,
         recipientPhone: event.recipientPhone,
+        recipientUsername: event.recipientUsername,
         paymentMethod: event.paymentMethod,
         countryCode: event.countryCode,
         promoCode: event.promoCode,

@@ -19,8 +19,9 @@ class BidRepository {
     required double weightKg,
     required String description,
     required String contentCategory,
-    required String recipientName,
-    required String recipientPhone,
+    String? recipientName,
+    String? recipientPhone,
+    String? recipientUsername,
     List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
   }) => _datasource.checkoutBid(
@@ -30,6 +31,7 @@ class BidRepository {
     contentCategory: contentCategory,
     recipientName: recipientName,
     recipientPhone: recipientPhone,
+    recipientUsername: recipientUsername,
     photoKeys: photoKeys,
     gridItems: gridItems,
   );
@@ -51,8 +53,9 @@ class BidRepository {
     required double weightKg,
     required String description,
     required String contentCategory,
-    required String recipientName,
-    required String recipientPhone,
+    String? recipientName,
+    String? recipientPhone,
+    String? recipientUsername,
     BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
     String? countryCode,
     String? promoCode,
@@ -65,6 +68,7 @@ class BidRepository {
     contentCategory: contentCategory,
     recipientName: recipientName,
     recipientPhone: recipientPhone,
+    recipientUsername: recipientUsername,
     paymentMethod: paymentMethod,
     countryCode: countryCode,
     promoCode: promoCode,
@@ -122,12 +126,14 @@ class BidRepository {
 
   Future<BidModel> changeRecipient(
     String bidId, {
-    required String recipientName,
-    required String recipientPhone,
+    String? recipientName,
+    String? recipientPhone,
+    String? recipientUsername,
   }) => _datasource.changeRecipient(
     bidId,
     recipientName: recipientName,
     recipientPhone: recipientPhone,
+    recipientUsername: recipientUsername,
   );
 
   Future<BidModel> requestRecipientReplacement(String bidId) =>

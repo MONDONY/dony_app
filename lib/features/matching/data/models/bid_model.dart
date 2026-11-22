@@ -146,6 +146,15 @@ class BidModel {
   @JsonKey(defaultValue: false)
   final bool recipientPhoneHidden;
 
+  /// Vue expéditeur : le destinataire a été désigné par son identifiant Yadony.
+  /// `false` sur un back antérieur.
+  @JsonKey(defaultValue: false)
+  final bool recipientDesignatedByUsername;
+
+  /// Vue expéditeur : identifiant désigné, tant que le lien n'est pas
+  /// `CONFIRMED`. `null` sinon ou sur un back antérieur.
+  final String? recipientUsername;
+
   /// Vue voyageur : le destinataire a refusé le colis ou s'en est retiré (lien
   /// `DECLINED`, yadony-back #412). [recipientName] et [recipientPhone] sont
   /// alors `null` : le voyageur peut demander à l'expéditeur d'en désigner un
@@ -366,6 +375,8 @@ class BidModel {
     this.recipientPhone,
     this.recipientAppStatus,
     this.recipientPhoneHidden = false,
+    this.recipientDesignatedByUsername = false,
+    this.recipientUsername,
     this.recipientDeclined = false,
     this.pickupCodeRenewalNeeded = false,
     this.recipientReplacementRequestedAt,
