@@ -49,6 +49,7 @@ void main() {
   test('createAnnouncement delegates correctly', () async {
     when(
       () => mockDs.createAnnouncement(
+        idempotencyKey: any(named: 'idempotencyKey'),
         departureCity: any(named: 'departureCity'),
         arrivalCity: any(named: 'arrivalCity'),
         departureDate: any(named: 'departureDate'),
@@ -64,6 +65,7 @@ void main() {
     ).thenAnswer((_) async => _ann());
 
     final result = await repo.createAnnouncement(
+      idempotencyKey: 'cle-test-0001',
       departureCity: 'Paris',
       arrivalCity: 'Dakar',
       departureDate: DateTime(2024, 6),
@@ -81,6 +83,7 @@ void main() {
     TransportMode? capturedMode;
     when(
       () => mockDs.createAnnouncement(
+        idempotencyKey: any(named: 'idempotencyKey'),
         departureCity: any(named: 'departureCity'),
         arrivalCity: any(named: 'arrivalCity'),
         departureDate: any(named: 'departureDate'),
@@ -100,6 +103,7 @@ void main() {
     });
 
     await repo.createAnnouncement(
+      idempotencyKey: 'cle-test-0001',
       departureCity: 'Paris',
       arrivalCity: 'Dakar',
       departureDate: DateTime(2024, 6),
@@ -117,6 +121,7 @@ void main() {
   test('createAnnouncement propage saveAsDraft au datasource', () async {
     when(
       () => mockDs.createAnnouncement(
+        idempotencyKey: any(named: 'idempotencyKey'),
         departureCity: any(named: 'departureCity'),
         arrivalCity: any(named: 'arrivalCity'),
         departureDate: any(named: 'departureDate'),
@@ -133,6 +138,7 @@ void main() {
     ).thenAnswer((_) async => _ann());
 
     await repo.createAnnouncement(
+      idempotencyKey: 'cle-test-0001',
       departureCity: 'Paris',
       arrivalCity: 'Dakar',
       departureDate: DateTime(2024, 6),
@@ -147,6 +153,7 @@ void main() {
 
     final captured = verify(
       () => mockDs.createAnnouncement(
+        idempotencyKey: any(named: 'idempotencyKey'),
         departureCity: any(named: 'departureCity'),
         arrivalCity: any(named: 'arrivalCity'),
         departureDate: any(named: 'departureDate'),

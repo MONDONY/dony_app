@@ -1832,6 +1832,76 @@ void main() {
       ).called(1);
     });
 
+    List<AnnouncementCreateRequested> sentCreations() => verify(
+      () => announcementBloc.add(
+        captureAny(that: isA<AnnouncementCreateRequested>()),
+      ),
+    ).captured.cast<AnnouncementCreateRequested>();
+
+    /// Émet l'erreur, puis retire le message qu'elle affiche : le snackbar
+    /// d'erreur garde une action et persiste, il recouvrirait les boutons du
+    /// bas.
+    Future<void> settleAfterError(WidgetTester tester, AppException e) async {
+      states.add(AnnouncementError(e));
+      await tester.pump();
+      ScaffoldMessenger.of(
+        tester.element(find.byType(Scaffold).first),
+      ).clearSnackBars();
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('clé d\'idempotence : gardée après une réponse perdue, '
+        'renouvelée après un refus 4xx, distincte pour le brouillon', (
+      tester,
+    ) async {
+      await reachPublishStep(tester, status: TravelerStatus.individual);
+
+      await tapPublish(tester);
+      await settleAfterError(tester, const TimeoutException());
+      await tapPublish(tester);
+      await settleAfterError(tester, const ServerException());
+      await tapPublish(tester);
+      await settleAfterError(tester, const ValidationException('refus'));
+      await tapPublish(tester);
+      await tapInPreview(tester, 'Enregistrer comme brouillon');
+
+      final keys = sentCreations().map((e) => e.idempotencyKey).toList();
+      expect(keys, hasLength(5));
+      expect(
+        keys.every((k) => RegExp(r'^[A-Za-z0-9_-]{8,64}$').hasMatch(k)),
+        isTrue,
+      );
+      // Délai dépassé puis 5xx : le trajet a pu être créé, même clé.
+      expect(keys[1], keys[0]);
+      expect(keys[2], keys[0]);
+      // Refus 4xx : rien n'a été créé, nouvelle clé.
+      expect(keys[3], isNot(keys[0]));
+      // Le brouillon serveur est une autre intention.
+      expect(keys[4], isNot(keys[3]));
+    });
+
+    testWidgets('trajet créé : le bouton d\'aperçu est inactif, plus aucun '
+        'envoi possible', (tester) async {
+      await reachPublishStep(tester, status: TravelerStatus.individual);
+      final preview = find.byKey(
+        const Key('create-announcement-preview'),
+        skipOffstage: false,
+      );
+      expect(tester.widget<DonyButton>(preview).onPressed, isNotNull);
+
+      states.add(AnnouncementCreated(_makeFullAnnouncement()));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(tester.widget<DonyButton>(preview).onPressed, isNull);
+
+      // Laisse finir les animations de l'écran de succès : leurs minuteurs ne
+      // doivent pas survivre au test.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    });
+
     testWidgets('403 traveler-status-required : l\'écran de blocage s\'ouvre '
         'avec les deux choix, sans « Plus tard »', (tester) async {
       await reachPublishStep(tester, status: TravelerStatus.individual);

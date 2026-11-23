@@ -10,6 +10,10 @@ export 'package:dony/features/matching/data/models/trip_stops.dart';
 abstract class AnnouncementEvent {}
 
 class AnnouncementCreateRequested extends AnnouncementEvent {
+  /// Clé d'idempotence de la tentative de création (en-tête
+  /// `Idempotency-Key`), décidée par le formulaire : voir `TripCreationKeys`.
+  /// Ne part jamais dans l'analytics ni dans les logs.
+  final String idempotencyKey;
   final String departureCity;
   final String arrivalCity;
   final String? departureCountryCode;
@@ -46,6 +50,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final bool fromAi;
 
   AnnouncementCreateRequested({
+    required this.idempotencyKey,
     required this.departureCity,
     required this.arrivalCity,
     this.departureCountryCode,
@@ -193,6 +198,9 @@ class AnnouncementTripCreateRequested extends AnnouncementEvent {
   final List<TripLegDraft> legs;
 
   AnnouncementTripCreateRequested({required this.first, required this.legs});
+
+  /// Clé d'idempotence du voyage : celle du premier trajet du formulaire.
+  String get idempotencyKey => first.idempotencyKey;
 }
 
 /// Marquage groupé « Arrivé à destination » : passe le trajet à ARRIVED et

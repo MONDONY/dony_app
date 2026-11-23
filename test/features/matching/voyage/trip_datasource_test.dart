@@ -53,7 +53,11 @@ void main() {
 
   test('createTrip poste toutes les étapes et lit la réponse', () async {
     when(
-      () => dio.post('/announcements/trips', data: any(named: 'data')),
+      () => dio.post(
+        '/announcements/trips',
+        data: any(named: 'data'),
+        options: any(named: 'options'),
+      ),
     ).thenAnswer(
       (_) async => Response(
         data: {
@@ -68,7 +72,10 @@ void main() {
       ),
     );
 
-    final legs = await repository.createTrip([payload, payload]);
+    final legs = await repository.createTrip([
+      payload,
+      payload,
+    ], idempotencyKey: 'cle-test-0001');
 
     expect(legs.map((l) => l.id), ['a', 'b']);
     expect(legs[1].tripLegIndex, 2);
@@ -77,6 +84,7 @@ void main() {
               () => dio.post(
                 '/announcements/trips',
                 data: captureAny(named: 'data'),
+                options: any(named: 'options'),
               ),
             ).captured.single
             as Map<String, dynamic>;
@@ -84,9 +92,35 @@ void main() {
     expect((body['legs'] as List).first, payload.toJson());
   });
 
+  test('createTrip envoie la clé d\'idempotence dans l\'en-tête', () async {
+    Options? sentOptions;
+    when(
+      () => dio.post(
+        '/announcements/trips',
+        data: any(named: 'data'),
+        options: any(named: 'options'),
+      ),
+    ).thenAnswer((inv) async {
+      sentOptions = inv.namedArguments[const Symbol('options')] as Options?;
+      return Response(
+        data: <String, dynamic>{},
+        statusCode: 201,
+        requestOptions: RequestOptions(path: '/announcements/trips'),
+      );
+    });
+
+    await repository.createTrip([payload], idempotencyKey: 'cle-voyage-001');
+
+    expect(sentOptions?.headers, {'Idempotency-Key': 'cle-voyage-001'});
+  });
+
   test('createTrip sans liste : aucune étape', () async {
     when(
-      () => dio.post('/announcements/trips', data: any(named: 'data')),
+      () => dio.post(
+        '/announcements/trips',
+        data: any(named: 'data'),
+        options: any(named: 'options'),
+      ),
     ).thenAnswer(
       (_) async => Response(
         data: <String, dynamic>{},
@@ -94,7 +128,10 @@ void main() {
         requestOptions: RequestOptions(path: '/announcements/trips'),
       ),
     );
-    expect(await repository.createTrip([payload]), isEmpty);
+    expect(
+      await repository.createTrip([payload], idempotencyKey: 'cle-test-0001'),
+      isEmpty,
+    );
   });
 
   test('getTripLegs lit les étapes du voyage', () async {

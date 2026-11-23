@@ -33,6 +33,7 @@ import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/trip_creation_keys.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -725,6 +726,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                         return BlocBuilder<AnnouncementBloc, AnnouncementState>(
                           builder: (ctx, annState) {
                             final isLoading = annState is AnnouncementLoading;
+                            // Trajet créé : le formulaire se ferme, plus aucun
+                            // envoi (il resterait visible un instant sous
+                            // l'écran de succès).
+                            final isSubmitLocked =
+                                isLoading || annState is AnnouncementCreated;
                             return BlocBuilder<
                               AnnouncementFormBloc,
                               AnnouncementFormState
@@ -752,7 +758,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                             ctx2.l10n.tripPublishPreviewButton,
                                         iconRight: DonyIcons.arrowRight,
                                         isLoading: isLoading,
-                                        onPressed: (canSubmit && !isLoading)
+                                        onPressed:
+                                            (canSubmit && !isSubmitLocked)
                                             ? () {
                                                 AnnouncementPreviewSheet.show(
                                                   ctx2,
@@ -900,6 +907,10 @@ class _TripFormContent extends StatefulWidget {
 
 class _TripFormContentState extends State<_TripFormContent> {
   final _formKey = GlobalKey<FormState>();
+
+  /// Clés d'idempotence des créations de ce formulaire : un renvoi après une
+  /// réponse perdue retombe sur le trajet déjà créé (voir [TripCreationKeys]).
+  final _creationKeys = TripCreationKeys();
 
   /// The last `NegotiationStartWithDedicatedTripRequested` dispatched by
   /// `_submit()` — brand-new offer with no existing thread yet
@@ -2126,7 +2137,14 @@ class _TripFormContentState extends State<_TripFormContent> {
         ),
       );
     } else {
+      // Voyage à plusieurs étapes (FLUTTER-4D) : toutes les étapes partent
+      // ensemble, en une transaction côté serveur.
+      final extraLegs = context.read<TripLegsCubit>().state.legs;
       final createEvent = AnnouncementCreateRequested(
+        idempotencyKey: _creationKeys.keyFor(
+          saveAsDraft: saveAsDraft,
+          multiLeg: extraLegs.isNotEmpty,
+        ),
         departureCity: departureCity,
         arrivalCity: arrivalCity,
         departureCountryCode: formBlocState.departureCountryCode,
@@ -2153,9 +2171,6 @@ class _TripFormContentState extends State<_TripFormContent> {
         currency: _currency.code,
         fromAi: context.read<AiFilledFieldsCubit>().isFromAi,
       );
-      // Voyage à plusieurs étapes (FLUTTER-4D) : toutes les étapes partent
-      // ensemble, en une transaction côté serveur.
-      final extraLegs = context.read<TripLegsCubit>().state.legs;
       if (extraLegs.isEmpty) {
         context.read<AnnouncementBloc>().add(createEvent);
         return;
@@ -2226,6 +2241,27 @@ class _TripFormContentState extends State<_TripFormContent> {
         return;
       }
       context.read<AnnouncementBloc>().add(event);
+    }
+  }
+
+  /// Un refus définitif du serveur (4xx) renouvelle la clé d'idempotence de la
+  /// dernière création envoyée ; un échec où le trajet a pu être créé la garde,
+  /// et un succès ne la renouvelle jamais (voir [TripCreationKeys]).
+  void _settleCreationKey(AnnouncementState state) {
+    switch (state) {
+      case AnnouncementError(:final error):
+        _creationKeys.onFailure(error);
+      case AnnouncementDraftLimitReached(:final error):
+        _creationKeys.onFailure(error);
+      case AnnouncementProLimitReached(:final error):
+        _creationKeys.onFailure(error);
+      case AnnouncementPublishingBlocked(:final error):
+        _creationKeys.onFailure(error);
+      case AnnouncementTripUnsupported():
+        // Route absente du back (404 ou 405) : rien n'a été créé.
+        _creationKeys.renewLast();
+      default:
+        break;
     }
   }
 
@@ -2511,6 +2547,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       },
       child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
         listener: (context, state) async {
+          _settleCreationKey(state);
           if (state is AnnouncementCreated || state is AnnouncementUpdated) {
             final announcement = state is AnnouncementCreated
                 ? state.announcement

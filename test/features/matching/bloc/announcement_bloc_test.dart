@@ -127,11 +127,130 @@ void main() {
   group('AnnouncementCreateRequested', () {
     final ann = buildAnnouncement();
 
+    Future<AnnouncementModel> createCall(String key) =>
+        mockRepo.createAnnouncement(
+          idempotencyKey: key,
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDate: any(named: 'departureDate'),
+          departureTime: any(named: 'departureTime'),
+          arrivalTime: any(named: 'arrivalTime'),
+          pickupAddress: any(named: 'pickupAddress'),
+          deliveryAddress: any(named: 'deliveryAddress'),
+          availableKg: any(named: 'availableKg'),
+          pricePerKg: any(named: 'pricePerKg'),
+          transportMode: any(named: 'transportMode'),
+          handoverDeadline: any(named: 'handoverDeadline'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        );
+
+    AnnouncementCreateRequested createEvent(
+      String key, {
+      bool saveAsDraft = false,
+    }) => AnnouncementCreateRequested(
+      idempotencyKey: key,
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime.now().add(const Duration(days: 10)),
+      pickupAddress: kTestPickupAddress,
+      deliveryAddress: kTestDeliveryAddress,
+      availableKg: 20.0,
+      pricePerKg: 5.0,
+      transportMode: TransportMode.plane,
+      handoverDeadline: DateTime(2026, 6, 14, 18),
+      saveAsDraft: saveAsDraft,
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'la clé d\'idempotence de l\'événement arrive au repository',
+      build: () {
+        when(
+          () => createCall(any(named: 'idempotencyKey')),
+        ).thenAnswer((_) async => ann);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(createEvent('cle-publication-1')),
+      verify: (_) {
+        verify(() => createCall('cle-publication-1')).called(1);
+      },
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'brouillon et publication envoient chacun la clé de leur événement',
+      build: () {
+        when(
+          () => createCall(any(named: 'idempotencyKey')),
+        ).thenAnswer((_) async => throw const TimeoutException());
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(createEvent('cle-brouillon-1', saveAsDraft: true));
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        bloc.add(createEvent('cle-publication-1'));
+      },
+      verify: (_) {
+        verify(() => createCall('cle-brouillon-1')).called(1);
+        verify(() => createCall('cle-publication-1')).called(1);
+      },
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'après une erreur, le renvoi repart avec la même clé',
+      build: () {
+        var calls = 0;
+        when(() => createCall(any(named: 'idempotencyKey'))).thenAnswer((
+          _,
+        ) async {
+          if (++calls == 1) throw const TimeoutException();
+          return ann;
+        });
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(createEvent('cle-publication-1'));
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        bloc.add(createEvent('cle-publication-1'));
+      },
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementError>(),
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementCreated>(),
+      ],
+      verify: (_) {
+        verify(() => createCall('cle-publication-1')).called(2);
+      },
+    );
+
+    // Le formulaire reste visible un instant sous l'écran de succès : un
+    // second envoi ne doit rien rappeler.
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'un second envoi après AnnouncementCreated est ignoré',
+      build: () {
+        when(
+          () => createCall(any(named: 'idempotencyKey')),
+        ).thenAnswer((_) async => ann);
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(createEvent('cle-publication-1'));
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        bloc.add(createEvent('cle-publication-1'));
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        bloc.add(createEvent('cle-brouillon-1', saveAsDraft: true));
+      },
+      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementCreated>()],
+      verify: (_) {
+        verify(() => createCall(any(named: 'idempotencyKey'))).called(1);
+      },
+    );
+
     blocTest<AnnouncementBloc, AnnouncementState>(
       'création réussie → [Loading, AnnouncementCreated]',
       build: () {
         when(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -149,6 +268,7 @@ void main() {
       },
       act: (bloc) => bloc.add(
         AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           departureDate: DateTime.now().add(const Duration(days: 10)),
@@ -173,6 +293,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -190,6 +311,7 @@ void main() {
       },
       act: (bloc) => bloc.add(
         AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           departureDate: DateTime.now().add(const Duration(days: 10)),
@@ -215,6 +337,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -241,6 +364,7 @@ void main() {
       },
       act: (bloc) => bloc.add(
         AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           departureDate: DateTime.now().add(const Duration(days: 10)),
@@ -270,6 +394,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -292,6 +417,7 @@ void main() {
       },
       act: (bloc) => bloc.add(
         AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           departureDate: DateTime.now().add(const Duration(days: 10)),
@@ -322,6 +448,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -344,6 +471,7 @@ void main() {
       },
       act: (bloc) {
         final event = AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           departureDate: DateTime.now().add(const Duration(days: 10)),
@@ -364,6 +492,7 @@ void main() {
       verify: (_) {
         verify(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -385,6 +514,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -402,6 +532,7 @@ void main() {
       },
       act: (bloc) => bloc.add(
         AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           departureDate: DateTime.now().add(const Duration(days: 10)),
@@ -427,6 +558,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -445,6 +577,7 @@ void main() {
       },
       act: (bloc) => bloc.add(
         AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           departureDate: DateTime.now().add(const Duration(days: 10)),
@@ -461,6 +594,7 @@ void main() {
       verify: (_) {
         final captured = verify(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -484,6 +618,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -507,6 +642,7 @@ void main() {
       },
       act: (bloc) => bloc.add(
         AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           departureDate: DateTime.now().add(const Duration(days: 10)),
@@ -531,6 +667,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -554,6 +691,7 @@ void main() {
       },
       act: (bloc) => bloc.add(
         AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           departureDate: DateTime.now().add(const Duration(days: 10)),
@@ -580,6 +718,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -606,6 +745,7 @@ void main() {
       },
       act: (bloc) => bloc.add(
         AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           departureDate: DateTime.now().add(const Duration(days: 10)),
@@ -2207,6 +2347,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
@@ -2224,6 +2365,7 @@ void main() {
       },
       act: (bloc) => bloc.add(
         AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           departureDate: DateTime.now().add(const Duration(days: 10)),
@@ -2238,6 +2380,7 @@ void main() {
       verify: (_) {
         verify(
           () => mockRepo.createAnnouncement(
+            idempotencyKey: any(named: 'idempotencyKey'),
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDate: any(named: 'departureDate'),
