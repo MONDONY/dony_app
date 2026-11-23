@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart' show Options;
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/network/retry_policy.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/announcement_payload.dart';
@@ -21,7 +23,17 @@ class AnnouncementRemoteDatasource {
 
   AnnouncementRemoteDatasource(this._apiClient);
 
+  static Options _idempotent(String key) =>
+      Options(headers: {RetryPolicy.idempotencyKeyHeader: key});
+
+  /// [idempotencyKey] : clé d'idempotence de la tentative de création
+  /// (en-tête `Idempotency-Key`). Si le serveur a créé le trajet mais que la
+  /// réponse s'est perdue, renvoyer la même clé rend le trajet déjà créé au
+  /// lieu d'en créer un second. Elle rend aussi ce POST rejouable par
+  /// `RetryOnTransientErrorInterceptor` ([RetryPolicy.isReplayable]). Un back
+  /// qui ne la connaît pas l'ignore.
   Future<AnnouncementModel> createAnnouncement({
+    required String idempotencyKey,
     required String departureCity,
     required String arrivalCity,
     String? departureCountryCode,
@@ -49,6 +61,7 @@ class AnnouncementRemoteDatasource {
   }) async {
     final response = await _apiClient.dio.post(
       '/announcements',
+      options: _idempotent(idempotencyKey),
       data: AnnouncementPayload(
         departureCity: departureCity,
         arrivalCity: arrivalCity,
@@ -82,11 +95,14 @@ class AnnouncementRemoteDatasource {
 
   /// Voyage à plusieurs étapes (FLUTTER-4D) : toutes les étapes en une
   /// transaction côté serveur. Renvoie les étapes créées, dans l'ordre.
+  /// [idempotencyKey] : voir [createAnnouncement].
   Future<List<AnnouncementModel>> createTrip(
-    List<AnnouncementPayload> legs,
-  ) async {
+    List<AnnouncementPayload> legs, {
+    required String idempotencyKey,
+  }) async {
     final response = await _apiClient.dio.post(
       '/announcements/trips',
+      options: _idempotent(idempotencyKey),
       data: {'legs': legs.map((l) => l.toJson()).toList()},
     );
     final data = response.data as Map<String, dynamic>;

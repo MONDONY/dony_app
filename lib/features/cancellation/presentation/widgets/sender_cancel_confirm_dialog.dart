@@ -12,7 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Confirmation d'une annulation par l'EXPÉDITEUR, avec l'aperçu des frais
-/// d'annulation (yadony-back #779) lu à l'ouverture.
+/// d'annulation lu à l'ouverture.
 ///
 /// Corps :
 /// - frais > 0 : [bodyWithFee] (à défaut [body]) puis le bloc des frais
@@ -78,10 +78,7 @@ class SenderCancelConfirmDialog extends StatelessWidget {
       CancellationFeePreviewState
     >(
       builder: (context, state) {
-        final fee = state.shownFee;
-        final loaded = state is CancellationFeePreviewLoaded ? state : null;
-        final recheckFailed = loaded?.recheckFailed ?? false;
-        final text = fee != null
+        final text = state.shownFee != null
             ? bodyWithFee ?? body
             : state.feeUnknown
             ? bodyUnknownFee ?? body
@@ -91,39 +88,13 @@ class SenderCancelConfirmDialog extends StatelessWidget {
             borderRadius: BorderRadius.circular(DonyRadius.sheet),
           ),
           title: Text(title, style: tt.headlineMedium),
-          content: AnimatedSize(
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    text,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  if (fee != null && loaded != null) ...[
-                    const SizedBox(height: DonySpacing.base),
-                    CancellationFeeNotice(
-                      preview: fee,
-                      fallbackCurrency: bid.currency,
-                      departureAt: bid.resolvedDepartureAt,
-                      now: loaded.now,
-                      increased: loaded.increased,
-                      recheckFailed: recheckFailed,
-                    ),
-                  ] else if (recheckFailed) ...[
-                    // Fenêtre gratuite dont le palier est passé, relecture
-                    // ratée : pas de bloc des frais, mais l'avertissement.
-                    const SizedBox(height: DonySpacing.base),
-                    CancellationFeeWarning(text: l.cancelFeeRecheckFailed),
-                  ],
-                ],
-              ),
+          content: CancellationFeePreviewSection(
+            state: state,
+            bid: bid,
+            scrollable: true,
+            body: Text(
+              text,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
           actions: [
@@ -165,6 +136,71 @@ class SenderCancelConfirmDialog extends StatelessWidget {
     if (!proceed || !context.mounted) return;
     context.pop();
     onConfirmed();
+  }
+}
+
+/// Corps d'une confirmation de l'expéditeur : [body], puis sous lui le bloc
+/// des frais ([CancellationFeeNotice]) quand des frais s'appliquent, ou
+/// l'avertissement ([CancellationFeeWarning]) quand la relecture avant de
+/// confirmer a échoué sans frais affichés. Il se déplie en 250 ms (aucune
+/// animation si le système les désactive). [scrollable] : le corps défile
+/// dans un dialogue.
+class CancellationFeePreviewSection extends StatelessWidget {
+  const CancellationFeePreviewSection({
+    super.key,
+    required this.state,
+    required this.bid,
+    required this.body,
+    this.scrollable = false,
+  });
+
+  final CancellationFeePreviewState state;
+  final BidModel bid;
+  final Widget body;
+  final bool scrollable;
+
+  @override
+  Widget build(BuildContext context) {
+    final current = state;
+    final children = <Widget>[body];
+    if (current is CancellationFeePreviewLoaded) {
+      final fee = current.shownFee;
+      if (fee != null) {
+        children
+          ..add(const SizedBox(height: DonySpacing.base))
+          ..add(
+            CancellationFeeNotice(
+              preview: fee,
+              fallbackCurrency: bid.currency,
+              departureAt: bid.resolvedDepartureAt,
+              now: current.now,
+              increased: current.increased,
+              recheckFailed: current.recheckFailed,
+            ),
+          );
+      } else if (current.recheckFailed) {
+        // Fenêtre gratuite dont le palier est passé, relecture ratée : pas de
+        // bloc des frais, mais l'avertissement.
+        children
+          ..add(const SizedBox(height: DonySpacing.base))
+          ..add(
+            CancellationFeeWarning(text: context.l10n.cancelFeeRecheckFailed),
+          );
+      }
+    }
+    final column = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
+    );
+    return AnimatedSize(
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: scrollable ? SingleChildScrollView(child: column) : column,
+    );
   }
 }
 

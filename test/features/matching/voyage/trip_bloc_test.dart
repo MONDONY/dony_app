@@ -121,6 +121,7 @@ void main() {
     test('date limite après le départ : délai ramené à zéro', () {
       final first = firstLeg();
       final late = AnnouncementCreateRequested(
+        idempotencyKey: 'cle-test-0001',
         departureCity: first.departureCity,
         arrivalCity: first.arrivalCity,
         departureDate: first.departureDate,
@@ -144,9 +145,72 @@ void main() {
     ];
 
     blocTest<AnnouncementBloc, AnnouncementState>(
+      'la clé d\'idempotence du voyage arrive au repository',
+      build: () {
+        when(
+          () => repo.createTrip(
+            any(),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
+        ).thenAnswer((_) async => legs);
+        return build();
+      },
+      act: (b) => b.add(
+        AnnouncementTripCreateRequested(
+          first: firstLeg(idempotencyKey: 'cle-voyage-001'),
+          legs: [doualaLeg()],
+        ),
+      ),
+      verify: (_) {
+        verify(
+          () => repo.createTrip(any(), idempotencyKey: 'cle-voyage-001'),
+        ).called(1);
+      },
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'un second envoi après AnnouncementTripCreated est ignoré',
+      build: () {
+        when(
+          () => repo.createTrip(
+            any(),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
+        ).thenAnswer((_) async => legs);
+        return build();
+      },
+      act: (b) async {
+        final event = AnnouncementTripCreateRequested(
+          first: firstLeg(idempotencyKey: 'cle-voyage-001'),
+          legs: [doualaLeg()],
+        );
+        b.add(event);
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        b.add(event);
+      },
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementTripCreated>(),
+      ],
+      verify: (_) {
+        verify(
+          () => repo.createTrip(
+            any(),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
       'succès : AnnouncementTripCreated, qui est aussi un AnnouncementCreated',
       build: () {
-        when(() => repo.createTrip(any())).thenAnswer((_) async => legs);
+        when(
+          () => repo.createTrip(
+            any(),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
+        ).thenAnswer((_) async => legs);
         return build();
       },
       act: (b) => b.add(
@@ -160,7 +224,12 @@ void main() {
       ],
       verify: (_) {
         final sent =
-            verify(() => repo.createTrip(captureAny())).captured.single
+            verify(
+                  () => repo.createTrip(
+                    captureAny(),
+                    idempotencyKey: any(named: 'idempotencyKey'),
+                  ),
+                ).captured.single
                 as List<AnnouncementPayload>;
         expect(sent, hasLength(2));
         expect(sent[1].departureCity, 'Abidjan');
@@ -171,7 +240,12 @@ void main() {
     blocTest<AnnouncementBloc, AnnouncementState>(
       'chaque étape part dans sa devise',
       build: () {
-        when(() => repo.createTrip(any())).thenAnswer((_) async => legs);
+        when(
+          () => repo.createTrip(
+            any(),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
+        ).thenAnswer((_) async => legs);
         return build();
       },
       act: (b) => b.add(
@@ -194,7 +268,12 @@ void main() {
       ),
       verify: (_) {
         final sent =
-            verify(() => repo.createTrip(captureAny())).captured.single
+            verify(
+                  () => repo.createTrip(
+                    captureAny(),
+                    idempotencyKey: any(named: 'idempotencyKey'),
+                  ),
+                ).captured.single
                 as List<AnnouncementPayload>;
         expect(sent.map((p) => p.toJson()['currency']), ['EUR', 'XOF']);
         expect(sent[1].pricePerKg, 3000);
@@ -205,7 +284,12 @@ void main() {
     blocTest<AnnouncementBloc, AnnouncementState>(
       '403 traveler-status-required : AnnouncementPublishingBlocked',
       build: () {
-        when(() => repo.createTrip(any())).thenThrow(
+        when(
+          () => repo.createTrip(
+            any(),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
+        ).thenThrow(
           DioException(
             requestOptions: RequestOptions(path: '/announcements/trips'),
             error: const ForbiddenException('x', 'traveler-status-required'),
@@ -227,7 +311,12 @@ void main() {
     blocTest<AnnouncementBloc, AnnouncementState>(
       'réponse vide : non pris en charge',
       build: () {
-        when(() => repo.createTrip(any())).thenAnswer((_) async => []);
+        when(
+          () => repo.createTrip(
+            any(),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
+        ).thenAnswer((_) async => []);
         return build();
       },
       act: (b) => b.add(
@@ -246,7 +335,12 @@ void main() {
       blocTest<AnnouncementBloc, AnnouncementState>(
         'ancien backend (${error.runtimeType}) : non pris en charge',
         build: () {
-          when(() => repo.createTrip(any())).thenThrow(
+          when(
+            () => repo.createTrip(
+              any(),
+              idempotencyKey: any(named: 'idempotencyKey'),
+            ),
+          ).thenThrow(
             DioException(requestOptions: RequestOptions(), error: error),
           );
           return build();
@@ -267,7 +361,12 @@ void main() {
     blocTest<AnnouncementBloc, AnnouncementState>(
       'étape refusée (422) : erreur, rien de créé',
       build: () {
-        when(() => repo.createTrip(any())).thenThrow(
+        when(
+          () => repo.createTrip(
+            any(),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
+        ).thenThrow(
           const ValidationException(
             'L\'étape 2 doit partir de Abidjan',
             code: 'trip-leg-city-mismatch',
@@ -292,7 +391,10 @@ void main() {
       'quota de brouillons atteint',
       build: () {
         when(
-          () => repo.createTrip(any()),
+          () => repo.createTrip(
+            any(),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
         ).thenThrow(const ForbiddenException('Limite', 'draft-limit-reached'));
         return build();
       },
@@ -312,7 +414,10 @@ void main() {
       'limite PRO atteinte',
       build: () {
         when(
-          () => repo.createTrip(any()),
+          () => repo.createTrip(
+            any(),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
         ).thenThrow(const ForbiddenException('Limite', 'pro-limit-reached'));
         return build();
       },

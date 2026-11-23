@@ -9,10 +9,12 @@ const kAbidjan = AddressData(label: 'Abidjan FHB', lat: 5.25, lng: -3.93);
 const kDouala = AddressData(label: 'Douala DLA', lat: 4.0, lng: 9.7);
 
 AnnouncementCreateRequested firstLeg({
+  String idempotencyKey = 'cle-test-0001',
   bool draft = false,
   String pricingMode = 'KG',
   TripStops? stops,
 }) => AnnouncementCreateRequested(
+  idempotencyKey: idempotencyKey,
   departureCity: 'Paris',
   arrivalCity: 'Abidjan',
   departureCountryCode: 'FR',

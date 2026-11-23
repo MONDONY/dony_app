@@ -8,7 +8,10 @@ import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
+import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -21,6 +24,11 @@ class _MockDeviceIdService extends Mock implements DeviceIdService {}
 /// Marqueur : la tentative échoue sans réponse (API injoignable).
 class _ConnError {
   const _ConnError();
+}
+
+/// Marqueur : la tentative échoue faute de réponse dans le délai.
+class _ReceiveTimeout {
+  const _ReceiveTimeout();
 }
 
 /// Marqueur : l'adaptateur lève cette erreur `dart:io` brute, que dio range
@@ -50,6 +58,12 @@ class _FakeAdapter implements HttpClientAdapter {
     requests.add(options);
     log.add('fetch ${options.method}');
     if (result is _RawError) throw result.error;
+    if (result is _ReceiveTimeout) {
+      throw DioException(
+        requestOptions: options,
+        type: DioExceptionType.receiveTimeout,
+      );
+    }
     if (result is _ConnError) {
       throw DioException(
         requestOptions: options,
@@ -114,6 +128,7 @@ void main() {
   late _RecordingSink sink;
   late _FakeTokenSource tokens;
   late List<Breadcrumb> crumbs;
+  late ApiClient client;
 
   Dio build(List<Object> queue) {
     log = [];
@@ -127,7 +142,7 @@ void main() {
     final deviceId = _MockDeviceIdService();
     when(deviceId.getDeviceId).thenAnswer((_) async => 'device-1');
 
-    final client = ApiClient(
+    client = ApiClient(
       baseUrl: 'http://test.local/api/v1',
       deviceIdService: deviceId,
       errorReporter: ErrorReportingService(sink),
@@ -236,6 +251,135 @@ void main() {
 
       expect(response.statusCode, 200);
       expect(adapter.requests, hasLength(2));
+    });
+
+    group('création de trajet avec clé d\'idempotence', () {
+      const key = 'cle-creation-0001';
+      const created = (
+        201,
+        '{"id":"ann-1","travelerId":"t","departureCity":"Paris",'
+            '"arrivalCity":"Dakar","departureDate":"2026-11-10",'
+            '"availableKg":10,"totalKg":10,"status":"ACTIVE",'
+            '"createdAt":"2026-01-01T00:00:00Z",'
+            '"updatedAt":"2026-01-01T00:00:00Z"}',
+      );
+      const createdTrip = (
+        201,
+        '{"tripGroupId":"g1","legs":[{"id":"a","travelerId":"t",'
+            '"departureCity":"Paris","arrivalCity":"Dakar",'
+            '"departureDate":"2026-11-10","availableKg":10,"totalKg":10,'
+            '"status":"ACTIVE","createdAt":"2026-01-01T00:00:00Z",'
+            '"updatedAt":"2026-01-01T00:00:00Z"}]}',
+      );
+      const pickup = AddressData(label: 'CDG', lat: 49.0, lng: 2.5);
+
+      // Le corps du trajet formate ses dates (`DateFormat` sans langue), ce
+      // qui fige `Intl.defaultLocale` sur la langue du poste : les tests de
+      // messages en français plus bas en dépendent. On la restaure.
+      setUp(() {
+        final previous = Intl.defaultLocale;
+        addTearDown(() => Intl.defaultLocale = previous);
+      });
+
+      Future<Object?> create() =>
+          AnnouncementRemoteDatasource(client).createAnnouncement(
+            idempotencyKey: key,
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            departureDate: DateTime(2026, 11, 10),
+            pickupAddress: pickup,
+            deliveryAddress: pickup,
+            availableKg: 10,
+            pricePerKg: 8,
+            transportMode: TransportMode.plane,
+            handoverDeadline: DateTime(2026, 11, 9),
+          );
+
+      List<Object?> sentKeys() => [
+        for (final r in adapter.requests) r.headers['Idempotency-Key'],
+      ];
+
+      test(
+        '502 puis 201 : rejoué avec la même clé, un seul trajet rendu',
+        () async {
+          build([502, created]);
+
+          final result = await create();
+
+          expect(result, isNotNull);
+          expect(adapter.requests, hasLength(2));
+          expect(
+            adapter.requests.every((r) => r.path == '/announcements'),
+            isTrue,
+          );
+          expect(sentKeys(), [key, key]);
+        },
+      );
+
+      test('connexion coupée puis 201 : rejoué avec la même clé', () async {
+        build([const _ConnError(), created]);
+
+        await create();
+
+        expect(sentKeys(), [key, key]);
+      });
+
+      test(
+        'délai dépassé : une seule relance, même clé, puis TimeoutException',
+        () async {
+          build([
+            const _ReceiveTimeout(),
+            const _ReceiveTimeout(),
+            const _ReceiveTimeout(),
+          ]);
+
+          await expectLater(create(), throwsA(appError<TimeoutException>()));
+
+          expect(sentKeys(), [key, key]);
+        },
+      );
+
+      test(
+        'voyage à étapes : POST /announcements/trips rejoué avec la même clé',
+        () async {
+          build([503, createdTrip]);
+
+          final legs = await AnnouncementRemoteDatasource(
+            client,
+          ).createTrip([], idempotencyKey: key);
+
+          expect(legs, hasLength(1));
+          expect(
+            adapter.requests.every((r) => r.path == '/announcements/trips'),
+            isTrue,
+          );
+          expect(sentKeys(), [key, key]);
+        },
+      );
+
+      test('refus 422 : jamais rejoué', () async {
+        build([422, created]);
+
+        await expectLater(create(), throwsA(appError<ValidationException>()));
+
+        expect(adapter.requests, hasLength(1));
+      });
+
+      test(
+        'la clé ne part ni dans le breadcrumb ni dans le report Sentry',
+        () async {
+          build([500, 500, 500, 500]);
+
+          await expectLater(create(), throwsA(isA<DioException>()));
+          await flush();
+
+          expect(
+            crumbs.map((c) => c.data.toString()).join(),
+            isNot(contains(key)),
+          );
+          expect(sink.contexts.toString(), isNot(contains(key)));
+        },
+      );
     });
 
     test('429 Nginx sur GET : rejoué selon la règle existante', () async {

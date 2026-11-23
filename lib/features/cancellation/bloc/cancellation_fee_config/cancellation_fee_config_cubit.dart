@@ -1,9 +1,10 @@
 import 'dart:async' hide TimeoutException;
 
 import 'package:dony/core/config/cancellation_fee_flag.dart';
-import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/app_exception.dart' show TimeoutException;
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/cancellation/data/cancellation_fee_failure.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_fee_config_model.dart';
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -151,20 +152,15 @@ class CancellationFeeConfigCubit extends Cubit<CancellationFeeConfigState> {
     }
   }
 
-  /// Vrai pour un 404 : back antérieur à la route, cas attendu tant que la
-  /// fonction n'est pas déployée, jamais signalé.
+  /// Vrai pour un 404 : back antérieur à la route, cas attendu, jamais
+  /// signalé.
   bool _trackFailure(Object e) {
-    final malformed = e is FormatException || e is TypeError;
-    final error = malformed ? null : unwrapDioError(e);
-    if (error is NotFoundException) return true;
+    final code = cancellationFeeFailureCode(e);
+    if (code == null) return true;
     unawaited(
       _analytics.logEvent(
         AnalyticsEvents.cancellationFeeConfigFailed,
-        properties: {
-          'error_code': malformed
-              ? 'invalid_payload'
-              : error?.code ?? 'unknown',
-        },
+        properties: {'error_code': code},
       ),
     );
     return false;

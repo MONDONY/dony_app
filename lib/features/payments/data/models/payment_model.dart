@@ -1,3 +1,4 @@
+import 'package:dony/core/utils/lenient_number.dart';
 import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -32,7 +33,7 @@ class PaymentModel {
   /// d'annulation ont été retenus. `null` tant que rien n'est remboursé, et
   /// sur un back antérieur (champ absent). Lecture tolérante : nombre ou
   /// texte, illisible = `null`.
-  @JsonKey(fromJson: _amountOrNull)
+  @JsonKey(fromJson: lenientDoubleOrNull)
   final double? refundedAmount;
 
   const PaymentModel({
@@ -52,10 +53,4 @@ class PaymentModel {
       _$PaymentModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$PaymentModelToJson(this);
-}
-
-double? _amountOrNull(Object? raw) {
-  if (raw is num) return raw.toDouble();
-  if (raw is String) return double.tryParse(raw.trim());
-  return null;
 }

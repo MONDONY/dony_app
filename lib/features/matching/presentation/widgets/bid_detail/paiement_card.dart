@@ -79,35 +79,33 @@ class PaiementCard extends StatelessWidget {
       if (retained != null) {
         // Colis annulé avec des frais d'annulation retenus : le dépôt n'est
         // pas rendu en entier, on dit ce qui l'est vraiment.
-        return DetailCard(
-          title: l.bidDetailPaymentCardTitle,
-          child: _refundedRow(
-            cs,
-            tt,
-            l.bidDetailAmountRefundedLabel(
-              _fmt(retained, existingPayment!.currency),
-            ),
+        body = _refundedRow(
+          cs,
+          tt,
+          l.bidDetailAmountRefundedLabel(
+            _fmt(retained, existingPayment!.currency),
           ),
         );
-      }
-      // Mobile money (pawaPay) — séquestré par Yadony comme Stripe, mais
-      // sans le détail par statut (pas de distinction libéré/remboursé).
-      body = Row(
-        children: [
-          DonyIcon('smartphone', color: cs.primary, size: 20),
-          const SizedBox(width: DonySpacing.sm),
-          Expanded(
-            child: Text(
-              bid.status == _awaitingPaymentStatus
-                  ? l.bidDetailPaymentToPayLabel(senderLabel)
-                  : l.bidDetailMobileMoneySecuredLabel(senderLabel),
-              style: tt.bodySmall?.copyWith(color: cs.onSurface),
+      } else {
+        // Mobile money (pawaPay) — séquestré par Yadony comme Stripe, mais
+        // sans le détail par statut (pas de distinction libéré/remboursé).
+        body = Row(
+          children: [
+            DonyIcon('smartphone', color: cs.primary, size: 20),
+            const SizedBox(width: DonySpacing.sm),
+            Expanded(
+              child: Text(
+                bid.status == _awaitingPaymentStatus
+                    ? l.bidDetailPaymentToPayLabel(senderLabel)
+                    : l.bidDetailMobileMoneySecuredLabel(senderLabel),
+                style: tt.bodySmall?.copyWith(color: cs.onSurface),
+              ),
             ),
-          ),
-          const SizedBox(width: DonySpacing.sm),
-          DonyBadge(label: l.bidDetailMobileMoneyBadge),
-        ],
-      );
+            const SizedBox(width: DonySpacing.sm),
+            DonyBadge(label: l.bidDetailMobileMoneyBadge),
+          ],
+        );
+      }
     } else {
       // Cash / Wave / Orange Money — règlement en personne (net voyageur)
       body = Row(
@@ -189,17 +187,10 @@ class PaiementCard extends StatelessWidget {
       final refundedLabel = refunded != null
           ? _fmt(refunded, existingPayment!.currency)
           : senderLabel;
-      return Row(
-        children: [
-          DonyIcon('refresh-cw', color: cs.onSurfaceVariant, size: 20),
-          const SizedBox(width: DonySpacing.sm),
-          Expanded(
-            child: Text(
-              l.bidDetailAmountRefundedLabel(refundedLabel),
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ),
-        ],
+      return _refundedRow(
+        cs,
+        tt,
+        l.bidDetailAmountRefundedLabel(refundedLabel),
       );
     }
 

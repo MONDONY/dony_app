@@ -1,8 +1,9 @@
 import 'dart:async' hide TimeoutException;
 
-import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/app_exception.dart' show TimeoutException;
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/cancellation/data/cancellation_fee_failure.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_fee_preview_model.dart';
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -89,7 +90,7 @@ class CancellationFeePreviewLoaded extends CancellationFeePreviewState {
 }
 
 /// Aperçu des frais d'annulation montré à l'expéditeur avant qu'il confirme
-/// l'annulation de son colis (yadony-back #779). Lu à chaque ouverture du
+/// l'annulation de son colis. Lu à chaque ouverture du
 /// dialogue, relu à la confirmation dès que le palier
 /// [CancellationFeePreviewModel.nextTierAt] est passé ou à moins de
 /// [refreshMargin] (l'horloge du téléphone peut retarder sur le serveur).
@@ -205,21 +206,14 @@ class CancellationFeePreviewCubit extends Cubit<CancellationFeePreviewState> {
     }
   }
 
-  /// Un back antérieur à la route répond 404 : cas attendu tant que la
-  /// fonction n'est pas déployée, jamais signalé.
+  /// Un back antérieur à la route répond 404 : cas attendu, jamais signalé.
   void _trackFailure(Object e, String stage) {
-    final malformed = e is FormatException || e is TypeError;
-    final error = malformed ? null : unwrapDioError(e);
-    if (error is NotFoundException) return;
+    final code = cancellationFeeFailureCode(e);
+    if (code == null) return;
     unawaited(
       _analytics.logEvent(
         AnalyticsEvents.cancellationFeePreviewFailed,
-        properties: {
-          'error_code': malformed
-              ? 'invalid_payload'
-              : error?.code ?? 'unknown',
-          'stage': stage,
-        },
+        properties: {'error_code': code, 'stage': stage},
       ),
     );
   }

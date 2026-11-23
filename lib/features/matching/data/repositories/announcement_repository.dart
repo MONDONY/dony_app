@@ -20,6 +20,7 @@ class AnnouncementRepository {
   AnnouncementRepository(this._remoteDatasource);
 
   Future<AnnouncementModel> createAnnouncement({
+    required String idempotencyKey,
     required String departureCity,
     required String arrivalCity,
     String? departureCountryCode,
@@ -46,6 +47,7 @@ class AnnouncementRepository {
     String? currency,
   }) async {
     return _remoteDatasource.createAnnouncement(
+      idempotencyKey: idempotencyKey,
       departureCity: departureCity,
       arrivalCity: arrivalCity,
       departureCountryCode: departureCountryCode,
@@ -74,8 +76,10 @@ class AnnouncementRepository {
   }
 
   /// Voyage à plusieurs étapes (FLUTTER-4D).
-  Future<List<AnnouncementModel>> createTrip(List<AnnouncementPayload> legs) =>
-      _remoteDatasource.createTrip(legs);
+  Future<List<AnnouncementModel>> createTrip(
+    List<AnnouncementPayload> legs, {
+    required String idempotencyKey,
+  }) => _remoteDatasource.createTrip(legs, idempotencyKey: idempotencyKey);
 
   /// Trajet récurrent par dates précises (yadony-back #525).
   Future<TripSeriesResult> createSeries(

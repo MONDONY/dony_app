@@ -21,7 +21,6 @@ final kFeeEffectiveFrom = DateTime.utc(2026, 12, 15);
 
 /// Configuration allumée (forme de `GET /config/cancellation-fee`).
 final kActiveFeeConfig = CancellationFeeConfigModel(
-  active: true,
   effectiveFrom: kFeeEffectiveFrom,
   capEur: 30,
   tiers: const [

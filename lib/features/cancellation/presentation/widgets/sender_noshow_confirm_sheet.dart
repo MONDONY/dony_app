@@ -103,39 +103,11 @@ class _CoveredBodyState extends State<_CoveredBody> {
       CancellationFeePreviewCubit,
       CancellationFeePreviewState
     >(
-      builder: (context, state) {
-        final fee = state.shownFee;
-        final loaded = state is CancellationFeePreviewLoaded ? state : null;
-        final recheckFailed = loaded?.recheckFailed ?? false;
-        return AnimatedSize(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 250),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              body,
-              if (fee != null && loaded != null) ...[
-                const SizedBox(height: DonySpacing.base),
-                CancellationFeeNotice(
-                  preview: fee,
-                  fallbackCurrency: widget.bid.currency,
-                  departureAt: widget.bid.resolvedDepartureAt,
-                  now: loaded.now,
-                  increased: loaded.increased,
-                  recheckFailed: recheckFailed,
-                ),
-              ] else if (recheckFailed) ...[
-                const SizedBox(height: DonySpacing.base),
-                CancellationFeeWarning(text: l.cancelFeeRecheckFailed),
-              ],
-            ],
-          ),
-        );
-      },
+      builder: (context, state) => CancellationFeePreviewSection(
+        state: state,
+        bid: widget.bid,
+        body: body,
+      ),
     );
   }
 }

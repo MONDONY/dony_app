@@ -394,7 +394,6 @@ void main() {
 
   // Horloge réelle de l'écran : la date d'effet doit être passée.
   final inForce = CancellationFeeConfigModel(
-    active: true,
     effectiveFrom: DateTime.utc(2026),
     capEur: 30,
     tiers: kActiveFeeConfig.tiers,

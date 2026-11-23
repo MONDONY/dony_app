@@ -75,9 +75,15 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     // que le bouton ne se désactive (le state Loading n'arrive qu'à la frame
     // suivante) envoyait 2-3 POST /announcements en rafale.
     if (state is AnnouncementLoading) return;
+    // Une création par formulaire : le bloc est créé par route, et une fois le
+    // trajet créé le formulaire se ferme. Pendant la fermeture, le formulaire
+    // reste visible un instant sous l'écran de succès, et un second envoi
+    // retomberait sur le trajet déjà créé.
+    if (state is AnnouncementCreated) return;
     emit(AnnouncementLoading());
     try {
       final announcement = await _repository.createAnnouncement(
+        idempotencyKey: event.idempotencyKey,
         departureCity: event.departureCity,
         arrivalCity: event.arrivalCity,
         departureCountryCode: event.departureCountryCode,
@@ -513,12 +519,14 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     AnnouncementTripCreateRequested event,
     Emitter<AnnouncementState> emit,
   ) async {
-    // Même garde anti double-soumission que la création simple.
-    if (state is AnnouncementLoading) return;
+    // Mêmes gardes que la création simple (double soumission, formulaire
+    // déjà créé).
+    if (state is AnnouncementLoading || state is AnnouncementCreated) return;
     emit(AnnouncementLoading());
     try {
       final legs = await _repository.createTrip(
         buildTripPayloads(event.first, event.legs),
+        idempotencyKey: event.idempotencyKey,
       );
       if (legs.isEmpty) {
         _logTripFailed(

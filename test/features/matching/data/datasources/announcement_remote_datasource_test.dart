@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/network/retry_policy.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
@@ -54,12 +55,54 @@ void main() {
   // ── createAnnouncement ───────────────────────────────────────────────────────
 
   group('createAnnouncement', () {
+    test(
+      'envoie la clé d\'idempotence dans l\'en-tête Idempotency-Key',
+      () async {
+        Options? capturedOptions;
+        when(
+          () => mockDio.post(
+            '/announcements',
+            data: any(named: 'data'),
+            options: any(named: 'options'),
+          ),
+        ).thenAnswer((inv) async {
+          capturedOptions =
+              inv.namedArguments[const Symbol('options')] as Options?;
+          return _ok(_announcementJson, '/announcements');
+        });
+
+        await datasource.createAnnouncement(
+          idempotencyKey: 'cle-abc-12345',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2024, 6),
+          pickupAddress: kPickup,
+          deliveryAddress: kDelivery,
+          availableKg: 10.0,
+          pricePerKg: 12.0,
+          transportMode: TransportMode.plane,
+          handoverDeadline: DateTime(2026, 6, 14, 18),
+        );
+
+        expect(capturedOptions?.headers, {
+          RetryPolicy.idempotencyKeyHeader: 'cle-abc-12345',
+        });
+        // Sans cet en-tête, l'intercepteur de relance ne rejouerait jamais ce POST.
+        expect(RetryPolicy.idempotencyKeyHeader, 'Idempotency-Key');
+      },
+    );
+
     test('returns AnnouncementModel on success', () async {
       when(
-        () => mockDio.post('/announcements', data: any(named: 'data')),
+        () => mockDio.post(
+          '/announcements',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
       ).thenAnswer((_) async => _ok(_announcementJson, '/announcements'));
 
       final result = await datasource.createAnnouncement(
+        idempotencyKey: 'cle-test-0001',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
         departureDate: DateTime(2024, 6),
@@ -77,10 +120,15 @@ void main() {
 
     test('includes optional time/address fields when provided', () async {
       when(
-        () => mockDio.post('/announcements', data: any(named: 'data')),
+        () => mockDio.post(
+          '/announcements',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
       ).thenAnswer((_) async => _ok(_announcementJson, '/announcements'));
 
       final result = await datasource.createAnnouncement(
+        idempotencyKey: 'cle-test-0001',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
         departureDate: DateTime(2024, 6),
@@ -100,7 +148,11 @@ void main() {
     test('sends transportMode wire value in payload', () async {
       Map<String, dynamic>? capturedData;
       when(
-        () => mockDio.post('/announcements', data: any(named: 'data')),
+        () => mockDio.post(
+          '/announcements',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
       ).thenAnswer((inv) async {
         capturedData =
             inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
@@ -108,6 +160,7 @@ void main() {
       });
 
       await datasource.createAnnouncement(
+        idempotencyKey: 'cle-test-0001',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
         departureDate: DateTime(2024, 6),
@@ -126,7 +179,11 @@ void main() {
     test('sends the chosen currency in the payload', () async {
       Map<String, dynamic>? capturedData;
       when(
-        () => mockDio.post('/announcements', data: any(named: 'data')),
+        () => mockDio.post(
+          '/announcements',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
       ).thenAnswer((inv) async {
         capturedData =
             inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
@@ -134,6 +191,7 @@ void main() {
       });
 
       await datasource.createAnnouncement(
+        idempotencyKey: 'cle-test-0001',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
         departureDate: DateTime(2024, 6),
@@ -154,7 +212,11 @@ void main() {
         'the wallet currency)', () async {
       Map<String, dynamic>? capturedData;
       when(
-        () => mockDio.post('/announcements', data: any(named: 'data')),
+        () => mockDio.post(
+          '/announcements',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
       ).thenAnswer((inv) async {
         capturedData =
             inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
@@ -162,6 +224,7 @@ void main() {
       });
 
       await datasource.createAnnouncement(
+        idempotencyKey: 'cle-test-0001',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
         departureDate: DateTime(2024, 6),
@@ -180,7 +243,11 @@ void main() {
     test('includes country codes in payload when provided', () async {
       Map<String, dynamic>? capturedData;
       when(
-        () => mockDio.post('/announcements', data: any(named: 'data')),
+        () => mockDio.post(
+          '/announcements',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
       ).thenAnswer((inv) async {
         capturedData =
             inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
@@ -188,6 +255,7 @@ void main() {
       });
 
       await datasource.createAnnouncement(
+        idempotencyKey: 'cle-test-0001',
         departureCity: 'New York',
         arrivalCity: 'Dakar',
         departureDate: DateTime(2024, 6),
@@ -209,7 +277,11 @@ void main() {
     test('omits country code keys when null', () async {
       Map<String, dynamic>? capturedData;
       when(
-        () => mockDio.post('/announcements', data: any(named: 'data')),
+        () => mockDio.post(
+          '/announcements',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
       ).thenAnswer((inv) async {
         capturedData =
             inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
@@ -217,6 +289,7 @@ void main() {
       });
 
       await datasource.createAnnouncement(
+        idempotencyKey: 'cle-test-0001',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
         departureDate: DateTime(2024, 6),
@@ -876,12 +949,17 @@ void main() {
     test('createAnnouncement envoie stopsCount pour un vol', () async {
       Map<String, dynamic>? body;
       when(
-        () => mockDio.post('/announcements', data: any(named: 'data')),
+        () => mockDio.post(
+          '/announcements',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
       ).thenAnswer((inv) async {
         body = inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
         return _ok(_announcementJson, '/announcements');
       });
       await datasource.createAnnouncement(
+        idempotencyKey: 'cle-test-0001',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
         departureDate: DateTime(2024, 6),

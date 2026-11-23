@@ -21,16 +21,12 @@ import 'package:flutter/material.dart';
 /// poser seulement pour un paiement en ligne (carte, mobile money), jamais en
 /// espèces. [clock] : horloge de la date d'effet (tests).
 class CancellationFeeScaleNotice extends StatelessWidget {
-  const CancellationFeeScaleNotice({
-    super.key,
-    this.clock,
-    this.source = 'bid_checkout',
-  });
-
-  final DateTime Function()? clock;
+  const CancellationFeeScaleNotice({super.key, this.clock});
 
   /// Origine de l'ouverture, pour l'analytics.
-  final String source;
+  static const _source = 'bid_checkout';
+
+  final DateTime Function()? clock;
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +93,7 @@ class CancellationFeeScaleNotice extends StatelessWidget {
       unawaited(
         getIt<AnalyticsService>().logEvent(
           AnalyticsEvents.cancellationFeeScaleOpened,
-          properties: {'source': source},
+          properties: {'source': _source},
         ),
       );
     }

@@ -71,6 +71,7 @@ void main() {
     () async {
       when(
         () => repo.createAnnouncement(
+          idempotencyKey: any(named: 'idempotencyKey'),
           departureCity: any(named: 'departureCity'),
           arrivalCity: any(named: 'arrivalCity'),
           departureDate: any(named: 'departureDate'),
@@ -94,6 +95,7 @@ void main() {
       final bloc = makeBloc();
       bloc.add(
         AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           departureDate: DateTime(2024, 12),
@@ -133,6 +135,7 @@ void main() {
     () async {
       when(
         () => repo.createAnnouncement(
+          idempotencyKey: any(named: 'idempotencyKey'),
           departureCity: any(named: 'departureCity'),
           arrivalCity: any(named: 'arrivalCity'),
           departureDate: any(named: 'departureDate'),
@@ -156,6 +159,7 @@ void main() {
       final bloc = makeBloc();
       bloc.add(
         AnnouncementCreateRequested(
+          idempotencyKey: 'cle-test-0001',
           departureCity: 'Paris',
           arrivalCity: 'Abidjan',
           departureDate: DateTime(2026, 11, 15),
@@ -194,6 +198,7 @@ void main() {
   test('no event when analytics disabled', () async {
     when(
       () => repo.createAnnouncement(
+        idempotencyKey: any(named: 'idempotencyKey'),
         departureCity: any(named: 'departureCity'),
         arrivalCity: any(named: 'arrivalCity'),
         departureDate: any(named: 'departureDate'),
@@ -217,6 +222,7 @@ void main() {
     final bloc = makeBloc(enabled: false);
     bloc.add(
       AnnouncementCreateRequested(
+        idempotencyKey: 'cle-test-0001',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
         departureDate: DateTime(2024, 12),
