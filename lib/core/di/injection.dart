@@ -171,8 +171,10 @@ import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_missing_fields_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_mobile_money_networks_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_price_suggestion_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_recurrence_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_series_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
@@ -697,6 +699,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<TripLegsCubit>(
     () => TripLegsCubit(getIt<AnalyticsService>()),
+  );
+  // Étape 1 de la création d'un trajet : récurrence et champs manquants.
+  getIt.registerFactory<TripRecurrenceCubit>(
+    () => TripRecurrenceCubit(getIt<AnalyticsService>()),
+  );
+  getIt.registerFactory<TripMissingFieldsCubit>(
+    () => TripMissingFieldsCubit(getIt<AnalyticsService>()),
   );
   // Brouillons locaux des formulaires de publication, propres à chaque compte.
   getIt.registerLazySingleton<FormDraftStore>(

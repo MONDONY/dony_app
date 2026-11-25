@@ -145,8 +145,9 @@ void main() {
       expect(depTime.label, 'Heure de départ');
       expect(depTime.requiredLabel, isTrue);
 
-      // L'heure d'arrivée reste optionnelle.
-      expect(find.text('Heure d\'arrivée (optionnel)'), findsOneWidget);
+      // L'heure d'arrivée reste optionnelle : son bloc le dit.
+      expect(find.text('Heure d\'arrivée'), findsOneWidget);
+      expect(find.text('Arrivée (facultatif)'), findsOneWidget);
     });
 
     testWidgets(
@@ -283,7 +284,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
 
         // L'heure d'arrivée reste le seul champ optionnel.
-        expect(find.text('Heure d\'arrivée (optionnel)'), findsOneWidget);
+        expect(find.text('Heure d\'arrivée'), findsOneWidget);
 
         final donyTextFields = tester
             .widgetList<DonyTextField>(find.byType(DonyTextField))
@@ -293,7 +294,7 @@ void main() {
 
         // Un seul champ optionnel (heure d'arrivée), sans requiredLabel.
         final optionalFields = donyTextFields
-            .where((f) => f.label?.contains('optionnel') == true)
+            .where((f) => f.label == 'Heure d\'arrivée')
             .toList();
         expect(optionalFields.length, 1);
         expect(optionalFields.first.requiredLabel, isFalse);
@@ -466,7 +467,8 @@ void main() {
     });
 
     testWidgets(
-      'P4 — champ date de départ a prefixIconColor = colorScheme.primary',
+      'P4 — date de départ en demi-largeur : sans icône, pour garder la '
+      'valeur lisible à 360 dp',
       (tester) async {
         await tester.pumpWidget(
           _buildSubject(
@@ -479,14 +481,8 @@ void main() {
         final dateField = tester.widget<DonyTextField>(
           find.byKey(const Key('departureDateField')),
         );
-        // Le paramètre prefixIconColor doit être non-null (couleur départ)
-        expect(dateField.prefixIconColor, isNotNull);
-
-        // Vérifier que la couleur correspond à colorScheme.primary
-        final cs = Theme.of(
-          tester.element(find.byKey(const Key('departureDateField'))),
-        ).colorScheme;
-        expect(dateField.prefixIconColor, equals(cs.primary));
+        expect(dateField.prefixIcon, isNull);
+        expect(dateField.prefixIconColor, isNull);
       },
     );
 
@@ -514,7 +510,7 @@ void main() {
     );
 
     testWidgets(
-      'champ heure de départ a prefixIconColor = colorScheme.primary',
+      'heure de départ en demi-largeur, à droite de la date, sans icône',
       (tester) async {
         await tester.pumpWidget(
           _buildSubject(
@@ -527,12 +523,13 @@ void main() {
         final departureTimeField = tester.widget<DonyTextField>(
           find.byKey(const Key('departureTimeField')),
         );
-        expect(departureTimeField.prefixIconColor, isNotNull);
-
-        final cs = Theme.of(
-          tester.element(find.byKey(const Key('departureTimeField'))),
-        ).colorScheme;
-        expect(departureTimeField.prefixIconColor, equals(cs.primary));
+        expect(departureTimeField.prefixIconColor, isNull);
+        expect(
+          tester.getTopLeft(find.byKey(const Key('departureDateField'))).dx,
+          lessThan(
+            tester.getTopLeft(find.byKey(const Key('departureTimeField'))).dx,
+          ),
+        );
       },
     );
   });
@@ -635,7 +632,8 @@ void main() {
 
   group('Champ date de départ — format intl', () {
     testWidgets(
-      'le rendu français du squelette yMMMEd égale l\'ancien motif EEE d MMM yyyy',
+      'date de départ au format court MMMEd (jour, date, mois), sans l\'année '
+      'qui ne tiendrait pas en demi-largeur',
       (tester) async {
         final departureCityNotifier = ValueNotifier<String?>(null);
         final arrivalCityNotifier = ValueNotifier<String?>(null);
@@ -666,18 +664,15 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 300));
 
-        // Ancien motif littéral, conservé ici uniquement pour la comparaison :
-        // le rendu du nouveau squelette doit lui être strictement identique
-        // en français (ex. « mar. 6 oct. 2026 »).
-        final oldPatternRendering = DateFormat(
-          'EEE d MMM yyyy',
-          'fr',
-        ).format(fixedDate);
-
-        expect(find.text(oldPatternRendering), findsOneWidget);
+        // Rendu français du squelette (ex. « mar. 6 oct. ») : le jour de la
+        // semaine lève l'ambiguïté de l'année.
+        expect(
+          find.text(DateFormat.MMMEd('fr').format(fixedDate)),
+          findsOneWidget,
+        );
         expect(
           find.text(DateFormat.yMMMEd('fr').format(fixedDate)),
-          findsOneWidget,
+          findsNothing,
         );
       },
     );
@@ -686,9 +681,8 @@ void main() {
   // ── Group: English (i18n) ─────────────────────────────────────────────────
 
   group('TrajetStep — English', () {
-    testWidgets('libellés "Trip" et "Arrival time (optional)" traduits', (
-      tester,
-    ) async {
+    testWidgets('libellés "Trip", "Arrival (optional)" et "Arrival time" '
+        'traduits', (tester) async {
       useEnglish();
       await tester.pumpWidget(
         _buildSubject(
@@ -699,7 +693,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('Trip'), findsOneWidget);
-      expect(find.text('Arrival time (optional)'), findsOneWidget);
+      expect(find.text('Arrival (optional)'), findsOneWidget);
+      expect(find.text('Arrival time'), findsOneWidget);
+      expect(find.text('Departure'), findsOneWidget);
     });
   });
 }

@@ -10,6 +10,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/address_selector_field.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/capacity_control.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_missing_fields.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -50,6 +51,14 @@ class LieuxCapaciteStep extends StatelessWidget {
   final String? pickupAddressError;
   final String? deliveryAddressError;
 
+  /// Ancres de défilement des deux adresses (pastilles des champs manquants).
+  final GlobalKey? pickupKey;
+  final GlobalKey? deliveryKey;
+
+  /// Astérisque sur « Lieux de remise » et « Capacité disponible » : blocs
+  /// obligatoires de la publication d'un trajet.
+  final bool requiredLabels;
+
   const LieuxCapaciteStep({
     super.key,
     this.initialPickupAddress,
@@ -61,6 +70,9 @@ class LieuxCapaciteStep extends StatelessWidget {
     this.lockedCapacityKg,
     this.pickupAddressError,
     this.deliveryAddressError,
+    this.pickupKey,
+    this.deliveryKey,
+    this.requiredLabels = false,
   });
 
   @override
@@ -76,6 +88,7 @@ class LieuxCapaciteStep extends StatelessWidget {
         CaSectionLabel(
           label: l.tripPublishHandoverLocationsLabel,
           iconAsset: 'arrow-left-right',
+          isRequired: requiredLabels,
         ),
         const SizedBox(height: DonySpacing.xs),
         Text(
@@ -83,40 +96,50 @@ class LieuxCapaciteStep extends StatelessWidget {
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.sm),
-        AddressSelectorField(
-          type: AddressSelectorType.remise,
-          value: initialPickupAddress,
-          onChanged: (addr) {
-            onPickupChanged(addr);
-            onPickupSaved(addr);
-            if (context.mounted) {
-              context.read<AnnouncementFormBloc>().add(
-                PickupAddressChanged(addr),
-              );
-            }
-          },
-        ).animate().fadeIn(delay: 80.ms),
-        DonyFieldError(
-          message: pickupAddressError,
-          textKey: const Key('pickup-address-error'),
+        // Adresse vide signalée : contour et message couleur
+        // d'avertissement (TripMissingFieldFrame).
+        KeyedSubtree(
+          key: pickupKey,
+          child: TripMissingFieldFrame(
+            marked: pickupAddressError != null,
+            messages: [?pickupAddressError],
+            messageKey: const Key('pickup-address-error'),
+            child: AddressSelectorField(
+              type: AddressSelectorType.remise,
+              value: initialPickupAddress,
+              onChanged: (addr) {
+                onPickupChanged(addr);
+                onPickupSaved(addr);
+                if (context.mounted) {
+                  context.read<AnnouncementFormBloc>().add(
+                    PickupAddressChanged(addr),
+                  );
+                }
+              },
+            ).animate().fadeIn(delay: 80.ms),
+          ),
         ),
         const SizedBox(height: DonySpacing.base),
-        AddressSelectorField(
-          type: AddressSelectorType.livraison,
-          value: initialDeliveryAddress,
-          onChanged: (addr) {
-            onDeliveryChanged(addr);
-            onDeliverySaved(addr);
-            if (context.mounted) {
-              context.read<AnnouncementFormBloc>().add(
-                DeliveryAddressChanged(addr),
-              );
-            }
-          },
-        ).animate().fadeIn(delay: 90.ms),
-        DonyFieldError(
-          message: deliveryAddressError,
-          textKey: const Key('delivery-address-error'),
+        KeyedSubtree(
+          key: deliveryKey,
+          child: TripMissingFieldFrame(
+            marked: deliveryAddressError != null,
+            messages: [?deliveryAddressError],
+            messageKey: const Key('delivery-address-error'),
+            child: AddressSelectorField(
+              type: AddressSelectorType.livraison,
+              value: initialDeliveryAddress,
+              onChanged: (addr) {
+                onDeliveryChanged(addr);
+                onDeliverySaved(addr);
+                if (context.mounted) {
+                  context.read<AnnouncementFormBloc>().add(
+                    DeliveryAddressChanged(addr),
+                  );
+                }
+              },
+            ).animate().fadeIn(delay: 90.ms),
+          ),
         ),
         const SizedBox(height: DonySpacing.xxl),
 
@@ -126,6 +149,7 @@ class LieuxCapaciteStep extends StatelessWidget {
           child: CaSectionLabel(
             label: l.tripPublishCapacityAvailableLabel,
             iconAsset: 'luggage',
+            isRequired: requiredLabels,
           ),
         ),
         const SizedBox(height: DonySpacing.base),

@@ -134,4 +134,19 @@ void main() {
     final back = TripFormDraft.fromJson(json, now: now);
     expect(back.legs.single.acceptedPaymentMethods, isNull);
   });
+
+  test('récurrence : relue telle quelle, éteinte par défaut', () {
+    const draft = TripFormDraft(
+      recurrenceEnabled: true,
+      recurrenceFrequency: 'weekly',
+    );
+    final back = TripFormDraft.fromJson(
+      jsonDecode(jsonEncode(draft.toJson())) as Map<String, dynamic>,
+    );
+    expect(back.recurrenceEnabled, isTrue);
+    expect(back.recurrenceFrequency, 'weekly');
+    final old = TripFormDraft.fromJson(const {});
+    expect(old.recurrenceEnabled, isFalse);
+    expect(old.recurrenceFrequency, isNull);
+  });
 }

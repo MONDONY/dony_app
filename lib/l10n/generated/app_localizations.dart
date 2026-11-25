@@ -4676,29 +4676,11 @@ abstract class AppLocalizations {
   /// **'Limite de brouillons atteinte'**
   String get tripPublishDraftLimitTitle;
 
-  /// Titre de la barre de suggestion des modèles de trajet enregistrés
-  ///
-  /// In fr, this message translates to:
-  /// **'Mes modèles'**
-  String get tripPublishTemplatesLabel;
-
-  /// Texte d'aide sous le titre de la barre de suggestion des modèles de trajet
-  ///
-  /// In fr, this message translates to:
-  /// **'Appliquez un modèle pour pré-remplir le trajet'**
-  String get tripPublishTemplatesHint;
-
   /// Confirmation après application d'un modèle de trajet, avec son nom
   ///
   /// In fr, this message translates to:
   /// **'Modèle « {label} » appliqué'**
   String tripPublishTemplateAppliedMessage(String label);
-
-  /// Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom
-  ///
-  /// In fr, this message translates to:
-  /// **'{label} · par article'**
-  String tripPublishTemplateChipGrid(String label);
 
   /// Titre de section (étape Trajet) pour la date limite de dépôt des colis
   ///
@@ -39527,6 +39509,138 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Retirer le prix au kilo'**
   String get tripEditKgPriceRemoveCta;
+
+  /// Étape 1 de la création d'un trajet : titre du bloc date et heure de départ
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get tripPublishDepartureBlockLabel;
+
+  /// Étape 1 : titre du bloc jour et heure d'arrivée
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get tripPublishArrivalBlockLabel;
+
+  /// Étape 1 : mention après le titre d'un bloc facultatif
+  ///
+  /// In fr, this message translates to:
+  /// **'(facultatif)'**
+  String get tripPublishOptionalSuffix;
+
+  /// Étape 1 : champ heure d'arrivée, dans le bloc Arrivée déjà marqué facultatif
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure d\'arrivée'**
+  String get tripPublishArrivalTimeLabel;
+
+  /// Étape 1 : titre du bloc des escales, suivi de « (facultatif) »
+  ///
+  /// In fr, this message translates to:
+  /// **'Escales'**
+  String get tripPublishStopsBlockLabel;
+
+  /// Pastille d'un champ manquant : lieu de remise du colis au départ
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu de remise'**
+  String get tripPublishFieldPickupAddressName;
+
+  /// Pastille d'un champ manquant : lieu de récupération à l'arrivée
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu de récupération'**
+  String get tripPublishFieldDeliveryAddressName;
+
+  /// Pastille d'un champ manquant : mode de transport
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode de transport'**
+  String get tripPublishFieldTransportModeName;
+
+  /// Bandeau en haut d'une étape quand « Continuer » est touché avec des champs vides
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Il reste 1 champ obligatoire à remplir avant de continuer.} other{Il reste {count} champs obligatoires à remplir avant de continuer.}}'**
+  String tripStepMissingBanner(int count);
+
+  /// Au-dessus du bouton Continuer, avant les pastilles des champs manquants
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Il manque 1 champ :} other{Il manque {count} champs :}}'**
+  String tripStepMissingTitle(int count);
+
+  /// Carte de récurrence de l'étape 1, sous « Vous faites ce trajet souvent ? »
+  ///
+  /// In fr, this message translates to:
+  /// **'Mêmes villes, kilos, prix et adresses à chaque date'**
+  String get tripRecurrenceSubtitle;
+
+  /// Puce de rythme d'un trajet récurrent
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque semaine'**
+  String get tripRecurrenceWeekly;
+
+  /// Puce de rythme d'un trajet récurrent
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les 2 semaines'**
+  String get tripRecurrenceBiweekly;
+
+  /// Puce de rythme d'un trajet récurrent
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque mois'**
+  String get tripRecurrenceMonthly;
+
+  /// Compteur de la carte de récurrence, premier trajet compris
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 trajet sera publié} other{{count} trajets seront publiés}}'**
+  String tripRecurrenceCount(int count);
+
+  /// Lien de la carte de récurrence qui ouvre le calendrier (court, une ligne)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir les dates'**
+  String get tripRecurrenceChooseDates;
+
+  /// Carte de récurrence allumée sans date de départ
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez d\'abord la date de départ : les dates suivantes en découlent.'**
+  String get tripRecurrencePickDateFirst;
+
+  /// Carte de récurrence quand des étapes de voyage ont été ajoutées
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de récurrence pour un voyage en plusieurs étapes. Retirez les étapes ajoutées pour la proposer.'**
+  String get tripRecurrenceMultiLegHint;
+
+  /// Titre de la feuille calendrier de la récurrence
+  ///
+  /// In fr, this message translates to:
+  /// **'Dates de vos trajets'**
+  String get tripRecurrenceDatesSheetTitle;
+
+  /// Sous-titre de la feuille calendrier de la récurrence
+  ///
+  /// In fr, this message translates to:
+  /// **'Le premier trajet part le {date}. Touchez un jour pour l\'ajouter ou le retirer.'**
+  String tripRecurrenceDatesSheetSubtitle(String date);
+
+  /// Bouton de la feuille calendrier de la récurrence (court)
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider'**
+  String get tripRecurrenceDatesDone;
+
+  /// Carte de l'écran de succès pendant la création de la série choisie à l'étape 1
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Publication de l\'autre date…} other{Publication des {count} autres dates…}}'**
+  String tripRecurrenceSeriesPublishing(int count);
 }
 
 class _AppLocalizationsDelegate

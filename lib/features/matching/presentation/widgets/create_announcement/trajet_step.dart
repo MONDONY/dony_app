@@ -10,11 +10,13 @@ import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.d
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
+import 'package:dony/features/matching/bloc/trip_missing_fields_cubit.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/stops_chips.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_missing_fields.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -69,17 +71,12 @@ class TrajetStep extends StatelessWidget {
   /// dédié la garde éditable (choix dans la fenêtre de tolérance).
   final bool lockDate;
 
-  /// Messages des champs obligatoires non renseignés.
-  ///
-  /// Nuls par défaut : le parent ne les publie qu'après une première
-  /// interaction, pour ne pas ouvrir un formulaire vierge tout en rouge.
-  /// Nommés un par un plutôt que rassemblés dans une `Map` indexée par
-  /// chaîne : l'analyseur garantit ainsi la correspondance, là où une clé
-  /// renommée côté parent aurait fait disparaître le message en silence.
-  final String? departureCityError;
-  final String? arrivalCityError;
-  final String? departureDateError;
-  final String? departureTimeError;
+  /// Champs obligatoires à marquer (vides après « Continuer ») : contour
+  /// couleur d'avertissement, valeur « Choisir », message dessous.
+  final Set<TripRequiredField> marked;
+
+  /// Ancres de défilement des champs (pastilles « Il manque N champs »).
+  final Map<TripRequiredField, GlobalKey> fieldKeys;
 
   const TrajetStep({
     super.key,
@@ -100,11 +97,18 @@ class TrajetStep extends StatelessWidget {
     this.arrivalCityBloc,
     this.lockCorridor = false,
     this.lockDate = false,
-    this.departureCityError,
-    this.arrivalCityError,
-    this.departureDateError,
-    this.departureTimeError,
+    this.marked = const {},
+    this.fieldKeys = const {},
   });
+
+  /// Enveloppe [child] dans l'ancre de défilement du champ [f], s'il en a une.
+  Widget _anchor(TripRequiredField f, Widget child) {
+    final key = fieldKeys[f];
+    return key == null ? child : KeyedSubtree(key: key, child: child);
+  }
+
+  static String _hhmm(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +244,7 @@ class TrajetStep extends StatelessWidget {
         },
       ),
 
-      // ── TRAJET ────────────────────────────────────────────────────────────
+      // ── TRAJET : les deux villes dans une même carte ──────────────────────
       CaSectionLabel(
         label: l.tripPublishRouteSectionLabel,
         iconAsset: 'plane-takeoff',
@@ -256,120 +260,233 @@ class TrajetStep extends StatelessWidget {
           ?arrivalDayOffsetNotifier,
         ]),
         builder: (context, _) {
+          final depMarked = marked.contains(TripRequiredField.departureCity);
+          final arrMarked = marked.contains(TripRequiredField.arrivalCity);
+          final dateMarked = marked.contains(TripRequiredField.departureDate);
+          final timeMarked = marked.contains(TripRequiredField.departureTime);
+          final choose = l.tripPublishHandoverDeadlineChoose;
+          final departureTime = departureTimeNotifier.value;
+          final arrivalTime = arrivalTimeNotifier.value;
+          final departureDate = departureDateNotifier.value;
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Corridor départ → arrivée ───────────────────────────────
-              // Même carte « billet » que la recherche et les alertes : les
+              // Carte « billet » commune à la recherche et aux alertes : les
               // deux villes se lisent d'un bloc, avec le bouton
-              // d'interversion posé sur la couture. « Heure de départ » suit
-              // le corridor au lieu de s'intercaler entre les deux villes,
-              // qui doivent rester adjacentes pour que la carte ait un sens.
-              if (lockCorridor) ...[
-                DonyTextField.tappable(
-                  key: const Key('departureCityField'),
-                  label: l.tripPublishDepartureCityLabel,
-                  value: departureCityNotifier.value,
-                  prefixWidget: const DonyEmoji.planeTakeoff(size: 20),
-                  trailing: DonyIcon(
-                    'lock',
-                    size: 16,
-                    color: cs.onSurfaceVariant,
+              // d'interversion posé sur la couture.
+              _anchor(
+                TripRequiredField.departureCity,
+                _anchor(
+                  TripRequiredField.arrivalCity,
+                  TripMissingFieldFrame(
+                    marked: depMarked || arrMarked,
+                    messages: [
+                      if (depMarked)
+                        tripRequiredFieldMessage(
+                          l,
+                          TripRequiredField.departureCity,
+                        ),
+                      if (arrMarked)
+                        tripRequiredFieldMessage(
+                          l,
+                          TripRequiredField.arrivalCity,
+                        ),
+                    ],
+                    child: lockCorridor
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              DonyTextField.tappable(
+                                key: const Key('departureCityField'),
+                                label: l.tripPublishDepartureCityLabel,
+                                value: departureCityNotifier.value,
+                                prefixWidget: const DonyEmoji.planeTakeoff(
+                                  size: 20,
+                                ),
+                                trailing: DonyIcon(
+                                  'lock',
+                                  size: 16,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                                onTap: () => _showLocked(
+                                  context,
+                                  l.tripPublishFieldLockedCorridorMessage,
+                                ),
+                              ),
+                              const SizedBox(height: DonySpacing.sm),
+                              DonyTextField.tappable(
+                                key: const Key('arrivalCityField'),
+                                label: l.tripPublishArrivalCityLabel,
+                                value: arrivalCityNotifier.value,
+                                prefixWidget: const DonyEmoji.planeLanding(
+                                  size: 20,
+                                ),
+                                trailing: DonyIcon(
+                                  'lock',
+                                  size: 16,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                                onTap: () => _showLocked(
+                                  context,
+                                  l.tripPublishFieldLockedCorridorMessage,
+                                ),
+                              ),
+                            ],
+                          )
+                        : AiFieldMark.overlay(
+                            fields: const ['departureCity', 'arrivalCity'],
+                            child: CityCorridorFields(
+                              departureValue: departureCityNotifier.value,
+                              arrivalValue: arrivalCityNotifier.value,
+                              departureFieldKey: const Key(
+                                'departureCityField',
+                              ),
+                              arrivalFieldKey: const Key('arrivalCityField'),
+                              requiredLabels: true,
+                              departureCityBloc: departureCityBloc,
+                              arrivalCityBloc: arrivalCityBloc,
+                              onDepartureSelected: (CityModel city) {
+                                // Code pays d'abord : le listener du city
+                                // notifier (sync vers le form bloc) lit la
+                                // valeur courante.
+                                departureCountryCodeNotifier?.value =
+                                    city.countryCode;
+                                departureCityNotifier.value = city.name;
+                              },
+                              onArrivalSelected: (CityModel city) {
+                                arrivalCountryCodeNotifier?.value =
+                                    city.countryCode;
+                                arrivalCityNotifier.value = city.name;
+                              },
+                              onDepartureCleared: () {
+                                departureCityNotifier.value = null;
+                                departureCountryCodeNotifier?.value = null;
+                              },
+                              onArrivalCleared: () {
+                                arrivalCityNotifier.value = null;
+                                arrivalCountryCodeNotifier?.value = null;
+                              },
+                              onSwap: _swapCities,
+                            ),
+                          ),
                   ),
-                  onTap: () => _showLocked(
-                    context,
-                    l.tripPublishFieldLockedCorridorMessage,
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.sm),
-                DonyTextField.tappable(
-                  key: const Key('arrivalCityField'),
-                  label: l.tripPublishArrivalCityLabel,
-                  value: arrivalCityNotifier.value,
-                  prefixWidget: const DonyEmoji.planeLanding(size: 20),
-                  trailing: DonyIcon(
-                    'lock',
-                    size: 16,
-                    color: cs.onSurfaceVariant,
-                  ),
-                  onTap: () => _showLocked(
-                    context,
-                    l.tripPublishFieldLockedCorridorMessage,
-                  ),
-                ),
-              ] else
-                AiFieldMark.overlay(
-                  fields: const ['departureCity', 'arrivalCity'],
-                  child: CityCorridorFields(
-                    departureValue: departureCityNotifier.value,
-                    arrivalValue: arrivalCityNotifier.value,
-                    departureFieldKey: const Key('departureCityField'),
-                    arrivalFieldKey: const Key('arrivalCityField'),
-                    requiredLabels: true,
-                    departureError: departureCityError,
-                    arrivalError: arrivalCityError,
-                    departureCityBloc: departureCityBloc,
-                    arrivalCityBloc: arrivalCityBloc,
-                    onDepartureSelected: (CityModel city) {
-                      // Code pays d'abord : le listener du city notifier (sync
-                      // vers le form bloc) lit la valeur courante.
-                      departureCountryCodeNotifier?.value = city.countryCode;
-                      departureCityNotifier.value = city.name;
-                    },
-                    onArrivalSelected: (CityModel city) {
-                      arrivalCountryCodeNotifier?.value = city.countryCode;
-                      arrivalCityNotifier.value = city.name;
-                    },
-                    onDepartureCleared: () {
-                      departureCityNotifier.value = null;
-                      departureCountryCodeNotifier?.value = null;
-                    },
-                    onArrivalCleared: () {
-                      arrivalCityNotifier.value = null;
-                      arrivalCountryCodeNotifier?.value = null;
-                    },
-                    onSwap: _swapCities,
-                  ),
-                ),
-              const SizedBox(height: DonySpacing.sm),
-              // ── Heure de départ (obligatoire, D1) — DonyTextField.tappable ───
-              AiFieldMark.overlay(
-                fields: const ['departureTime'],
-                child: DonyTextField.tappable(
-                  key: const Key('departureTimeField'),
-                  label: l.tripPublishDepartureTimeLabel,
-                  requiredLabel: true,
-                  value: departureTimeNotifier.value != null
-                      ? '${departureTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${departureTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
-                      : null,
-                  prefixIcon: DonyIcons.time,
-                  prefixIconColor: Theme.of(context).colorScheme.primary,
-                  // Obligatoire (D1) : pas de bouton clear, on garde le chevron.
-                  trailing: Icon(
-                    DonyIcons.chevron,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  errorText: departureTimeError,
-                  onTap: () => onSelectDepartureTime(),
                 ),
               ),
+              const SizedBox(height: DonySpacing.xl),
+
+              // ── DÉPART : date puis heure, côte à côte ───────────────────
+              CaSectionLabel(
+                label: l.tripPublishDepartureBlockLabel,
+                iconAsset: 'calendar',
+              ),
               const SizedBox(height: DonySpacing.sm),
-              // ── Heure d'arrivée (optionnel) — DonyTextField.tappable ───
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _anchor(
+                      TripRequiredField.departureDate,
+                      TripMissingFieldFrame(
+                        marked: dateMarked,
+                        messages: [
+                          if (dateMarked)
+                            tripRequiredFieldMessage(
+                              l,
+                              TripRequiredField.departureDate,
+                            ),
+                        ],
+                        child: AiFieldMark.overlay(
+                          fields: const ['departureDate'],
+                          child: DonyTextField.tappable(
+                            key: const Key('departureDateField'),
+                            label: l.tripPublishDepartureDateLabel,
+                            requiredLabel: true,
+                            value: departureDate != null
+                                ? DateFormat.MMMEd(
+                                    l.localeName,
+                                  ).format(departureDate)
+                                : (dateMarked ? choose : null),
+                            trailing: lockDate
+                                ? DonyIcon(
+                                    'lock',
+                                    size: 16,
+                                    color: cs.onSurfaceVariant,
+                                  )
+                                : null,
+                            onTap: lockDate
+                                ? () => _showLocked(
+                                    context,
+                                    l.tripPublishFieldLockedDateMessage,
+                                  )
+                                : () => onSelectDate(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  Expanded(
+                    child: _anchor(
+                      TripRequiredField.departureTime,
+                      TripMissingFieldFrame(
+                        marked: timeMarked,
+                        messages: [
+                          if (timeMarked)
+                            tripRequiredFieldMessage(
+                              l,
+                              TripRequiredField.departureTime,
+                            ),
+                        ],
+                        child: AiFieldMark.overlay(
+                          fields: const ['departureTime'],
+                          // Obligatoire (D1) : pas de bouton d'effacement.
+                          child: DonyTextField.tappable(
+                            key: const Key('departureTimeField'),
+                            label: l.tripPublishDepartureTimeLabel,
+                            requiredLabel: true,
+                            value: departureTime != null
+                                ? _hhmm(departureTime)
+                                : (timeMarked ? choose : null),
+                            onTap: () => onSelectDepartureTime(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // ── Feedback informatif « sera signalé urgent » ────────────
+              // Non-bloquant : n'affecte jamais la soumission du formulaire.
+              if (departureDate != null && isUrgentDate(departureDate))
+                Padding(
+                  padding: const EdgeInsets.only(top: DonySpacing.xs),
+                  child: Text(
+                    l.tripPublishUrgentDepartureWarning,
+                    style: tt.bodySmall?.copyWith(color: cs.error),
+                  ),
+                ),
+              const SizedBox(height: DonySpacing.xl),
+
+              // ── ARRIVÉE (facultatif) : heure puis jour d'arrivée ────────
+              CaSectionLabel(
+                label: l.tripPublishArrivalBlockLabel,
+                iconAsset: 'plane-landing',
+                note: l.tripPublishOptionalSuffix,
+              ),
+              const SizedBox(height: DonySpacing.sm),
               DonyTextField.tappable(
                 key: const Key('arrivalTimeField'),
-                label: l.tripPublishArrivalTimeOptionalLabel,
-                value: arrivalTimeNotifier.value != null
-                    ? '${arrivalTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${arrivalTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
-                    : null,
+                label: l.tripPublishArrivalTimeLabel,
+                value: arrivalTime != null ? _hhmm(arrivalTime) : null,
                 prefixIcon: DonyIcons.time,
-                prefixIconColor: Theme.of(context).colorScheme.secondary,
-                trailing: arrivalTimeNotifier.value != null
+                prefixIconColor: cs.secondary,
+                trailing: arrivalTime != null
                     ? IconButton(
                         tooltip: l.tripPublishClearArrivalTimeTooltip,
                         icon: Icon(
                           DonyIcons.close,
                           size: 18,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: cs.onSurfaceVariant,
                         ),
                         onPressed: () => arrivalTimeNotifier.value = null,
                         padding: EdgeInsets.zero,
@@ -381,63 +498,16 @@ class TrajetStep extends StatelessWidget {
                     : Icon(
                         DonyIcons.chevron,
                         size: 18,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: cs.onSurfaceVariant,
                       ),
                 onTap: () => onSelectArrivalTime(),
               ),
-              if (arrivalDayOffsetNotifier != null &&
-                  arrivalTimeNotifier.value != null) ...[
+              // Le jour d'arrivée n'a de sens qu'avec une heure : il n'est
+              // envoyé qu'avec elle (FLUTTER-4E).
+              if (arrivalDayOffsetNotifier != null && arrivalTime != null) ...[
                 const SizedBox(height: DonySpacing.sm),
                 ArrivalDayChips(notifier: arrivalDayOffsetNotifier!),
               ],
-              const SizedBox(height: DonySpacing.sm),
-              // ── Date de départ * — DonyTextField.tappable ─────────────
-              AiFieldMark.overlay(
-                fields: const ['departureDate'],
-                child: DonyTextField.tappable(
-                  key: const Key('departureDateField'),
-                  label: l.tripPublishDepartureDateLabel,
-                  value: departureDateNotifier.value != null
-                      ? DateFormat.yMMMEd(
-                          l.localeName,
-                        ).format(departureDateNotifier.value!)
-                      : null,
-                  prefixIcon: DonyIcons.date,
-                  prefixIconColor: Theme.of(context).colorScheme.primary,
-                  trailing: DonyIcon(
-                    lockDate ? 'lock' : 'chevron-right',
-                    size: lockDate ? 16 : 18,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  requiredLabel: true,
-                  errorText: departureDateError,
-                  onTap: lockDate
-                      ? () => _showLocked(
-                          context,
-                          l.tripPublishFieldLockedDateMessage,
-                        )
-                      : () => onSelectDate(),
-                ),
-              ),
-              // ── Feedback informatif « sera signalé urgent » ────────────
-              // Non-bloquant : n'affecte jamais la soumission du formulaire.
-              ValueListenableBuilder<DateTime?>(
-                valueListenable: departureDateNotifier,
-                builder: (context, date, _) {
-                  if (date == null || !isUrgentDate(date)) {
-                    return const SizedBox.shrink();
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.only(top: DonySpacing.xs),
-                    child: Text(
-                      l.tripPublishUrgentDepartureWarning,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: cs.error),
-                    ),
-                  );
-                },
-              ),
             ],
           ).animate().fadeIn(delay: 60.ms);
         },
@@ -447,10 +517,24 @@ class TrajetStep extends StatelessWidget {
           valueListenable: transportModeNotifier!,
           builder: (context, mode, _) => supportsStops(mode)
               ? Padding(
-                  padding: const EdgeInsets.only(top: DonySpacing.base),
-                  child: AiFieldMark.overlay(
-                    fields: const ['direct'],
-                    child: StopsChips(notifier: stopsNotifier!),
+                  padding: const EdgeInsets.only(top: DonySpacing.xl),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CaSectionLabel(
+                        label: l.tripPublishStopsBlockLabel,
+                        iconAsset: 'route',
+                        note: l.tripPublishOptionalSuffix,
+                      ),
+                      const SizedBox(height: DonySpacing.sm),
+                      AiFieldMark.overlay(
+                        fields: const ['direct'],
+                        child: StopsChips(
+                          notifier: stopsNotifier!,
+                          showLabel: false,
+                        ),
+                      ),
+                    ],
                   ),
                 ).animate().fadeIn(delay: 80.ms)
               : const SizedBox.shrink(),

@@ -129,6 +129,19 @@ abstract final class AnalyticsEvents {
   static const tripSeriesCreated = 'trip_series_created';
   static const tripSeriesTemplateSaved = 'trip_series_template_saved';
 
+  /// Récurrence choisie à l'étape 1 de la création d'un trajet.
+  static const tripRecurrenceToggled = 'trip_recurrence_toggled';
+  static const tripRecurrenceFrequencyChosen =
+      'trip_recurrence_frequency_chosen';
+  static const tripRecurrenceDatesCustomized =
+      'trip_recurrence_dates_customized';
+
+  /// « Continuer » touché avec des champs obligatoires vides (étapes 1 et 2
+  /// de la création d'un trajet), et pastille d'un champ manquant touchée.
+  static const tripStepBlockedMissingFields =
+      'trip_step_blocked_missing_fields';
+  static const tripMissingFieldChipTapped = 'trip_missing_field_chip_tapped';
+
   /// Voyage à plusieurs étapes (FLUTTER-4D) : étape ajoutée au formulaire.
   static const tripLegAdded = 'trip_leg_added';
   static const tripHidden = 'trip_hidden';

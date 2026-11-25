@@ -947,12 +947,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPublishSuccessShareCta': (l) => l.tripPublishSuccessShareCta,
   'tripPublishMonthlyLimitTitle': (l) => l.tripPublishMonthlyLimitTitle,
   'tripPublishDraftLimitTitle': (l) => l.tripPublishDraftLimitTitle,
-  'tripPublishTemplatesLabel': (l) => l.tripPublishTemplatesLabel,
-  'tripPublishTemplatesHint': (l) => l.tripPublishTemplatesHint,
   'tripPublishTemplateAppliedMessage': (l) =>
       l.tripPublishTemplateAppliedMessage(placeholderMarker('label')),
-  'tripPublishTemplateChipGrid': (l) =>
-      l.tripPublishTemplateChipGrid(placeholderMarker('label')),
   'tripPublishDropoffSectionLabel': (l) => l.tripPublishDropoffSectionLabel,
   'tripPublishHandoverDeadlineLabel': (l) => l.tripPublishHandoverDeadlineLabel,
   'tripPublishHandoverDeadlineSubtitle': (l) =>
@@ -8533,6 +8529,33 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripEditKgPriceNoneInfo': (l) => l.tripEditKgPriceNoneInfo,
   'tripEditKgPriceAddCta': (l) => l.tripEditKgPriceAddCta,
   'tripEditKgPriceRemoveCta': (l) => l.tripEditKgPriceRemoveCta,
+  'tripPublishDepartureBlockLabel': (l) => l.tripPublishDepartureBlockLabel,
+  'tripPublishArrivalBlockLabel': (l) => l.tripPublishArrivalBlockLabel,
+  'tripPublishOptionalSuffix': (l) => l.tripPublishOptionalSuffix,
+  'tripPublishArrivalTimeLabel': (l) => l.tripPublishArrivalTimeLabel,
+  'tripPublishStopsBlockLabel': (l) => l.tripPublishStopsBlockLabel,
+  'tripPublishFieldPickupAddressName': (l) =>
+      l.tripPublishFieldPickupAddressName,
+  'tripPublishFieldDeliveryAddressName': (l) =>
+      l.tripPublishFieldDeliveryAddressName,
+  'tripPublishFieldTransportModeName': (l) =>
+      l.tripPublishFieldTransportModeName,
+  'tripStepMissingBanner': (l) => l.tripStepMissingBanner(intPlaceholderValue),
+  'tripStepMissingTitle': (l) => l.tripStepMissingTitle(intPlaceholderValue),
+  'tripRecurrenceSubtitle': (l) => l.tripRecurrenceSubtitle,
+  'tripRecurrenceWeekly': (l) => l.tripRecurrenceWeekly,
+  'tripRecurrenceBiweekly': (l) => l.tripRecurrenceBiweekly,
+  'tripRecurrenceMonthly': (l) => l.tripRecurrenceMonthly,
+  'tripRecurrenceCount': (l) => l.tripRecurrenceCount(intPlaceholderValue),
+  'tripRecurrenceChooseDates': (l) => l.tripRecurrenceChooseDates,
+  'tripRecurrencePickDateFirst': (l) => l.tripRecurrencePickDateFirst,
+  'tripRecurrenceMultiLegHint': (l) => l.tripRecurrenceMultiLegHint,
+  'tripRecurrenceDatesSheetTitle': (l) => l.tripRecurrenceDatesSheetTitle,
+  'tripRecurrenceDatesSheetSubtitle': (l) =>
+      l.tripRecurrenceDatesSheetSubtitle(placeholderMarker('date')),
+  'tripRecurrenceDatesDone': (l) => l.tripRecurrenceDatesDone,
+  'tripRecurrenceSeriesPublishing': (l) =>
+      l.tripRecurrenceSeriesPublishing(intPlaceholderValue),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8565,7 +8588,6 @@ const textParameters = <String, List<String>>{
   'commonListLast': ['head', 'last'],
   'tripPublishSuccessSubtitle': ['departureCity', 'arrivalCity'],
   'tripPublishTemplateAppliedMessage': ['label'],
-  'tripPublishTemplateChipGrid': ['label'],
   'tripPublishIntroVerifyCallout': ['identity', 'path'],
   'tripPublishIntroVerifyHint': ['continueLabel'],
   'tripPublishCashOnlyBannerNoConnectCountry': ['country'],
@@ -9246,4 +9268,5 @@ const textParameters = <String, List<String>>{
   'tripPublishEarningsAmount': ['amount'],
   'tripPublishItemPriceExample': ['label', 'price'],
   'tripPublishItemPricesRestPerKg': ['price'],
+  'tripRecurrenceDatesSheetSubtitle': ['date'],
 };
