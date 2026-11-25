@@ -211,6 +211,11 @@ abstract final class VideoModalPresenter {
       case VideoModalActionKind.screen:
         final screen = action.screen;
         if (screen == null) return false;
+        // Écran de colis : sa route dépend du colis du moment (bidId, rôle),
+        // que seul l'appelant d'une étape de colis connaît. Sans ce contexte,
+        // jamais de navigation (ni feuille de connexion) : le bouton ferme
+        // simplement la feuille. À brancher avec le contexte colis (P4).
+        if (screen.needsParcelContext) return false;
         final real =
             (hasRealSession ??
             () => getItSafe<FirebaseSessionProbe>()?.hasRealSession ?? false)();

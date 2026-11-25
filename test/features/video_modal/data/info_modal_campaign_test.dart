@@ -185,6 +185,16 @@ void main() {
       ]);
     });
 
+    test('seuls les 4 écrans de colis sont exemptés de router.dart', () {
+      expect(
+        InfoScreen.values
+            .where((s) => s.needsParcelContext)
+            .map((s) => s.wire)
+            .toList(),
+        ['PARCEL_DETAIL', 'PARCEL_QR', 'PARCEL_SEND_CODE', 'PARCEL_TRACKING'],
+      );
+    });
+
     test('chaque route existe dans router.dart', () {
       final router = File('lib/app/router.dart').readAsStringSync();
       for (final s in InfoScreen.values) {

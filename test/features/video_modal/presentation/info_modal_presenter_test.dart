@@ -135,7 +135,7 @@ void main() {
     expect(proceed, isFalse);
   });
 
-  for (final s in InfoScreen.values) {
+  for (final s in InfoScreen.values.where((s) => !s.needsParcelContext)) {
     testWidgets('SCREEN ${s.wire} -> ${s.route}', (tester) async {
       usePhone360(tester);
       await pump(
@@ -146,6 +146,35 @@ void main() {
       await tapAndSettle(tester, 'info-modal-primary');
       expect(find.text('page ${s.route}'), findsOneWidget);
     });
+  }
+
+  // Écrans de colis sans contexte colis : aucune navigation vers la route
+  // repère, ni feuille de connexion, la feuille se ferme proprement.
+  for (final s in InfoScreen.values.where((s) => s.needsParcelContext)) {
+    for (final session in [true, false]) {
+      testWidgets(
+        '${s.wire} sans contexte colis, ${session ? 'connecté' : 'visiteur'} : '
+        'aucune navigation',
+        (tester) async {
+          usePhone360(tester);
+          real = session;
+          await pump(
+            tester,
+            infoCampaign(primary: VideoModalAction.openScreen(s)),
+            launcher: _Launcher(),
+          );
+          await tapAndSettle(tester, 'info-modal-primary');
+          expect(find.text('page ${s.route}'), findsNothing);
+          expect(
+            find.text(lookupAppLocalizations(AppL10n.fr).authRequiredTitle),
+            findsNothing,
+          );
+          expect(find.byKey(const Key('info-modal-primary')), findsNothing);
+          expect(tester.takeException(), isNull);
+          expect(events, ['SHOWN', 'OPENED']);
+        },
+      );
+    }
   }
 
   testWidgets('visiteur devant un écran protégé : feuille de connexion', (
