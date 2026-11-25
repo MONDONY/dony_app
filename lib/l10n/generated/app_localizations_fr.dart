@@ -2752,20 +2752,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishDraftLimitTitle => 'Limite de brouillons atteinte';
 
   @override
-  String get tripPublishTemplatesLabel => 'Mes modèles';
-
-  @override
-  String get tripPublishTemplatesHint =>
-      'Appliquez un modèle pour pré-remplir le trajet';
-
-  @override
   String tripPublishTemplateAppliedMessage(String label) {
     return 'Modèle « $label » appliqué';
-  }
-
-  @override
-  String tripPublishTemplateChipGrid(String label) {
-    return '$label · par article';
   }
 
   @override
@@ -24764,4 +24752,108 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripEditKgPriceRemoveCta => 'Retirer le prix au kilo';
+
+  @override
+  String get tripPublishDepartureBlockLabel => 'Départ';
+
+  @override
+  String get tripPublishArrivalBlockLabel => 'Arrivée';
+
+  @override
+  String get tripPublishOptionalSuffix => '(facultatif)';
+
+  @override
+  String get tripPublishArrivalTimeLabel => 'Heure d\'arrivée';
+
+  @override
+  String get tripPublishStopsBlockLabel => 'Escales';
+
+  @override
+  String get tripPublishFieldPickupAddressName => 'Lieu de remise';
+
+  @override
+  String get tripPublishFieldDeliveryAddressName => 'Lieu de récupération';
+
+  @override
+  String get tripPublishFieldTransportModeName => 'Mode de transport';
+
+  @override
+  String tripStepMissingBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Il reste $count champs obligatoires à remplir avant de continuer.',
+      one: 'Il reste 1 champ obligatoire à remplir avant de continuer.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripStepMissingTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Il manque $count champs :',
+      one: 'Il manque 1 champ :',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripRecurrenceSubtitle =>
+      'Mêmes villes, kilos, prix et adresses à chaque date';
+
+  @override
+  String get tripRecurrenceWeekly => 'Chaque semaine';
+
+  @override
+  String get tripRecurrenceBiweekly => 'Toutes les 2 semaines';
+
+  @override
+  String get tripRecurrenceMonthly => 'Chaque mois';
+
+  @override
+  String tripRecurrenceCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trajets seront publiés',
+      one: '1 trajet sera publié',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripRecurrenceChooseDates => 'Choisir les dates';
+
+  @override
+  String get tripRecurrencePickDateFirst =>
+      'Choisissez d\'abord la date de départ : les dates suivantes en découlent.';
+
+  @override
+  String get tripRecurrenceMultiLegHint =>
+      'Pas de récurrence pour un voyage en plusieurs étapes. Retirez les étapes ajoutées pour la proposer.';
+
+  @override
+  String get tripRecurrenceDatesSheetTitle => 'Dates de vos trajets';
+
+  @override
+  String tripRecurrenceDatesSheetSubtitle(String date) {
+    return 'Le premier trajet part le $date. Touchez un jour pour l\'ajouter ou le retirer.';
+  }
+
+  @override
+  String get tripRecurrenceDatesDone => 'Valider';
+
+  @override
+  String tripRecurrenceSeriesPublishing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Publication des $count autres dates…',
+      one: 'Publication de l\'autre date…',
+    );
+    return '$_temp0';
+  }
 }

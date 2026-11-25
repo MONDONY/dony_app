@@ -1335,26 +1335,9 @@
   "@tripPublishDraftLimitTitle": {
     "description": "Titre du dialogue quand la limite de brouillons est atteinte"
   },
-  "tripPublishTemplatesLabel": "Mes modèles",
-  "@tripPublishTemplatesLabel": {
-    "description": "Titre de la barre de suggestion des modèles de trajet enregistrés"
-  },
-  "tripPublishTemplatesHint": "Appliquez un modèle pour pré-remplir le trajet",
-  "@tripPublishTemplatesHint": {
-    "description": "Texte d'aide sous le titre de la barre de suggestion des modèles de trajet"
-  },
   "tripPublishTemplateAppliedMessage": "Modèle « {label} » appliqué",
   "@tripPublishTemplateAppliedMessage": {
     "description": "Confirmation après application d'un modèle de trajet, avec son nom",
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "tripPublishTemplateChipGrid": "{label} · par article",
-  "@tripPublishTemplateChipGrid": {
-    "description": "Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom",
     "placeholders": {
       "label": {
         "type": "String"
@@ -23849,5 +23832,49 @@
   "tripEditKgPriceAddCta": "Ajouter un prix au kilo",
   "@tripEditKgPriceAddCta": {"description": "Lien texte, une ligne"},
   "tripEditKgPriceRemoveCta": "Retirer le prix au kilo",
-  "@tripEditKgPriceRemoveCta": {"description": "Lien texte, une ligne"}
+  "@tripEditKgPriceRemoveCta": {"description": "Lien texte, une ligne"},
+  "tripPublishDepartureBlockLabel": "Départ",
+  "@tripPublishDepartureBlockLabel": {"description": "Étape 1 de la création d'un trajet : titre du bloc date et heure de départ"},
+  "tripPublishArrivalBlockLabel": "Arrivée",
+  "@tripPublishArrivalBlockLabel": {"description": "Étape 1 : titre du bloc jour et heure d'arrivée"},
+  "tripPublishOptionalSuffix": "(facultatif)",
+  "@tripPublishOptionalSuffix": {"description": "Étape 1 : mention après le titre d'un bloc facultatif"},
+  "tripPublishArrivalTimeLabel": "Heure d'arrivée",
+  "@tripPublishArrivalTimeLabel": {"description": "Étape 1 : champ heure d'arrivée, dans le bloc Arrivée déjà marqué facultatif"},
+  "tripPublishStopsBlockLabel": "Escales",
+  "@tripPublishStopsBlockLabel": {"description": "Étape 1 : titre du bloc des escales, suivi de « (facultatif) »"},
+  "tripPublishFieldPickupAddressName": "Lieu de remise",
+  "@tripPublishFieldPickupAddressName": {"description": "Pastille d'un champ manquant : lieu de remise du colis au départ"},
+  "tripPublishFieldDeliveryAddressName": "Lieu de récupération",
+  "@tripPublishFieldDeliveryAddressName": {"description": "Pastille d'un champ manquant : lieu de récupération à l'arrivée"},
+  "tripPublishFieldTransportModeName": "Mode de transport",
+  "@tripPublishFieldTransportModeName": {"description": "Pastille d'un champ manquant : mode de transport"},
+  "tripStepMissingBanner": "{count, plural, =1{Il reste 1 champ obligatoire à remplir avant de continuer.} other{Il reste {count} champs obligatoires à remplir avant de continuer.}}",
+  "@tripStepMissingBanner": {"description": "Bandeau en haut d'une étape quand « Continuer » est touché avec des champs vides", "placeholders": {"count": {"type": "int"}}},
+  "tripStepMissingTitle": "{count, plural, =1{Il manque 1 champ :} other{Il manque {count} champs :}}",
+  "@tripStepMissingTitle": {"description": "Au-dessus du bouton Continuer, avant les pastilles des champs manquants", "placeholders": {"count": {"type": "int"}}},
+  "tripRecurrenceSubtitle": "Mêmes villes, kilos, prix et adresses à chaque date",
+  "@tripRecurrenceSubtitle": {"description": "Carte de récurrence de l'étape 1, sous « Vous faites ce trajet souvent ? »"},
+  "tripRecurrenceWeekly": "Chaque semaine",
+  "@tripRecurrenceWeekly": {"description": "Puce de rythme d'un trajet récurrent"},
+  "tripRecurrenceBiweekly": "Toutes les 2 semaines",
+  "@tripRecurrenceBiweekly": {"description": "Puce de rythme d'un trajet récurrent"},
+  "tripRecurrenceMonthly": "Chaque mois",
+  "@tripRecurrenceMonthly": {"description": "Puce de rythme d'un trajet récurrent"},
+  "tripRecurrenceCount": "{count, plural, =1{1 trajet sera publié} other{{count} trajets seront publiés}}",
+  "@tripRecurrenceCount": {"description": "Compteur de la carte de récurrence, premier trajet compris", "placeholders": {"count": {"type": "int"}}},
+  "tripRecurrenceChooseDates": "Choisir les dates",
+  "@tripRecurrenceChooseDates": {"description": "Lien de la carte de récurrence qui ouvre le calendrier (court, une ligne)"},
+  "tripRecurrencePickDateFirst": "Choisissez d'abord la date de départ : les dates suivantes en découlent.",
+  "@tripRecurrencePickDateFirst": {"description": "Carte de récurrence allumée sans date de départ"},
+  "tripRecurrenceMultiLegHint": "Pas de récurrence pour un voyage en plusieurs étapes. Retirez les étapes ajoutées pour la proposer.",
+  "@tripRecurrenceMultiLegHint": {"description": "Carte de récurrence quand des étapes de voyage ont été ajoutées"},
+  "tripRecurrenceDatesSheetTitle": "Dates de vos trajets",
+  "@tripRecurrenceDatesSheetTitle": {"description": "Titre de la feuille calendrier de la récurrence"},
+  "tripRecurrenceDatesSheetSubtitle": "Le premier trajet part le {date}. Touchez un jour pour l'ajouter ou le retirer.",
+  "@tripRecurrenceDatesSheetSubtitle": {"description": "Sous-titre de la feuille calendrier de la récurrence", "placeholders": {"date": {"type": "String"}}},
+  "tripRecurrenceDatesDone": "Valider",
+  "@tripRecurrenceDatesDone": {"description": "Bouton de la feuille calendrier de la récurrence (court)"},
+  "tripRecurrenceSeriesPublishing": "{count, plural, =1{Publication de l'autre date…} other{Publication des {count} autres dates…}}",
+  "@tripRecurrenceSeriesPublishing": {"description": "Carte de l'écran de succès pendant la création de la série choisie à l'étape 1", "placeholders": {"count": {"type": "int"}}}
 }

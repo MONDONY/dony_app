@@ -33,14 +33,18 @@ import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_missing_fields_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_price_suggestion_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_recurrence_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_series_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart'
     show BidPaymentMethod;
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
+import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_price_suggestion.dart';
+import 'package:dony/features/matching/data/models/trip_series_result.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
@@ -530,6 +534,17 @@ void main() {
       getIt.registerSingleton<PriceGridRepository>(_MockPriceGridRepository());
     }
 
+    // Récurrence et champs manquants de l'étape 1, fournis par getIt.
+    if (!getIt.isRegistered<TripRecurrenceCubit>()) {
+      getIt.registerFactory<TripRecurrenceCubit>(
+        () => TripRecurrenceCubit(getIt<AnalyticsService>()),
+      );
+    }
+    if (!getIt.isRegistered<TripMissingFieldsCubit>()) {
+      getIt.registerFactory<TripMissingFieldsCubit>(
+        () => TripMissingFieldsCubit(getIt<AnalyticsService>()),
+      );
+    }
     // TripLegsCubit — étapes d'un voyage (FLUTTER-4D), fourni par getIt.
     if (!getIt.isRegistered<TripLegsCubit>()) {
       registerTestFormDraftCubit();
@@ -836,21 +851,27 @@ void main() {
     });
 
     testWidgets(
-      'bouton "Continuer" désactivé quand les champs obligatoires sont vides (mode création)',
+      'bouton "Continuer" actif même avec des champs vides : un appui '
+      'n\'avance pas et signale ce qui manque (mode création)',
       (tester) async {
         setupViewport(tester);
 
-        // Creation mode: _canContinueNotifier starts false (no pre-filled fields)
         await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
-        // DonyButton with label 'Continuer' should have onPressed == null
         final donyButton = tester.widget<DonyButton>(
           find.ancestor(
             of: find.text('Continuer'),
             matching: find.byType(DonyButton),
           ),
         );
-        expect(donyButton.onPressed, isNull);
+        expect(donyButton.onPressed, isNotNull);
+
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        // Toujours à l'étape 1 : la section dépôt (étape 1) reste visible.
+        expect(find.text('DÉPÔT DES COLIS'), findsOneWidget);
+        expect(find.byKey(const Key('trip-missing-banner-0')), findsOneWidget);
       },
     );
 
@@ -970,7 +991,7 @@ void main() {
 
       // L'étape 0 porte la section « dépôt » avec sa ligne unique.
       expect(find.text('DÉPÔT DES COLIS'), findsOneWidget);
-      expect(find.text('Date limite de dépôt'), findsOneWidget);
+      expect(find.text('Date limite de dépôt *'), findsOneWidget);
     });
 
     testWidgets('mode locked: bannière "Trajet dédié à la demande" affichée', (
@@ -1175,7 +1196,10 @@ void main() {
 
   // ── Group: Template suggestion bar + _applyTemplate ──────────────────────────
 
-  group('CreateTripScreen — Template suggestion bar', () {
+  // La barre « Mes modèles » a quitté l'étape 1 : un modèle s'applique
+  // désormais à l'ouverture (`CreateTripArgs.template`, feuille « Terminer
+  // ou créer »), par le même `_applyTemplate`.
+  group('CreateTripScreen — Modèle appliqué à l\'ouverture', () {
     const mockTemplate = TripTemplate(
       id: 'tmpl-1',
       label: 'Paris → Dakar',
@@ -1252,13 +1276,14 @@ void main() {
       });
     });
 
-    /// Révèle et tape le modèle « Abidjan → Paris » (`fullTemplate`) : la
-    /// barre de suggestions est une `ListView.separated` horizontale lazy,
-    /// son deuxième item n'est construit qu'une fois scrollé en vue.
-    Future<void> tapFullTemplateChip(WidgetTester tester) async {
-      await tester.drag(find.byType(ListView), const Offset(-400, 0));
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.tap(find.textContaining('Abidjan → Paris'));
+    /// Ouvre le formulaire avec [template] appliqué (premier frame passé).
+    Future<void> openWith(WidgetTester tester, TripTemplate template) async {
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(args: CreateTripArgs(template: template)),
+        ),
+      );
       await tester.pump(const Duration(milliseconds: 600));
     }
 
@@ -1275,36 +1300,25 @@ void main() {
       return (state as dynamic).handoverDeadlineForTest.value as DateTime?;
     }
 
-    testWidgets('template chip visible au step 0 en mode création', (
-      tester,
-    ) async {
+    testWidgets('plus de barre « Mes modèles » à l\'étape 1, même avec des '
+        'modèles enregistrés', (tester) async {
       registerCurrencyPreference('EUR');
       setupViewport(tester);
 
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
-      // The template bar shows the chip, prix formaté dans la devise active
-      expect(find.textContaining('Paris → Dakar'), findsOneWidget);
-      expect(find.textContaining('8'), findsWidgets);
-      expect(find.textContaining('€'), findsWidgets);
+      expect(find.text('Mes modèles'), findsNothing);
+      expect(find.textContaining('Paris → Dakar'), findsNothing);
+      expect(find.byType(ActionChip), findsNothing);
     });
 
-    testWidgets('tap template chip → _applyTemplate applique les valeurs', (
-      tester,
-    ) async {
+    testWidgets('modèle passé à l\'ouverture → _applyTemplate applique les '
+        'valeurs', (tester) async {
       setupViewport(tester);
 
-      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-
-      // Le second modèle n'est pas encore construit : la liste horizontale
-      // est lazy (ListView.separated) et ne bâtit que ses items visibles.
-      expect(find.byType(ActionChip), findsOneWidget);
-
-      // Tap the chip → _applyTemplate(t) called.
       // _applyTemplate shows a DonySnackbar (SnackBar with ~4s auto-dismiss)
       // → drain all pending timers to avoid the 'timer still pending' assertion.
-      await tester.tap(find.textContaining('Paris → Dakar'));
-      await tester.pump(const Duration(milliseconds: 600));
+      await openWith(tester, mockTemplate);
 
       // Screen still present (no navigation triggered)
       expect(find.byType(CreateTripScreen), findsOneWidget);
@@ -1322,9 +1336,7 @@ void main() {
       (tester) async {
         registerCurrencyPreference('EUR');
         setupViewport(tester);
-        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-
-        await tapFullTemplateChip(tester);
+        await openWith(tester, fullTemplate);
 
         final formBloc = BlocProvider.of<AnnouncementFormBloc>(
           tester.element(find.byType(TrajetStep)),
@@ -1356,9 +1368,7 @@ void main() {
       (tester) async {
         registerCurrencyPreference('EUR');
         setupViewport(tester);
-        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-
-        await tapFullTemplateChip(tester);
+        await openWith(tester, fullTemplate);
 
         final step = tester.widget<TrajetStep>(find.byType(TrajetStep));
         expect(step.departureCityNotifier.value, 'Abidjan');
@@ -1412,9 +1422,7 @@ void main() {
       'délai de remise du modèle recalculé quand la date est choisie',
       (tester) async {
         setupViewport(tester);
-        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-
-        await tapFullTemplateChip(tester);
+        await openWith(tester, fullTemplate);
 
         final step = tester.widget<TrajetStep>(find.byType(TrajetStep));
         step.departureDateNotifier.value = DateTime(2026, 10, 20);
@@ -1423,13 +1431,20 @@ void main() {
         // Le jour limite = départ - 2 jours (handoverLeadDays du modèle).
         expect(handoverDeadlineOf(tester), DateTime(2026, 10, 18));
 
-        // Enchaîner un modèle SANS délai de remise (mockTemplate) doit
-        // effacer la date limite du modèle précédent : champ nul du modèle
-        // = défaut du formulaire vierge, pas la valeur héritée.
-        await tester.drag(find.byType(ListView), const Offset(400, 0));
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
+
+    testWidgets(
+      'modèle SANS délai de remise : pas de date limite, même après le '
+      'choix de la date',
+      (tester) async {
+        setupViewport(tester);
+        await openWith(tester, mockTemplate);
+
+        final step = tester.widget<TrajetStep>(find.byType(TrajetStep));
+        step.departureDateNotifier.value = DateTime(2026, 10, 20);
         await tester.pump(const Duration(milliseconds: 300));
-        await tester.tap(find.textContaining('Paris → Dakar'));
-        await tester.pump(const Duration(milliseconds: 600));
 
         expect(handoverDeadlineOf(tester), isNull);
 
@@ -1442,10 +1457,7 @@ void main() {
     ) async {
       registerCurrencyPreference('EUR');
       setupViewport(tester);
-      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-
-      await tester.tap(find.textContaining('Paris → Dakar'));
-      await tester.pump(const Duration(milliseconds: 600));
+      await openWith(tester, mockTemplate);
 
       // skipOffstage: false — les notifiers sont partagés, l'étape affichée
       // n'importe pas.
@@ -1616,7 +1628,7 @@ void main() {
       await pumpAndDrain(
         tester,
         _wrapWithRouter(
-          const CreateTripScreen(),
+          const CreateTripScreen(args: CreateTripArgs(template: template)),
           authState: AuthAuthenticated(
             UserModel(
               id: 'user-test-1',
@@ -1629,7 +1641,6 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.textContaining('Abidjan → Paris'));
       await tester.pump(const Duration(milliseconds: 600));
       // La confirmation « modèle appliqué » recouvre les boutons du bas.
       for (var i = 0; i < 8; i++) {
@@ -3746,7 +3757,7 @@ void main() {
         find.byKey(const Key('sheet-handover-deadline-row')),
         findsOneWidget,
       );
-      expect(find.text('Date limite de dépôt'), findsOneWidget);
+      expect(find.text('Date limite de dépôt *'), findsOneWidget);
     });
 
     testWidgets('mode création : la row affiche "Choisir" (aucune valeur)', (
@@ -3977,7 +3988,8 @@ void main() {
     });
 
     testWidgets(
-      'heure postérieure au départ le jour du départ : erreur et Continuer inactif',
+      'heure postérieure au départ le jour du départ : erreur, et Continuer '
+      'n\'avance pas',
       (tester) async {
         await openTrip(tester);
 
@@ -3990,7 +4002,18 @@ void main() {
           findsOneWidget,
         );
         final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
-        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
+        await tester.ensureVisible(continueBtn);
+        await tester.tap(continueBtn);
+        await tester.pump(const Duration(milliseconds: 600));
+        // Toujours à l'étape 1, la date limite listée parmi les manquants.
+        expect(
+          find.byKey(const Key('trip-missing-chip-handoverDeadline')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('sheet-handover-deadline-row')),
+          findsOneWidget,
+        );
       },
     );
 
@@ -4073,7 +4096,8 @@ void main() {
     }
 
     testWidgets(
-      'fenêtre absente : "Continuer" désactivé au step 0, aucun dispatch possible',
+      'fenêtre absente : "Continuer" n\'avance pas au step 0, aucun dispatch '
+      'possible',
       (tester) async {
         // Annonce complète MAIS sans fenêtre de remise. Dans le wizard, la
         // garde qui mord en premier n'est pas celle de _submit() ("Fenêtre de
@@ -4121,14 +4145,13 @@ void main() {
           ),
         );
 
-        // Le bouton "Continuer" existe mais est inerte.
+        // Le bouton "Continuer" reste actif, mais un tap ne fait pas avancer
+        // le wizard : on reste au step 0, la date limite est signalée.
         final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
         expect(continueBtn, findsOneWidget);
-        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
-
-        // Un tap ne fait pas avancer le wizard : on reste au step 0.
         await tester.tap(continueBtn);
         await tester.pump(const Duration(milliseconds: 600));
+        expect(find.text('Date limite de dépôt obligatoire'), findsOneWidget);
 
         expect(find.text('Enregistrer'), findsNothing);
         verifyNever(
@@ -4407,16 +4430,23 @@ void main() {
     // ── Le bug corrigé : l'heure de départ ne bloquait pas l'étape 0 ──────────
 
     testWidgets(
-      'sans heure de départ, "Continuer" est désactivé à l\'étape 0',
+      'sans heure de départ, "Continuer" n\'avance pas à l\'étape 0',
       (tester) async {
-        // _submit() refuse une annonce sans heure de départ (D1), mais
-        // _updateCanContinue() omettait ce champ : on pouvait traverser
-        // l'étape 0 puis se retrouver bloqué au submit.
+        // _submit() refuse une annonce sans heure de départ (D1) : on ne
+        // doit pas pouvoir traverser l'étape 0 sans elle.
         await pump(tester, makeAnnouncement(departureTime: null));
 
         final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
         expect(continueBtn, findsOneWidget);
-        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
+        await tester.tap(continueBtn);
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.text('Heure de départ obligatoire'), findsOneWidget);
+        expect(
+          find.byKey(const Key('trip-missing-chip-departureTime')),
+          findsOneWidget,
+        );
+        expect(find.byType(LieuxCapaciteStep), findsNothing);
       },
     );
 
@@ -4441,19 +4471,21 @@ void main() {
         expect(find.text('Heure de départ obligatoire'), findsNothing);
         expect(find.text('Date de départ obligatoire'), findsNothing);
         expect(find.byKey(const Key('sheet-handover-error')), findsNothing);
-        // Et « Continuer » est bien inerte.
+        expect(find.byKey(const Key('trip-missing-banner-0')), findsNothing);
+        // « Continuer » reste actif : c'est l'appui qui signale.
         final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
-        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNotNull);
       },
     );
 
     // ── Après une interaction, ce qui manque s'affiche ────────────────────────
 
     testWidgets(
-      'après une interaction, les champs manquants affichent leur message',
+      'une interaction seule ne marque rien ; « Continuer » marque les seuls '
+      'champs manquants',
       (tester) async {
         // Annonce sans heure de départ, avec une heure d'arrivée : effacer
-        // cette dernière est une interaction utilisateur qui arme l'affichage.
+        // cette dernière est une interaction utilisateur.
         await pump(
           tester,
           makeAnnouncement(
@@ -4473,6 +4505,10 @@ void main() {
         expect(clearBtn, findsOneWidget);
         await tester.tap(clearBtn);
         await tester.pump(const Duration(milliseconds: 300));
+        expect(find.text('Heure de départ obligatoire'), findsNothing);
+
+        await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
 
         // Le seul champ obligatoire manquant est signalé.
         expect(find.text('Heure de départ obligatoire'), findsOneWidget);
@@ -4485,7 +4521,8 @@ void main() {
     // ── Étape 1 : entrer dans l'étape révèle ses attentes ─────────────────────
 
     testWidgets(
-      'étape 1 : les adresses manquantes sont signalées dès l\'entrée',
+      'étape 1 : rien de marqué à l\'entrée, « Continuer » signale les deux '
+      'adresses et n\'avance pas',
       (tester) async {
         await pump(
           tester,
@@ -4496,12 +4533,20 @@ void main() {
         await tester.tap(find.text('Continuer'));
         await tester.pump(const Duration(milliseconds: 600));
 
+        expect(find.byKey(const Key('pickup-address-error')), findsNothing);
+        expect(find.byKey(const Key('trip-missing-banner-1')), findsNothing);
+
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNotNull);
+        await tester.tap(continueBtn);
+        await tester.pump(const Duration(milliseconds: 600));
+
         expect(find.byKey(const Key('pickup-address-error')), findsOneWidget);
         expect(find.byKey(const Key('delivery-address-error')), findsOneWidget);
-
-        // Et « Continuer » de l'étape 1 est inerte.
-        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
-        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
+        expect(find.byKey(const Key('trip-missing-banner-1')), findsOneWidget);
+        expect(find.text('Il manque 2 champs :'), findsOneWidget);
+        // Toujours à l'étape 2 (Lieux) : pas d'étape prix.
+        expect(find.byType(PrixConditionsStep), findsNothing);
       },
     );
 
@@ -6149,6 +6194,589 @@ void main() {
       expect(find.byKey(const Key('ai-entry-cta')), findsOneWidget);
       expect(find.byKey(const Key('ai-field-mark')), findsNothing);
     });
+  });
+
+  // ── Lot 2 : étape 1 rangée, récurrence, champs manquants ────────────────────
+
+  group('CreateTripScreen — étape 1 rangée', () {
+    testWidgets('blocs Trajet, Départ (date puis heure, côte à côte), '
+        'Arrivée et Escales facultatifs', (tester) async {
+      setupViewport(tester);
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+      final date = tester.getTopLeft(
+        find.byKey(const Key('departureDateField')),
+      );
+      final time = tester.getTopLeft(
+        find.byKey(const Key('departureTimeField')),
+      );
+      // Date à gauche, heure à droite, sur la même ligne.
+      expect(date.dx, lessThan(time.dx));
+      expect(date.dy, moreOrLessEquals(time.dy, epsilon: 1));
+      expect(find.text('Départ'), findsOneWidget);
+      expect(find.text('Arrivée (facultatif)'), findsOneWidget);
+      expect(find.text('Escales (facultatif)'), findsOneWidget);
+      expect(find.text("Heure d'arrivée"), findsOneWidget);
+      // L'heure d'arrivée vient sous le départ.
+      expect(
+        tester.getTopLeft(find.byKey(const Key('arrivalTimeField'))).dy,
+        greaterThan(time.dy),
+      );
+      // Plus de barre « Mes modèles ».
+      expect(find.text('Mes modèles'), findsNothing);
+    });
+  });
+
+  group('CreateTripScreen — récurrence (étape 1)', () {
+    TripRecurrenceCubit recurrence(WidgetTester tester) =>
+        BlocProvider.of<TripRecurrenceCubit>(
+          tester.element(find.byType(TrajetStep)),
+        );
+
+    Future<void> scrollTo(WidgetTester tester, Finder f) async {
+      await tester.ensureVisible(f);
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    testWidgets('interrupteur éteint par défaut ; allumé : rythmes, date '
+        'manquante, compteur et dates', (tester) async {
+      tester.view.physicalSize = const Size(400, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+      final card = find.byKey(const Key('trip-recurrence-card'));
+      await scrollTo(tester, card);
+      expect(find.text('Vous faites ce trajet souvent ?'), findsOneWidget);
+      expect(
+        find.text('Mêmes villes, kilos, prix et adresses à chaque date'),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<Switch>(find.byKey(const Key('trip-recurrence-switch')))
+            .value,
+        isFalse,
+      );
+      expect(find.text('Chaque semaine'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('trip-recurrence-switch')));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Chaque semaine'), findsOneWidget);
+      expect(find.text('Toutes les 2 semaines'), findsOneWidget);
+      expect(find.text('Chaque mois'), findsOneWidget);
+      expect(
+        find.byKey(const Key('trip-recurrence-pick-date-first')),
+        findsOneWidget,
+      );
+
+      final day = DateTime.now().add(const Duration(days: 20));
+      tester
+          .widget<TrajetStep>(find.byType(TrajetStep))
+          .departureDateNotifier
+          .value = DateTime(
+        day.year,
+        day.month,
+        day.day,
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('4 trajets seront publiés'), findsOneWidget);
+
+      await tester.tap(find.text('Chaque semaine'));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('5 trajets seront publiés'), findsOneWidget);
+      expect(recurrence(tester).state.seriesDates, hasLength(4));
+
+      // « Choisir les dates » : calendrier, puis « Valider ».
+      final choose = find.byKey(const Key('trip-recurrence-choose-dates'));
+      await scrollTo(tester, choose);
+      await tester.tap(choose);
+      await tester.pumpAndSettle();
+      expect(find.text('Dates de vos trajets'), findsOneWidget);
+      expect(
+        find.byKey(const Key('trip-recurrence-sheet-count')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('trip-recurrence-dates-done')));
+      await tester.pumpAndSettle();
+      expect(find.text('Dates de vos trajets'), findsNothing);
+    });
+
+    testWidgets('masquée en modification', (tester) async {
+      setupViewport(tester);
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(
+            args: CreateTripArgs(announcement: _makeFullAnnouncement()),
+          ),
+        ),
+      );
+      expect(
+        find.byKey(const Key('trip-recurrence-card'), skipOffstage: false),
+        findsNothing,
+      );
+    });
+
+    testWidgets('masquée pour un trajet dédié', (tester) async {
+      setupViewport(tester);
+      final nego = _makeNegotiationBloc();
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(
+            args: CreateTripArgs(
+              lockContext: _makeLockContext(),
+              negotiationBloc: nego,
+            ),
+          ),
+        ),
+      );
+      expect(
+        find.byKey(const Key('trip-recurrence-card'), skipOffstage: false),
+        findsNothing,
+      );
+    });
+
+    testWidgets('voyage en plusieurs étapes : explication, pas '
+        'd\'interrupteur', (tester) async {
+      tester.view.physicalSize = const Size(400, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+      BlocProvider.of<TripLegsCubit>(
+        tester.element(find.byType(TrajetStep)),
+      ).restore([
+        TripLegDraft(
+          arrivalCity: 'Bamako',
+          departureDate: DateTime.now().add(const Duration(days: 40)),
+          departureTime: '10:00',
+          deliveryAddress: const AddressData(label: 'Bko', lat: 12.6, lng: -8),
+          availableKg: 10,
+        ),
+      ]);
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.byKey(const Key('trip-recurrence-multileg-hint')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('trip-recurrence-switch')), findsNothing);
+      await tester.pump(const Duration(seconds: 1));
+    });
+  });
+
+  group('CreateTripScreen — champs manquants (étapes 1 et 2)', () {
+    testWidgets('« Continuer » avec un formulaire vide : bandeau, marques, '
+        'pastilles, défilement ; remplir un champ fait baisser le compteur', (
+      tester,
+    ) async {
+      setupViewport(tester);
+      final analytics = getIt<AnalyticsService>();
+      clearInteractions(analytics);
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+      // Rien de marqué à l'ouverture.
+      expect(find.byKey(const Key('trip-missing-banner-0')), findsNothing);
+      expect(find.byKey(const Key('trip-missing-chips')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('trip-step-continue')));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text(
+          'Il reste 5 champs obligatoires à remplir avant de continuer.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Il manque 5 champs :'), findsOneWidget);
+      for (final f in [
+        'departureCity',
+        'arrivalCity',
+        'departureDate',
+        'departureTime',
+        'handoverDeadline',
+      ]) {
+        expect(find.byKey(Key('trip-missing-chip-$f')), findsOneWidget);
+      }
+      expect(find.text('Ville de départ obligatoire'), findsOneWidget);
+      expect(find.text('Heure de départ obligatoire'), findsOneWidget);
+      expect(find.text('Date de départ obligatoire'), findsOneWidget);
+      // Valeur « Choisir » sur la date et l'heure vides.
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('departureTimeField')),
+          matching: find.text('Choisir'),
+        ),
+        findsOneWidget,
+      );
+      // Toujours à l'étape 1.
+      expect(find.byType(LieuxCapaciteStep), findsNothing);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.tripStepBlockedMissingFields,
+          properties: {
+            'step': 0,
+            'count': 5,
+            'fields': [
+              'departureCity',
+              'arrivalCity',
+              'departureDate',
+              'departureTime',
+              'handoverDeadline',
+            ],
+          },
+        ),
+      ).called(1);
+
+      // Remplir l'heure retire sa marque et fait baisser le compteur.
+      tester
+          .widget<TrajetStep>(find.byType(TrajetStep))
+          .departureTimeNotifier
+          .value = const TimeOfDay(
+        hour: 10,
+        minute: 0,
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Il manque 4 champs :'), findsOneWidget);
+      expect(
+        find.byKey(const Key('trip-missing-chip-departureTime')),
+        findsNothing,
+      );
+      expect(find.text('Heure de départ obligatoire'), findsNothing);
+
+      // Pastille : défilement jusqu'au champ, mesuré.
+      await tester.tap(
+        find.byKey(const Key('trip-missing-chip-handoverDeadline')),
+      );
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.tripMissingFieldChipTapped,
+          properties: {'field': 'handoverDeadline'},
+        ),
+      ).called(1);
+      expect(
+        tester
+            .getRect(find.byKey(const Key('sheet-handover-deadline-row')))
+            .top,
+        lessThan(844),
+      );
+    });
+
+    testWidgets('étape 2 : adresses manquantes signalées, puis passage à '
+        'l\'étape 3 une fois remplies', (tester) async {
+      setupViewport(tester);
+      final ann = _makeFullAnnouncement();
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(
+            args: CreateTripArgs(
+              announcement: AnnouncementModel(
+                id: ann.id,
+                travelerId: ann.travelerId,
+                departureCity: ann.departureCity,
+                arrivalCity: ann.arrivalCity,
+                departureDate: ann.departureDate,
+                departureTime: ann.departureTime,
+                availableKg: ann.availableKg,
+                totalKg: ann.totalKg,
+                pricePerKg: ann.pricePerKg,
+                status: ann.status,
+                createdAt: ann.createdAt,
+                updatedAt: ann.updatedAt,
+                handoverDeadline: ann.handoverDeadline,
+                transportMode: ann.transportMode,
+                acceptedPaymentMethods: ann.acceptedPaymentMethods,
+                deliveryAddress: ann.deliveryAddress,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('trip-step-continue')));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byType(LieuxCapaciteStep), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('trip-step-continue')));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(
+        find.text('Il reste 1 champ obligatoire à remplir avant de continuer.'),
+        findsOneWidget,
+      );
+      expect(find.text('Il manque 1 champ :'), findsOneWidget);
+      expect(
+        find.byKey(const Key('trip-missing-chip-pickupAddress')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('pickup-address-error')), findsOneWidget);
+      expect(find.byType(PrixConditionsStep), findsNothing);
+
+      // Adresse remplie : plus rien de signalé, l'étape suivante s'ouvre.
+      tester
+          .widget<LieuxCapaciteStep>(find.byType(LieuxCapaciteStep))
+          .onPickupChanged(const AddressData(label: 'Gare', lat: 48, lng: 2));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('trip-missing-chips')), findsNothing);
+      await tester.tap(find.byKey(const Key('trip-step-continue')));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byType(PrixConditionsStep), findsOneWidget);
+    });
+  });
+
+  group('CreateTripScreen — série créée après la publication', () {
+    late _MockAnnouncementBloc announcementBloc;
+    late _MockAnnouncementRepository repo;
+    late StreamController<AnnouncementState> states;
+
+    setUpAll(() => registerFallbackValue(<DateTime>[]));
+
+    setUp(() {
+      announcementBloc = _MockAnnouncementBloc();
+      when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+      if (getIt.isRegistered<AnnouncementBloc>()) {
+        getIt.unregister<AnnouncementBloc>();
+      }
+      getIt.registerFactory<AnnouncementBloc>(() => announcementBloc);
+      repo = _MockAnnouncementRepository();
+      if (getIt.isRegistered<TripSeriesCubit>()) {
+        getIt.unregister<TripSeriesCubit>();
+      }
+      getIt.registerFactoryParam<TripSeriesCubit, AnnouncementModel, void>(
+        (a, _) => TripSeriesCubit(
+          a,
+          repo,
+          _MockTripTemplateRepository(),
+          getIt<AnalyticsService>(),
+        ),
+      );
+    });
+
+    tearDown(() async {
+      await states.close();
+      getIt.unregister<AnnouncementBloc>();
+      getIt.registerFactory<AnnouncementBloc>(() {
+        final b = _MockAnnouncementBloc();
+        when(() => b.state).thenReturn(AnnouncementInitial());
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
+        return b;
+      });
+      getIt.unregister<TripSeriesCubit>();
+      getIt.registerFactoryParam<TripSeriesCubit, AnnouncementModel, void>(
+        (a, _) => TripSeriesCubit(
+          a,
+          _MockAnnouncementRepository(),
+          _MockTripTemplateRepository(),
+          getIt<AnalyticsService>(),
+        ),
+      );
+    });
+
+    Future<void> open(
+      WidgetTester tester, {
+      required bool recurrence,
+      DateTime? day,
+    }) async {
+      setupViewport(tester);
+      states = StreamController<AnnouncementState>.broadcast();
+      when(() => announcementBloc.stream).thenAnswer((_) => states.stream);
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+      if (recurrence && day != null) {
+        tester
+                .widget<TrajetStep>(find.byType(TrajetStep))
+                .departureDateNotifier
+                .value =
+            day;
+        await tester.pump();
+        BlocProvider.of<TripRecurrenceCubit>(
+          tester.element(find.byType(TrajetStep)),
+        ).setEnabled(true);
+        await tester.pump();
+      }
+    }
+
+    testWidgets('récurrence active : série publiée avec les dates choisies, '
+        'résultat sur la carte de l\'écran de succès', (tester) async {
+      final now = DateTime.now().add(const Duration(days: 20));
+      final day = DateTime(now.year, now.month, now.day);
+      final expected = TripRecurrenceDates.compute(
+        day,
+        TripRecurrenceFrequency.monthly,
+        today: DateTime.now(),
+      );
+      final completer = Completer<TripSeriesResult>();
+      when(
+        () => repo.createSeries(
+          any(),
+          dates: any(named: 'dates'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      ).thenAnswer((_) => completer.future);
+
+      await open(tester, recurrence: true, day: day);
+      states.add(
+        AnnouncementCreated(_makeFullAnnouncement(departureDate: day)),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+
+      final captured = verify(
+        () => repo.createSeries(
+          'ann-full-1',
+          dates: captureAny(named: 'dates'),
+          saveAsDraft: false,
+        ),
+      ).captured;
+      expect(captured.single, expected);
+      expect(
+        find.byKey(const Key('trip-series-card-progress')),
+        findsOneWidget,
+      );
+      expect(find.text('Publication des 3 autres dates…'), findsOneWidget);
+
+      completer.complete(
+        TripSeriesResult(
+          seriesId: 's1',
+          created: [_makeFullAnnouncement(), _makeFullAnnouncement()],
+          failed: [
+            TripSeriesFailure(date: expected.last, code: 'draft-limit-reached'),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('2 autres dates ajoutées'), findsOneWidget);
+      expect(find.byKey(const Key('trip-series-card-partial')), findsOneWidget);
+    });
+
+    testWidgets('échec de la série : motif sur la carte, calendrier '
+        'toujours proposé', (tester) async {
+      final now = DateTime.now().add(const Duration(days: 20));
+      final day = DateTime(now.year, now.month, now.day);
+      when(
+        () => repo.createSeries(
+          any(),
+          dates: any(named: 'dates'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      ).thenThrow(Exception('boom'));
+
+      await open(tester, recurrence: true, day: day);
+      states.add(
+        AnnouncementCreated(_makeFullAnnouncement(departureDate: day)),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.byKey(const Key('trip-series-card-error')), findsOneWidget);
+      expect(find.byKey(const Key('trip-series-open')), findsOneWidget);
+    });
+
+    testWidgets('récurrence éteinte : aucune série envoyée', (tester) async {
+      await open(tester, recurrence: false);
+      states.add(AnnouncementCreated(_makeFullAnnouncement()));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.byKey(const Key('trip-series-open')), findsOneWidget);
+      verifyNever(
+        () => repo.createSeries(
+          any(),
+          dates: any(named: 'dates'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      );
+    });
+
+    testWidgets('brouillon : jamais de série', (tester) async {
+      final now = DateTime.now().add(const Duration(days: 20));
+      final day = DateTime(now.year, now.month, now.day);
+      await open(tester, recurrence: true, day: day);
+      states.add(
+        AnnouncementCreated(
+          _makeFullAnnouncement(departureDate: day, status: 'DRAFT'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      verifyNever(
+        () => repo.createSeries(
+          any(),
+          dates: any(named: 'dates'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      );
+    });
+  });
+
+  group('CreateTripScreen — libellés sur une ligne à 360 dp', () {
+    for (final english in [false, true]) {
+      testWidgets('${english ? 'EN' : 'FR'} : boutons, pastilles et puces de '
+          'l\'étape 1 sans débordement ni retour à la ligne', (tester) async {
+        if (english) useEnglish();
+        tester.view.physicalSize = const Size(360, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+        await tester.tap(find.byKey(const Key('trip-step-continue')));
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.ensureVisible(
+          find.byKey(const Key('trip-recurrence-switch')),
+        );
+        await tester.tap(find.byKey(const Key('trip-recurrence-switch')));
+        await tester.pump(const Duration(milliseconds: 300));
+        final day = DateTime.now().add(const Duration(days: 20));
+        tester
+            .widget<TrajetStep>(find.byType(TrajetStep))
+            .departureDateNotifier
+            .value = DateTime(
+          day.year,
+          day.month,
+          day.day,
+        );
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(tester.takeException(), isNull);
+
+        void oneLine(Finder f) {
+          expect(f, findsWidgets);
+          for (final e in f.evaluate()) {
+            final box = e.renderObject! as RenderBox;
+            final style = DefaultTextStyle.of(e).style;
+            final size = (style.fontSize ?? 14) * 1.6;
+            expect(box.size.height, lessThanOrEqualTo(size), reason: '$f');
+          }
+        }
+
+        final l = english ? 'Continue' : 'Continuer';
+        oneLine(find.text(l));
+        oneLine(
+          find.descendant(
+            of: find.byKey(const Key('trip-missing-chips')),
+            matching: find.byType(Text),
+          ),
+        );
+        for (final f in TripRecurrenceFrequency.values) {
+          oneLine(
+            find.descendant(
+              of: find.byKey(Key('trip-recurrence-${f.wire}')),
+              matching: find.byType(Text),
+            ),
+          );
+        }
+        oneLine(
+          find.descendant(
+            of: find.byKey(const Key('trip-recurrence-choose-dates')),
+            matching: find.byType(Text),
+          ),
+        );
+      });
+    }
   });
 }
 

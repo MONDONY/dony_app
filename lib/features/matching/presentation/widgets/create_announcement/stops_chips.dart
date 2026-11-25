@@ -13,10 +13,19 @@ import 'package:flutter/material.dart';
 /// quelle que soit la largeur (feuille d'une étape, FLUTTER-HN) ; sinon des
 /// puces (formulaire du premier trajet).
 class StopsChips extends StatelessWidget {
-  const StopsChips({super.key, required this.notifier, this.segmented = false});
+  const StopsChips({
+    super.key,
+    required this.notifier,
+    this.segmented = false,
+    this.showLabel = true,
+  });
 
   final ValueNotifier<TripStops?> notifier;
   final bool segmented;
+
+  /// Libellé « Escales (facultatif) » au-dessus des puces. Faux quand le
+  /// bloc porte déjà son titre (étape 1 de la création d'un trajet).
+  final bool showLabel;
 
   /// Libellé court d'une option, pour la bascule segmentée : « 2 escales ou
   /// plus » ne tient pas dans un tiers de 320 dp.
@@ -45,11 +54,13 @@ class StopsChips extends StatelessWidget {
         key: const Key('stops-chips'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l.tripStopsLabel,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: DonySpacing.xs),
+          if (showLabel) ...[
+            Text(
+              l.tripStopsLabel,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: DonySpacing.xs),
+          ],
           if (segmented)
             DonySegmentedControl<TripStops?>(
               key: const Key('stops-segmented'),

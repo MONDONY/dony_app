@@ -37,6 +37,8 @@ import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_missing_fields_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_recurrence_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -477,6 +479,17 @@ void _tripRegisterDependencies() {
   if (!getIt.isRegistered<PriceGridRepository>()) {
     getIt.registerSingleton<PriceGridRepository>(
       _TripMockPriceGridRepository(),
+    );
+  }
+  // Récurrence et champs manquants de l'étape 1, fournis par getIt.
+  if (!getIt.isRegistered<TripRecurrenceCubit>()) {
+    getIt.registerFactory<TripRecurrenceCubit>(
+      () => TripRecurrenceCubit(getIt<AnalyticsService>()),
+    );
+  }
+  if (!getIt.isRegistered<TripMissingFieldsCubit>()) {
+    getIt.registerFactory<TripMissingFieldsCubit>(
+      () => TripMissingFieldsCubit(getIt<AnalyticsService>()),
     );
   }
   // TripLegsCubit — étapes d'un voyage (FLUTTER-4D), fourni par getIt.

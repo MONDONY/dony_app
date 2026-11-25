@@ -154,6 +154,24 @@ class TripSeriesCubit extends Cubit<TripSeriesState> {
     emit(state.copyWith(visibleMonth: DateTime(m.year, m.month + delta)));
   }
 
+  /// Série demandée dès la création du trajet (récurrence choisie à l'étape
+  /// 1 du formulaire) : les dates sont cochées puis envoyées. Une date qui ne
+  /// se coche pas (passée, jour du trajet) est écartée, au plus [maxDates].
+  Future<void> submitDates(List<DateTime> dates, {bool draft = false}) {
+    final picked = <DateTime>{
+      for (final d in dates)
+        if (isSelectable(d)) _day(d),
+    }.toList()..sort();
+    final capped = picked.take(maxDates).toList();
+    emit(
+      state.copyWith(
+        selected: capped,
+        visibleMonth: capped.isEmpty ? null : _month(capped.first),
+      ),
+    );
+    return submit(draft: draft);
+  }
+
   Future<void> submit({required bool draft}) async {
     if (state.selected.isEmpty || state.status == TripSeriesStatus.submitting) {
       return;
