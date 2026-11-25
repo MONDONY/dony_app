@@ -24,6 +24,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_step_moment.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_sticky_bar.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
@@ -42,6 +43,7 @@ import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/tracking_consent_prompt.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -168,6 +170,11 @@ class _BidDetailViewState extends State<_BidDetailView>
   /// La feuille de régénération (`?action=new-code`) ne s'ouvre qu'une fois,
   /// au premier chargement où l'expéditeur a un code à renouveler.
   bool _codeRenewalPrompted = false;
+
+  /// Le moment d'étape du colis (modals programmés depuis l'admin) a été
+  /// évalué pour cette ouverture de la fiche : une fois, au premier
+  /// chargement du colis ; ni un rebuild ni un relevé ne le réémettent.
+  bool _parcelStepEvaluated = false;
 
   final _existingPaymentNotifier = ValueNotifier<PaymentModel?>(null);
   final _paymentLoadedNotifier = ValueNotifier<bool>(false);
@@ -458,6 +465,22 @@ class _BidDetailViewState extends State<_BidDetailView>
     });
   }
 
+  /// Modal d'étape du colis : au premier chargement de cette ouverture, le
+  /// moment de l'étape (ACCEPTED, HANDED_OVER, IN_TRANSIT, ARRIVED,
+  /// COMPLETED) part avec le rôle du lecteur ; rien hors des rails. Le modal
+  /// s'ouvre sur cette fiche ([context], qui voit les BLoCs de l'écran).
+  void _maybeNotifyParcelStep(BuildContext context, BidModel bid) {
+    if (_parcelStepEvaluated) return;
+    _parcelStepEvaluated = true;
+    final moment = bidParcelStepMoment(
+      bid,
+      viewerId: _resolveViewerId(context.read<AuthBloc>().state),
+    );
+    if (moment != null) {
+      VideoModalMoments.notifyParcelStep(moment, origin: context);
+    }
+  }
+
   /// La configuration des frais d'annulation a été demandée pour cet écran.
   bool _feeConfigWarmedUp = false;
 
@@ -720,6 +743,7 @@ class _BidDetailViewState extends State<_BidDetailView>
                   _skeletonLoading = false;
                   _maybeOpenCodeRenewal(context, state.bid);
                   _maybeWarmUpFeeConfig(context);
+                  _maybeNotifyParcelStep(context, state.bid);
                   if (state.bid.id != previousBidId) {
                     _existingPaymentNotifier.value = null;
                     _paymentLoadedNotifier.value = false;

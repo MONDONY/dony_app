@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/core/services/app_log.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/video_modal/bloc/video_modal_bloc.dart';
+import 'package:dony/features/video_modal/data/models/parcel_step.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/presentation/screens/video_modal_player_screen.dart';
 import 'package:dony/features/video_modal/presentation/widgets/info_modal_sheet.dart';
@@ -50,11 +52,17 @@ abstract final class VideoModalPresenter {
   /// Se termine quand la feuille et le lecteur sont refermés. Rend `true` si
   /// l'appelant peut poursuivre vers son formulaire ; `false` si une action
   /// d'information a déjà emmené la personne ailleurs (écran ou lien).
+  ///
+  /// [parcel] : le colis d'un modal d'étape, qui donne leur action aux
+  /// boutons `PARCEL_*` (sans lui, ils ferment seulement la feuille).
+  /// [onShown] : appelé une fois le modal affiché (SHOWN compté).
   static Future<bool> present(
     BuildContext context, {
     required VideoModalBloc bloc,
     required VideoModalCampaign campaign,
     required VideoModalTrigger trigger,
+    ParcelActionContext? parcel,
+    VoidCallback? onShown,
     @visibleForTesting ExternalUrlLauncher? launcher,
     @visibleForTesting bool Function()? hasRealSession,
     @visibleForTesting VideoModalImageLoader? imageLoader,
@@ -85,6 +93,7 @@ abstract final class VideoModalPresenter {
         if (!isVideoModalFrontmost(context)) return true;
       }
       answer(VideoModalEventType.shown);
+      onShown?.call();
       if (campaign.isInfo) {
         return await _presentInfo(
           context,
@@ -94,6 +103,7 @@ abstract final class VideoModalPresenter {
           dontShowAgain: dontShowAgain,
           launcher: launcher,
           hasRealSession: hasRealSession,
+          parcel: parcel,
         );
       }
       final choice = await VideoModalSheet.show(
@@ -138,6 +148,7 @@ abstract final class VideoModalPresenter {
     required ValueNotifier<bool> dontShowAgain,
     ExternalUrlLauncher? launcher,
     bool Function()? hasRealSession,
+    ParcelActionContext? parcel,
   }) async {
     final choice = await InfoModalSheet.show(
       context,
@@ -185,18 +196,23 @@ abstract final class VideoModalPresenter {
       action,
       launcher: launcher,
       hasRealSession: hasRealSession,
+      parcel: parcel,
     );
     return !left;
   }
 
   /// Exécute l'action d'un bouton. Rend `true` si la personne a quitté le
   /// parcours en cours (écran ouvert, feuille de connexion, lien externe).
+  ///
+  /// [parcel] : contexte du colis d'un modal d'étape, sans lequel un bouton
+  /// `PARCEL_*` ne fait rien d'autre que fermer la feuille.
   @visibleForTesting
   static Future<bool> runInfoAction(
     BuildContext context,
     VideoModalAction action, {
     ExternalUrlLauncher? launcher,
     bool Function()? hasRealSession,
+    ParcelActionContext? parcel,
   }) async {
     switch (action.kind) {
       case VideoModalActionKind.close:
@@ -211,11 +227,14 @@ abstract final class VideoModalPresenter {
       case VideoModalActionKind.screen:
         final screen = action.screen;
         if (screen == null) return false;
-        // Écran de colis : sa route dépend du colis du moment (bidId, rôle),
-        // que seul l'appelant d'une étape de colis connaît. Sans ce contexte,
-        // jamais de navigation (ni feuille de connexion) : le bouton ferme
-        // simplement la feuille. À brancher avec le contexte colis (P4).
-        if (screen.needsParcelContext) return false;
+        // Écran de colis : son action dépend du colis du moment (bidId,
+        // rôle), que seul l'appelant d'une étape de colis connaît. Sans ce
+        // contexte, jamais de navigation (ni feuille de connexion) : le
+        // bouton ferme simplement la feuille.
+        if (screen.needsParcelContext) {
+          if (parcel == null) return false;
+          return _runParcelAction(context, screen, parcel);
+        }
         final real =
             (hasRealSession ??
             () => getItSafe<FirebaseSessionProbe>()?.hasRealSession ?? false)();
@@ -229,6 +248,48 @@ abstract final class VideoModalPresenter {
           unawaited(context.push<Object?>(screen.route));
         }
         return true;
+    }
+  }
+
+  /// Bouton `PARCEL_*` d'un modal d'étape. Un bouton qui ne s'applique pas
+  /// (rôle, code absent) n'est normalement pas affiché ; exécuté quand même,
+  /// il ne fait rien. Le détail ouvre la fiche du colis (ou la réception du
+  /// destinataire), sauf si la personne y est déjà : le modal se ferme
+  /// simplement sur elle. Une fenêtre qui échoue (colis inconnu, périmé) ne
+  /// casse rien.
+  static Future<bool> _runParcelAction(
+    BuildContext context,
+    InfoScreen screen,
+    ParcelActionContext parcel,
+  ) async {
+    if (!parcel.canRun(screen)) return false;
+    if (screen == InfoScreen.parcelDetail) {
+      final route = parcel.detailRoute;
+      if (_currentPath(context) == route) return false;
+      unawaited(context.push<Object?>(route));
+      return true;
+    }
+    final open = parcel.openerFor(screen);
+    if (open == null) return false;
+    try {
+      await open(context);
+    } on Object catch (e) {
+      AppLog.debug(
+        'video_modal.parcel_action_failed',
+        data: {'screen': screen.wire, 'error': '${e.runtimeType}'},
+      );
+    }
+    return true;
+  }
+
+  /// Chemin affiché par le routeur, `null` hors GoRouter.
+  static String? _currentPath(BuildContext context) {
+    try {
+      return GoRouter.maybeOf(
+        context,
+      )?.routerDelegate.currentConfiguration.uri.path;
+    } on Object {
+      return null;
     }
   }
 

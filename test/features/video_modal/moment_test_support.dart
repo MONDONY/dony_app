@@ -29,3 +29,14 @@ RecordingMoments useRecordingMoments() {
   addTearDown(VideoModalMoments.resetForTest);
   return moments;
 }
+
+/// Laisse répondre le stockage du téléphone (hors du temps simulé), puis
+/// livre le moment émis.
+Future<void> flushStorage(WidgetTester tester) async {
+  for (var i = 0; i < 2; i++) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
+    await tester.pump();
+  }
+}

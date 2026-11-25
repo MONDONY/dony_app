@@ -24735,4 +24735,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get scanConfirmNoCodeQuestion =>
       'The recipient doesn\'t have the code?';
+
+  @override
+  String get parcelModalFallbackRecipient => 'your recipient';
+
+  @override
+  String get parcelModalFallbackTraveler => 'your traveler';
+
+  @override
+  String get parcelModalFallbackSender => 'the sender';
+
+  @override
+  String get parcelModalFallbackArrivalCity => 'the arrival city';
 }

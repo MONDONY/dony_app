@@ -36,7 +36,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// ferment d'abord le sheet, puis agissent avec le [context] de l'écran.
 ///
 /// [source] : `tile` pour la grille, `footer` quand le bouton du bas « Envoyer
-/// le code à … » ou « Renvoyer le code à … » ouvre le sheet `prevenir`.
+/// le code à … » ou « Renvoyer le code à … » ouvre le sheet `prevenir`,
+/// `modal` quand c'est un bouton d'un modal d'étape du colis.
 Future<void> openSenderTileSheet(
   BuildContext context,
   BidModel bid,

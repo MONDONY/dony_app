@@ -39761,6 +39761,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le destinataire n\'a pas le code ?'**
   String get scanConfirmNoCodeQuestion;
+
+  /// Modal d'étape du colis : remplace {destinataire} dans les textes de l'admin quand le nom du destinataire est inconnu (majuscule ajoutée en tête de phrase)
+  ///
+  /// In fr, this message translates to:
+  /// **'votre destinataire'**
+  String get parcelModalFallbackRecipient;
+
+  /// Modal d'étape du colis : remplace {voyageur} dans les textes de l'admin quand le nom du voyageur est inconnu (majuscule ajoutée en tête de phrase)
+  ///
+  /// In fr, this message translates to:
+  /// **'votre voyageur'**
+  String get parcelModalFallbackTraveler;
+
+  /// Modal d'étape du colis : remplace {expéditeur} dans les textes de l'admin quand le nom de l'expéditeur est inconnu (majuscule ajoutée en tête de phrase)
+  ///
+  /// In fr, this message translates to:
+  /// **'l\'expéditeur'**
+  String get parcelModalFallbackSender;
+
+  /// Modal d'étape du colis : remplace {ville_arrivee} dans les textes de l'admin quand la ville d'arrivée est inconnue (majuscule ajoutée en tête de phrase)
+  ///
+  /// In fr, this message translates to:
+  /// **'la ville d\'arrivée'**
+  String get parcelModalFallbackArrivalCity;
 }
 
 class _AppLocalizationsDelegate

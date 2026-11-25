@@ -23993,5 +23993,13 @@
   "scanConfirmNoCodeTitle": "Pas de code, pas de remise",
   "@scanConfirmNoCodeTitle": {"description": "Saisie du code par le voyageur : titre de l'encadré d'avertissement au-dessus du champ"},
   "scanConfirmNoCodeQuestion": "Le destinataire n'a pas le code ?",
-  "@scanConfirmNoCodeQuestion": {"description": "Saisie du code par le voyageur : question sous le champ, suivie du lien « Appeler » et du prénom de l'expéditeur"}
+  "@scanConfirmNoCodeQuestion": {"description": "Saisie du code par le voyageur : question sous le champ, suivie du lien « Appeler » et du prénom de l'expéditeur"},
+  "parcelModalFallbackRecipient": "votre destinataire",
+  "@parcelModalFallbackRecipient": {"description": "Modal d'étape du colis : remplace {destinataire} dans les textes de l'admin quand le nom du destinataire est inconnu (majuscule ajoutée en tête de phrase)"},
+  "parcelModalFallbackTraveler": "votre voyageur",
+  "@parcelModalFallbackTraveler": {"description": "Modal d'étape du colis : remplace {voyageur} dans les textes de l'admin quand le nom du voyageur est inconnu (majuscule ajoutée en tête de phrase)"},
+  "parcelModalFallbackSender": "l'expéditeur",
+  "@parcelModalFallbackSender": {"description": "Modal d'étape du colis : remplace {expéditeur} dans les textes de l'admin quand le nom de l'expéditeur est inconnu (majuscule ajoutée en tête de phrase)"},
+  "parcelModalFallbackArrivalCity": "la ville d'arrivée",
+  "@parcelModalFallbackArrivalCity": {"description": "Modal d'étape du colis : remplace {ville_arrivee} dans les textes de l'admin quand la ville d'arrivée est inconnue (majuscule ajoutée en tête de phrase)"}
 }

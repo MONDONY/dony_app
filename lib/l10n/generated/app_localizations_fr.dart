@@ -24908,4 +24908,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get scanConfirmNoCodeQuestion => 'Le destinataire n\'a pas le code ?';
+
+  @override
+  String get parcelModalFallbackRecipient => 'votre destinataire';
+
+  @override
+  String get parcelModalFallbackTraveler => 'votre voyageur';
+
+  @override
+  String get parcelModalFallbackSender => 'l\'expéditeur';
+
+  @override
+  String get parcelModalFallbackArrivalCity => 'la ville d\'arrivée';
 }

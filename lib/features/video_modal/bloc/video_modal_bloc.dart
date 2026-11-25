@@ -82,9 +82,10 @@ class VideoModalBloc extends Bloc<VideoModalEvent, VideoModalState> {
     Emitter<VideoModalState> emit,
   ) async {
     if (event.event == VideoModalEventType.shown) {
-      // « À chaque fois » : aucune case. Sinon la case (type de modal, nature
-      // du déclencheur) : les autres cases restent libres.
-      if (!event.campaign.isEveryTime) {
+      // « À chaque fois » et « une fois par colis » : aucune case. Sinon la
+      // case (type de modal, nature du déclencheur) : les autres cases
+      // restent libres.
+      if (!event.campaign.ignoresSessionLimit) {
         emit(
           state.copyWith(
             usedSlots: {
@@ -94,6 +95,18 @@ class VideoModalBloc extends Bloc<VideoModalEvent, VideoModalState> {
           ),
         );
       }
+    }
+    // « Ne plus afficher » : la version ne revient plus de ce lancement, même
+    // hors de la limite de session.
+    if (event.event == VideoModalEventType.dontShowAgain) {
+      emit(
+        state.copyWith(
+          suppressed: {
+            ...state.suppressed,
+            VideoModalState.suppressionKey(event.campaign),
+          },
+        ),
+      );
     }
     final realSession = _hasRealSession();
     unawaited(

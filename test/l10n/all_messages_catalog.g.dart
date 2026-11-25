@@ -8583,6 +8583,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'parcelCallSender': (l) => l.parcelCallSender,
   'scanConfirmNoCodeTitle': (l) => l.scanConfirmNoCodeTitle,
   'scanConfirmNoCodeQuestion': (l) => l.scanConfirmNoCodeQuestion,
+  'parcelModalFallbackRecipient': (l) => l.parcelModalFallbackRecipient,
+  'parcelModalFallbackTraveler': (l) => l.parcelModalFallbackTraveler,
+  'parcelModalFallbackSender': (l) => l.parcelModalFallbackSender,
+  'parcelModalFallbackArrivalCity': (l) => l.parcelModalFallbackArrivalCity,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

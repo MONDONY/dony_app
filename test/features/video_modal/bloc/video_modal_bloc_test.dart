@@ -185,7 +185,15 @@ void main() {
           event: event,
         ),
       ),
-      expect: () => <VideoModalState>[],
+      // « Ne plus afficher » écarte la version pour le reste du lancement ;
+      // les autres réponses ne changent pas l'état.
+      expect: () => event == VideoModalEventType.dontShowAgain
+          ? [
+              VideoModalState(
+                suppressed: {VideoModalState.suppressionKey(campaign())},
+              ),
+            ]
+          : <VideoModalState>[],
       verify: (_) {
         verify(
           () => repo.record(campaign(), event, realSession: false),
@@ -247,8 +255,13 @@ void main() {
         event: VideoModalEventType.dontShowAgain,
       ),
     ),
-    // Ne compte pas comme un affichage : « un modal par session » intact.
-    expect: () => <VideoModalState>[],
+    // Ne compte pas comme un affichage : « un modal par session » intact ;
+    // la version est écartée pour le reste du lancement.
+    expect: () => [
+      VideoModalState(
+        suppressed: {VideoModalState.suppressionKey(infoCampaign())},
+      ),
+    ],
     verify: (_) {
       verify(
         () => analytics.logEvent(

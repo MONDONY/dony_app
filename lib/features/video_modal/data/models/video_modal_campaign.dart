@@ -91,6 +91,19 @@ enum VideoModalTrigger {
     return null;
   }
 
+  /// Statut d'un colis vers son étape : `null` pour tout statut hors des
+  /// rails (annulé, absent, refusé, expiré, en négociation, en attente de
+  /// paiement ou de réponse, refusé par le voyageur…), qui n'ouvre aucun
+  /// modal d'étape.
+  static VideoModalTrigger? forParcelStatus(String? status) => switch (status) {
+    'ACCEPTED' => parcelAccepted,
+    'HANDED_OVER' => parcelHandedOver,
+    'IN_TRANSIT' => parcelInTransit,
+    'ARRIVED' => parcelArrived,
+    'COMPLETED' => parcelDelivered,
+    _ => null,
+  };
+
   /// Onglet du shell (`StatefulShellRoute` de `router.dart`, branches 0 à 4 :
   /// Rechercher, Activités, Suivi, Messages, Moi) vers son déclencheur.
   static VideoModalTrigger? forShellTab(int index) => switch (index) {
@@ -315,8 +328,9 @@ enum VideoModalFrequency {
   /// session (un modal d'écran ou de moment peut revenir à chaque occurrence).
   everyTime('EVERY_TIME'),
 
-  /// Une fois par colis (étapes de colis) : le back compte par colis, pas
-  /// l'app, donc aucun plafond local.
+  /// Une fois par colis (étapes de colis) : le back la sert toujours
+  /// (aucun plafond, réponse sans effet) et l'app dédoublonne par colis dans
+  /// son historique local. Hors de la limite « un modal par lancement ».
   oncePerParcel('ONCE_PER_PARCEL');
 
   const VideoModalFrequency(this.wire);
@@ -582,6 +596,97 @@ class VideoModalCampaign extends Equatable {
 
   /// Affichée à chaque occurrence de l'action, hors limites de session.
   bool get isEveryTime => frequency == VideoModalFrequency.everyTime;
+
+  /// Une fois par colis : dédoublonnée par colis sur le téléphone.
+  bool get isOncePerParcel => frequency == VideoModalFrequency.oncePerParcel;
+
+  /// N'occupe aucune case de la limite « un modal par lancement » et n'en
+  /// est jamais bloquée : « à chaque fois » et « une fois par colis ».
+  bool get ignoresSessionLimit => isEveryTime || isOncePerParcel;
+
+  /// Copie adaptée au colis d'un modal d'étape, à l'ouverture : [fill]
+  /// remplit les variables des textes (titre, sous-titre, texte, libellés,
+  /// points forts, texte alternatif de l'image) ; [canRun] dit quels boutons
+  /// `PARCEL_*` s'appliquent à la personne. Un bouton qui ne s'applique pas
+  /// n'est pas affiché : principal masqué, le secondaire prend sa place ; les
+  /// deux masqués, un seul bouton qui ferme le modal. Liens, « Fermer » et
+  /// écrans hors colis ne sont jamais masqués.
+  VideoModalCampaign withParcelStep({
+    required String Function(String text) fill,
+    required bool Function(InfoScreen screen) canRun,
+  }) {
+    bool shown(VideoModalAction? a) {
+      final screen = a?.screen;
+      return a != null &&
+          (a.kind != VideoModalActionKind.screen ||
+              screen == null ||
+              !screen.needsParcelContext ||
+              canRun(screen));
+    }
+
+    String? fillOpt(String? t) => t == null ? null : fill(t);
+
+    VideoModalAction? primary = primaryAction;
+    VideoModalAction? secondary = secondaryAction;
+    String? primaryText = primaryLabel;
+    String? secondaryText = secondaryLabel;
+    if (isInfo) {
+      final keepPrimary = shown(primary);
+      final keepSecondary = shown(secondary);
+      if (!keepPrimary && keepSecondary) {
+        primary = secondary;
+        primaryText = secondaryText;
+        secondary = null;
+        secondaryText = null;
+      } else if (!keepPrimary) {
+        primary = const VideoModalAction.close();
+        primaryText = null;
+        secondary = null;
+        secondaryText = null;
+      } else if (!keepSecondary) {
+        secondary = null;
+        secondaryText = null;
+      }
+    }
+    return VideoModalCampaign(
+      id: id,
+      version: version,
+      triggers: triggers,
+      title: fill(title),
+      subtitle: fillOpt(subtitle),
+      youtubeVideoId: youtubeVideoId,
+      type: type,
+      body: fillOpt(body),
+      icon: icon,
+      primaryAction: primary,
+      secondaryAction: secondary,
+      durationSeconds: durationSeconds,
+      highlights: [
+        for (final h in highlights)
+          VideoModalHighlight(icon: h.icon, text: fill(h.text)),
+      ],
+      primaryLabel: fillOpt(primaryText),
+      secondaryLabel: fillOpt(secondaryText),
+      maxDisplays: maxDisplays,
+      displays: displays,
+      audience: audience,
+      layout: layout,
+      sizePercent: sizePercent,
+      imageMode: imageMode,
+      imageFit: imageFit,
+      imageUrl: imageUrl,
+      imageAlt: fillOpt(imageAlt),
+      priority: priority,
+      frequency: frequency,
+      frequencyDays: frequencyDays,
+      stopAfterAnswer: stopAfterAnswer,
+      allowDontShowAgain: allowDontShowAgain,
+      lastShownAt: lastShownAt,
+      triggerOptions: triggerOptions,
+      corridors: corridors,
+      parcelRoles: parcelRoles,
+    );
+  }
 
   /// Campagne lisible, ou `null` si un champ indispensable manque ou est
   /// invalide : le back peut être plus ancien ou plus récent que l'app, une

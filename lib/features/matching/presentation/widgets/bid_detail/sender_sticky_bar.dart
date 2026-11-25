@@ -264,7 +264,7 @@ class SenderStickyBar extends StatelessWidget {
             ? _SenderFooterAction.showMyCode
             : _SenderFooterAction.track;
       }
-      return _canSendCode(bid)
+      return canSendCode(bid)
           ? _SenderFooterAction.sendCode
           : _SenderFooterAction.track;
     }
@@ -275,7 +275,7 @@ class SenderStickyBar extends StatelessWidget {
             ? _SenderFooterAction.callTraveler
             : _SenderFooterAction.track;
       }
-      return _canSendCode(bid)
+      return canSendCode(bid)
           ? _SenderFooterAction.resendCode
           : _SenderFooterAction.track;
     }
@@ -290,8 +290,9 @@ class SenderStickyBar extends StatelessWidget {
 
   /// Le code de retrait peut partir vers un destinataire tiers depuis la
   /// feuille « Prévenir » : le message peut partir et le code existe (ni
-  /// bloqué, ni expiré). Mêmes règles que la tuile et son sheet.
-  static bool _canSendCode(BidModel bid) =>
+  /// bloqué, ni expiré). Mêmes règles que la tuile et son sheet ; aussi
+  /// celles du bouton « Envoyer le code » d'un modal d'étape du colis.
+  static bool canSendCode(BidModel bid) =>
       !bid.recipientIsSender &&
       PrevenirDestinataire.canNotify(bid) &&
       PrevenirDestinataire.withCode(bid);
@@ -406,7 +407,7 @@ class SenderStickyBar extends StatelessWidget {
 
   /// « Envoyer le code à {prénom} » (colis remis ou en route) ou « Renvoyer
   /// le code à {prénom} » (arrivé) : ouvre la feuille « Prévenir », déjà en
-  /// mode code puisque le code existe ([_canSendCode]). Prénom coupé avant le
+  /// mode code puisque le code existe ([canSendCode]). Prénom coupé avant le
   /// libellé ([buttonFirstName]), jamais la police.
   Widget _sendCodeButton(BuildContext context) {
     final l = context.l10n;
