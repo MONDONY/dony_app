@@ -326,8 +326,8 @@ void main() {
         ParcelRole.traveler,
         false,
         [
-          "Ask the recipient for their 6-digit code. Without a code, call the "
-              "sender.",
+          'Ask the recipient for their 6-digit code. Without a code, call the '
+              'sender.',
         ],
       ),
       (
