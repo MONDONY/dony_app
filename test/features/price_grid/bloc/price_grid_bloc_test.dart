@@ -7,6 +7,7 @@ import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
+import 'package:dony/features/price_grid/data/models/price_grid_suggestion.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -359,5 +360,96 @@ void main() {
         ]),
       ],
     );
+
+    group('prix de la route (grille vide)', () {
+      const suggestions = [
+        PriceGridSuggestion(label: 'Valise cabine', unitPriceNet: 10),
+        PriceGridSuggestion(label: 'Sac à dos 50L', unitPriceNet: 15),
+      ];
+
+      blocTest<PriceGridBloc, PriceGridState>(
+        'ajoute chaque article, relit une fois, compte la création',
+        build: () {
+          when(
+            () => repository.addItem(
+              label: any(named: 'label'),
+              unitPriceNet: any(named: 'unitPriceNet'),
+            ),
+          ).thenAnswer((_) async => _item1);
+          when(
+            () => repository.getItems(),
+          ).thenAnswer((_) async => [_item1, _item2]);
+          return PriceGridBloc(repository, analytics);
+        },
+        seed: () => const PriceGridLoaded([]),
+        act: (b) => b.add(const PriceGridSuggestionsAddRequested(suggestions)),
+        expect: () => [
+          isA<PriceGridLoaded>().having((s) => s.items, 'items', [
+            _item1,
+            _item2,
+          ]),
+        ],
+        verify: (_) {
+          verify(
+            () => repository.addItem(label: 'Valise cabine', unitPriceNet: 10),
+          ).called(1);
+          verify(
+            () => repository.addItem(label: 'Sac à dos 50L', unitPriceNet: 15),
+          ).called(1);
+          verify(() => repository.getItems()).called(1);
+          verify(
+            () => backend.capture(
+              AnalyticsEvents.priceGridItemAdded,
+              any(that: containsPair('source', 'route_suggestion')),
+            ),
+          ).called(2);
+          verify(
+            () => backend.capture(AnalyticsEvents.priceGridCreated, any()),
+          ).called(1);
+        },
+      );
+
+      blocTest<PriceGridBloc, PriceGridState>(
+        'un article refusé n\'arrête pas les suivants',
+        build: () {
+          when(
+            () => repository.addItem(label: 'Valise cabine', unitPriceNet: 10),
+          ).thenThrow(Exception('doublon'));
+          when(
+            () => repository.addItem(label: 'Sac à dos 50L', unitPriceNet: 15),
+          ).thenAnswer((_) async => _item2);
+          when(() => repository.getItems()).thenAnswer((_) async => [_item2]);
+          return PriceGridBloc(repository, analytics);
+        },
+        seed: () => const PriceGridLoaded([]),
+        act: (b) => b.add(const PriceGridSuggestionsAddRequested(suggestions)),
+        expect: () => [
+          isA<PriceGridLoaded>().having((s) => s.items, 'items', [_item2]),
+        ],
+      );
+
+      blocTest<PriceGridBloc, PriceGridState>(
+        'tous refusés : erreur puis liste précédente',
+        build: () {
+          when(
+            () => repository.addItem(
+              label: any(named: 'label'),
+              unitPriceNet: any(named: 'unitPriceNet'),
+            ),
+          ).thenThrow(Exception('hors ligne'));
+          return PriceGridBloc(repository, analytics);
+        },
+        seed: () => const PriceGridLoaded([]),
+        act: (b) => b.add(const PriceGridSuggestionsAddRequested(suggestions)),
+        expect: () => [isA<PriceGridError>(), isA<PriceGridLoaded>()],
+      );
+
+      blocTest<PriceGridBloc, PriceGridState>(
+        'liste vide : rien ne se passe',
+        build: () => PriceGridBloc(repository, analytics),
+        act: (b) => b.add(const PriceGridSuggestionsAddRequested([])),
+        expect: () => <PriceGridState>[],
+      );
+    });
   });
 }

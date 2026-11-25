@@ -87,7 +87,8 @@ void main() {
       expect(back.currentStep, 0);
       expect(back.desiredDate, isNull);
       expect(back.negotiable, isTrue);
-      expect(back.acceptedPaymentMethods, {PaymentMethod.stripe});
+      // Espèces et carte cochées au départ.
+      expect(back.acceptedPaymentMethods, kDefaultPackageRequestPaymentMethods);
       expect(back.parcelSize, isNull);
       expect(back.transportMode, isNull);
     });
@@ -115,7 +116,7 @@ void main() {
       }, now: _now);
       expect(back.currentStep, 2);
       expect(back.parcelSize, isNull);
-      expect(back.acceptedPaymentMethods, {PaymentMethod.stripe});
+      expect(back.acceptedPaymentMethods, kDefaultPackageRequestPaymentMethods);
       expect(back.categories, ['A']);
       expect(back.desiredDate, isNull);
     });

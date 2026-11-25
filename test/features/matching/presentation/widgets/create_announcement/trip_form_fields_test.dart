@@ -10,8 +10,8 @@ void main() {
     expect(f.availableKg.value, 23);
     expect(f.priceOption.value, -1);
     expect(f.pricePerKg, isNull);
-    expect(f.kgPriceEnabled.value, isTrue);
-    expect(f.cashEnabled.value, isFalse);
+    // Espèces cochées d'office, comme à la création d'un trajet.
+    expect(f.cashEnabled.value, isTrue);
     expect(f.mobileMoneyEnabled.value, isFalse);
     expect(f.negotiable.value, isFalse);
     // Rien de coché d'office (FLUTTER-1Y) : liste vide = tout accepté.
@@ -49,11 +49,11 @@ void main() {
     f.dispose();
   });
 
-  test('pricePerKg nul quand le prix au kilo est désactivé', () {
+  test('pricePerKg nul tant qu\'aucun prix n\'est posé', () {
     final f = TripFormFields();
-    f.selectPrice(6);
-    f.kgPriceEnabled.value = false;
     expect(f.pricePerKg, isNull);
+    f.selectPrice(6);
+    expect(f.pricePerKg, 6);
     f.dispose();
   });
 
@@ -61,6 +61,11 @@ void main() {
     'acceptedPaymentMethodsFor : Stripe selon devise et compte, cash forcé sans Stripe',
     () {
       final f = TripFormFields();
+      expect(f.acceptedPaymentMethodsFor(stripeConfigured: true), [
+        'STRIPE',
+        'CASH',
+      ]);
+      f.cashEnabled.value = false;
       expect(f.acceptedPaymentMethodsFor(stripeConfigured: true), ['STRIPE']);
       expect(f.acceptedPaymentMethodsFor(stripeConfigured: false), ['CASH']);
       f.cashEnabled.value = true;

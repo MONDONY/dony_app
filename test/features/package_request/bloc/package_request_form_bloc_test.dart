@@ -26,6 +26,17 @@ PackageRequestFormBloc makeBloc(MockRepo repo) => PackageRequestFormBloc(
 );
 
 void main() {
+  test('nouvelle demande : espèces et carte cochées au départ', () {
+    expect(const PackageRequestFormState().acceptedPaymentMethods, {
+      PaymentMethod.stripe,
+      PaymentMethod.cash,
+    });
+    expect(kDefaultPackageRequestPaymentMethods, {
+      PaymentMethod.stripe,
+      PaymentMethod.cash,
+    });
+  });
+
   // Épingle le taux de commission : ces tests assertent des montants
   // calculés à 12 % (indépendants du défaut kDonyCommissionRateDefault).
   setUpAll(() => setDonyCommissionRate(0.12));
@@ -176,7 +187,7 @@ void main() {
           transportMode: TransportMode.plane,
           categories: const ['Vêtements'],
           negotiable: true,
-          acceptedPaymentMethods: {PaymentMethod.stripe},
+          acceptedPaymentMethods: kDefaultPackageRequestPaymentMethods,
           totalBudgetEur: 25,
         ),
       ).called(1);
@@ -1155,6 +1166,9 @@ void main() {
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'toggle CASH adds it to acceptedPaymentMethods',
     build: () => makeBloc(repo),
+    seed: () => const PackageRequestFormState(
+      acceptedPaymentMethods: {PaymentMethod.stripe},
+    ),
     act: (b) =>
         b.add(const PackageRequestPaymentMethodToggled(PaymentMethod.cash)),
     expect: () => [
@@ -1169,7 +1183,9 @@ void main() {
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'toggle STRIPE when it is the only method keeps STRIPE (cannot empty) — no emission',
     build: () => makeBloc(repo),
-    seed: () => const PackageRequestFormState(),
+    seed: () => const PackageRequestFormState(
+      acceptedPaymentMethods: {PaymentMethod.stripe},
+    ),
     act: (b) =>
         b.add(const PackageRequestPaymentMethodToggled(PaymentMethod.stripe)),
     // BLoC does not emit when the resulting set equals the current state.
@@ -1185,10 +1201,7 @@ void main() {
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'passage en XOF retire la carte et coche mobile money et espèces',
     build: () => makeBloc(repo),
-    seed: () => const PackageRequestFormState(
-      currency: SupportedCurrency.eur,
-      acceptedPaymentMethods: {PaymentMethod.stripe, PaymentMethod.cash},
-    ),
+    seed: () => const PackageRequestFormState(currency: SupportedCurrency.eur),
     act: (b) =>
         b.add(const PackageRequestCurrencyChanged(SupportedCurrency.xof)),
     expect: () => [
@@ -1536,7 +1549,7 @@ void main() {
             transportMode: TransportMode.plane,
             categories: const ['Vêtements'],
             negotiable: true,
-            acceptedPaymentMethods: {PaymentMethod.stripe},
+            acceptedPaymentMethods: kDefaultPackageRequestPaymentMethods,
             totalBudgetEur: 25,
           ),
         ).called(1);

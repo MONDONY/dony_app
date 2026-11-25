@@ -177,3 +177,13 @@ class AnnouncementGridPreviewLoadRequested extends AnnouncementFormEvent {
 class AnnouncementPricePerKgClearedRequested extends AnnouncementFormEvent {
   const AnnouncementPricePerKgClearedRequested();
 }
+
+/// Publication arrêtée faute de moyen de paiement coché. [action] :
+/// `publish` (création), `save` (modification) ou `draft` (brouillon serveur).
+class AnnouncementPublishBlockedPaymentRequested extends AnnouncementFormEvent {
+  final String action;
+  const AnnouncementPublishBlockedPaymentRequested(this.action);
+
+  @override
+  List<Object?> get props => [action];
+}

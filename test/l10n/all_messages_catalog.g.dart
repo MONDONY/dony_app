@@ -1022,22 +1022,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripPublishIntroVerifyHint(placeholderMarker('continueLabel')),
   'tripPublishIntroStripeTitle': (l) => l.tripPublishIntroStripeTitle,
   'tripPublishIntroStripeSubtitle': (l) => l.tripPublishIntroStripeSubtitle,
-  'tripPublishPricingModeKg': (l) => l.tripPublishPricingModeKg,
-  'tripPublishPricingModeMixed': (l) => l.tripPublishPricingModeMixed,
   'tripPublishPricePerKgSectionLabel': (l) =>
       l.tripPublishPricePerKgSectionLabel,
-  'tripPublishKgPriceToggleTitle': (l) => l.tripPublishKgPriceToggleTitle,
-  'tripPublishKgPriceToggleSubtitle': (l) => l.tripPublishKgPriceToggleSubtitle,
-  'tripPublishCustomPriceChipLabel': (l) => l.tripPublishCustomPriceChipLabel,
-  'tripPublishCustomPriceFieldHint': (l) => l.tripPublishCustomPriceFieldHint,
-  'tripPublishPriceSelectPrompt': (l) => l.tripPublishPriceSelectPrompt,
-  'tripPublishUnlimitedCapacityEstimateNote': (l) =>
-      l.tripPublishUnlimitedCapacityEstimateNote,
-  'tripPublishPriceEstimateLine': (l) => l.tripPublishPriceEstimateLine(
-    placeholderMarker('travelerNet'),
-    placeholderMarker('senderTotal'),
-  ),
-  'tripPublishGridCommissionNotice': (l) => l.tripPublishGridCommissionNotice,
   'tripPublishNegotiableToggleTitle': (l) => l.tripPublishNegotiableToggleTitle,
   'tripPublishNegotiableToggleSubtitle': (l) =>
       l.tripPublishNegotiableToggleSubtitle,
@@ -1097,19 +1083,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripPublishLockedPriceNoteSubtitle,
   'tripPublishAgreedPriceLabel': (l) => l.tripPublishAgreedPriceLabel,
   'tripPublishGridPreviewLabel': (l) => l.tripPublishGridPreviewLabel,
-  'tripPublishGridPreviewSeeAll': (l) =>
-      l.tripPublishGridPreviewSeeAll(intPlaceholderValue),
-  'tripPublishGridPreviewNote': (l) => l.tripPublishGridPreviewNote,
   'tripPublishGridPreviewConvertedNote': (l) =>
       l.tripPublishGridPreviewConvertedNote(placeholderMarker('currency')),
-  'tripPublishGridSheetTitle': (l) => l.tripPublishGridSheetTitle,
-  'tripPublishGridSheetSubtitle': (l) => l.tripPublishGridSheetSubtitle,
-  'tripPublishGridSheetEditCta': (l) => l.tripPublishGridSheetEditCta,
-  'tripPublishGridSheetCommissionNote': (l) =>
-      l.tripPublishGridSheetCommissionNote,
-  'tripPublishGridEmptyTitle': (l) => l.tripPublishGridEmptyTitle,
-  'tripPublishGridEmptySubtitle': (l) => l.tripPublishGridEmptySubtitle,
-  'tripPublishGridComposeCta': (l) => l.tripPublishGridComposeCta,
   'tripPublishCorridorConfirmedBadge': (l) =>
       l.tripPublishCorridorConfirmedBadge,
   'tripPublishRouteSectionLabel': (l) => l.tripPublishRouteSectionLabel,
@@ -2099,12 +2074,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidCreateGridItemRemoveSemantic(placeholderMarker('label')),
   'bidCreateGridItemAddSemantic': (l) =>
       l.bidCreateGridItemAddSemantic(placeholderMarker('label')),
-  'bidCreatePriceTooLowHint': (l) => l.bidCreatePriceTooLowHint,
-  'bidCreatePriceTooHighHint': (l) => l.bidCreatePriceTooHighHint,
-  'bidCreateMarketPriceCorridor': (l) =>
-      l.bidCreateMarketPriceCorridor(placeholderMarker('corridor')),
-  'bidCreateMarketPriceLabel': (l) => l.bidCreateMarketPriceLabel,
-  'bidCreateCompetitivePriceSuffix': (l) => l.bidCreateCompetitivePriceSuffix,
   'bidCreateDisclaimerSigned': (l) =>
       l.bidCreateDisclaimerSigned(placeholderMarker('dateTime')),
   'tripPublishCashCommissionIntro': (l) => l.tripPublishCashCommissionIntro,
@@ -7497,10 +7466,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.walletTopupAmountAtLeast(placeholderMarker('min')),
   'walletTopupAmountAtMost': (l) =>
       l.walletTopupAmountAtMost(placeholderMarker('max')),
-  'tripPublishGridCommissionNoticeGrid': (l) =>
-      l.tripPublishGridCommissionNoticeGrid,
-  'tripPublishGridSheetCommissionNoteGrid': (l) =>
-      l.tripPublishGridSheetCommissionNoteGrid,
   'priceGridCommissionNoticeGrid': (l) => l.priceGridCommissionNoticeGrid,
   'priceGridSenderWillPayMessageGrid': (l) =>
       l.priceGridSenderWillPayMessageGrid(
@@ -8515,6 +8480,59 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'designateYadonyUserAlreadyRecipient': (l) =>
       l.designateYadonyUserAlreadyRecipient,
   'recipientChangeUsernameWarning': (l) => l.recipientChangeUsernameWarning,
+  'cancelScaleNoticeText': (l) => l.cancelScaleNoticeText,
+  'cancelScaleNoticeLink': (l) => l.cancelScaleNoticeLink,
+  'cancelScaleSheetTitle': (l) => l.cancelScaleSheetTitle,
+  'cancelScaleMoreThan': (l) =>
+      l.cancelScaleMoreThan(intPlaceholderValue, intPlaceholderValue),
+  'cancelScaleBetween': (l) => l.cancelScaleBetween(
+    intPlaceholderValue,
+    intPlaceholderValue,
+    intPlaceholderValue,
+  ),
+  'cancelScaleLessThan': (l) =>
+      l.cancelScaleLessThan(intPlaceholderValue, intPlaceholderValue),
+  'cancelScaleCap': (l) => l.cancelScaleCap(placeholderMarker('fee')),
+  'cancelScaleExactAmount': (l) => l.cancelScaleExactAmount,
+  'cancelScaleCashNote': (l) => l.cancelScaleCashNote,
+  'tripPublishKgPriceDecrease': (l) =>
+      l.tripPublishKgPriceDecrease(placeholderMarker('step')),
+  'tripPublishKgPriceIncrease': (l) =>
+      l.tripPublishKgPriceIncrease(placeholderMarker('step')),
+  'tripPublishKgPriceSemantics': (l) =>
+      l.tripPublishKgPriceSemantics(placeholderMarker('price')),
+  'tripPublishKgPriceMostCommon': (l) => l.tripPublishKgPriceMostCommon,
+  'tripPublishKgPriceReset': (l) =>
+      l.tripPublishKgPriceReset(placeholderMarker('price')),
+  'tripPublishKgPriceBounds': (l) => l.tripPublishKgPriceBounds(
+    placeholderMarker('min'),
+    placeholderMarker('max'),
+  ),
+  'tripPublishEarningsIfFull': (l) =>
+      l.tripPublishEarningsIfFull(placeholderMarker('kg')),
+  'tripPublishEarningsPerKg': (l) => l.tripPublishEarningsPerKg,
+  'tripPublishEarningsAmount': (l) =>
+      l.tripPublishEarningsAmount(placeholderMarker('amount')),
+  'tripPublishEarningsFeesNote': (l) => l.tripPublishEarningsFeesNote,
+  'tripPublishItemPricesTitle': (l) => l.tripPublishItemPricesTitle,
+  'tripPublishItemPricesOptional': (l) => l.tripPublishItemPricesOptional,
+  'tripPublishItemPricesPitch': (l) => l.tripPublishItemPricesPitch,
+  'tripPublishItemPriceExample': (l) => l.tripPublishItemPriceExample(
+    placeholderMarker('label'),
+    placeholderMarker('price'),
+  ),
+  'tripPublishItemPricesAddCta': (l) => l.tripPublishItemPricesAddCta,
+  'tripPublishItemPricesRestPerKg': (l) =>
+      l.tripPublishItemPricesRestPerKg(placeholderMarker('price')),
+  'tripPublishPaymentMethodMissing': (l) => l.tripPublishPaymentMethodMissing,
+  'priceGridRouteSuggestionsTitle': (l) => l.priceGridRouteSuggestionsTitle,
+  'priceGridRouteSuggestionsSubtitle': (l) =>
+      l.priceGridRouteSuggestionsSubtitle,
+  'priceGridRouteSuggestionsApplyCta': (l) =>
+      l.priceGridRouteSuggestionsApplyCta,
+  'tripEditKgPriceNoneInfo': (l) => l.tripEditKgPriceNoneInfo,
+  'tripEditKgPriceAddCta': (l) => l.tripEditKgPriceAddCta,
+  'tripEditKgPriceRemoveCta': (l) => l.tripEditKgPriceRemoveCta,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8550,7 +8568,6 @@ const textParameters = <String, List<String>>{
   'tripPublishTemplateChipGrid': ['label'],
   'tripPublishIntroVerifyCallout': ['identity', 'path'],
   'tripPublishIntroVerifyHint': ['continueLabel'],
-  'tripPublishPriceEstimateLine': ['travelerNet', 'senderTotal'],
   'tripPublishCashOnlyBannerNoConnectCountry': ['country'],
   'tripPublishCardCurrencyUnavailableNotice': ['currency'],
   'tripPublishMobileMoneyCurrencyNotice': ['accountCurrency', 'tripCurrency'],
@@ -8639,7 +8656,6 @@ const textParameters = <String, List<String>>{
   'bidCreateGridItemSemanticUnit': ['label', 'price'],
   'bidCreateGridItemRemoveSemantic': ['label'],
   'bidCreateGridItemAddSemantic': ['label'],
-  'bidCreateMarketPriceCorridor': ['corridor'],
   'bidCreateDisclaimerSigned': ['dateTime'],
   'bidSubmittedOn': ['date'],
   'negotiationThreadCashCommissionAmount': ['amount'],
@@ -9220,4 +9236,14 @@ const textParameters = <String, List<String>>{
   'inquiryLockedBarMessage': ['name'],
   'usernameChangeTooSoon': ['date'],
   'usernameCopySemantics': ['username'],
+  'cancelScaleCap': ['fee'],
+  'tripPublishKgPriceDecrease': ['step'],
+  'tripPublishKgPriceIncrease': ['step'],
+  'tripPublishKgPriceSemantics': ['price'],
+  'tripPublishKgPriceReset': ['price'],
+  'tripPublishKgPriceBounds': ['min', 'max'],
+  'tripPublishEarningsIfFull': ['kg'],
+  'tripPublishEarningsAmount': ['amount'],
+  'tripPublishItemPriceExample': ['label', 'price'],
+  'tripPublishItemPricesRestPerKg': ['price'],
 };

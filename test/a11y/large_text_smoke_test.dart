@@ -103,6 +103,7 @@ import '../features/payments/money/money_fixtures.dart';
 import '../helpers/form_draft_test_doubles.dart';
 import '../helpers/mock_analytics_backend.dart';
 import '../helpers/money_test_doubles.dart';
+import '../helpers/price_suggestion_test_doubles.dart';
 
 // Fournit un HelpCenterBloc minimal (catalogue vide) aux 3 harnais de ce
 // fichier (accueil, publication de trajet, paiement), comme l'app le fournit
@@ -493,6 +494,7 @@ void _tripRegisterDependencies() {
       ),
     );
   }
+  registerTestPriceSuggestionCubit();
   if (!getIt.isRegistered<IContentCategoryRepository>()) {
     final repo = _TripMockContentCategoryRepository();
     when(() => repo.getCategories()).thenAnswer((_) async => const []);

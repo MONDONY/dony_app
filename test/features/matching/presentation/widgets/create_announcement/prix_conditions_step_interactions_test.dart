@@ -1,12 +1,10 @@
 // Tests complémentaires de couverture pour PrixConditionsStep :
-// - Tap sur chip prix prédéfini (change l'index sélectionné)
-// - Tap sur "Autre prix" (affiche le champ prix custom)
-// - Saisie dans le champ prix custom (met à jour customPriceNotifier)
+// - « − / + » du prix au kilo (prix libre écrit dans les notifiers)
+// - Bornes du sélecteur dans la devise du trajet
 // - Tap sur chip de contenu (add/remove dans selectedContentNotifier)
 // - Ajout d'un type custom "Ce que j'accepte" via ContentCategoryComboBox
 // - Ajout d'un type refusé via ContentCategoryComboBox
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -52,7 +50,6 @@ Widget _host({
   ValueNotifier<double>? customPrice,
   ValueNotifier<double>? availableKg,
   ValueNotifier<bool>? cashEnabled,
-  ValueNotifier<bool>? kgPriceEnabled,
   ValueNotifier<bool>? mobileMoneyEnabled,
   ValueNotifier<SupportedCurrency>? currencyNotifier,
   bool mobileMoneyAccountActive = false,
@@ -99,7 +96,6 @@ Widget _host({
             customPriceNotifier: customPrice ?? ValueNotifier<double>(0),
             availableKgNotifier: availableKg ?? ValueNotifier<double>(10),
             cashEnabledNotifier: cashEnabled ?? ValueNotifier<bool>(false),
-            kgPriceEnabledNotifier: kgPriceEnabled ?? ValueNotifier<bool>(true),
             mobileMoneyEnabledNotifier:
                 mobileMoneyEnabled ?? ValueNotifier<bool>(false),
             currencyNotifier:
@@ -173,132 +169,85 @@ Future<void> _pump(
 
 void main() {
   group('PrixConditionsStep — interactions prix', () {
-    testWidgets('tap sur chip 9 EUR change le notifier priceOption', (
+    testWidgets('« + » depuis le repère 7 € pose un prix libre de 8 €', (
       tester,
     ) async {
       final priceOption = ValueNotifier<int>(0);
-      await _pump(tester, priceOption: priceOption);
-
-      // Chip 9 EUR est le 3ème chip (index 2) de la grille 7-10 €/kg.
-      await tester.tap(
-        find.text(CurrencyFormatter.format(9, SupportedCurrency.eur)),
-      );
-      await tester.pump();
-
-      expect(priceOption.value, 2);
-    });
-
-    testWidgets('tap sur "Autre prix" affiche le champ prix custom', (
-      tester,
-    ) async {
-      final priceOption = ValueNotifier<int>(0);
+      final customPrice = ValueNotifier<double>(0);
       final customPriceCtrl = TextEditingController();
       await _pump(
         tester,
         priceOption: priceOption,
+        customPrice: customPrice,
         customPriceCtrl: customPriceCtrl,
       );
 
-      // Avant le tap, le champ custom n'existe pas
-      expect(find.text('ex: 12'), findsNothing);
-
-      // Tap sur "Autre prix"
-      await tester.tap(find.text('Autre prix'));
-      await tester.pump();
+      await _tapVisible(tester, find.byKey(const Key('kg-price-increase')));
       await tester.pump();
 
-      // Le champ custom apparaît
-      expect(find.text('ex: 12'), findsOneWidget);
+      // « Autre prix » (index = nombre de repères) + montant libre.
+      expect(priceOption.value, KgPriceReference.eur.presets.length);
+      expect(customPrice.value, 8);
+      expect(customPriceCtrl.text, '8');
     });
 
-    testWidgets(
-      'saisie dans le champ custom prix met à jour customPriceNotifier',
-      (tester) async {
-        final priceOption = ValueNotifier<int>(
-          4,
-        ); // 4 = kPriceOptions.length = "Autre"
-        final customPrice = ValueNotifier<double>(0.0);
-        final customPriceCtrl = TextEditingController();
+    testWidgets('« − » deux fois depuis 9 € donne 7 €', (tester) async {
+      final priceOption = ValueNotifier<int>(2); // 9 €
+      final customPrice = ValueNotifier<double>(0);
+      await _pump(tester, priceOption: priceOption, customPrice: customPrice);
 
-        await _pump(
-          tester,
-          priceOption: priceOption,
-          customPrice: customPrice,
-          customPriceCtrl: customPriceCtrl,
-        );
+      await _tapVisible(tester, find.byKey(const Key('kg-price-decrease')));
+      await tester.pump();
+      await _tapVisible(tester, find.byKey(const Key('kg-price-decrease')));
+      await tester.pump();
 
-        // Le champ custom est visible car priceOption == kPriceOptions.length
-        expect(find.text('ex: 12'), findsOneWidget);
+      expect(customPrice.value, 7);
+    });
 
-        // Taper "12" dans le champ
-        await tester.enterText(
-          find.byWidgetPredicate(
-            (w) => w is TextField && w.decoration?.hintText == 'ex: 12',
-          ),
-          '12',
-        );
-        await tester.pump();
+    testWidgets('prix décimal (8,50 €) : « + » remonte à 9 €', (tester) async {
+      final priceOption = ValueNotifier<int>(
+        KgPriceReference.eur.presets.length,
+      );
+      final customPrice = ValueNotifier<double>(8.5);
+      await _pump(
+        tester,
+        priceOption: priceOption,
+        customPrice: customPrice,
+        customPriceCtrl: TextEditingController(text: '8.50'),
+      );
 
-        expect(customPrice.value, 12.0);
-      },
-    );
+      await _tapVisible(tester, find.byKey(const Key('kg-price-increase')));
+      await tester.pump();
+
+      expect(customPrice.value, 9);
+    });
   });
 
-  // FLUTTER-GK : bornes du prix libre dans la devise de l'annonce.
-  group('PrixConditionsStep — bornes du prix libre', () {
-    Future<void> pumpCustom(
-      WidgetTester tester,
-      SupportedCurrency currency,
+  // FLUTTER-GK : bornes du prix dans la devise de l'annonce.
+  group('PrixConditionsStep — bornes du sélecteur', () {
+    testWidgets('XOF : pas de 500 F CFA, plancher 1 000 (au-dessus de 656)', (
+      tester,
     ) async {
+      final priceOption = ValueNotifier<int>(0); // 1 000 F CFA
+      final customPrice = ValueNotifier<double>(0);
       await tester.pumpWidget(
         _host(
-          currency: currency,
-          priceOption: ValueNotifier<int>(
-            KgPriceReference.forCurrency(currency).presets.length,
-          ),
+          currency: SupportedCurrency.xof,
+          priceOption: priceOption,
+          customPrice: customPrice,
           customPriceCtrl: TextEditingController(),
         ),
       );
       await tester.pump(const Duration(milliseconds: 200));
+
+      await _tapVisible(tester, find.byKey(const Key('kg-price-decrease')));
       await tester.pump();
-    }
+      // Déjà au plancher : rien ne bouge, l'index reste le repère.
+      expect(priceOption.value, 0);
 
-    Future<void> type(WidgetTester tester, String text) async {
-      await tester.enterText(
-        find.descendant(
-          of: find.byKey(const Key('trip-custom-price')),
-          matching: find.byType(TextField),
-        ),
-        text,
-      );
+      await _tapVisible(tester, find.byKey(const Key('kg-price-increase')));
       await tester.pump();
-    }
-
-    testWidgets('EUR : 0,99 trop bas, 1 admis, 501 trop élevé', (tester) async {
-      await pumpCustom(tester, SupportedCurrency.eur);
-
-      await type(tester, '0,99');
-      expect(find.textContaining('Prix trop bas : minimum'), findsOneWidget);
-
-      await type(tester, '1');
-      expect(find.textContaining('Prix trop bas'), findsNothing);
-      expect(find.textContaining('Prix trop élevé'), findsNothing);
-
-      await type(tester, '501');
-      expect(find.textContaining('Prix trop élevé : maximum'), findsOneWidget);
-    });
-
-    testWidgets('XOF : 8 trop bas (minimum 656), 656 admis', (tester) async {
-      await pumpCustom(tester, SupportedCurrency.xof);
-
-      await type(tester, '8');
-      expect(
-        find.textContaining('Prix trop bas : minimum 656'),
-        findsOneWidget,
-      );
-
-      await type(tester, '656');
-      expect(find.textContaining('Prix trop bas'), findsNothing);
+      expect(customPrice.value, 1500);
     });
   });
 
@@ -311,9 +260,13 @@ void main() {
       final selected = ValueNotifier<Set<String>>({});
       await _pump(tester, selectedContent: selected);
 
-      await tester.tap(find.byKey(const Key('accepted-content-field')));
+      await _tapVisible(
+        tester,
+        find.byKey(const Key('accepted-content-field')),
+      );
       await tester.pumpAndSettle();
-      await tester.tap(
+      await _tapVisible(
+        tester,
         find.byKey(const Key('accepted-content-item-Vêtements & tissus')),
       );
       await tester.pumpAndSettle();
@@ -331,9 +284,13 @@ void main() {
       final selected = ValueNotifier<Set<String>>({'Vêtements & tissus'});
       await _pump(tester, selectedContent: selected);
 
-      await tester.tap(find.byKey(const Key('accepted-content-field')));
+      await _tapVisible(
+        tester,
+        find.byKey(const Key('accepted-content-field')),
+      );
       await tester.pumpAndSettle();
-      await tester.tap(
+      await _tapVisible(
+        tester,
         find.byKey(const Key('accepted-content-item-Vêtements & tissus')),
       );
       await tester.pumpAndSettle();
@@ -391,14 +348,17 @@ void main() {
         find.byType(SingleChildScrollView),
         const Offset(0, -200),
       );
-      await tester.tap(find.byKey(const Key('refused-content-field')));
+      await _tapVisible(tester, find.byKey(const Key('refused-content-field')));
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const Key('refused-content-field')),
         'Explosifs',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('refused-content-item-add')));
+      await _tapVisible(
+        tester,
+        find.byKey(const Key('refused-content-item-add')),
+      );
       await tester.pumpAndSettle();
 
       expect(refused.value.contains('Explosifs'), isTrue);
@@ -418,7 +378,8 @@ void main() {
       );
       expect(tag, findsOneWidget);
 
-      await tester.tap(
+      await _tapVisible(
+        tester,
         find.descendant(of: tag, matching: find.byType(GestureDetector)),
       );
       await tester.pumpAndSettle();
@@ -443,14 +404,20 @@ void main() {
           final customAccepted = ValueNotifier<Set<String>>({});
           await _pump(tester, customAccepted: customAccepted);
 
-          await tester.tap(find.byKey(const Key('accepted-content-field')));
+          await _tapVisible(
+            tester,
+            find.byKey(const Key('accepted-content-field')),
+          );
           await tester.pumpAndSettle();
           await tester.enterText(
             find.byKey(const Key('accepted-content-field')),
             'Bijoux',
           );
           await tester.pumpAndSettle();
-          await tester.tap(find.byKey(const Key('accepted-content-item-add')));
+          await _tapVisible(
+            tester,
+            find.byKey(const Key('accepted-content-item-add')),
+          );
           await tester.pumpAndSettle();
 
           expect(customAccepted.value.contains('Bijoux'), isTrue);
@@ -470,7 +437,8 @@ void main() {
           final tag = find.byKey(const Key('accepted-content-tag-Bijoux'));
           expect(tag, findsOneWidget);
 
-          await tester.tap(
+          await _tapVisible(
+            tester,
             find.descendant(of: tag, matching: find.byType(GestureDetector)),
           );
           await tester.pumpAndSettle();
@@ -517,7 +485,8 @@ void main() {
       );
 
       final cashSwitchFinder = find.byKey(const Key('payment-method-cash'));
-      await tester.tap(
+      await _tapVisible(
+        tester,
         find
             .descendant(of: cashSwitchFinder, matching: find.byType(Switch))
             .last,
@@ -612,4 +581,15 @@ void main() {
       expect(find.text('Modes de paiement acceptés'), findsOneWidget);
     });
   });
+}
+
+/// La section prix (carte « − / + », gain, prix par article) allonge l'étape :
+/// un élément plus bas peut sortir de l'écran de test. On l'y ramène avant de
+/// le toucher, sinon le toucher tombe à côté.
+Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
+  if (finder.evaluate().isNotEmpty) {
+    await tester.ensureVisible(finder.first);
+    await tester.pump();
+  }
+  await tester.tap(finder);
 }

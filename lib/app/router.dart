@@ -180,6 +180,7 @@ import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addre
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addresses_screen.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
+import 'package:dony/features/price_grid/data/models/price_grid_suggestion.dart';
 import 'package:dony/features/price_grid/presentation/price_grid_screen.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/open_listings_cubit.dart';
@@ -1738,7 +1739,14 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => BlocProvider(
         create: (_) =>
             getIt<PriceGridBloc>()..add(const PriceGridLoadRequested()),
-        child: const PriceGridScreen(),
+        // Prix pratiqués sur la route, passés par l'étape « Prix &
+        // conditions » d'un trajet pour préremplir une grille vide.
+        child: PriceGridScreen(
+          suggestions: switch (state.extra) {
+            final List<PriceGridSuggestion> list => list,
+            _ => const [],
+          },
+        ),
       ),
     ),
 

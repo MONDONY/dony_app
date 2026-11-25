@@ -39,6 +39,7 @@ class AnnouncementFormBloc
     on<AnnouncementPricingModeSetRequested>(_onPricingModeSet);
     on<AnnouncementGridPreviewLoadRequested>(_onGridPreviewLoad);
     on<AnnouncementPricePerKgClearedRequested>(_onPricePerKgCleared);
+    on<AnnouncementPublishBlockedPaymentRequested>(_onPublishBlockedPayment);
   }
 
   void _onDepartureCityChanged(
@@ -215,6 +216,9 @@ class AnnouncementFormBloc
     AnnouncementPricingModeSetRequested event,
     Emitter<AnnouncementFormState> emit,
   ) {
+    // Grille déjà lue : le mode en découle (cf. [_onGridPreviewLoad]), un
+    // brouillon ou un modèle ne le contredit pas.
+    if (state.gridLoaded) return;
     final wasAlreadyMixed = state.pricingMode == PricingMode.mixed;
     emit(state.copyWith(pricingMode: event.mode));
     if (event.mode == PricingMode.mixed && !wasAlreadyMixed) {
@@ -239,10 +243,33 @@ class AnnouncementFormBloc
             ),
           )
           .toList();
-      emit(state.copyWith(gridPreviewItems: previewItems));
+      // Le mode de tarification se déduit des prix par article : une grille
+      // remplie publie en MIXED (articles + reste au kilo), une grille vide
+      // au kilo. Le choix n'est plus une bascule de l'écran.
+      emit(
+        state.copyWith(
+          gridPreviewItems: previewItems,
+          gridLoaded: true,
+          pricingMode: previewItems.isEmpty
+              ? PricingMode.kg
+              : PricingMode.mixed,
+        ),
+      );
     } catch (_) {
       // silence — preview only, non bloquant
     }
+  }
+
+  void _onPublishBlockedPayment(
+    AnnouncementPublishBlockedPaymentRequested event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.tripPublishBlockedPayment,
+        properties: {'action': event.action},
+      ),
+    );
   }
 
   void _onPricePerKgCleared(

@@ -1291,6 +1291,34 @@ abstract final class AnalyticsEvents {
   static const tripRescheduled = 'trip_rescheduled';
   static const tripRescheduleDecided = 'trip_reschedule_decided';
   static const arrivalInstructionsUpdated = 'arrival_instructions_updated';
+
+  // Étape « Prix & conditions » de la création d'un trajet.
+  /// Prix conseillés de la route chargés (`TripPriceSuggestionCubit`).
+  /// Propriétés `has_kg_price` (médiane du back présente), `sample_size_bracket`
+  /// (`0`/`1-2`/`3-9`/`10-49`/`50+`), `items_count`, `source`
+  /// (`backend`/`fallback`), `currency`.
+  static const tripPriceSuggestionLoaded = 'trip_price_suggestion_loaded';
+
+  /// Prix au kilo monté ou baissé d'un pas. Propriétés `direction`
+  /// (`up`/`down`), `from_suggested` (le prix valait le prix conseillé).
+  static const tripPriceAdjusted = 'trip_price_adjusted';
+
+  /// « Revenir au prix conseillé ». Propriété `source` (`backend`/`fallback`).
+  static const tripPriceResetToSuggested = 'trip_price_reset_to_suggested';
+
+  /// Éditeur des prix par article ouvert. Propriétés `source`
+  /// (`step`/`card_edit`), `suggested_items_count`.
+  static const tripItemPricesOpened = 'trip_item_prices_opened';
+
+  /// Modification d'un trajet vendu aux seuls prix par article : « Ajouter un
+  /// prix au kilo » / « Retirer le prix au kilo ». Aucune propriété.
+  static const tripKgPriceAddedOnEdit = 'trip_kg_price_added_on_edit';
+  static const tripKgPriceRemovedOnEdit = 'trip_kg_price_removed_on_edit';
+
+  /// Publication (ou enregistrement) d'un trajet arrêtée : aucun moyen de
+  /// paiement coché. Propriété `action` (`publish`/`save`/`draft`).
+  static const tripPublishBlockedPayment = 'trip_publish_blocked_payment';
+
   // Négociation du prix d'un trajet. L'entonnoir se lit dans cet ordre :
   // ouverture du mode → première proposition → contre-offres → issue.
   // Bascule « J'accepte les propositions de prix » à la création du trajet.

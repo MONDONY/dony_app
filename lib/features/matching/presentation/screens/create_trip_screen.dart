@@ -8,6 +8,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/kg_price_stepper.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
@@ -35,6 +36,7 @@ import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/trip_creation_keys.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_price_suggestion_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -49,6 +51,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_currencies_confirm_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_legs_section.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_price_section.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_series/trip_series_card.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
@@ -129,6 +132,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   /// Moyens de paiement tels qu'ils partiront au submit (FLUTTER-GJ) : l'aperçu
   /// les affiche au lieu de les recalculer.
   List<String> Function()? _paymentMethods;
+
+  /// Vérification « au moins un moyen de paiement » du formulaire
+  /// (cf. `_TripFormContent.onPaymentGuardReady`).
+  bool Function(String action)? _ensurePaymentMethod;
 
   /// Devise de l'annonce. En création, choisie par l'utilisateur (défaut :
   /// devise du portefeuille) ; en édition ou trajet dédié, figée sur la
@@ -467,6 +474,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       BlocProvider<AnnouncementFormBloc>(
         create: (_) => getIt<AnnouncementFormBloc>(),
       ),
+      // Prix conseillés de la route (yadony-back#788), repli embarqué.
+      BlocProvider<TripPriceSuggestionCubit>(
+        create: (_) => getIt<TripPriceSuggestionCubit>(),
+      ),
       // Étapes supplémentaires d'un voyage (FLUTTER-4D), en création seulement.
       BlocProvider<TripLegsCubit>(create: (_) => getIt<TripLegsCubit>()),
       BlocProvider<AiFilledFieldsCubit>.value(value: _aiFilled),
@@ -581,6 +592,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                           currencyEditableNotifier: _currencyEditableNotifier,
                           onSubmitReady: (fn) => _submit = fn,
                           onPaymentMethodsReady: (fn) => _paymentMethods = fn,
+                          onPaymentGuardReady: (fn) =>
+                              _ensurePaymentMethod = fn,
                           onDraftHandlersReady: (snapshot, restore) {
                             _draftSnapshot = snapshot;
                             _restoreDraft = restore;
@@ -709,7 +722,15 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                       label: ctx.l10n.commonSave,
                                       isLoading: isLoading,
                                       onPressed: (canSubmit && !isLoading)
-                                          ? () => _submit?.call()
+                                          ? () {
+                                              if (!(_ensurePaymentMethod?.call(
+                                                    'save',
+                                                  ) ??
+                                                  true)) {
+                                                return;
+                                              }
+                                              _submit?.call();
+                                            }
                                           : null,
                                     ),
                                   ),
@@ -761,6 +782,14 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                         onPressed:
                                             (canSubmit && !isSubmitLocked)
                                             ? () {
+                                                // Aucun moyen de paiement :
+                                                // pas d'aperçu, la section
+                                                // paiement passe en orange.
+                                                if (!(_ensurePaymentMethod
+                                                        ?.call('publish') ??
+                                                    true)) {
+                                                  return;
+                                                }
                                                 AnnouncementPreviewSheet.show(
                                                   ctx2,
                                                   formState: ctx2
@@ -871,6 +900,10 @@ class _TripFormContent extends StatefulWidget {
   final void Function(void Function({bool saveAsDraft}))? onSubmitReady;
   final void Function(List<String> Function())? onPaymentMethodsReady;
 
+  /// Remet au parent la vérification « au moins un moyen de paiement »,
+  /// appelée avant l'aperçu (création) ou l'enregistrement (modification).
+  final void Function(bool Function(String action))? onPaymentGuardReady;
+
   /// Remet au parent de quoi lire la saisie (brouillon local) et la
   /// recharger (reprise du brouillon).
   final void Function(
@@ -898,6 +931,7 @@ class _TripFormContent extends StatefulWidget {
     this.currencyEditableNotifier,
     this.onSubmitReady,
     this.onPaymentMethodsReady,
+    this.onPaymentGuardReady,
     this.onDraftHandlersReady,
   });
 
@@ -977,7 +1011,10 @@ class _TripFormContentState extends State<_TripFormContent> {
     fallbackCatalog.map((c) => c.label).toList(),
   );
   final _refusedTypesNotifier = ValueNotifier<Set<String>>({});
-  final _cashEnabledNotifier = ValueNotifier<bool>(false);
+  // Espèces cochées par défaut à la création : c'est le moyen que tous les
+  // expéditeurs peuvent utiliser. Modification, modèle et brouillon
+  // réécrivent cette valeur avec la leur.
+  final _cashEnabledNotifier = ValueNotifier<bool>(true);
 
   /// Le voyageur garde la carte sur ce trajet (FLUTTER-FT) : cochée par
   /// défaut, elle n'est envoyée que si Stripe Connect est prêt et la devise
@@ -995,13 +1032,29 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   /// Le voyageur ouvre son trajet aux propositions de prix des expéditeurs.
   final _negotiableNotifier = ValueNotifier<bool>(false);
-  late final ValueNotifier<bool> _kgPriceEnabledNotifier;
 
-  /// Prix au kilo d'un brouillon restauré qui change de mode de tarification
-  /// (brouillon IA « grille + 10 €/kg », brouillon local) : le changement de
-  /// mode coupe l'interrupteur, ce qui effaçait le prix. Le listener du mode
-  /// réapplique cette valeur une fois, au lieu de couper.
-  bool? _pendingKgPriceEnabled;
+  /// Modification d'un trajet vendu aux seuls prix par article (aucun prix
+  /// au kilo publié) : il le reste, sauf si le voyageur ajoute lui-même un
+  /// prix au kilo (« Ajouter un prix au kilo »).
+  final _kgPriceAddedNotifier = ValueNotifier<bool>(false);
+
+  /// Le prix au kilo affiché a été posé par l'app (prix conseillé de la
+  /// route), pas par le voyageur : un nouveau prix conseillé (réponse du
+  /// back, changement de route ou de devise) le remplace. Le moindre geste
+  /// sur le prix, un brouillon, un modèle ou l'IA le figent.
+  bool _priceIsAutoSuggested = false;
+
+  /// Vrai pendant l'écriture d'un prix conseillé : les écouteurs du prix ne
+  /// doivent pas y voir un geste du voyageur.
+  bool _applyingAutoPrice = false;
+
+  /// Publication arrêtée faute de moyen de paiement : la section paiement de
+  /// l'étape passe en orange (cf. `PrixConditionsStep.paymentErrorNotifier`).
+  final _paymentErrorNotifier = ValueNotifier<bool>(false);
+
+  /// Section des moyens de paiement, cible du défilement quand la
+  /// publication est arrêtée.
+  final _paymentSectionKey = GlobalKey();
   final _descriptionCtrl = TextEditingController();
   final _customAcceptedCtrl = TextEditingController();
   final _refusedCtrl = TextEditingController();
@@ -1041,9 +1094,17 @@ class _TripFormContentState extends State<_TripFormContent> {
   //   (bien plus bas) de l'euro, ou l'inverse laisserait passer un montant
   //   que le serveur refuserait. Le plancher (1 €/kg converti) arrête les
   //   8 XOF/kg saisis en croyant taper des euros (FLUTTER-GK).
+  /// Modification d'un trajet publié sans prix au kilo (prix par article
+  /// seuls) : le prix au kilo y est facultatif.
+  bool get _kgPriceOptionalOnEdit =>
+      _isEdit &&
+      !widget.lockCorridorAndDate &&
+      widget.announcement!.pricePerKg == null;
+
   bool get _isPriceValid {
     if (_isLocked) return true;
-    if (!_kgPriceEnabledNotifier.value) return true;
+    // Trajet sans prix au kilo gardé tel quel : rien à valider.
+    if (_kgPriceOptionalOnEdit && !_kgPriceAddedNotifier.value) return true;
     final idx = _priceOptionNotifier.value;
     if (idx == -1) return false;
     if (!_isCustomPrice) return true;
@@ -1205,6 +1266,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (!_isEdit) _seedAvailableKgToFormBloc();
     widget.onSubmitReady?.call(_submit);
     widget.onPaymentMethodsReady?.call(_paymentMethods);
+    widget.onPaymentGuardReady?.call(_ensurePaymentMethod);
     widget.onDraftHandlersReady?.call(_draftSnapshot, _restoreDraft);
     final initialTemplate = widget.initialTemplate;
     if (initialTemplate != null && widget.announcement == null) {
@@ -1212,9 +1274,18 @@ class _TripFormContentState extends State<_TripFormContent> {
         if (mounted) _applyTemplate(initialTemplate);
       });
     }
-    _kgPriceEnabledNotifier = ValueNotifier<bool>(true); // KG = ON par défaut
-    _kgPriceEnabledNotifier.addListener(_onKgToggleChanged);
-    _kgPriceEnabledNotifier.addListener(_syncCanSubmit);
+    // Prix conseillé posé d'emblée en création (médiane embarquée de la
+    // devise), remplacé par celui de la route dès que le back répond. Jamais
+    // en modification ni en trajet dédié : le trajet a déjà son prix.
+    if (!_isEdit && !_isLocked) {
+      _applyAutoPrice(
+        KgPriceReference.forCurrency(_currency).marketMedian,
+        force: true,
+      );
+    }
+    _priceOptionNotifier.addListener(_onPriceTouched);
+    _kgPriceAddedNotifier.addListener(_onKgPriceAddedChanged);
+    _customPriceNotifier.addListener(_onPriceTouched);
     _transportModeNotifier.addListener(_syncCanSubmit);
     _priceOptionNotifier.addListener(_syncCanSubmit);
     _customPriceCtrl.addListener(_syncCanSubmit);
@@ -1290,6 +1361,162 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customAcceptedNotifier.addListener(_syncAcceptedTypesToFormBloc);
     _refusedTypesNotifier.addListener(_syncRejectedTypesToFormBloc);
     _departureTimeNotifier.addListener(_syncDepartureTimeToParent);
+
+    // Section paiement en orange après une publication arrêtée : elle
+    // redevient normale dès qu'un moyen est coché.
+    _cashEnabledNotifier.addListener(_clearPaymentErrorIfResolved);
+    _cardEnabledNotifier.addListener(_clearPaymentErrorIfResolved);
+    _mobileMoneyEnabledNotifier.addListener(_clearPaymentErrorIfResolved);
+
+    // Prix conseillés de la route, rechargés quand la route ou la devise
+    // change. Sans objet pour un trajet dédié (prix fixé par la demande).
+    if (!_isLocked) {
+      _departureCityNotifier.addListener(_requestPriceSuggestion);
+      _arrivalCityNotifier.addListener(_requestPriceSuggestion);
+      widget.currencyNotifier.addListener(_requestPriceSuggestion);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _requestPriceSuggestion();
+      // Prix par article : la grille du profil est lue d'emblée, le mode de
+      // tarification en découle (cf. AnnouncementFormBloc). Pas quand le
+      // prix est fixé par une négociation : son mode ne bouge pas.
+      if (!_isLocked && !widget.lockCorridorAndDate) {
+        context.read<AnnouncementFormBloc>().add(
+          const AnnouncementGridPreviewLoadRequested(),
+        );
+      }
+    });
+  }
+
+  /// Prix conseillé de la route dans la devise du trajet : médiane du back
+  /// si elle est arrivée, sinon médiane embarquée de la devise.
+  double get _suggestedPricePerKg {
+    final state = context.read<TripPriceSuggestionCubit>().state;
+    if (state.currency == _currency) return state.suggestedPricePerKg;
+    return TripPriceSuggestionState(currency: _currency).suggestedPricePerKg;
+  }
+
+  /// Un geste sur le prix (« − / + », retour au prix conseillé, brouillon,
+  /// modèle, IA) le fige : un prix conseillé arrivé ensuite ne l'écrase plus.
+  /// « Ajouter un prix au kilo » / « Retirer le prix au kilo » en
+  /// modification d'un trajet sans prix au kilo : la carte − / + part du prix
+  /// conseillé, et le retrait remet le trajet tel qu'il était publié.
+  void _onKgPriceAddedChanged() {
+    if (!mounted || !_kgPriceOptionalOnEdit) return;
+    if (_kgPriceAddedNotifier.value) {
+      writeKgPrice(
+        price: _suggestedPricePerKg,
+        currency: _currency,
+        priceOptionNotifier: _priceOptionNotifier,
+        customPriceNotifier: _customPriceNotifier,
+        customPriceCtrl: _customPriceCtrl,
+      );
+    } else {
+      _priceOptionNotifier.value = -1;
+      context.read<AnnouncementFormBloc>().add(
+        const AnnouncementPricePerKgClearedRequested(),
+      );
+    }
+    _syncCanSubmit();
+  }
+
+  void _onPriceTouched() {
+    if (_applyingAutoPrice) return;
+    _priceIsAutoSuggested = false;
+  }
+
+  /// Pose [price] comme prix conseillé.
+  ///
+  /// Sans [force], seulement si le prix affiché est encore un prix posé par
+  /// l'app. [keepClean] : le formulaire auquel personne n'a touché le reste
+  /// (le prix conseillé arrive après la prise de la référence de saisie, ce
+  /// n'est pas une modification du voyageur).
+  void _applyAutoPrice(
+    double price, {
+    bool force = false,
+    bool keepClean = false,
+  }) {
+    if (!force && !_priceIsAutoSuggested) return;
+    final wasClean =
+        keepClean &&
+        _initialFormSignature != null &&
+        !_restoredFromDraft &&
+        _formSignature == _initialFormSignature;
+    _applyingAutoPrice = true;
+    try {
+      writeKgPrice(
+        price: price,
+        currency: _currency,
+        priceOptionNotifier: _priceOptionNotifier,
+        customPriceNotifier: _customPriceNotifier,
+        customPriceCtrl: _customPriceCtrl,
+      );
+    } finally {
+      _applyingAutoPrice = false;
+    }
+    _priceIsAutoSuggested = true;
+    if (wasClean) {
+      _initialFormSignature = _formSignature;
+      _markDirty();
+    }
+  }
+
+  /// Demande les prix conseillés de la route saisie, dans la devise du
+  /// trajet. Le cubit ignore une route déjà chargée.
+  void _requestPriceSuggestion() {
+    if (!mounted || _isLocked) return;
+    final from = _departureCityNotifier.value;
+    final to = _arrivalCityNotifier.value;
+    if (from == null || to == null) return;
+    unawaited(
+      context.read<TripPriceSuggestionCubit>().load(
+        departureCity: from,
+        arrivalCity: to,
+        currency: _currency,
+      ),
+    );
+  }
+
+  /// Prix conseillé de la route reçu : il remplace le prix affiché s'il n'a
+  /// été posé que par l'app. Jamais en modification, où le trajet a déjà le
+  /// sien.
+  void _onPriceSuggestionLoaded(TripPriceSuggestionState state) {
+    if (_isEdit || _isLocked || state.currency != _currency) return;
+    _applyAutoPrice(state.suggestedPricePerKg, keepClean: true);
+  }
+
+  /// Retire l'alerte de la section paiement dès qu'un moyen est coché.
+  void _clearPaymentErrorIfResolved() {
+    if (!mounted || !_paymentErrorNotifier.value) return;
+    if (_paymentMethods().isNotEmpty) _paymentErrorNotifier.value = false;
+  }
+
+  /// Vérifie qu'au moins un moyen de paiement est coché avant d'envoyer.
+  ///
+  /// Sinon le bouton reste actif mais rien ne part : la section paiement
+  /// passe en orange avec son message, l'écran y défile, et l'arrêt est
+  /// compté (`trip_publish_blocked_payment`, [action] : `publish`, `save`,
+  /// `draft`). Sans objet pour un trajet dédié, dont le moyen est fixé.
+  bool _ensurePaymentMethod(String action) {
+    if (_isLocked || _paymentMethods().isNotEmpty) return true;
+    _paymentErrorNotifier.value = true;
+    context.read<AnnouncementFormBloc>().add(
+      AnnouncementPublishBlockedPaymentRequested(action),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _paymentSectionKey.currentContext;
+      if (target == null || !target.mounted) return;
+      unawaited(
+        Scrollable.ensureVisible(
+          target,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          alignment: 0.1,
+        ),
+      );
+    });
+    return false;
   }
 
   /// Champs obligatoires manquants à l'étape 0, dans l'ordre d'affichage.
@@ -1372,7 +1599,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _mobileMoneyEnabledNotifier,
     _stopsNotifier,
     _negotiableNotifier,
-    _kgPriceEnabledNotifier,
+    _kgPriceAddedNotifier,
     _descriptionCtrl,
     _customAcceptedCtrl,
     _refusedCtrl,
@@ -1384,7 +1611,7 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// La saleté se mesure en comparant cette signature à celle prise à
   /// l'ouverture, et non en écoutant les notifications : plusieurs champs sont
   /// réécrits avec leur propre valeur au démarrage (le `BlocListener` sur
-  /// `pricingMode` repositionne `_kgPriceEnabledNotifier`, et les notifiers de
+  /// les prix conseillés arrivent après coup, et les notifiers de
   /// `Set` notifient dès qu'on leur assigne un ensemble égal mais distinct).
   /// Compter ces échos comme des modifications faisait apparaître la
   /// confirmation de sortie sur un formulaire auquel personne n'avait touché.
@@ -1412,7 +1639,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       _mobileMoneyEnabledNotifier.value,
       _stopsNotifier.value,
       _negotiableNotifier.value,
-      _kgPriceEnabledNotifier.value,
+      _kgPriceAddedNotifier.value,
       set(_selectedContentNotifier.value),
       set(_customAcceptedNotifier.value),
       set(_refusedTypesNotifier.value),
@@ -1609,7 +1836,6 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   void _syncPriceToFormBloc() {
     if (!mounted) return;
-    if (!_kgPriceEnabledNotifier.value) return; // évite d'écraser le clear
     if (_priceOptionNotifier.value == -1) return; // pas encore de sélection
     context.read<AnnouncementFormBloc>().add(
       PriceChanged(_pricePerKg, currency: _currency),
@@ -1703,6 +1929,27 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (!widget.currencyNotifier.value.isMobileMoneyEligible) {
       _mobileMoneyEnabledNotifier.value = false;
     }
+    if (!_isEdit && !_isLocked) {
+      // Le prix conseillé suit la devise (8 € ne font pas 8 F CFA). Un prix
+      // choisi par le voyageur reste, sauf s'il sort des bornes de la
+      // nouvelle devise.
+      final price = currentKgPrice(
+        currency: _currency,
+        priceOption: _priceOptionNotifier.value,
+        customPrice: _customPriceNotifier.value,
+        customPriceText: _customPriceCtrl.text,
+      );
+      final bounds = kgPriceStepperBoundsFor(_currency);
+      final outOfBounds =
+          price == null || price < bounds.min || price > bounds.max;
+      if (_priceIsAutoSuggested || outOfBounds) {
+        _applyAutoPrice(
+          _suggestedPricePerKg,
+          force: true,
+          keepClean: _priceIsAutoSuggested,
+        );
+      }
+    }
     _syncPriceToFormBloc();
   }
 
@@ -1724,16 +1971,6 @@ class _TripFormContentState extends State<_TripFormContent> {
     context.read<AnnouncementFormBloc>().add(
       RejectedTypesChanged(_refusedTypesNotifier.value.toList()),
     );
-  }
-
-  void _onKgToggleChanged() {
-    if (!mounted) return;
-    if (!_kgPriceEnabledNotifier.value) {
-      context.read<AnnouncementFormBloc>().add(
-        const AnnouncementPricePerKgClearedRequested(),
-      );
-      _priceOptionNotifier.value = 0; // reset chips visuellement
-    }
   }
 
   @override
@@ -1761,13 +1998,21 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customAcceptedNotifier.removeListener(_syncAcceptedTypesToFormBloc);
     _refusedTypesNotifier.removeListener(_syncRejectedTypesToFormBloc);
     _departureTimeNotifier.removeListener(_syncDepartureTimeToParent);
-    _kgPriceEnabledNotifier.removeListener(_onKgToggleChanged);
-    _kgPriceEnabledNotifier.removeListener(_syncCanSubmit);
+    _priceOptionNotifier.removeListener(_onPriceTouched);
+    _customPriceNotifier.removeListener(_onPriceTouched);
+    _cashEnabledNotifier.removeListener(_clearPaymentErrorIfResolved);
+    _cardEnabledNotifier.removeListener(_clearPaymentErrorIfResolved);
+    _mobileMoneyEnabledNotifier.removeListener(_clearPaymentErrorIfResolved);
+    _departureCityNotifier.removeListener(_requestPriceSuggestion);
+    _arrivalCityNotifier.removeListener(_requestPriceSuggestion);
+    widget.currencyNotifier.removeListener(_requestPriceSuggestion);
     _priceOptionNotifier.removeListener(_syncCanSubmit);
     _customPriceCtrl.removeListener(_syncCanSubmit);
     widget.currencyNotifier.removeListener(_syncCanSubmit);
     widget.currencyNotifier.removeListener(_onCurrencyChanged);
-    _kgPriceEnabledNotifier.dispose();
+    _paymentErrorNotifier.dispose();
+    _kgPriceAddedNotifier.removeListener(_onKgPriceAddedChanged);
+    _kgPriceAddedNotifier.dispose();
     _cashEnabledNotifier.dispose();
     _cardEnabledNotifier.dispose();
     _stopsNotifier.dispose();
@@ -1823,20 +2068,19 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// (FLUTTER-GJ).
   ///
   /// Publiable sans Stripe (cash-only) : STRIPE n'est inclus que si
-  /// configuré, et CASH est forcé quand Stripe ne l'est pas — la liste ne
-  /// peut jamais être vide (au moins une méthode de paiement est requise).
-  /// La carte n'existe pas en zone CFA (pas de Stripe Connect) : elle n'est
-  /// envoyée que si la devise du trajet l'autorise, comme l'aperçu du
-  /// sélecteur de devise. Le backend la retirerait de toute façon.
-  /// La carte est décochable (FLUTTER-FT) : sans elle, les espèces
-  /// repartent d'office, comme quand Stripe n'est pas configuré.
+  /// configuré. La carte n'existe pas en zone CFA (pas de Stripe Connect) :
+  /// elle n'est envoyée que si la devise du trajet l'autorise, comme
+  /// l'aperçu du sélecteur de devise. Le backend la retirerait de toute
+  /// façon. Chaque moyen se décoche (carte : FLUTTER-FT) : la liste peut donc
+  /// être vide, et [_ensurePaymentMethod] arrête alors la publication au lieu
+  /// d'ajouter les espèces en silence.
   List<String> _paymentMethods() {
     final stripeConfigured =
         _isStripeConfigured() && _currency.isStripeEligible;
     final cardOn = stripeConfigured && _cardEnabledNotifier.value;
     return [
       if (cardOn) 'STRIPE',
-      if (_cashEnabledNotifier.value || !cardOn) 'CASH',
+      if (_cashEnabledNotifier.value) 'CASH',
       if (_mobileMoneyEnabledNotifier.value) 'MOBILE_MONEY',
     ];
   }
@@ -2071,16 +2315,31 @@ class _TripFormContentState extends State<_TripFormContent> {
       return;
     }
 
+    if (!_ensurePaymentMethod(
+      saveAsDraft ? 'draft' : (_isEdit ? 'save' : 'publish'),
+    )) {
+      return;
+    }
     final paymentMethods = _paymentMethods();
     // Escales : avion seulement, sinon jamais envoyées.
     final stops = supportsStops(transportMode) ? _stopsNotifier.value : null;
 
     final formBlocState = context.read<AnnouncementFormBloc>().state;
     final capacityUnitWire = formBlocState.capacityUnit.toWire();
-    final pricingModeWire = formBlocState.pricingMode == PricingMode.mixed
+    // Trajet publié sans prix au kilo et gardé ainsi : même envoi
+    // qu'avant (mode d'origine, prix du bloc vide). Prix au kilo ajouté :
+    // articles + reste au kilo (MIXED).
+    final keepsNoKgPrice =
+        _kgPriceOptionalOnEdit && !_kgPriceAddedNotifier.value;
+    final addedKgPrice = _kgPriceOptionalOnEdit && _kgPriceAddedNotifier.value;
+    final pricingModeWire = keepsNoKgPrice
+        ? widget.announcement!.pricingMode
+        : addedKgPrice || formBlocState.pricingMode == PricingMode.mixed
         ? 'MIXED'
         : 'KG';
-    final pricePerKgToSubmit = formBlocState.pricePerKg ?? 0.0;
+    final pricePerKgToSubmit = keepsNoKgPrice
+        ? 0.0
+        : formBlocState.pricePerKg ?? 0.0;
 
     final handoverDeadline = _resolveHandoverDeadline();
     if (handoverDeadline == null) {
@@ -2530,21 +2789,10 @@ class _TripFormContentState extends State<_TripFormContent> {
       );
     }
 
-    return BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
-      listenWhen: (prev, curr) => prev.pricingMode != curr.pricingMode,
-      listener: (context, formState) {
-        final pending = _pendingKgPriceEnabled;
-        if (pending != null) {
-          _pendingKgPriceEnabled = null;
-          _kgPriceEnabledNotifier.value = pending;
-          return;
-        }
-        if (formState.pricingMode == PricingMode.mixed) {
-          _kgPriceEnabledNotifier.value = false;
-        } else {
-          _kgPriceEnabledNotifier.value = true;
-        }
-      },
+    return BlocListener<TripPriceSuggestionCubit, TripPriceSuggestionState>(
+      listenWhen: (prev, curr) =>
+          curr.status == TripPriceSuggestionStatus.loaded && prev != curr,
+      listener: (context, suggestion) => _onPriceSuggestionLoaded(suggestion),
       child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
         listener: (context, state) async {
           _settleCreationKey(state);
@@ -2793,10 +3041,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     _pickupAddressNotifier.value = t.pickupAddress;
     _deliveryAddressNotifier.value = t.deliveryAddress;
 
-    _kgPriceEnabledNotifier.value = !t.usesPriceGrid || t.pricePerKg != null;
     final price = t.pricePerKg;
     if (price == null) {
-      _priceOptionNotifier.value = -1;
+      // Modèle sans prix au kilo (grille seule, d'avant le prix unique) : le
+      // prix conseillé reprend la main.
+      _applyAutoPrice(_suggestedPricePerKg, force: true);
     } else {
       final presetIdx = _presets.indexOf(price);
       if (presetIdx != -1) {
@@ -2904,7 +3153,9 @@ class _TripFormContentState extends State<_TripFormContent> {
       availableKg: _availableKgNotifier.value,
       capacityUnit: formState.capacityUnit.toWire(),
       pricingMode: formState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG',
-      kgPriceEnabled: _kgPriceEnabledNotifier.value,
+      // `kgPriceEnabled` garde sa valeur par défaut (vrai) : toujours un prix
+      // au kilo depuis le prix unique, le champ ne sert qu'aux anciens
+      // brouillons.
       priceOption: _priceOptionNotifier.value,
       customPrice: _customPriceNotifier.value,
       customPriceText: _customPriceCtrl.text,
@@ -2951,11 +3202,19 @@ class _TripFormContentState extends State<_TripFormContent> {
     _pickupAddressNotifier.value = d.pickupAddress;
     _deliveryAddressNotifier.value = d.deliveryAddress;
 
-    _kgPriceEnabledNotifier.value = d.kgPriceEnabled;
-    _priceOptionNotifier.value = d.priceOption.clamp(-1, _presets.length);
     final customPrice = d.customPrice;
     if (customPrice != null) _customPriceNotifier.value = customPrice;
     _customPriceCtrl.text = d.customPriceText;
+    // Brouillon « grille seule » (d'avant le prix unique) ou sans prix : le
+    // prix conseillé reprend la main.
+    final priceOption = d.kgPriceEnabled
+        ? d.priceOption.clamp(-1, _presets.length)
+        : -1;
+    if (priceOption == -1) {
+      _applyAutoPrice(_suggestedPricePerKg, force: true);
+    } else {
+      _priceOptionNotifier.value = priceOption;
+    }
 
     _selectedContentNotifier.value = d.acceptedContent.toSet();
     _customAcceptedNotifier.value = d.customAccepted.toSet();
@@ -2987,9 +3246,6 @@ class _TripFormContentState extends State<_TripFormContent> {
     final pricingMode = d.pricingMode == 'MIXED'
         ? PricingMode.mixed
         : PricingMode.kg;
-    _pendingKgPriceEnabled = formBloc.state.pricingMode != pricingMode
-        ? d.kgPriceEnabled
-        : null;
     formBloc.add(AnnouncementPricingModeSetRequested(pricingMode));
 
     context.read<TripLegsCubit>().restore(d.legs);
@@ -3256,7 +3512,15 @@ class _TripFormContentState extends State<_TripFormContent> {
               availableKgNotifier: _availableKgNotifier,
               cashEnabledNotifier: _cashEnabledNotifier,
               cardEnabledNotifier: _cardEnabledNotifier,
-              kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
+              // Chaque moyen se décoche librement ; la publication exige
+              // qu'il en reste un (cf. `_ensurePaymentMethod`).
+              lockCashWithoutCard: false,
+              paymentErrorNotifier: _paymentErrorNotifier,
+              paymentSectionKey: _paymentSectionKey,
+              // Trajet publié sans prix au kilo : il le reste, sauf ajout.
+              kgPriceAddedNotifier: _kgPriceOptionalOnEdit
+                  ? _kgPriceAddedNotifier
+                  : null,
               mobileMoneyEnabledNotifier: _mobileMoneyEnabledNotifier,
               currencyNotifier: widget.currencyNotifier,
               mobileMoneyAccountActive: mobileMoneyAccountActive,
@@ -3308,14 +3572,13 @@ class _TripFormContentState extends State<_TripFormContent> {
             _arrivalTimeNotifier,
             _arrivalDayOffsetNotifier,
             _deliveryAddressNotifier,
-            _kgPriceEnabledNotifier,
             _transportModeNotifier,
             _stopsNotifier,
             widget.currencyNotifier,
           ]),
           builder: (context, _) => TripLegsSection(
             origin: _firstLegOrigin(),
-            showPrice: _kgPriceEnabledNotifier.value,
+            showPrice: true,
             tripCurrency: _currency,
             paymentRails: _legPaymentRails,
             defaultKg: _availableKgNotifier.value,

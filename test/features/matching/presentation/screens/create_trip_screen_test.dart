@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
@@ -33,12 +33,14 @@ import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_price_suggestion_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_series_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart'
     show BidPaymentMethod;
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
+import 'package:dony/features/matching/data/models/trip_price_suggestion.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
@@ -94,6 +96,7 @@ import '../../../../helpers/form_draft_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/mock_recent_city_store.dart';
+import '../../../../helpers/price_suggestion_test_doubles.dart';
 import '../../../video_modal/moment_test_support.dart';
 
 const _emptyHelpConfigJson = '''
@@ -395,7 +398,8 @@ AnnouncementModel _makeFullAnnouncement({
   TripStops? stops,
   String currency = 'EUR',
   String status = 'ACTIVE',
-  double pricePerKg = 8.0,
+  double? pricePerKg = 8.0,
+  String pricingMode = 'KG',
   Set<BidPaymentMethod> acceptedPaymentMethods = const {
     BidPaymentMethod.stripe,
     BidPaymentMethod.cash,
@@ -440,6 +444,7 @@ AnnouncementModel _makeFullAnnouncement({
   currency: currency,
   currencyEditable: currencyEditable,
   capacityUnit: capacityUnit,
+  pricingMode: pricingMode,
 );
 
 /// Returns a minimal `LockedTripContext` suitable for locked-mode tests.
@@ -542,6 +547,8 @@ void main() {
         ),
       );
     }
+    // Prix conseillés de la route : back « ancien » (404) par défaut.
+    registerTestPriceSuggestionCubit();
 
     // IContentCategoryRepository — _TripFormContentState.initState calls
     // getIt<IContentCategoryRepository>().getCategories() via an unawaited
@@ -2557,7 +2564,10 @@ void main() {
             currency: 'XOF',
             // 8 F CFA/kg passerait sous le plancher de 656 (FLUTTER-GK).
             pricePerKg: 3000,
-            acceptedPaymentMethods: {BidPaymentMethod.mobileMoney},
+            acceptedPaymentMethods: {
+              BidPaymentMethod.mobileMoney,
+              BidPaymentMethod.cash,
+            },
           ),
         );
 
@@ -2649,6 +2659,123 @@ void main() {
       ).called(1);
     });
 
+    // ── Trajet publié aux seuls prix par article (sans prix au kilo) ────────
+    group('modification sans prix au kilo', () {
+      AnnouncementModel gridOnly() =>
+          _makeFullAnnouncement(pricePerKg: null, pricingMode: 'MIXED');
+
+      AnnouncementUpdateRequested lastUpdate() =>
+          verify(
+                () => announcementBloc.add(
+                  captureAny(that: isA<AnnouncementUpdateRequested>()),
+                ),
+              ).captured.last
+              as AnnouncementUpdateRequested;
+
+      testWidgets('pas de carte − / + : ligne d\'info et lien d\'ajout', (
+        tester,
+      ) async {
+        await navigateToStep2(tester, announcement: gridOnly());
+
+        expect(find.byKey(const Key('kg-price-none-on-edit')), findsOneWidget);
+        expect(
+          find.text('Ce trajet est vendu uniquement aux prix par article'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('kg-price-card')), findsNothing);
+        expect(find.byKey(const Key('kg-price-earnings')), findsNothing);
+        // « Enregistrer » reste possible sans prix au kilo.
+        expect(
+          tester
+              .widget<DonyButton>(
+                find.byKey(const Key('create-announcement-submit')),
+              )
+              .onPressed,
+          isNotNull,
+        );
+      });
+
+      testWidgets('enregistrer sans ajout : même envoi qu\'avant (mode '
+          'd\'origine, aucun prix au kilo)', (tester) async {
+        await navigateToStep2(tester, announcement: gridOnly());
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        final event = lastUpdate();
+        expect(event.pricingMode, 'MIXED');
+        expect(event.pricePerKg, 0);
+      });
+
+      testWidgets('« Ajouter un prix au kilo » : carte au prix conseillé, '
+          'enregistré en MIXED avec ce prix', (tester) async {
+        await navigateToStep2(tester, announcement: gridOnly());
+
+        final add = find.byKey(const Key('kg-price-add-on-edit'));
+        await tester.ensureVisible(add);
+        await tester.tap(add);
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.byKey(const Key('kg-price-card')), findsOneWidget);
+        expect(
+          tester.widget<Text>(find.byKey(const Key('kg-price-amount'))).data,
+          '8',
+        );
+        expect(
+          find.byKey(const Key('kg-price-remove-on-edit')),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        final event = lastUpdate();
+        expect(event.pricingMode, 'MIXED');
+        expect(event.pricePerKg, 8);
+      });
+
+      testWidgets('« Retirer le prix au kilo » : retour au trajet d\'origine', (
+        tester,
+      ) async {
+        await navigateToStep2(tester, announcement: gridOnly());
+
+        final add = find.byKey(const Key('kg-price-add-on-edit'));
+        await tester.ensureVisible(add);
+        await tester.tap(add);
+        await tester.pump(const Duration(milliseconds: 400));
+        final remove = find.byKey(const Key('kg-price-remove-on-edit'));
+        await tester.ensureVisible(remove);
+        await tester.tap(remove);
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.byKey(const Key('kg-price-card')), findsNothing);
+        expect(find.byKey(const Key('kg-price-none-on-edit')), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        final event = lastUpdate();
+        expect(event.pricingMode, 'MIXED');
+        expect(event.pricePerKg, 0);
+      });
+
+      testWidgets('trajet qui avait un prix au kilo : carte inchangée, '
+          'aucun lien d\'ajout ni de retrait', (tester) async {
+        await navigateToStep2(tester);
+
+        expect(find.byKey(const Key('kg-price-card')), findsOneWidget);
+        expect(find.byKey(const Key('kg-price-none-on-edit')), findsNothing);
+        expect(find.byKey(const Key('kg-price-add-on-edit')), findsNothing);
+        expect(find.byKey(const Key('kg-price-remove-on-edit')), findsNothing);
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+        final event = lastUpdate();
+        expect(event.pricePerKg, 8);
+        expect(event.pricingMode, 'KG');
+      });
+    });
+
     testWidgets('FLUTTER-GE : les escales préremplies repartent à '
         'l\'enregistrement', (tester) async {
       await navigateToStep2(
@@ -2673,21 +2800,16 @@ void main() {
     });
 
     testWidgets(
-      'changer de devise resynchronise le prix du bloc : le même chip vaut '
+      'changer de devise resynchronise le prix du bloc : le même repère vaut '
       '1 500 F CFA en XOF puis 8 € en EUR (_onCurrencyChanged)',
       (tester) async {
         await navigateToStep2(
           tester,
-          announcement: _makeFullAnnouncement(currency: 'XOF'),
+          announcement: _makeFullAnnouncement(
+            currency: 'XOF',
+            pricePerKg: 1500,
+          ),
         );
-
-        await tester.ensureVisible(
-          find.text(CurrencyFormatter.format(1500, SupportedCurrency.xof)),
-        );
-        await tester.tap(
-          find.text(CurrencyFormatter.format(1500, SupportedCurrency.xof)),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
 
         final stepFinder = find.byType(PrixConditionsStep);
         final formBloc = BlocProvider.of<AnnouncementFormBloc>(
@@ -2703,8 +2825,8 @@ void main() {
 
         expect(formBloc.state.pricePerKg, 8);
         expect(
-          find.text(CurrencyFormatter.format(8, SupportedCurrency.eur)),
-          findsOneWidget,
+          tester.widget<Text>(find.byKey(const Key('kg-price-amount'))).data,
+          '8',
         );
       },
     );
@@ -2719,7 +2841,10 @@ void main() {
             currency: 'XOF',
             // 8 F CFA/kg passerait sous le plancher de 656 (FLUTTER-GK).
             pricePerKg: 3000,
-            acceptedPaymentMethods: {BidPaymentMethod.mobileMoney},
+            acceptedPaymentMethods: {
+              BidPaymentMethod.mobileMoney,
+              BidPaymentMethod.cash,
+            },
           ),
         );
 
@@ -4190,43 +4315,35 @@ void main() {
       },
     );
 
-    testWidgets('Stripe non configuré : Espèces est forcé ON et verrouillé', (
-      tester,
-    ) async {
-      registerStripeBloc(onboardingComplete: false);
-      await navigateToStep2(tester);
+    testWidgets(
+      'Stripe non configuré : Espèces se décoche, rien n\'est verrouillé '
+      '(au moins un moyen exigé à l\'enregistrement)',
+      (tester) async {
+        registerStripeBloc(onboardingComplete: false);
+        await navigateToStep2(tester);
 
-      final cashSwitch = find.byKey(const Key('payment-method-cash'));
-      expect(cashSwitch, findsOneWidget);
+        final cashSwitch = find.byKey(const Key('payment-method-cash'));
+        expect(cashSwitch, findsOneWidget);
+        // _makeFullAnnouncement() accepte CASH : coché, actionnable.
+        final tile = tester.widget<SwitchListTile>(cashSwitch);
+        expect(tile.value, isTrue);
+        expect(tile.onChanged, isNotNull);
+        expect(
+          find.textContaining('Toujours accepté sur ce trajet'),
+          findsNothing,
+        );
 
-      // Sans Stripe, CASH est la seule méthode possible : la ligne reste à
-      // ON. L'interrupteur n'est plus désactivé (grisé, il se lisait
-      // « indisponible », Sentry FLUTTER-8M) : un toucher explique, sans
-      // jamais le couper.
-      final tile = tester.widget<SwitchListTile>(cashSwitch);
-      expect(tile.value, isTrue);
-      expect(tile.onChanged, isNotNull);
-      expect(
-        find.textContaining('Toujours accepté sur ce trajet'),
-        findsOneWidget,
-      );
+        await tester.ensureVisible(cashSwitch);
+        await tester.pump();
+        await tester.tap(cashSwitch);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
-      await tester.ensureVisible(cashSwitch);
-      await tester.pump();
-      await tester.tap(cashSwitch);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(
-        find.textContaining('les espèces restent toujours acceptées'),
-        findsOneWidget,
-      );
-      expect(tester.widget<SwitchListTile>(cashSwitch).value, isTrue);
-
-      // L'encart commission reste visible puisque CASH est actif.
-      expect(find.byType(CashCommissionNotice), findsOneWidget);
-      await tester.pump(const Duration(seconds: 5));
-    });
+        expect(tester.widget<SwitchListTile>(cashSwitch).value, isFalse);
+        expect(find.byType(CashCommissionNotice), findsNothing);
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
   });
 
   // ── Group: gating des champs obligatoires ────────────────────────────────────
@@ -5221,6 +5338,91 @@ void main() {
     }
 
     final row = find.byKey(const Key('trip-currency-selector-row'));
+
+    // ── Étape prix simplifiée (prix conseillé, espèces, au moins un moyen) ──
+
+    void useBackendSuggestion(double pricePerKg) {
+      getIt.unregister<TripPriceSuggestionCubit>();
+      registerTestPriceSuggestionCubit(
+        suggestion: TripPriceSuggestion(
+          currency: 'EUR',
+          pricePerKg: pricePerKg,
+          sampleSize: 6,
+        ),
+      );
+      addTearDown(() {
+        getIt.unregister<TripPriceSuggestionCubit>();
+        registerTestPriceSuggestionCubit();
+      });
+    }
+
+    String amount(WidgetTester tester) =>
+        tester.widget<Text>(find.byKey(const Key('kg-price-amount'))).data!;
+
+    testWidgets('sans prix (brouillon) : prix conseillé de la route posé, '
+        'pastille « le plus courant »', (tester) async {
+      useBackendSuggestion(10);
+      await pumpAt(tester, 2);
+
+      expect(amount(tester), '10');
+      expect(find.byKey(const Key('kg-price-most-common')), findsOneWidget);
+      final formBloc = BlocProvider.of<AnnouncementFormBloc>(
+        tester.element(find.byType(PrixConditionsStep)),
+      );
+      expect(formBloc.state.pricePerKg, 10);
+    });
+
+    testWidgets('prix déjà choisi (brouillon) : jamais écrasé par le prix '
+        'conseillé', (tester) async {
+      useBackendSuggestion(10);
+      await pumpAt(tester, 2, priceOption: 0);
+
+      expect(amount(tester), '7');
+      expect(find.byKey(const Key('kg-price-most-common')), findsNothing);
+      expect(find.byKey(const Key('kg-price-reset')), findsOneWidget);
+    });
+
+    testWidgets('back ancien (404) : médiane embarquée, sans pastille', (
+      tester,
+    ) async {
+      await pumpAt(tester, 2);
+      expect(amount(tester), '8');
+      expect(find.byKey(const Key('kg-price-most-common')), findsNothing);
+    });
+
+    testWidgets('aucun moyen de paiement : l\'aperçu ne s\'ouvre pas, la '
+        'section passe en orange, puis se répare', (tester) async {
+      // Brouillon sans espèces, Stripe non configuré : aucun moyen.
+      await pumpAt(tester, 2);
+      final preview = find.byKey(const Key('create-announcement-preview'));
+      // Le bouton reste actif.
+      expect(tester.widget<DonyButton>(preview).onPressed, isNotNull);
+
+      await tester.tap(preview);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(const Key('payment-methods-error')), findsOneWidget);
+      expect(
+        find.text('Choisissez au moins un moyen de paiement'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('preview-currency-change')), findsNothing);
+      verify(
+        () => getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.tripPublishBlockedPayment,
+          properties: {'action': 'publish'},
+        ),
+      ).called(greaterThanOrEqualTo(1));
+
+      final cash = find.byKey(const Key('payment-method-cash'));
+      await tester.ensureVisible(cash);
+      await tester.pump();
+      await tester.tap(cash);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byKey(const Key('payment-methods-error')), findsNothing);
+      await tester.pump(const Duration(seconds: 1));
+    });
 
     testWidgets('étape 1 (Trajet) : pas d\'encart', (tester) async {
       await pumpAt(tester, 0);

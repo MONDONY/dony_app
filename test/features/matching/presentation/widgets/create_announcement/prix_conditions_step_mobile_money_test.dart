@@ -103,7 +103,6 @@ Widget _host({
                 customPriceNotifier: ValueNotifier<double>(0),
                 availableKgNotifier: ValueNotifier<double>(10),
                 cashEnabledNotifier: ValueNotifier<bool>(false),
-                kgPriceEnabledNotifier: ValueNotifier<bool>(true),
                 mobileMoneyEnabledNotifier:
                     mobileMoneyEnabledNotifier ?? ValueNotifier<bool>(false),
                 currencyNotifier:
@@ -213,7 +212,10 @@ void main() {
           find.byKey(const Key('activate-mobile-money-cta')),
         );
         await tester.pump();
-        await tester.tap(find.byKey(const Key('activate-mobile-money-cta')));
+        await _tapVisible(
+          tester,
+          find.byKey(const Key('activate-mobile-money-cta')),
+        );
         await tester.pumpAndSettle();
 
         expect(find.text('mobile-money-account-stub'), findsOneWidget);
@@ -252,7 +254,10 @@ void main() {
           find.byKey(const Key('payment-method-mobile-money')),
         );
         await tester.pump();
-        await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
+        await _tapVisible(
+          tester,
+          find.byKey(const Key('payment-method-mobile-money')),
+        );
         await tester.pump();
 
         expect(notifier.value, isTrue);
@@ -333,7 +338,10 @@ void main() {
         find.byKey(const Key('activate-mobile-money-cta')),
       );
       await tester.pump();
-      await tester.tap(find.byKey(const Key('activate-mobile-money-cta')));
+      await _tapVisible(
+        tester,
+        find.byKey(const Key('activate-mobile-money-cta')),
+      );
       await tester.pumpAndSettle();
       expect(
         reloads,
@@ -341,7 +349,7 @@ void main() {
         reason: 'Rien à recharger tant que l\'écran est ouvert',
       );
 
-      await tester.tap(find.text('stub-back'));
+      await _tapVisible(tester, find.text('stub-back'));
       await tester.pumpAndSettle();
 
       expect(reloads, 1);
@@ -417,7 +425,10 @@ void main() {
         find.byKey(const Key('payment-method-mobile-money')),
       );
       await tester.pump();
-      await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
+      await _tapVisible(
+        tester,
+        find.byKey(const Key('payment-method-mobile-money')),
+      );
       await tester.pump();
 
       expect(notifier.value, isTrue);
@@ -451,7 +462,7 @@ void main() {
 
       final cta = find.byKey(const Key('switch-to-mobile-money-currency-cta'));
       await tester.ensureVisible(cta);
-      await tester.tap(cta);
+      await _tapVisible(tester, cta);
       await tester.pumpAndSettle();
 
       // FLUTTER-GK : confirmation explicite avant de basculer la devise.
@@ -463,7 +474,10 @@ void main() {
         ),
         findsOneWidget,
       );
-      await tester.tap(find.byKey(const Key('currency-switch-confirm')));
+      await _tapVisible(
+        tester,
+        find.byKey(const Key('currency-switch-confirm')),
+      );
       // Le changement de devise relance les animations d'apparition.
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pump(const Duration(milliseconds: 500));
@@ -525,9 +539,12 @@ void main() {
       );
       final cta = find.byKey(const Key('switch-to-mobile-money-currency-cta'));
       await tester.ensureVisible(cta);
-      await tester.tap(cta);
+      await _tapVisible(tester, cta);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('currency-switch-cancel')));
+      await _tapVisible(
+        tester,
+        find.byKey(const Key('currency-switch-cancel')),
+      );
       await tester.pumpAndSettle();
 
       expect(currency.value.code, SupportedCurrency.eur.code);
@@ -638,4 +655,15 @@ void main() {
       },
     );
   });
+}
+
+/// La section prix (carte « − / + », gain, prix par article) allonge l'étape :
+/// un élément plus bas peut sortir de l'écran de test. On l'y ramène avant de
+/// le toucher, sinon le toucher tombe à côté.
+Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
+  if (finder.evaluate().isNotEmpty) {
+    await tester.ensureVisible(finder.first);
+    await tester.pump();
+  }
+  await tester.tap(finder);
 }
