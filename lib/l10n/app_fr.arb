@@ -1335,26 +1335,9 @@
   "@tripPublishDraftLimitTitle": {
     "description": "Titre du dialogue quand la limite de brouillons est atteinte"
   },
-  "tripPublishTemplatesLabel": "Mes modèles",
-  "@tripPublishTemplatesLabel": {
-    "description": "Titre de la barre de suggestion des modèles de trajet enregistrés"
-  },
-  "tripPublishTemplatesHint": "Appliquez un modèle pour pré-remplir le trajet",
-  "@tripPublishTemplatesHint": {
-    "description": "Texte d'aide sous le titre de la barre de suggestion des modèles de trajet"
-  },
   "tripPublishTemplateAppliedMessage": "Modèle « {label} » appliqué",
   "@tripPublishTemplateAppliedMessage": {
     "description": "Confirmation après application d'un modèle de trajet, avec son nom",
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "tripPublishTemplateChipGrid": "{label} · par article",
-  "@tripPublishTemplateChipGrid": {
-    "description": "Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom",
     "placeholders": {
       "label": {
         "type": "String"
@@ -1556,57 +1539,9 @@
   "@tripPublishIntroStripeSubtitle": {
     "description": "Texte du rappel Stripe (voyageur) dans l'intro de publication d'un trajet"
   },
-  "tripPublishPricingModeKg": "Au kilo",
-  "@tripPublishPricingModeKg": {
-    "description": "Option « au kilo » du toggle de mode de tarification, étape Prix & conditions"
-  },
-  "tripPublishPricingModeMixed": "Articles + kilo",
-  "@tripPublishPricingModeMixed": {
-    "description": "Option « grille + kilo » du toggle de mode de tarification"
-  },
   "tripPublishPricePerKgSectionLabel": "Prix par kg",
   "@tripPublishPricePerKgSectionLabel": {
     "description": "Libellé de la section prix au kg, réutilisé comme libellé du champ de prix personnalisé"
-  },
-  "tripPublishKgPriceToggleTitle": "Tarif au kilo",
-  "@tripPublishKgPriceToggleTitle": {
-    "description": "Titre du toggle « Tarif au kilo », visible en mode grille"
-  },
-  "tripPublishKgPriceToggleSubtitle": "Optionnel avec les prix par article",
-  "@tripPublishKgPriceToggleSubtitle": {
-    "description": "Sous-titre du toggle « Tarif au kilo »"
-  },
-  "tripPublishCustomPriceChipLabel": "Autre prix",
-  "@tripPublishCustomPriceChipLabel": {
-    "description": "Libellé de la puce « Autre prix » du sélecteur de prix au kg"
-  },
-  "tripPublishCustomPriceFieldHint": "ex: 12",
-  "@tripPublishCustomPriceFieldHint": {
-    "description": "Indice du champ de saisie du prix personnalisé au kg"
-  },
-  "tripPublishPriceSelectPrompt": "Sélectionnez un prix pour voir l'estimation",
-  "@tripPublishPriceSelectPrompt": {
-    "description": "Invite affichée tant qu'aucun prix au kg n'est sélectionné"
-  },
-  "tripPublishUnlimitedCapacityEstimateNote": "Capacité illimitée : estimation selon la demande",
-  "@tripPublishUnlimitedCapacityEstimateNote": {
-    "description": "Note affichée à la place de l'estimation quand la capacité est Kg libre"
-  },
-  "tripPublishPriceEstimateLine": "Vous touchez {travelerNet} · l'expéditeur paie {senderTotal}",
-  "@tripPublishPriceEstimateLine": {
-    "description": "Ligne d'estimation du prix au kg, montants déjà formatés dans la devise",
-    "placeholders": {
-      "travelerNet": {
-        "type": "String"
-      },
-      "senderTotal": {
-        "type": "String"
-      }
-    }
-  },
-  "tripPublishGridCommissionNotice": "Yadony ajoute ses frais de service sur chaque article et sur le prix au kilo",
-  "@tripPublishGridCommissionNotice": {
-    "description": "Note sous l'aperçu de grille en mode mixte, sans taux (FLUTTER-R6)"
   },
   "tripPublishNegotiableToggleTitle": "J'accepte les propositions de prix",
   "@tripPublishNegotiableToggleTitle": {
@@ -1765,19 +1700,6 @@
   "@tripPublishGridPreviewLabel": {
     "description": "Libellé au-dessus de l'aperçu de grille, étape Prix & conditions"
   },
-  "tripPublishGridPreviewSeeAll": "Voir les {count} articles",
-  "@tripPublishGridPreviewSeeAll": {
-    "description": "Bouton pour ouvrir la feuille listant tous les articles de la grille",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "tripPublishGridPreviewNote": "Ces prix viennent de votre profil. Les modifier les change sur tous vos trajets.",
-  "@tripPublishGridPreviewNote": {
-    "description": "Note sous l'aperçu de grille rappelant que la grille est un réglage de profil"
-  },
   "tripPublishGridPreviewConvertedNote": "Converti depuis {currency} au taux du jour",
   "@tripPublishGridPreviewConvertedNote": {
     "description": "Mention sous l'aperçu de grille quand les prix (exprimés dans la devise active du voyageur) sont convertis dans la devise du trajet",
@@ -1787,34 +1709,6 @@
         "example": "EUR"
       }
     }
-  },
-  "tripPublishGridSheetTitle": "Vos prix par article",
-  "@tripPublishGridSheetTitle": {
-    "description": "Titre de la feuille listant tous les articles de la grille"
-  },
-  "tripPublishGridSheetSubtitle": "Valable sur tous vos trajets",
-  "@tripPublishGridSheetSubtitle": {
-    "description": "Sous-titre de la feuille de grille complète"
-  },
-  "tripPublishGridSheetEditCta": "Modifier mes prix",
-  "@tripPublishGridSheetEditCta": {
-    "description": "Bouton sticky de la feuille de grille complète"
-  },
-  "tripPublishGridSheetCommissionNote": "Prix payés par l'expéditeur, frais de service Yadony compris.",
-  "@tripPublishGridSheetCommissionNote": {
-    "description": "Note sous la liste d'articles de la feuille de grille complète, sans taux (FLUTTER-R6)"
-  },
-  "tripPublishGridEmptyTitle": "Aucun prix par article",
-  "@tripPublishGridEmptyTitle": {
-    "description": "Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette"
-  },
-  "tripPublishGridEmptySubtitle": "Ajoutez au moins une étiquette pour que les expéditeurs réservent article par article.",
-  "@tripPublishGridEmptySubtitle": {
-    "description": "Sous-titre de la carte grille vide"
-  },
-  "tripPublishGridComposeCta": "Ajouter mes prix par article",
-  "@tripPublishGridComposeCta": {
-    "description": "Bouton de la carte grille vide, ouvre l'écran de grille du profil"
   },
   "tripPublishCorridorConfirmedBadge": "Confirmé",
   "@tripPublishCorridorConfirmedBadge": {
@@ -5515,31 +5409,6 @@
         "type": "String"
       }
     }
-  },
-  "bidCreatePriceTooLowHint": "Prix bas : risque de méfiance de l'expéditeur",
-  "@bidCreatePriceTooLowHint": {
-    "description": "Avertissement prix trop bas (price_hint_widget.dart)"
-  },
-  "bidCreatePriceTooHighHint": "Prix élevé : peu de demandes attendues",
-  "@bidCreatePriceTooHighHint": {
-    "description": "Avertissement prix trop élevé (price_hint_widget.dart)"
-  },
-  "bidCreateMarketPriceCorridor": "Marché {corridor} : ",
-  "@bidCreateMarketPriceCorridor": {
-    "description": "Préfixe du prix médian de marché avec corridor (price_hint_widget.dart)",
-    "placeholders": {
-      "corridor": {
-        "type": "String"
-      }
-    }
-  },
-  "bidCreateMarketPriceLabel": "Marché ",
-  "@bidCreateMarketPriceLabel": {
-    "description": "Préfixe du prix médian de marché sans corridor (price_hint_widget.dart)"
-  },
-  "bidCreateCompetitivePriceSuffix": " · Votre prix est compétitif.",
-  "@bidCreateCompetitivePriceSuffix": {
-    "description": "Suffixe affiché après le prix médian de marché (price_hint_widget.dart)"
   },
   "bidCreateDisclaimerSigned": "Disclaimer signé le {dateTime}",
   "@bidCreateDisclaimerSigned": {
@@ -22263,10 +22132,6 @@
   "@walletTopupAmountAtLeast": {"description": "Seule borne publiée par l'opérateur : le minimum, sous le montant saisi (wallet_topup_amount_screen.dart). {min} : montant formaté.", "placeholders": {"min": {"type": "String"}}},
   "walletTopupAmountAtMost": "Au plus {max}",
   "@walletTopupAmountAtMost": {"description": "Seule borne publiée par l'opérateur : le maximum, sous le montant saisi (wallet_topup_amount_screen.dart). {max} : montant formaté.", "placeholders": {"max": {"type": "String"}}},
-  "tripPublishGridCommissionNoticeGrid": "Ces prix sont ceux que vous touchez. Les frais de service Yadony sont payés par l'expéditeur, en plus. En espèces, vous les avancez sur votre solde Yadony et l'expéditeur vous les rembourse dans le paiement.",
-  "@tripPublishGridCommissionNoticeGrid": {"description": "Sous l'aperçu de la grille à l'étape Prix & conditions quand une grille de commission est en vigueur : qui paie les frais de service. Jamais le minimum (YADONY-FLUTTER-PROD-1J). Variante de tripPublishGridCommissionNotice."},
-  "tripPublishGridSheetCommissionNoteGrid": "Prix touchés par le voyageur. Les frais de service Yadony sont payés par l'expéditeur, en plus. En espèces, le voyageur les avance sur son solde Yadony et l'expéditeur les lui rembourse dans le paiement.",
-  "@tripPublishGridSheetCommissionNoteGrid": {"description": "Pied de la feuille complète de l'aperçu de grille quand une grille de commission est en vigueur. Jamais le minimum (YADONY-FLUTTER-PROD-1J)."},
   "priceGridCommissionNoticeGrid": "Vous encaissez exactement votre montant : les frais de service Yadony sont payés par l'expéditeur. En espèces, vous les avancez sur votre solde Yadony et l'expéditeur vous les rembourse dans le paiement.",
   "@priceGridCommissionNoticeGrid": {"description": "Pied de l'écran de la grille de prix du voyageur quand une grille de commission est en vigueur. Jamais le minimum (YADONY-FLUTTER-PROD-1J)."},
   "priceGridSenderWillPayMessageGrid": "L'expéditeur paiera {paid}, dont {fee} de frais de service Yadony.",
@@ -24001,5 +23866,113 @@
   "parcelModalFallbackSender": "l'expéditeur",
   "@parcelModalFallbackSender": {"description": "Modal d'étape du colis : remplace {expéditeur} dans les textes de l'admin quand le nom de l'expéditeur est inconnu (majuscule ajoutée en tête de phrase)"},
   "parcelModalFallbackArrivalCity": "la ville d'arrivée",
-  "@parcelModalFallbackArrivalCity": {"description": "Modal d'étape du colis : remplace {ville_arrivee} dans les textes de l'admin quand la ville d'arrivée est inconnue (majuscule ajoutée en tête de phrase)"}
+  "@parcelModalFallbackArrivalCity": {"description": "Modal d'étape du colis : remplace {ville_arrivee} dans les textes de l'admin quand la ville d'arrivée est inconnue (majuscule ajoutée en tête de phrase)"},
+  "tripPublishKgPriceDecrease": "Baisser le prix de {step}",
+  "@tripPublishKgPriceDecrease": {"description": "Bouton − du prix au kilo (lecteur d'écran)", "placeholders": {"step": {"type": "String"}}},
+  "tripPublishKgPriceIncrease": "Monter le prix de {step}",
+  "@tripPublishKgPriceIncrease": {"description": "Bouton + du prix au kilo (lecteur d'écran)", "placeholders": {"step": {"type": "String"}}},
+  "tripPublishKgPriceSemantics": "Prix au kilo : {price}",
+  "@tripPublishKgPriceSemantics": {"description": "Lecture du gros montant du prix au kilo", "placeholders": {"price": {"type": "String"}}},
+  "tripPublishKgPriceMostCommon": "Prix le plus courant sur ce trajet",
+  "@tripPublishKgPriceMostCommon": {"description": "Pastille quand le prix vaut la médiane de la route"},
+  "tripPublishKgPriceReset": "Revenir au prix conseillé ({price})",
+  "@tripPublishKgPriceReset": {"description": "Lien qui remet le prix conseillé, une seule ligne", "placeholders": {"price": {"type": "String"}}},
+  "tripPublishKgPriceBounds": "Entre {min} et {max} le kilo",
+  "@tripPublishKgPriceBounds": {"description": "Bornes du sélecteur de prix au kilo", "placeholders": {"min": {"type": "String"}, "max": {"type": "String"}}},
+  "tripPublishEarningsIfFull": "Si vous remplissez vos {kg} kg",
+  "@tripPublishEarningsIfFull": {"description": "Bloc gain : kilos du trajet", "placeholders": {"kg": {"type": "String"}}},
+  "tripPublishEarningsPerKg": "Pour chaque kilo transporté",
+  "@tripPublishEarningsPerKg": {"description": "Bloc gain : capacité illimitée"},
+  "tripPublishEarningsAmount": "Vous touchez {amount}",
+  "@tripPublishEarningsAmount": {"description": "Bloc gain : montant net voyageur, déjà formaté", "placeholders": {"amount": {"type": "String"}}},
+  "tripPublishEarningsFeesNote": "Les frais Yadony sont payés par l'expéditeur, en plus de votre prix.",
+  "@tripPublishEarningsFeesNote": {"description": "Bloc gain : qui paie les frais"},
+  "tripPublishItemPricesTitle": "Prix par article",
+  "@tripPublishItemPricesTitle": {"description": "Titre de la carte d'invitation aux prix par article"},
+  "tripPublishItemPricesOptional": "Facultatif",
+  "@tripPublishItemPricesOptional": {"description": "Étiquette de la carte prix par article"},
+  "tripPublishItemPricesPitch": "Un téléphone ou un ordinateur pèse peu mais vaut plus. Fixez-leur un prix, l'expéditeur le voit tout de suite.",
+  "@tripPublishItemPricesPitch": {"description": "Texte de la carte d'invitation aux prix par article"},
+  "tripPublishItemPriceExample": "{label} · {price}",
+  "@tripPublishItemPriceExample": {"description": "Exemple de prix pratiqué sur la route", "placeholders": {"label": {"type": "String"}, "price": {"type": "String"}}},
+  "tripPublishItemPricesAddCta": "Ajouter mes prix",
+  "@tripPublishItemPricesAddCta": {"description": "Bouton de la carte prix par article (court, une ligne)"},
+  "tripPublishItemPricesRestPerKg": "Le reste est compté au kilo, à {price}/kg.",
+  "@tripPublishItemPricesRestPerKg": {"description": "Sous la liste des prix par article", "placeholders": {"price": {"type": "String"}}},
+  "tripPublishPaymentMethodMissing": "Choisissez au moins un moyen de paiement",
+  "@tripPublishPaymentMethodMissing": {"description": "Publication arrêtée : aucun moyen de paiement coché"},
+  "priceGridRouteSuggestionsTitle": "Prix pratiqués sur ce trajet",
+  "@priceGridRouteSuggestionsTitle": {"description": "Écran grille vide : titre des prix suggérés de la route"},
+  "priceGridRouteSuggestionsSubtitle": "Ajoutez-les tels quels, vous pourrez les ajuster ensuite. Ces prix servent sur tous vos trajets.",
+  "@priceGridRouteSuggestionsSubtitle": {"description": "Écran grille vide : explication des prix suggérés"},
+  "priceGridRouteSuggestionsApplyCta": "Ajouter ces prix",
+  "@priceGridRouteSuggestionsApplyCta": {"description": "Écran grille vide : ajoute tous les prix suggérés (court)"},
+  "tripEditKgPriceNoneInfo": "Ce trajet est vendu uniquement aux prix par article",
+  "@tripEditKgPriceNoneInfo": {"description": "Modification d'un trajet sans prix au kilo"},
+  "tripEditKgPriceAddCta": "Ajouter un prix au kilo",
+  "@tripEditKgPriceAddCta": {"description": "Lien texte, une ligne"},
+  "tripEditKgPriceRemoveCta": "Retirer le prix au kilo",
+  "@tripEditKgPriceRemoveCta": {"description": "Lien texte, une ligne"},
+  "tripPublishDepartureBlockLabel": "Départ",
+  "@tripPublishDepartureBlockLabel": {"description": "Étape 1 de la création d'un trajet : titre du bloc date et heure de départ"},
+  "tripPublishArrivalBlockLabel": "Arrivée",
+  "@tripPublishArrivalBlockLabel": {"description": "Étape 1 : titre du bloc jour et heure d'arrivée"},
+  "tripPublishOptionalSuffix": "(facultatif)",
+  "@tripPublishOptionalSuffix": {"description": "Étape 1 : mention après le titre d'un bloc facultatif"},
+  "tripPublishArrivalTimeLabel": "Heure d'arrivée",
+  "@tripPublishArrivalTimeLabel": {"description": "Étape 1 : champ heure d'arrivée, dans le bloc Arrivée déjà marqué facultatif"},
+  "tripPublishStopsBlockLabel": "Escales",
+  "@tripPublishStopsBlockLabel": {"description": "Étape 1 : titre du bloc des escales, suivi de « (facultatif) »"},
+  "tripPublishFieldPickupAddressName": "Lieu de remise",
+  "@tripPublishFieldPickupAddressName": {"description": "Pastille d'un champ manquant : lieu de remise du colis au départ"},
+  "tripPublishFieldDeliveryAddressName": "Lieu de récupération",
+  "@tripPublishFieldDeliveryAddressName": {"description": "Pastille d'un champ manquant : lieu de récupération à l'arrivée"},
+  "tripPublishFieldTransportModeName": "Mode de transport",
+  "@tripPublishFieldTransportModeName": {"description": "Pastille d'un champ manquant : mode de transport"},
+  "tripStepMissingBanner": "{count, plural, =1{Il reste 1 champ obligatoire à remplir avant de continuer.} other{Il reste {count} champs obligatoires à remplir avant de continuer.}}",
+  "@tripStepMissingBanner": {"description": "Bandeau en haut d'une étape quand « Continuer » est touché avec des champs vides", "placeholders": {"count": {"type": "int"}}},
+  "tripStepMissingTitle": "{count, plural, =1{Il manque 1 champ :} other{Il manque {count} champs :}}",
+  "@tripStepMissingTitle": {"description": "Au-dessus du bouton Continuer, avant les pastilles des champs manquants", "placeholders": {"count": {"type": "int"}}},
+  "tripRecurrenceSubtitle": "Mêmes villes, kilos, prix et adresses à chaque date",
+  "@tripRecurrenceSubtitle": {"description": "Carte de récurrence de l'étape 1, sous « Vous faites ce trajet souvent ? »"},
+  "tripRecurrenceWeekly": "Chaque semaine",
+  "@tripRecurrenceWeekly": {"description": "Puce de rythme d'un trajet récurrent"},
+  "tripRecurrenceBiweekly": "Toutes les 2 semaines",
+  "@tripRecurrenceBiweekly": {"description": "Puce de rythme d'un trajet récurrent"},
+  "tripRecurrenceMonthly": "Chaque mois",
+  "@tripRecurrenceMonthly": {"description": "Puce de rythme d'un trajet récurrent"},
+  "tripRecurrenceCount": "{count, plural, =1{1 trajet sera publié} other{{count} trajets seront publiés}}",
+  "@tripRecurrenceCount": {"description": "Compteur de la carte de récurrence, premier trajet compris", "placeholders": {"count": {"type": "int"}}},
+  "tripRecurrenceChooseDates": "Choisir les dates",
+  "@tripRecurrenceChooseDates": {"description": "Lien de la carte de récurrence qui ouvre le calendrier (court, une ligne)"},
+  "tripRecurrencePickDateFirst": "Choisissez d'abord la date de départ : les dates suivantes en découlent.",
+  "@tripRecurrencePickDateFirst": {"description": "Carte de récurrence allumée sans date de départ"},
+  "tripRecurrenceMultiLegHint": "Pas de récurrence pour un voyage en plusieurs étapes. Retirez les étapes ajoutées pour la proposer.",
+  "@tripRecurrenceMultiLegHint": {"description": "Carte de récurrence quand des étapes de voyage ont été ajoutées"},
+  "tripRecurrenceDatesSheetTitle": "Dates de vos trajets",
+  "@tripRecurrenceDatesSheetTitle": {"description": "Titre de la feuille calendrier de la récurrence"},
+  "tripRecurrenceDatesSheetSubtitle": "Le premier trajet part le {date}. Touchez un jour pour l'ajouter ou le retirer.",
+  "@tripRecurrenceDatesSheetSubtitle": {"description": "Sous-titre de la feuille calendrier de la récurrence", "placeholders": {"date": {"type": "String"}}},
+  "tripRecurrenceDatesDone": "Valider",
+  "@tripRecurrenceDatesDone": {"description": "Bouton de la feuille calendrier de la récurrence (court)"},
+  "tripRecurrenceSeriesPublishing": "{count, plural, =1{Publication de l'autre date…} other{Publication des {count} autres dates…}}",
+  "@tripRecurrenceSeriesPublishing": {"description": "Carte de l'écran de succès pendant la création de la série choisie à l'étape 1", "placeholders": {"count": {"type": "int"}}},
+  "tripPublishedItemPricesProposalTitle": "Vous n'avez pas mis de prix par article",
+  "@tripPublishedItemPricesProposalTitle": {"description": "Écran de succès d'un trajet publié, grille vide : titre de la proposition"},
+  "tripPublishedItemPricesProposalBody": "Les téléphones et ordinateurs rapportent plus avec un prix fixe. Voici les prix pratiqués sur ce trajet : gardez-les ou changez-les.",
+  "@tripPublishedItemPricesProposalBody": {"description": "Écran de succès, grille vide : texte au-dessus des prix de la route"},
+  "tripPublishedItemPricesNextTrips": "Ils vaudront pour vos prochains trajets, pas pour celui-ci.",
+  "@tripPublishedItemPricesNextTrips": {"description": "Écran de succès : la grille est figée à la publication, les prix ajoutés ne changent pas le trajet publié"},
+  "tripPublishedItemPricesEmptyBody": "Un téléphone ou un ordinateur rapporte plus avec un prix fixe. Vos prix vaudront pour vos prochains trajets.",
+  "@tripPublishedItemPricesEmptyBody": {"description": "Écran de succès, grille vide sans prix de route"},
+  "tripPublishedItemPricesAddCta": "Ajouter",
+  "@tripPublishedItemPricesAddCta": {"description": "Écran de succès : ajoute les prix proposés à la grille (très court, à côté de « Modifier »)"},
+  "tripPublishedItemPricesAddedTitle": "Prix ajoutés pour vos prochains trajets",
+  "@tripPublishedItemPricesAddedTitle": {"description": "Écran de succès : prix ajoutés à la grille du profil"},
+  "tripPublishedItemPricesAddedBody": "{count, plural, =1{1 prix par article dans votre profil. Ce trajet garde son prix au kilo.} other{{count} prix par article dans votre profil. Ce trajet garde son prix au kilo.}}",
+  "@tripPublishedItemPricesAddedBody": {"description": "Écran de succès : nombre d'articles de la grille après l'ajout", "placeholders": {"count": {"type": "int"}}},
+  "tripPublishedItemPricesSeeCta": "Voir mes prix",
+  "@tripPublishedItemPricesSeeCta": {"description": "Écran de succès : ouvre la grille du profil après l'ajout (court)"},
+  "tripPublishedItemPricesAddFailed": "Les prix n'ont pas pu être ajoutés. Réessayez.",
+  "@tripPublishedItemPricesAddFailed": {"description": "Écran de succès : échec de l'ajout des prix proposés"}
 }

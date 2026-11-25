@@ -165,10 +165,10 @@ void main() {
           packageRepo,
           analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
         );
-        // Default: {stripe} selected
+        // Espèces et carte cochées au départ.
         expect(
           bloc.state.acceptedPaymentMethods.contains(PaymentMethod.cash),
-          isFalse,
+          isTrue,
         );
 
         await tester.pumpWidget(
@@ -188,7 +188,7 @@ void main() {
 
         expect(
           bloc.state.acceptedPaymentMethods.contains(PaymentMethod.cash),
-          isTrue,
+          isFalse,
         );
       });
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -10,22 +12,40 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// « Vous faites ce trajet souvent ? » sur l'écran de succès d'un trajet
 /// direct : ouvre le calendrier du trajet récurrent.
+///
+/// [autoDates] non vide : la récurrence a été choisie à l'étape 1 du
+/// formulaire, la série part dès l'affichage (publiée, pas en brouillons)
+/// et la carte en montre l'avancement puis le résultat.
 class TripSeriesCard extends StatelessWidget {
-  const TripSeriesCard({super.key, required this.announcement});
+  const TripSeriesCard({
+    super.key,
+    required this.announcement,
+    this.autoDates = const [],
+  });
 
   final AnnouncementModel announcement;
+  final List<DateTime> autoDates;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<TripSeriesCubit>(param1: announcement),
-      child: const _CardBody(),
+      create: (_) {
+        final cubit = getIt<TripSeriesCubit>(param1: announcement);
+        if (autoDates.isNotEmpty) unawaited(cubit.submitDates(autoDates));
+        return cubit;
+      },
+      child: _CardBody(auto: autoDates.isNotEmpty),
     );
   }
 }
 
 class _CardBody extends StatelessWidget {
-  const _CardBody();
+  const _CardBody({required this.auto});
+
+  /// Série partie d'elle-même (récurrence de l'étape 1) : son échec ou son
+  /// résultat partiel s'affiche sur la carte. Ouverte au calendrier, c'est
+  /// la feuille qui les montre.
+  final bool auto;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +56,8 @@ class _CardBody extends StatelessWidget {
       buildWhen: (p, c) => p.status != c.status || p.result != c.result,
       builder: (context, state) {
         final done = state.status == TripSeriesStatus.done;
+        final busy = state.status == TripSeriesStatus.submitting;
+        final failedCount = state.result?.failed.length ?? 0;
         return Container(
           padding: const EdgeInsets.all(DonySpacing.base),
           decoration: BoxDecoration(
@@ -73,17 +95,43 @@ class _CardBody extends StatelessWidget {
                               ? l10n.tripSeriesCardDone(
                                   state.result?.created.length ?? 0,
                                 )
+                              : busy
+                              ? l10n.tripRecurrenceSeriesPublishing(
+                                  state.selected.length,
+                                )
                               : l10n.tripSeriesCardTitle,
                           key: const Key('trip-series-card-title'),
                           style: tt.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        if (!done) ...[
+                        if (!done && !busy) ...[
                           const SizedBox(height: DonySpacing.xs),
                           Text(
                             l10n.tripSeriesCardBody,
                             style: tt.bodyMedium?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                        // Échec de la série : le motif, puis le calendrier
+                        // reste proposé, dates gardées.
+                        if (auto &&
+                            state.status == TripSeriesStatus.failed) ...[
+                          const SizedBox(height: DonySpacing.xs),
+                          Text(
+                            tripSeriesErrorText(context, state.errorCode),
+                            key: const Key('trip-series-card-error'),
+                            style: tt.bodySmall?.copyWith(color: cs.error),
+                          ),
+                        ],
+                        if (auto && done && failedCount > 0) ...[
+                          const SizedBox(height: DonySpacing.xs),
+                          Text(
+                            '${l10n.tripSeriesSomeFailed(failedCount)} '
+                            '${tripSeriesErrorText(context, state.result!.failed.first.code)}',
+                            key: const Key('trip-series-card-partial'),
+                            style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
                           ),
@@ -93,7 +141,14 @@ class _CardBody extends StatelessWidget {
                   ),
                 ],
               ),
-              if (!done) ...[
+              if (busy)
+                const Padding(
+                  padding: EdgeInsets.only(top: DonySpacing.md),
+                  child: LinearProgressIndicator(
+                    key: Key('trip-series-card-progress'),
+                  ),
+                )
+              else if (!done) ...[
                 const SizedBox(height: DonySpacing.md),
                 DonyButton(
                   key: const Key('trip-series-open'),

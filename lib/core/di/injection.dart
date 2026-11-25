@@ -171,7 +171,11 @@ import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_missing_fields_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_mobile_money_networks_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_price_suggestion_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_published_item_prices_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_recurrence_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_series_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
@@ -180,6 +184,7 @@ import 'package:dony/features/matching/data/datasources/bid_negotiation_remote_d
 import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/bid_supplement_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/mobile_money_remote_datasource.dart';
+import 'package:dony/features/matching/data/datasources/price_suggestion_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_amendment_repository.dart';
@@ -187,6 +192,7 @@ import 'package:dony/features/matching/data/repositories/bid_negotiation_reposit
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
+import 'package:dony/features/matching/data/repositories/price_suggestion_repository.dart';
 import 'package:dony/features/matching/data/repositories/tools_completion_repository.dart';
 import 'package:dony/features/messaging/bloc/ask_question/ask_question_cubit.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
@@ -695,6 +701,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<TripLegsCubit>(
     () => TripLegsCubit(getIt<AnalyticsService>()),
   );
+  // Étape 1 de la création d'un trajet : récurrence et champs manquants.
+  getIt.registerFactory<TripRecurrenceCubit>(
+    () => TripRecurrenceCubit(getIt<AnalyticsService>()),
+  );
+  getIt.registerFactory<TripMissingFieldsCubit>(
+    () => TripMissingFieldsCubit(getIt<AnalyticsService>()),
+  );
   // Brouillons locaux des formulaires de publication, propres à chaque compte.
   getIt.registerLazySingleton<FormDraftStore>(
     () => FormDraftStore(
@@ -774,6 +787,27 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<PriceGridBloc>(
     () =>
         PriceGridBloc(getIt<PriceGridRepository>(), getIt<AnalyticsService>()),
+  );
+
+  // Matching — prix conseillés d'une route (yadony-back#788)
+  getIt.registerLazySingleton<PriceSuggestionRemoteDatasource>(
+    () => PriceSuggestionRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<PriceSuggestionRepository>(
+    () => PriceSuggestionRepository(getIt<PriceSuggestionRemoteDatasource>()),
+  );
+  getIt.registerFactory<TripPriceSuggestionCubit>(
+    () => TripPriceSuggestionCubit(
+      getIt<PriceSuggestionRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  // Carte « Prix par article » de l'écran de succès d'un trajet publié.
+  getIt.registerFactory<TripPublishedItemPricesCubit>(
+    () => TripPublishedItemPricesCubit(
+      getIt<PriceSuggestionRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Matching — formulaire de publication d'un trajet

@@ -1,3 +1,5 @@
+import 'package:dony/features/price_grid/data/models/price_grid_suggestion.dart';
+
 abstract class PriceGridEvent {
   const PriceGridEvent();
 }
@@ -34,4 +36,11 @@ class PriceGridItemDeleteRequested extends PriceGridEvent {
 class PriceGridItemsReorderRequested extends PriceGridEvent {
   final List<String> orderedIds;
   const PriceGridItemsReorderRequested(this.orderedIds);
+}
+
+/// Ajoute d'un coup les prix pratiqués sur la route du trajet en cours de
+/// publication, proposés quand la grille est vide.
+class PriceGridSuggestionsAddRequested extends PriceGridEvent {
+  final List<PriceGridSuggestion> suggestions;
+  const PriceGridSuggestionsAddRequested(this.suggestions);
 }

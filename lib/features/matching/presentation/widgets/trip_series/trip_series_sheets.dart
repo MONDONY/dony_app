@@ -97,7 +97,7 @@ class _SeriesBody extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const TripSeriesCalendar(),
+            TripSeriesCalendar.forSeries(),
             const SizedBox(height: DonySpacing.md),
             Container(
               padding: const EdgeInsets.all(DonySpacing.md),

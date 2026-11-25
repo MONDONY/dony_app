@@ -42,6 +42,8 @@ class TripFormDraft extends Equatable {
     this.mobileMoneyEnabled = false,
     this.negotiable = false,
     this.legs = const [],
+    this.recurrenceEnabled = false,
+    this.recurrenceFrequency,
   });
 
   /// Étape atteinte : 0 trajet, 1 lieux et capacité, 2 prix et conditions.
@@ -103,6 +105,12 @@ class TripFormDraft extends Equatable {
   /// Étapes ajoutées après le premier trajet (FLUTTER-4D).
   final List<TripLegDraft> legs;
 
+  /// Récurrence choisie à l'étape 1 (interrupteur et rythme `weekly`,
+  /// `biweekly`, `monthly`). Les dates se recalculent depuis le départ : une
+  /// retouche au calendrier n'est pas gardée.
+  final bool recurrenceEnabled;
+  final String? recurrenceFrequency;
+
   Map<String, dynamic> toJson() => {
     'step': step,
     'currency': currency,
@@ -136,6 +144,8 @@ class TripFormDraft extends Equatable {
     'mobileMoneyEnabled': mobileMoneyEnabled,
     'negotiable': negotiable,
     'legs': [for (final l in legs) _legToJson(l)],
+    'recurrenceEnabled': recurrenceEnabled,
+    'recurrenceFrequency': recurrenceFrequency,
   };
 
   /// Lecture tolérante : un champ absent ou illisible vaut le défaut du
@@ -191,6 +201,8 @@ class TripFormDraft extends Equatable {
       mobileMoneyEnabled: json['mobileMoneyEnabled'] as bool? ?? false,
       negotiable: json['negotiable'] as bool? ?? false,
       legs: legs,
+      recurrenceEnabled: json['recurrenceEnabled'] as bool? ?? false,
+      recurrenceFrequency: json['recurrenceFrequency'] as String?,
     );
   }
 

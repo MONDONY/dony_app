@@ -101,7 +101,7 @@ abstract final class PackageRequestFormDraft {
       deliveryNeighborhood: json['deliveryNeighborhood'] as String?,
       negotiable: json['negotiable'] as bool? ?? true,
       acceptedPaymentMethods: methods.isEmpty
-          ? const {PaymentMethod.stripe}
+          ? kDefaultPackageRequestPaymentMethods
           : methods,
       totalBudgetEur: (json['totalBudgetEur'] as num?)?.toDouble(),
       targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),

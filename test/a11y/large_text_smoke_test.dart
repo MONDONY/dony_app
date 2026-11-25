@@ -37,6 +37,8 @@ import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_missing_fields_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_recurrence_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -103,6 +105,7 @@ import '../features/payments/money/money_fixtures.dart';
 import '../helpers/form_draft_test_doubles.dart';
 import '../helpers/mock_analytics_backend.dart';
 import '../helpers/money_test_doubles.dart';
+import '../helpers/price_suggestion_test_doubles.dart';
 
 // Fournit un HelpCenterBloc minimal (catalogue vide) aux 3 harnais de ce
 // fichier (accueil, publication de trajet, paiement), comme l'app le fournit
@@ -478,6 +481,17 @@ void _tripRegisterDependencies() {
       _TripMockPriceGridRepository(),
     );
   }
+  // Récurrence et champs manquants de l'étape 1, fournis par getIt.
+  if (!getIt.isRegistered<TripRecurrenceCubit>()) {
+    getIt.registerFactory<TripRecurrenceCubit>(
+      () => TripRecurrenceCubit(getIt<AnalyticsService>()),
+    );
+  }
+  if (!getIt.isRegistered<TripMissingFieldsCubit>()) {
+    getIt.registerFactory<TripMissingFieldsCubit>(
+      () => TripMissingFieldsCubit(getIt<AnalyticsService>()),
+    );
+  }
   // TripLegsCubit — étapes d'un voyage (FLUTTER-4D), fourni par getIt.
   if (!getIt.isRegistered<TripLegsCubit>()) {
     registerTestFormDraftCubit();
@@ -493,6 +507,7 @@ void _tripRegisterDependencies() {
       ),
     );
   }
+  registerTestPriceSuggestionCubit();
   if (!getIt.isRegistered<IContentCategoryRepository>()) {
     final repo = _TripMockContentCategoryRepository();
     when(() => repo.getCategories()).thenAnswer((_) async => const []);

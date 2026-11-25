@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:dony/core/currency/active_currency.dart';
-import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/kg_price_stepper.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
@@ -35,6 +35,9 @@ import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/trip_creation_keys.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_missing_fields_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_price_suggestion_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_recurrence_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -49,6 +52,10 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_currencies_confirm_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_legs_section.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_missing_fields.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_price_section.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_recurrence_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_published/trip_published_item_prices_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_series/trip_series_card.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
@@ -66,9 +73,6 @@ import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 import 'package:dony/features/traveler_status/presentation/publish_blocked_screen.dart';
 import 'package:dony/features/traveler_status/presentation/traveler_status_prompt.dart';
 import 'package:dony/features/traveler_status/presentation/traveler_status_sheet.dart';
-import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
-import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
-import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
@@ -126,9 +130,17 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   late final ValueNotifier<TimeOfDay?> _departureTimeNotifier;
   void Function({bool saveAsDraft})? _submit;
 
+  /// « Continuer » des étapes 1 et 2 : vrai si rien ne manque, sinon les
+  /// champs vides sont signalés (cf. `_TripFormContent.onContinueReady`).
+  bool Function(int step)? _tryContinue;
+
   /// Moyens de paiement tels qu'ils partiront au submit (FLUTTER-GJ) : l'aperçu
   /// les affiche au lieu de les recalculer.
   List<String> Function()? _paymentMethods;
+
+  /// Vérification « au moins un moyen de paiement » du formulaire
+  /// (cf. `_TripFormContent.onPaymentGuardReady`).
+  bool Function(String action)? _ensurePaymentMethod;
 
   /// Devise de l'annonce. En création, choisie par l'utilisateur (défaut :
   /// devise du portefeuille) ; en édition ou trajet dédié, figée sur la
@@ -467,12 +479,20 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       BlocProvider<AnnouncementFormBloc>(
         create: (_) => getIt<AnnouncementFormBloc>(),
       ),
+      // Prix conseillés de la route (yadony-back#788), repli embarqué.
+      BlocProvider<TripPriceSuggestionCubit>(
+        create: (_) => getIt<TripPriceSuggestionCubit>(),
+      ),
       // Étapes supplémentaires d'un voyage (FLUTTER-4D), en création seulement.
       BlocProvider<TripLegsCubit>(create: (_) => getIt<TripLegsCubit>()),
       BlocProvider<AiFilledFieldsCubit>.value(value: _aiFilled),
-      BlocProvider<TripTemplateBloc>(
-        create: (_) =>
-            getIt<TripTemplateBloc>()..add(const TripTemplateLoaded()),
+      // Récurrence choisie à l'étape 1 (création d'un trajet direct) et
+      // champs obligatoires manquants des étapes 1 et 2.
+      BlocProvider<TripRecurrenceCubit>(
+        create: (_) => getIt<TripRecurrenceCubit>(),
+      ),
+      BlocProvider<TripMissingFieldsCubit>(
+        create: (_) => getIt<TripMissingFieldsCubit>(),
       ),
       BlocProvider<MobileMoneyAccountBloc>(
         create: (_) =>
@@ -580,7 +600,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                           currencyNotifier: _currencyNotifier,
                           currencyEditableNotifier: _currencyEditableNotifier,
                           onSubmitReady: (fn) => _submit = fn,
+                          onContinueReady: (fn) => _tryContinue = fn,
                           onPaymentMethodsReady: (fn) => _paymentMethods = fn,
+                          onPaymentGuardReady: (fn) =>
+                              _ensurePaymentMethod = fn,
                           onDraftHandlersReady: (snapshot, restore) {
                             _draftSnapshot = snapshot;
                             _restoreDraft = restore;
@@ -601,43 +624,49 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                       listenable: Listenable.merge([
                         _canSubmitNotifier,
                         _currentStepNotifier,
-                        _canContinueNotifier,
-                        _canContinueStep1Notifier,
                       ]),
                       builder: (ctx, _) {
                         final step = _currentStepNotifier.value;
                         final canSubmit = _canSubmitNotifier.value;
-                        final canContinue = _canContinueNotifier.value;
-                        final canContinueStep1 =
-                            _canContinueStep1Notifier.value;
 
                         // ── Étapes 0 et 1 : Continuer (+ Retour si step > 0) ──
+                        // « Continuer » reste actif : avec des champs vides,
+                        // il ne fait pas avancer, les signale et les liste
+                        // en pastilles au-dessus du bouton.
                         if (step < 2) {
-                          return Row(
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              if (step > 0) ...[
-                                Expanded(
-                                  child: DonyButton(
-                                    label: ctx.l10n.commonBack,
-                                    variant: DonyButtonVariant.secondary,
-                                    icon: DonyIcons.back,
-                                    onPressed: () =>
-                                        _currentStepNotifier.value = step - 1,
+                              TripMissingFieldsChips(step: step),
+                              Row(
+                                children: [
+                                  if (step > 0) ...[
+                                    Expanded(
+                                      child: DonyButton(
+                                        label: ctx.l10n.commonBack,
+                                        variant: DonyButtonVariant.secondary,
+                                        icon: DonyIcons.back,
+                                        onPressed: () =>
+                                            _currentStepNotifier.value =
+                                                step - 1,
+                                      ),
+                                    ),
+                                    const SizedBox(width: DonySpacing.sm),
+                                  ],
+                                  Expanded(
+                                    child: DonyButton(
+                                      key: const Key('trip-step-continue'),
+                                      label: ctx.l10n.commonContinue,
+                                      iconRight: DonyIcons.arrowRight,
+                                      onPressed: () {
+                                        if (_tryContinue?.call(step) ?? true) {
+                                          _currentStepNotifier.value = step + 1;
+                                        }
+                                      },
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: DonySpacing.sm),
-                              ],
-                              Expanded(
-                                child: DonyButton(
-                                  label: ctx.l10n.commonContinue,
-                                  iconRight: DonyIcons.arrowRight,
-                                  onPressed:
-                                      ((step == 0 && !canContinue) ||
-                                          (step == 1 && !canContinueStep1))
-                                      ? null
-                                      : () => _currentStepNotifier.value =
-                                            step + 1,
-                                ),
+                                ],
                               ),
                             ],
                           );
@@ -709,7 +738,15 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                       label: ctx.l10n.commonSave,
                                       isLoading: isLoading,
                                       onPressed: (canSubmit && !isLoading)
-                                          ? () => _submit?.call()
+                                          ? () {
+                                              if (!(_ensurePaymentMethod?.call(
+                                                    'save',
+                                                  ) ??
+                                                  true)) {
+                                                return;
+                                              }
+                                              _submit?.call();
+                                            }
                                           : null,
                                     ),
                                   ),
@@ -761,6 +798,14 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                         onPressed:
                                             (canSubmit && !isSubmitLocked)
                                             ? () {
+                                                // Aucun moyen de paiement :
+                                                // pas d'aperçu, la section
+                                                // paiement passe en orange.
+                                                if (!(_ensurePaymentMethod
+                                                        ?.call('publish') ??
+                                                    true)) {
+                                                  return;
+                                                }
                                                 AnnouncementPreviewSheet.show(
                                                   ctx2,
                                                   formState: ctx2
@@ -869,7 +914,15 @@ class _TripFormContent extends StatefulWidget {
   /// `null` en création comme pour un back antérieur.
   final ValueNotifier<bool?>? currencyEditableNotifier;
   final void Function(void Function({bool saveAsDraft}))? onSubmitReady;
+
+  /// Remet au parent la vérification des champs obligatoires de l'étape
+  /// avant « Continuer » (cf. `TripMissingFieldsCubit`).
+  final void Function(bool Function(int step))? onContinueReady;
   final void Function(List<String> Function())? onPaymentMethodsReady;
+
+  /// Remet au parent la vérification « au moins un moyen de paiement »,
+  /// appelée avant l'aperçu (création) ou l'enregistrement (modification).
+  final void Function(bool Function(String action))? onPaymentGuardReady;
 
   /// Remet au parent de quoi lire la saisie (brouillon local) et la
   /// recharger (reprise du brouillon).
@@ -897,7 +950,9 @@ class _TripFormContent extends StatefulWidget {
     required this.currencyNotifier,
     this.currencyEditableNotifier,
     this.onSubmitReady,
+    this.onContinueReady,
     this.onPaymentMethodsReady,
+    this.onPaymentGuardReady,
     this.onDraftHandlersReady,
   });
 
@@ -954,17 +1009,16 @@ class _TripFormContentState extends State<_TripFormContent> {
   final _priceOptionNotifier = ValueNotifier<int>(-1); // -1 = aucune sélection
   final _transportModeNotifier = ValueNotifier<TransportMode?>(null);
 
-  // ── Erreurs de champs obligatoires ──────────────────────────────────────────
-  // Les champs manquants ne passent en rouge qu'après une première interaction
-  // de l'utilisateur avec l'étape : un formulaire vierge reste neutre.
-  bool _step0Touched = false;
-  bool _step1Touched = false;
-  final _step0ErrorsNotifier = ValueNotifier<Set<_Step0Field>>(
-    const <_Step0Field>{},
-  );
-  final _step1ErrorsNotifier = ValueNotifier<Set<_Step1Field>>(
-    const <_Step1Field>{},
-  );
+  // ── Champs obligatoires manquants ───────────────────────────────────────────
+  // Rien n'est marqué tant que « Continuer » n'a pas été touché avec des
+  // champs vides (cf. TripMissingFieldsCubit) : un formulaire vierge reste
+  // neutre.
+
+  /// Ancres de défilement des champs obligatoires (pastilles, premier champ
+  /// vide après « Continuer »).
+  final Map<TripRequiredField, GlobalKey> _fieldKeys = {
+    for (final f in TripRequiredField.values) f: GlobalKey(),
+  };
 
   // Rien de coché d'office : trois catégories présélectionnées étaient
   // « pas utiles » (FLUTTER-1Y). Une liste vide = tous les contenus acceptés.
@@ -977,7 +1031,10 @@ class _TripFormContentState extends State<_TripFormContent> {
     fallbackCatalog.map((c) => c.label).toList(),
   );
   final _refusedTypesNotifier = ValueNotifier<Set<String>>({});
-  final _cashEnabledNotifier = ValueNotifier<bool>(false);
+  // Espèces cochées par défaut à la création : c'est le moyen que tous les
+  // expéditeurs peuvent utiliser. Modification, modèle et brouillon
+  // réécrivent cette valeur avec la leur.
+  final _cashEnabledNotifier = ValueNotifier<bool>(true);
 
   /// Le voyageur garde la carte sur ce trajet (FLUTTER-FT) : cochée par
   /// défaut, elle n'est envoyée que si Stripe Connect est prêt et la devise
@@ -995,13 +1052,29 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   /// Le voyageur ouvre son trajet aux propositions de prix des expéditeurs.
   final _negotiableNotifier = ValueNotifier<bool>(false);
-  late final ValueNotifier<bool> _kgPriceEnabledNotifier;
 
-  /// Prix au kilo d'un brouillon restauré qui change de mode de tarification
-  /// (brouillon IA « grille + 10 €/kg », brouillon local) : le changement de
-  /// mode coupe l'interrupteur, ce qui effaçait le prix. Le listener du mode
-  /// réapplique cette valeur une fois, au lieu de couper.
-  bool? _pendingKgPriceEnabled;
+  /// Modification d'un trajet vendu aux seuls prix par article (aucun prix
+  /// au kilo publié) : il le reste, sauf si le voyageur ajoute lui-même un
+  /// prix au kilo (« Ajouter un prix au kilo »).
+  final _kgPriceAddedNotifier = ValueNotifier<bool>(false);
+
+  /// Le prix au kilo affiché a été posé par l'app (prix conseillé de la
+  /// route), pas par le voyageur : un nouveau prix conseillé (réponse du
+  /// back, changement de route ou de devise) le remplace. Le moindre geste
+  /// sur le prix, un brouillon, un modèle ou l'IA le figent.
+  bool _priceIsAutoSuggested = false;
+
+  /// Vrai pendant l'écriture d'un prix conseillé : les écouteurs du prix ne
+  /// doivent pas y voir un geste du voyageur.
+  bool _applyingAutoPrice = false;
+
+  /// Publication arrêtée faute de moyen de paiement : la section paiement de
+  /// l'étape passe en orange (cf. `PrixConditionsStep.paymentErrorNotifier`).
+  final _paymentErrorNotifier = ValueNotifier<bool>(false);
+
+  /// Section des moyens de paiement, cible du défilement quand la
+  /// publication est arrêtée.
+  final _paymentSectionKey = GlobalKey();
   final _descriptionCtrl = TextEditingController();
   final _customAcceptedCtrl = TextEditingController();
   final _refusedCtrl = TextEditingController();
@@ -1041,9 +1114,17 @@ class _TripFormContentState extends State<_TripFormContent> {
   //   (bien plus bas) de l'euro, ou l'inverse laisserait passer un montant
   //   que le serveur refuserait. Le plancher (1 €/kg converti) arrête les
   //   8 XOF/kg saisis en croyant taper des euros (FLUTTER-GK).
+  /// Modification d'un trajet publié sans prix au kilo (prix par article
+  /// seuls) : le prix au kilo y est facultatif.
+  bool get _kgPriceOptionalOnEdit =>
+      _isEdit &&
+      !widget.lockCorridorAndDate &&
+      widget.announcement!.pricePerKg == null;
+
   bool get _isPriceValid {
     if (_isLocked) return true;
-    if (!_kgPriceEnabledNotifier.value) return true;
+    // Trajet sans prix au kilo gardé tel quel : rien à valider.
+    if (_kgPriceOptionalOnEdit && !_kgPriceAddedNotifier.value) return true;
     final idx = _priceOptionNotifier.value;
     if (idx == -1) return false;
     if (!_isCustomPrice) return true;
@@ -1204,7 +1285,9 @@ class _TripFormContentState extends State<_TripFormContent> {
     }
     if (!_isEdit) _seedAvailableKgToFormBloc();
     widget.onSubmitReady?.call(_submit);
+    widget.onContinueReady?.call(_tryContinue);
     widget.onPaymentMethodsReady?.call(_paymentMethods);
+    widget.onPaymentGuardReady?.call(_ensurePaymentMethod);
     widget.onDraftHandlersReady?.call(_draftSnapshot, _restoreDraft);
     final initialTemplate = widget.initialTemplate;
     if (initialTemplate != null && widget.announcement == null) {
@@ -1212,9 +1295,18 @@ class _TripFormContentState extends State<_TripFormContent> {
         if (mounted) _applyTemplate(initialTemplate);
       });
     }
-    _kgPriceEnabledNotifier = ValueNotifier<bool>(true); // KG = ON par défaut
-    _kgPriceEnabledNotifier.addListener(_onKgToggleChanged);
-    _kgPriceEnabledNotifier.addListener(_syncCanSubmit);
+    // Prix conseillé posé d'emblée en création (médiane embarquée de la
+    // devise), remplacé par celui de la route dès que le back répond. Jamais
+    // en modification ni en trajet dédié : le trajet a déjà son prix.
+    if (!_isEdit && !_isLocked) {
+      _applyAutoPrice(
+        KgPriceReference.forCurrency(_currency).marketMedian,
+        force: true,
+      );
+    }
+    _priceOptionNotifier.addListener(_onPriceTouched);
+    _kgPriceAddedNotifier.addListener(_onKgPriceAddedChanged);
+    _customPriceNotifier.addListener(_onPriceTouched);
     _transportModeNotifier.addListener(_syncCanSubmit);
     _priceOptionNotifier.addListener(_syncCanSubmit);
     _customPriceCtrl.addListener(_syncCanSubmit);
@@ -1243,24 +1335,14 @@ class _TripFormContentState extends State<_TripFormContent> {
     _handoverDeadlineNotifier.addListener(_updateCanContinue);
     _updateCanContinue(); // état initial (pré-remplissage en mode édition)
 
-    // Armé APRÈS le calcul initial : la pré-sélection automatique du mode
-    // avion et le pré-remplissage en édition ne comptent pas comme une
-    // interaction, donc n'allument aucun message d'erreur à l'ouverture.
-    _departureCityNotifier.addListener(_markStep0Touched);
-    _arrivalCityNotifier.addListener(_markStep0Touched);
-    _departureDateNotifier.addListener(_markStep0Touched);
-    _departureTimeNotifier.addListener(_markStep0Touched);
-    // Facultative, mais y toucher reste une interaction avec l'étape.
-    _arrivalTimeNotifier.addListener(_markStep0Touched);
-    _arrivalDayOffsetNotifier.addListener(_markStep0Touched);
-    _transportModeNotifier.addListener(_markStep0Touched);
-    _handoverDeadlineNotifier.addListener(_markStep0Touched);
-
-    // L'étape 1 n'a que deux champs, et on n'y arrive qu'en ayant complété
-    // l'étape 0 : y entrer vaut engagement, on annonce donc tout de suite ce
-    // qu'elle attend plutôt que de laisser un bouton gris sans explication.
-    widget.currentStepNotifier?.addListener(_markStep1TouchedOnEntry);
+    // Changer d'étape relit les manquants de la nouvelle étape (et efface
+    // les marques de la précédente).
+    widget.currentStepNotifier?.addListener(_syncMissingFields);
     _updateCanContinueStep1();
+
+    // Récurrence (création d'un trajet direct) : les dates suivantes
+    // découlent de la date de départ.
+    _departureDateNotifier.addListener(_syncRecurrenceDate);
 
     // Détection de saisie en cours. La référence n'est PAS prise ici : elle
     // l'est après deux post-frames (_captureInitialSignature), et le garde
@@ -1290,60 +1372,228 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customAcceptedNotifier.addListener(_syncAcceptedTypesToFormBloc);
     _refusedTypesNotifier.addListener(_syncRejectedTypesToFormBloc);
     _departureTimeNotifier.addListener(_syncDepartureTimeToParent);
+
+    // Section paiement en orange après une publication arrêtée : elle
+    // redevient normale dès qu'un moyen est coché.
+    _cashEnabledNotifier.addListener(_clearPaymentErrorIfResolved);
+    _cardEnabledNotifier.addListener(_clearPaymentErrorIfResolved);
+    _mobileMoneyEnabledNotifier.addListener(_clearPaymentErrorIfResolved);
+
+    // Prix conseillés de la route, rechargés quand la route ou la devise
+    // change. Sans objet pour un trajet dédié (prix fixé par la demande).
+    if (!_isLocked) {
+      _departureCityNotifier.addListener(_requestPriceSuggestion);
+      _arrivalCityNotifier.addListener(_requestPriceSuggestion);
+      widget.currencyNotifier.addListener(_requestPriceSuggestion);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _requestPriceSuggestion();
+      // Prix par article : la grille du profil est lue d'emblée, le mode de
+      // tarification en découle (cf. AnnouncementFormBloc). Pas quand le
+      // prix est fixé par une négociation : son mode ne bouge pas.
+      if (!_isLocked && !widget.lockCorridorAndDate) {
+        context.read<AnnouncementFormBloc>().add(
+          const AnnouncementGridPreviewLoadRequested(),
+        );
+      }
+    });
   }
 
-  /// Champs obligatoires manquants à l'étape 0, dans l'ordre d'affichage.
+  /// Prix conseillé de la route dans la devise du trajet : médiane du back
+  /// si elle est arrivée, sinon médiane embarquée de la devise.
+  double get _suggestedPricePerKg {
+    final state = context.read<TripPriceSuggestionCubit>().state;
+    if (state.currency == _currency) return state.suggestedPricePerKg;
+    return TripPriceSuggestionState(currency: _currency).suggestedPricePerKg;
+  }
+
+  /// Un geste sur le prix (« − / + », retour au prix conseillé, brouillon,
+  /// modèle, IA) le fige : un prix conseillé arrivé ensuite ne l'écrase plus.
+  /// « Ajouter un prix au kilo » / « Retirer le prix au kilo » en
+  /// modification d'un trajet sans prix au kilo : la carte − / + part du prix
+  /// conseillé, et le retrait remet le trajet tel qu'il était publié.
+  void _onKgPriceAddedChanged() {
+    if (!mounted || !_kgPriceOptionalOnEdit) return;
+    if (_kgPriceAddedNotifier.value) {
+      writeKgPrice(
+        price: _suggestedPricePerKg,
+        currency: _currency,
+        priceOptionNotifier: _priceOptionNotifier,
+        customPriceNotifier: _customPriceNotifier,
+        customPriceCtrl: _customPriceCtrl,
+      );
+    } else {
+      _priceOptionNotifier.value = -1;
+      context.read<AnnouncementFormBloc>().add(
+        const AnnouncementPricePerKgClearedRequested(),
+      );
+    }
+    _syncCanSubmit();
+  }
+
+  void _onPriceTouched() {
+    if (_applyingAutoPrice) return;
+    _priceIsAutoSuggested = false;
+  }
+
+  /// Pose [price] comme prix conseillé.
   ///
-  /// Source de vérité unique : `_updateCanContinue()` en dérive l'état du
-  /// bouton et les champs en dérivent leur `errorText`. Les deux ne peuvent
-  /// donc pas diverger — c'est exactement ce qui a laissé passer l'heure de
-  /// départ (listener branché, condition oubliée).
-  Set<_Step0Field> get _missingStep0Fields => {
-    if (_departureCityNotifier.value == null) _Step0Field.departureCity,
-    if (_departureTimeNotifier.value == null) _Step0Field.departureTime,
-    if (_arrivalCityNotifier.value == null) _Step0Field.arrivalCity,
-    if (_departureDateNotifier.value == null) _Step0Field.departureDate,
-    if (_transportModeNotifier.value == null) _Step0Field.transportMode,
-    if (_handoverDeadlineNotifier.value == null) _Step0Field.handoverDeadline,
+  /// Sans [force], seulement si le prix affiché est encore un prix posé par
+  /// l'app. [keepClean] : le formulaire auquel personne n'a touché le reste
+  /// (le prix conseillé arrive après la prise de la référence de saisie, ce
+  /// n'est pas une modification du voyageur).
+  void _applyAutoPrice(
+    double price, {
+    bool force = false,
+    bool keepClean = false,
+  }) {
+    if (!force && !_priceIsAutoSuggested) return;
+    final wasClean =
+        keepClean &&
+        _initialFormSignature != null &&
+        !_restoredFromDraft &&
+        _formSignature == _initialFormSignature;
+    _applyingAutoPrice = true;
+    try {
+      writeKgPrice(
+        price: price,
+        currency: _currency,
+        priceOptionNotifier: _priceOptionNotifier,
+        customPriceNotifier: _customPriceNotifier,
+        customPriceCtrl: _customPriceCtrl,
+      );
+    } finally {
+      _applyingAutoPrice = false;
+    }
+    _priceIsAutoSuggested = true;
+    if (wasClean) {
+      _initialFormSignature = _formSignature;
+      _markDirty();
+    }
+  }
+
+  /// Demande les prix conseillés de la route saisie, dans la devise du
+  /// trajet. Le cubit ignore une route déjà chargée.
+  void _requestPriceSuggestion() {
+    if (!mounted || _isLocked) return;
+    final from = _departureCityNotifier.value;
+    final to = _arrivalCityNotifier.value;
+    if (from == null || to == null) return;
+    unawaited(
+      context.read<TripPriceSuggestionCubit>().load(
+        departureCity: from,
+        arrivalCity: to,
+        currency: _currency,
+      ),
+    );
+  }
+
+  /// Prix conseillé de la route reçu : il remplace le prix affiché s'il n'a
+  /// été posé que par l'app. Jamais en modification, où le trajet a déjà le
+  /// sien.
+  void _onPriceSuggestionLoaded(TripPriceSuggestionState state) {
+    if (_isEdit || _isLocked || state.currency != _currency) return;
+    _applyAutoPrice(state.suggestedPricePerKg, keepClean: true);
+  }
+
+  /// Retire l'alerte de la section paiement dès qu'un moyen est coché.
+  void _clearPaymentErrorIfResolved() {
+    if (!mounted || !_paymentErrorNotifier.value) return;
+    if (_paymentMethods().isNotEmpty) _paymentErrorNotifier.value = false;
+  }
+
+  /// Vérifie qu'au moins un moyen de paiement est coché avant d'envoyer.
+  ///
+  /// Sinon le bouton reste actif mais rien ne part : la section paiement
+  /// passe en orange avec son message, l'écran y défile, et l'arrêt est
+  /// compté (`trip_publish_blocked_payment`, [action] : `publish`, `save`,
+  /// `draft`). Sans objet pour un trajet dédié, dont le moyen est fixé.
+  bool _ensurePaymentMethod(String action) {
+    if (_isLocked || _paymentMethods().isNotEmpty) return true;
+    _paymentErrorNotifier.value = true;
+    context.read<AnnouncementFormBloc>().add(
+      AnnouncementPublishBlockedPaymentRequested(action),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _paymentSectionKey.currentContext;
+      if (target == null || !target.mounted) return;
+      unawaited(
+        Scrollable.ensureVisible(
+          target,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          alignment: 0.1,
+        ),
+      );
+    });
+    return false;
+  }
+
+  /// Champs obligatoires manquants de l'étape [step], dans l'ordre
+  /// d'affichage : source unique du bouton « Continuer », des marques, du
+  /// bandeau et des pastilles. Une date limite de dépôt postérieure au départ
+  /// compte comme manquante (même règle que la publication).
+  List<TripRequiredField> _missingFor(int step) => switch (step) {
+    0 => [
+      if (_departureCityNotifier.value == null) TripRequiredField.departureCity,
+      if (_arrivalCityNotifier.value == null) TripRequiredField.arrivalCity,
+      if (_departureDateNotifier.value == null) TripRequiredField.departureDate,
+      if (_departureTimeNotifier.value == null) TripRequiredField.departureTime,
+      if (_transportModeNotifier.value == null) TripRequiredField.transportMode,
+      if (_handoverDeadlineNotifier.value == null ||
+          _isHandoverDeadlineInvalid())
+        TripRequiredField.handoverDeadline,
+    ],
+    1 => [
+      if (_pickupAddress == null) TripRequiredField.pickupAddress,
+      if (_deliveryAddress == null) TripRequiredField.deliveryAddress,
+    ],
+    _ => const [],
   };
 
+  int get _currentStep => widget.currentStepNotifier?.value ?? 0;
+
+  /// Pousse les manquants de l'étape affichée vers le cubit : remplir un
+  /// champ retire sa marque et fait baisser le compteur.
+  void _syncMissingFields() {
+    if (!mounted) return;
+    final step = _currentStep;
+    context.read<TripMissingFieldsCubit>().sync(step, _missingFor(step));
+  }
+
+  /// « Continuer » de l'étape [step] (cf. `onContinueReady`).
+  bool _tryContinue(int step) => context
+      .read<TripMissingFieldsCubit>()
+      .tryContinue(step, _missingFor(step));
+
+  /// Défile jusqu'au champ demandé (premier champ vide, pastille touchée).
+  void _scrollToField(TripRequiredField? field) {
+    if (field == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _fieldKeys[field]?.currentContext;
+      if (target == null || !target.mounted) return;
+      unawaited(
+        Scrollable.ensureVisible(
+          target,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          alignment: 0.1,
+        ),
+      );
+    });
+  }
+
+  void _syncRecurrenceDate() {
+    if (!mounted || _isEdit || _isLocked) return;
+    context.read<TripRecurrenceCubit>().departureDateChanged(
+      _departureDateNotifier.value,
+    );
+  }
+
   void _updateCanContinue() {
-    final missing = _missingStep0Fields;
-    widget.canContinueNotifier?.value =
-        missing.isEmpty && !_isHandoverDeadlineInvalid();
-    _refreshStep0Errors(missing);
-  }
-
-  /// Publie les erreurs de l'étape 0 — mais seulement une fois que
-  /// l'utilisateur a touché à quelque chose.
-  ///
-  /// Un formulaire de création vierge ne doit pas s'ouvrir tout en rouge ;
-  /// `_step0Touched` n'est armé qu'après le calcul initial de `initState`
-  /// (cf. `_markStep0Touched`), donc la pré-sélection automatique du mode
-  /// avion ne le déclenche pas.
-  void _refreshStep0Errors([Set<_Step0Field>? missing]) {
-    final next = _step0Touched
-        ? (missing ?? _missingStep0Fields)
-        : const <_Step0Field>{};
-    // `_missingStep0Fields` renvoie un Set neuf a chaque appel et Set n'a pas
-    // d'operator == : sans cette comparaison de contenu, le notifier previent
-    // ses auditeurs a chaque frappe meme quand rien n'a change, et reconstruit
-    // TrajetStep pour rien.
-    if (setEquals(_step0ErrorsNotifier.value, next)) return;
-    _step0ErrorsNotifier.value = next;
-  }
-
-  /// Message du champ [f] s'il fait partie des manquants, sinon null.
-  static String? _msg(
-    AppLocalizations l10n,
-    Set<_Step0Field> missing,
-    _Step0Field f,
-  ) => missing.contains(f) ? _step0FieldMessage(l10n, f) : null;
-
-  void _markStep0Touched() {
-    if (_step0Touched) return;
-    _step0Touched = true;
-    _refreshStep0Errors();
+    widget.canContinueNotifier?.value = _missingFor(0).isEmpty;
+    _syncMissingFields();
   }
 
   /// Tout ce que l'utilisateur peut modifier dans le formulaire.
@@ -1372,7 +1622,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _mobileMoneyEnabledNotifier,
     _stopsNotifier,
     _negotiableNotifier,
-    _kgPriceEnabledNotifier,
+    _kgPriceAddedNotifier,
     _descriptionCtrl,
     _customAcceptedCtrl,
     _refusedCtrl,
@@ -1384,7 +1634,7 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// La saleté se mesure en comparant cette signature à celle prise à
   /// l'ouverture, et non en écoutant les notifications : plusieurs champs sont
   /// réécrits avec leur propre valeur au démarrage (le `BlocListener` sur
-  /// `pricingMode` repositionne `_kgPriceEnabledNotifier`, et les notifiers de
+  /// les prix conseillés arrivent après coup, et les notifiers de
   /// `Set` notifient dès qu'on leur assigne un ensemble égal mais distinct).
   /// Compter ces échos comme des modifications faisait apparaître la
   /// confirmation de sortie sur un formulaire auquel personne n'avait touché.
@@ -1412,7 +1662,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       _mobileMoneyEnabledNotifier.value,
       _stopsNotifier.value,
       _negotiableNotifier.value,
-      _kgPriceEnabledNotifier.value,
+      _kgPriceAddedNotifier.value,
       set(_selectedContentNotifier.value),
       set(_customAcceptedNotifier.value),
       set(_refusedTypesNotifier.value),
@@ -1462,27 +1712,9 @@ class _TripFormContentState extends State<_TripFormContent> {
     });
   }
 
-  void _markStep1TouchedOnEntry() {
-    if (_step1Touched || widget.currentStepNotifier?.value != 1) return;
-    _step1Touched = true;
-    _updateCanContinueStep1();
-  }
-
   void _updateCanContinueStep1() {
-    widget.canContinueStep1Notifier?.value =
-        _pickupAddress != null && _deliveryAddress != null;
-    // « Touché » est arme uniquement a l'entree dans l'etape
-    // (_markStep1TouchedOnEntry). L'armer aussi ici faisait s'ouvrir en rouge
-    // une modification d'annonce n'ayant qu'une des deux adresses.
-    final next = _step1Touched
-        ? {
-            if (_pickupAddress == null) _Step1Field.pickupAddress,
-            if (_deliveryAddress == null) _Step1Field.deliveryAddress,
-          }
-        : const <_Step1Field>{};
-    if (!setEquals(_step1ErrorsNotifier.value, next)) {
-      _step1ErrorsNotifier.value = next;
-    }
+    widget.canContinueStep1Notifier?.value = _missingFor(1).isEmpty;
+    _syncMissingFields();
   }
 
   void _syncCanSubmit() {
@@ -1609,7 +1841,6 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   void _syncPriceToFormBloc() {
     if (!mounted) return;
-    if (!_kgPriceEnabledNotifier.value) return; // évite d'écraser le clear
     if (_priceOptionNotifier.value == -1) return; // pas encore de sélection
     context.read<AnnouncementFormBloc>().add(
       PriceChanged(_pricePerKg, currency: _currency),
@@ -1703,6 +1934,27 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (!widget.currencyNotifier.value.isMobileMoneyEligible) {
       _mobileMoneyEnabledNotifier.value = false;
     }
+    if (!_isEdit && !_isLocked) {
+      // Le prix conseillé suit la devise (8 € ne font pas 8 F CFA). Un prix
+      // choisi par le voyageur reste, sauf s'il sort des bornes de la
+      // nouvelle devise.
+      final price = currentKgPrice(
+        currency: _currency,
+        priceOption: _priceOptionNotifier.value,
+        customPrice: _customPriceNotifier.value,
+        customPriceText: _customPriceCtrl.text,
+      );
+      final bounds = kgPriceStepperBoundsFor(_currency);
+      final outOfBounds =
+          price == null || price < bounds.min || price > bounds.max;
+      if (_priceIsAutoSuggested || outOfBounds) {
+        _applyAutoPrice(
+          _suggestedPricePerKg,
+          force: true,
+          keepClean: _priceIsAutoSuggested,
+        );
+      }
+    }
     _syncPriceToFormBloc();
   }
 
@@ -1724,16 +1976,6 @@ class _TripFormContentState extends State<_TripFormContent> {
     context.read<AnnouncementFormBloc>().add(
       RejectedTypesChanged(_refusedTypesNotifier.value.toList()),
     );
-  }
-
-  void _onKgToggleChanged() {
-    if (!mounted) return;
-    if (!_kgPriceEnabledNotifier.value) {
-      context.read<AnnouncementFormBloc>().add(
-        const AnnouncementPricePerKgClearedRequested(),
-      );
-      _priceOptionNotifier.value = 0; // reset chips visuellement
-    }
   }
 
   @override
@@ -1761,13 +2003,21 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customAcceptedNotifier.removeListener(_syncAcceptedTypesToFormBloc);
     _refusedTypesNotifier.removeListener(_syncRejectedTypesToFormBloc);
     _departureTimeNotifier.removeListener(_syncDepartureTimeToParent);
-    _kgPriceEnabledNotifier.removeListener(_onKgToggleChanged);
-    _kgPriceEnabledNotifier.removeListener(_syncCanSubmit);
+    _priceOptionNotifier.removeListener(_onPriceTouched);
+    _customPriceNotifier.removeListener(_onPriceTouched);
+    _cashEnabledNotifier.removeListener(_clearPaymentErrorIfResolved);
+    _cardEnabledNotifier.removeListener(_clearPaymentErrorIfResolved);
+    _mobileMoneyEnabledNotifier.removeListener(_clearPaymentErrorIfResolved);
+    _departureCityNotifier.removeListener(_requestPriceSuggestion);
+    _arrivalCityNotifier.removeListener(_requestPriceSuggestion);
+    widget.currencyNotifier.removeListener(_requestPriceSuggestion);
     _priceOptionNotifier.removeListener(_syncCanSubmit);
     _customPriceCtrl.removeListener(_syncCanSubmit);
     widget.currencyNotifier.removeListener(_syncCanSubmit);
     widget.currencyNotifier.removeListener(_onCurrencyChanged);
-    _kgPriceEnabledNotifier.dispose();
+    _paymentErrorNotifier.dispose();
+    _kgPriceAddedNotifier.removeListener(_onKgPriceAddedChanged);
+    _kgPriceAddedNotifier.dispose();
     _cashEnabledNotifier.dispose();
     _cardEnabledNotifier.dispose();
     _stopsNotifier.dispose();
@@ -1796,12 +2046,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     _transportModeNotifier.dispose();
     _pickupAddressNotifier.dispose();
     _deliveryAddressNotifier.dispose();
-    widget.currentStepNotifier?.removeListener(_markStep1TouchedOnEntry);
+    widget.currentStepNotifier?.removeListener(_syncMissingFields);
+    _departureDateNotifier.removeListener(_syncRecurrenceDate);
     for (final l in _userEditableListenables) {
       l.removeListener(_markDirty);
     }
-    _step0ErrorsNotifier.dispose();
-    _step1ErrorsNotifier.dispose();
     super.dispose();
   }
 
@@ -1823,20 +2072,19 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// (FLUTTER-GJ).
   ///
   /// Publiable sans Stripe (cash-only) : STRIPE n'est inclus que si
-  /// configuré, et CASH est forcé quand Stripe ne l'est pas — la liste ne
-  /// peut jamais être vide (au moins une méthode de paiement est requise).
-  /// La carte n'existe pas en zone CFA (pas de Stripe Connect) : elle n'est
-  /// envoyée que si la devise du trajet l'autorise, comme l'aperçu du
-  /// sélecteur de devise. Le backend la retirerait de toute façon.
-  /// La carte est décochable (FLUTTER-FT) : sans elle, les espèces
-  /// repartent d'office, comme quand Stripe n'est pas configuré.
+  /// configuré. La carte n'existe pas en zone CFA (pas de Stripe Connect) :
+  /// elle n'est envoyée que si la devise du trajet l'autorise, comme
+  /// l'aperçu du sélecteur de devise. Le backend la retirerait de toute
+  /// façon. Chaque moyen se décoche (carte : FLUTTER-FT) : la liste peut donc
+  /// être vide, et [_ensurePaymentMethod] arrête alors la publication au lieu
+  /// d'ajouter les espèces en silence.
   List<String> _paymentMethods() {
     final stripeConfigured =
         _isStripeConfigured() && _currency.isStripeEligible;
     final cardOn = stripeConfigured && _cardEnabledNotifier.value;
     return [
       if (cardOn) 'STRIPE',
-      if (_cashEnabledNotifier.value || !cardOn) 'CASH',
+      if (_cashEnabledNotifier.value) 'CASH',
       if (_mobileMoneyEnabledNotifier.value) 'MOBILE_MONEY',
     ];
   }
@@ -1947,35 +2195,52 @@ class _TripFormContentState extends State<_TripFormContent> {
     final arrivalTimeVal = _arrivalTimeNotifier.value;
 
     if (departureCity == null) {
-      _showError(_step0FieldMessage(context.l10n, _Step0Field.departureCity));
+      _showError(
+        tripRequiredFieldMessage(context.l10n, TripRequiredField.departureCity),
+      );
       return;
     }
     if (arrivalCity == null) {
-      _showError(_step0FieldMessage(context.l10n, _Step0Field.arrivalCity));
+      _showError(
+        tripRequiredFieldMessage(context.l10n, TripRequiredField.arrivalCity),
+      );
       return;
     }
     if (departureDate == null) {
-      _showError(_step0FieldMessage(context.l10n, _Step0Field.departureDate));
+      _showError(
+        tripRequiredFieldMessage(context.l10n, TripRequiredField.departureDate),
+      );
       return;
     }
     // D1 : l'heure de départ est obligatoire (backstop du verrou d'annulation).
     if (departureTimeVal == null) {
-      _showError(_step0FieldMessage(context.l10n, _Step0Field.departureTime));
+      _showError(
+        tripRequiredFieldMessage(context.l10n, TripRequiredField.departureTime),
+      );
       return;
     }
 
     _formKey.currentState!.save();
 
     if (_pickupAddress == null) {
-      _showError(_step1FieldMessage(context.l10n, _Step1Field.pickupAddress));
+      _showError(
+        tripRequiredFieldMessage(context.l10n, TripRequiredField.pickupAddress),
+      );
       return;
     }
     if (_deliveryAddress == null) {
-      _showError(_step1FieldMessage(context.l10n, _Step1Field.deliveryAddress));
+      _showError(
+        tripRequiredFieldMessage(
+          context.l10n,
+          TripRequiredField.deliveryAddress,
+        ),
+      );
       return;
     }
     if (_transportModeNotifier.value == null) {
-      _showError(_step0FieldMessage(context.l10n, _Step0Field.transportMode));
+      _showError(
+        tripRequiredFieldMessage(context.l10n, TripRequiredField.transportMode),
+      );
       return;
     }
 
@@ -2071,21 +2336,39 @@ class _TripFormContentState extends State<_TripFormContent> {
       return;
     }
 
+    if (!_ensurePaymentMethod(
+      saveAsDraft ? 'draft' : (_isEdit ? 'save' : 'publish'),
+    )) {
+      return;
+    }
     final paymentMethods = _paymentMethods();
     // Escales : avion seulement, sinon jamais envoyées.
     final stops = supportsStops(transportMode) ? _stopsNotifier.value : null;
 
     final formBlocState = context.read<AnnouncementFormBloc>().state;
     final capacityUnitWire = formBlocState.capacityUnit.toWire();
-    final pricingModeWire = formBlocState.pricingMode == PricingMode.mixed
+    // Trajet publié sans prix au kilo et gardé ainsi : même envoi
+    // qu'avant (mode d'origine, prix du bloc vide). Prix au kilo ajouté :
+    // articles + reste au kilo (MIXED).
+    final keepsNoKgPrice =
+        _kgPriceOptionalOnEdit && !_kgPriceAddedNotifier.value;
+    final addedKgPrice = _kgPriceOptionalOnEdit && _kgPriceAddedNotifier.value;
+    final pricingModeWire = keepsNoKgPrice
+        ? widget.announcement!.pricingMode
+        : addedKgPrice || formBlocState.pricingMode == PricingMode.mixed
         ? 'MIXED'
         : 'KG';
-    final pricePerKgToSubmit = formBlocState.pricePerKg ?? 0.0;
+    final pricePerKgToSubmit = keepsNoKgPrice
+        ? 0.0
+        : formBlocState.pricePerKg ?? 0.0;
 
     final handoverDeadline = _resolveHandoverDeadline();
     if (handoverDeadline == null) {
       _showError(
-        _step0FieldMessage(context.l10n, _Step0Field.handoverDeadline),
+        tripRequiredFieldMessage(
+          context.l10n,
+          TripRequiredField.handoverDeadline,
+        ),
       );
       return;
     }
@@ -2471,7 +2754,14 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   @override
   Widget build(BuildContext context) {
-    final formChild = _buildForm(context);
+    // Premier champ vide après « Continuer », ou pastille touchée : l'écran
+    // défile jusqu'au champ.
+    final formChild =
+        BlocListener<TripMissingFieldsCubit, TripMissingFieldsState>(
+          listenWhen: (p, c) => p.focusSeq != c.focusSeq,
+          listener: (_, state) => _scrollToField(state.focusField),
+          child: _buildForm(context),
+        );
     if (_isLocked) {
       return BlocListener<NegotiationBloc, NegotiationState>(
         listener: (context, state) {
@@ -2530,21 +2820,10 @@ class _TripFormContentState extends State<_TripFormContent> {
       );
     }
 
-    return BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
-      listenWhen: (prev, curr) => prev.pricingMode != curr.pricingMode,
-      listener: (context, formState) {
-        final pending = _pendingKgPriceEnabled;
-        if (pending != null) {
-          _pendingKgPriceEnabled = null;
-          _kgPriceEnabledNotifier.value = pending;
-          return;
-        }
-        if (formState.pricingMode == PricingMode.mixed) {
-          _kgPriceEnabledNotifier.value = false;
-        } else {
-          _kgPriceEnabledNotifier.value = true;
-        }
-      },
+    return BlocListener<TripPriceSuggestionCubit, TripPriceSuggestionState>(
+      listenWhen: (prev, curr) =>
+          curr.status == TripPriceSuggestionStatus.loaded && prev != curr,
+      listener: (context, suggestion) => _onPriceSuggestionLoaded(suggestion),
       child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
         listener: (context, state) async {
           _settleCreationKey(state);
@@ -2560,6 +2839,16 @@ class _TripFormContentState extends State<_TripFormContent> {
               unawaited(_showDraftSaved(context, announcement));
               return;
             }
+            // Récurrence choisie à l'étape 1 : la série part depuis la carte
+            // de l'écran de succès (trajet direct seulement).
+            final recurrenceDates = isEdit || state is AnnouncementTripCreated
+                ? const <DateTime>[]
+                : context.read<TripRecurrenceCubit>().state.seriesDates;
+            // Prix de la route déjà chargés par l'étape prix : la carte
+            // « Prix par article » de l'écran de succès les reprend.
+            final routeSuggestion = context
+                .read<TripPriceSuggestionCubit>()
+                .state;
             final stripe = context.read<StripeAccountBloc>().state;
             final needsPayouts =
                 !isEdit &&
@@ -2658,14 +2947,27 @@ class _TripFormContentState extends State<_TripFormContent> {
                       analyticsContext: isEdit
                           ? 'trip_published'
                           : 'trip_published_v2',
-                      // Trajet récurrent : un trajet direct tout juste créé
-                      // peut être répété à d'autres dates (yadony-back #525).
-                      extra:
-                          !isEdit &&
-                              state is! AnnouncementTripCreated &&
-                              announcement.tripGroupId == null
-                          ? TripSeriesCard(announcement: announcement)
-                          : null,
+                      // Création : prix par article du trajet publié, ou
+                      // proposition des prix de la route si la grille est
+                      // vide ; puis, pour un trajet direct, la récurrence
+                      // (yadony-back #525).
+                      extra: isEdit
+                          ? null
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                TripPublishedItemPricesCard(
+                                  announcement: announcement,
+                                  routeSuggestion: routeSuggestion,
+                                ),
+                                if (state is! AnnouncementTripCreated &&
+                                    announcement.tripGroupId == null)
+                                  TripSeriesCard(
+                                    announcement: announcement,
+                                    autoDates: recurrenceDates,
+                                  ),
+                              ],
+                            ),
                       secondaryLabel: isEdit ? null : l.tripPublishSuccessCta,
                       onSecondary: isEdit ? null : viewTrip,
                       secondaryIconAsset: null,
@@ -2793,10 +3095,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     _pickupAddressNotifier.value = t.pickupAddress;
     _deliveryAddressNotifier.value = t.deliveryAddress;
 
-    _kgPriceEnabledNotifier.value = !t.usesPriceGrid || t.pricePerKg != null;
     final price = t.pricePerKg;
     if (price == null) {
-      _priceOptionNotifier.value = -1;
+      // Modèle sans prix au kilo (grille seule, d'avant le prix unique) : le
+      // prix conseillé reprend la main.
+      _applyAutoPrice(_suggestedPricePerKg, force: true);
     } else {
       final presetIdx = _presets.indexOf(price);
       if (presetIdx != -1) {
@@ -2904,7 +3207,9 @@ class _TripFormContentState extends State<_TripFormContent> {
       availableKg: _availableKgNotifier.value,
       capacityUnit: formState.capacityUnit.toWire(),
       pricingMode: formState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG',
-      kgPriceEnabled: _kgPriceEnabledNotifier.value,
+      // `kgPriceEnabled` garde sa valeur par défaut (vrai) : toujours un prix
+      // au kilo depuis le prix unique, le champ ne sert qu'aux anciens
+      // brouillons.
       priceOption: _priceOptionNotifier.value,
       customPrice: _customPriceNotifier.value,
       customPriceText: _customPriceCtrl.text,
@@ -2917,6 +3222,12 @@ class _TripFormContentState extends State<_TripFormContent> {
       mobileMoneyEnabled: _mobileMoneyEnabledNotifier.value,
       negotiable: _negotiableNotifier.value,
       legs: context.read<TripLegsCubit>().state.legs,
+      recurrenceEnabled: _isEdit || _isLocked
+          ? false
+          : context.read<TripRecurrenceCubit>().state.enabled,
+      recurrenceFrequency: _isEdit || _isLocked
+          ? null
+          : context.read<TripRecurrenceCubit>().state.frequency.wire,
     );
   }
 
@@ -2951,11 +3262,19 @@ class _TripFormContentState extends State<_TripFormContent> {
     _pickupAddressNotifier.value = d.pickupAddress;
     _deliveryAddressNotifier.value = d.deliveryAddress;
 
-    _kgPriceEnabledNotifier.value = d.kgPriceEnabled;
-    _priceOptionNotifier.value = d.priceOption.clamp(-1, _presets.length);
     final customPrice = d.customPrice;
     if (customPrice != null) _customPriceNotifier.value = customPrice;
     _customPriceCtrl.text = d.customPriceText;
+    // Brouillon « grille seule » (d'avant le prix unique) ou sans prix : le
+    // prix conseillé reprend la main.
+    final priceOption = d.kgPriceEnabled
+        ? d.priceOption.clamp(-1, _presets.length)
+        : -1;
+    if (priceOption == -1) {
+      _applyAutoPrice(_suggestedPricePerKg, force: true);
+    } else {
+      _priceOptionNotifier.value = priceOption;
+    }
 
     _selectedContentNotifier.value = d.acceptedContent.toSet();
     _customAcceptedNotifier.value = d.customAccepted.toSet();
@@ -2987,12 +3306,15 @@ class _TripFormContentState extends State<_TripFormContent> {
     final pricingMode = d.pricingMode == 'MIXED'
         ? PricingMode.mixed
         : PricingMode.kg;
-    _pendingKgPriceEnabled = formBloc.state.pricingMode != pricingMode
-        ? d.kgPriceEnabled
-        : null;
     formBloc.add(AnnouncementPricingModeSetRequested(pricingMode));
 
     context.read<TripLegsCubit>().restore(d.legs);
+    // Après la date : les dates suivantes se recalculent depuis elle. Une
+    // retouche au calendrier n'est pas gardée dans le brouillon.
+    context.read<TripRecurrenceCubit>().restore(
+      enabled: d.recurrenceEnabled,
+      frequency: TripRecurrenceFrequency.fromWire(d.recurrenceFrequency),
+    );
     _updateCanContinueStep1();
     _markDirty();
   }
@@ -3003,75 +3325,22 @@ class _TripFormContentState extends State<_TripFormContent> {
     return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
-  Widget _buildTemplatesSuggestionBar(
-    BuildContext context,
-    TextTheme tt,
-    ColorScheme cs,
-  ) {
-    return BlocBuilder<TripTemplateBloc, TripTemplateState>(
-      builder: (context, state) {
-        if (state.templates.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CaSectionLabel(
-              label: context.l10n.tripPublishTemplatesLabel,
-              iconAsset: 'bookmark',
-            ),
-            const SizedBox(height: DonySpacing.xs),
-            Text(
-              context.l10n.tripPublishTemplatesHint,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            SizedBox(
-              height: 40,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: state.templates.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(width: DonySpacing.sm),
-                itemBuilder: (context, i) {
-                  final t = state.templates[i];
-                  return ActionChip(
-                    avatar: t.emoji != null
-                        ? Text(t.emoji!)
-                        : DonyIcon('bookmark', size: 16, color: cs.primary),
-                    label: Text(
-                      t.pricePerKg == null
-                          ? context.l10n.tripPublishTemplateChipGrid(t.label)
-                          : '${t.label} · ${CurrencyFormatter.formatOrPlain(t.pricePerKg!, SupportedCurrency.fromCodeOrDefault(t.currency), compact: true)}/kg',
-                    ),
-                    onPressed: () => _applyTemplate(t),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: DonySpacing.xl),
-          ],
-        );
-      },
-    );
-  }
+  // ── Step 0 — Trajet ──────────────────────────────────────────────────────────
+  /// Champs à marquer à l'étape [step] : ceux qui manquent, une fois
+  /// « Continuer » touché.
+  static Set<TripRequiredField> _markedAt(TripMissingFieldsState s, int step) =>
+      s.attempted && s.step == step ? s.missing.toSet() : const {};
 
-  // ── Step 0 — Trajet + Transport ─────────────────────────────────────────────
   List<Widget> _buildStep0(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
       if (_isLocked) ...[
         _LockedBanner(lockContext: widget.lockContext!),
         const SizedBox(height: DonySpacing.lg),
       ],
-      if (!_isEdit && !_isLocked)
-        ValueListenableBuilder<SupportedCurrency>(
-          valueListenable: widget.currencyNotifier,
-          builder: (context, _, _) =>
-              _buildTemplatesSuggestionBar(context, tt, cs),
-        ),
-      ValueListenableBuilder<Set<_Step0Field>>(
-        valueListenable: _step0ErrorsNotifier,
-        builder: (context, missing, _) => TrajetStep(
+      const TripMissingFieldsBanner(step: 0),
+      BlocBuilder<TripMissingFieldsCubit, TripMissingFieldsState>(
+        buildWhen: (p, c) => !setEquals(_markedAt(p, 0), _markedAt(c, 0)),
+        builder: (context, missing) => TrajetStep(
           departureCityNotifier: _departureCityNotifier,
           arrivalCityNotifier: _arrivalCityNotifier,
           departureCountryCodeNotifier: _departureCountryCodeNotifier,
@@ -3085,26 +3354,8 @@ class _TripFormContentState extends State<_TripFormContent> {
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
           onSelectDate: _selectDate,
-          departureCityError: _msg(
-            context.l10n,
-            missing,
-            _Step0Field.departureCity,
-          ),
-          arrivalCityError: _msg(
-            context.l10n,
-            missing,
-            _Step0Field.arrivalCity,
-          ),
-          departureDateError: _msg(
-            context.l10n,
-            missing,
-            _Step0Field.departureDate,
-          ),
-          departureTimeError: _msg(
-            context.l10n,
-            missing,
-            _Step0Field.departureTime,
-          ),
+          marked: _markedAt(missing, 0),
+          fieldKeys: _fieldKeys,
           // Corridor verrouillé en modification (Q1) ET en trajet dédié (lockContext).
           // Date verrouillée seulement en modification ; le dédié la garde éditable
           // dans la fenêtre de tolérance.
@@ -3117,107 +3368,133 @@ class _TripFormContentState extends State<_TripFormContent> {
         iconAsset: 'package',
       ),
       const SizedBox(height: DonySpacing.xs),
-      CaSectionCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Le jour seul ne suffisait pas : le jour du départ, la limite
-            // est l'heure de départ, pas la fin de journée, et rien ne le
-            // disait (Sentry FLUTTER-MY). Le voyageur choisit désormais le jour
-            // puis l'heure (FLUTTER-PK) ; l'heure affichée est celle que
-            // [_resolveHandoverDeadline] enverra : l'heure choisie, ou à défaut
-            // la règle de repli, recalculée si le départ change.
-            AnimatedBuilder(
-              animation: Listenable.merge([
-                _handoverDeadlineNotifier,
-                _departureDateNotifier,
-                _departureTimeNotifier,
-              ]),
-              builder: (context, _) => ListTile(
-                key: const Key('sheet-handover-deadline-row'),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.base,
+      // Le jour seul ne suffisait pas : le jour du départ, la limite est
+      // l'heure de départ, pas la fin de journée, et rien ne le disait
+      // (Sentry FLUTTER-MY). Le voyageur choisit désormais le jour puis
+      // l'heure (FLUTTER-PK) ; l'heure affichée est celle que
+      // [_resolveHandoverDeadline] enverra : l'heure choisie, ou à défaut la
+      // règle de repli, recalculée si le départ change.
+      BlocBuilder<TripMissingFieldsCubit, TripMissingFieldsState>(
+        buildWhen: (p, c) => !setEquals(_markedAt(p, 0), _markedAt(c, 0)),
+        builder: (context, missing) => AnimatedBuilder(
+          animation: Listenable.merge([
+            _handoverDeadlineNotifier,
+            _departureDateNotifier,
+            _departureTimeNotifier,
+          ]),
+          builder: (context, _) {
+            final l = context.l10n;
+            final marked = _markedAt(
+              missing,
+              0,
+            ).contains(TripRequiredField.handoverDeadline);
+            // Deux messages distincts : « date limite incohérente »
+            // (postérieure au départ), toujours affiché, et « date limite
+            // absente », seulement après « Continuer ».
+            final err = _isHandoverDeadlineInvalid()
+                ? l.tripPublishHandoverDeadlineInvalid
+                : (marked
+                      ? tripRequiredFieldMessage(
+                          l,
+                          TripRequiredField.handoverDeadline,
+                        )
+                      : null);
+            return KeyedSubtree(
+              key: _fieldKeys[TripRequiredField.handoverDeadline],
+              child: TripMissingFieldFrame(
+                marked: marked,
+                messages: [?err],
+                messageKey: const Key('sheet-handover-error'),
+                child: CaSectionCard(
+                  child: ListTile(
+                    key: const Key('sheet-handover-deadline-row'),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.base,
+                    ),
+                    leading: DonyIcon(
+                      'calendar',
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: Text.rich(
+                      TextSpan(
+                        text: l.tripPublishHandoverDeadlineLabel,
+                        children: [
+                          TextSpan(
+                            text: ' *',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    subtitle: Text(l.tripPublishHandoverDeadlineSubtitle),
+                    trailing: Text(
+                      _handoverDeadlineDisplay(l) ??
+                          l.tripPublishHandoverDeadlineChoose,
+                      key: const Key('sheet-handover-deadline-value'),
+                      textAlign: TextAlign.end,
+                    ),
+                    onTap: _selectHandoverDeadline,
+                  ),
                 ),
-                leading: DonyIcon(
-                  'calendar',
-                  size: 20,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                title: Text(context.l10n.tripPublishHandoverDeadlineLabel),
-                subtitle: Text(
-                  context.l10n.tripPublishHandoverDeadlineSubtitle,
-                ),
-                trailing: Text(
-                  _handoverDeadlineDisplay(context.l10n) ??
-                      context.l10n.tripPublishHandoverDeadlineChoose,
-                  key: const Key('sheet-handover-deadline-value'),
-                  textAlign: TextAlign.end,
-                ),
-                onTap: _selectHandoverDeadline,
               ),
-            ),
-            AnimatedBuilder(
-              animation: Listenable.merge([
-                _handoverDeadlineNotifier,
-                _departureDateNotifier,
-                _departureTimeNotifier,
-                _step0ErrorsNotifier,
-              ]),
-              builder: (context, _) {
-                // Deux erreurs distinctes sur la même ligne : « date limite
-                // incohérente » (postérieure au départ) et « date limite
-                // absente » (rien de choisi). La seconde n'apparaît qu'après
-                // une première interaction avec l'étape.
-                final err = _isHandoverDeadlineInvalid()
-                    ? context.l10n.tripPublishHandoverDeadlineInvalid
-                    : (_step0ErrorsNotifier.value.contains(
-                            _Step0Field.handoverDeadline,
-                          )
-                          ? _step0FieldMessage(
-                              context.l10n,
-                              _Step0Field.handoverDeadline,
-                            )
-                          : null);
-                return DonyFieldError(
-                  message: err,
-                  textKey: const Key('sheet-handover-error'),
-                  withIcon: true,
-                );
-              },
-            ),
-          ],
+            );
+          },
         ),
       ),
+      // Trajet récurrent : création d'un trajet direct seulement. Une
+      // modification touche un seul trajet, un trajet dédié reste unique,
+      // et un voyage en plusieurs étapes n'en propose pas.
+      if (!_isEdit && !_isLocked) ...[
+        const SizedBox(height: DonySpacing.xl),
+        BlocBuilder<TripLegsCubit, TripLegsState>(
+          buildWhen: (p, c) => p.legs.isEmpty != c.legs.isEmpty,
+          builder: (context, legs) =>
+              TripRecurrenceCard(multiLeg: legs.legs.isNotEmpty),
+        ),
+      ],
+      const SizedBox(height: DonySpacing.base),
     ];
   }
 
   // ── Step 1 — Lieux & Capacité ────────────────────────────────────────────────
   List<Widget> _buildStep1(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
-      ValueListenableBuilder<Set<_Step1Field>>(
-        valueListenable: _step1ErrorsNotifier,
-        builder: (context, missing, _) => LieuxCapaciteStep(
-          initialPickupAddress: _pickupAddressNotifier.value,
-          initialDeliveryAddress: _deliveryAddressNotifier.value,
-          onPickupSaved: (v) => _pickupAddressNotifier.value = v,
-          onPickupChanged: (addr) {
-            _pickupAddressNotifier.value = addr;
-            _updateCanContinueStep1();
-          },
-          onDeliverySaved: (v) => _deliveryAddressNotifier.value = v,
-          onDeliveryChanged: (addr) {
-            _deliveryAddressNotifier.value = addr;
-            _updateCanContinueStep1();
-          },
-          pickupAddressError: missing.contains(_Step1Field.pickupAddress)
-              ? _step1FieldMessage(context.l10n, _Step1Field.pickupAddress)
-              : null,
-          deliveryAddressError: missing.contains(_Step1Field.deliveryAddress)
-              ? _step1FieldMessage(context.l10n, _Step1Field.deliveryAddress)
-              : null,
-          // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
-          lockedCapacityKg: _isLocked ? widget.lockContext!.weightKg : null,
-        ),
+      const TripMissingFieldsBanner(step: 1),
+      BlocBuilder<TripMissingFieldsCubit, TripMissingFieldsState>(
+        buildWhen: (p, c) => !setEquals(_markedAt(p, 1), _markedAt(c, 1)),
+        builder: (context, state) {
+          final marked = _markedAt(state, 1);
+          final l = context.l10n;
+          return LieuxCapaciteStep(
+            initialPickupAddress: _pickupAddressNotifier.value,
+            initialDeliveryAddress: _deliveryAddressNotifier.value,
+            onPickupSaved: (v) => _pickupAddressNotifier.value = v,
+            onPickupChanged: (addr) {
+              _pickupAddressNotifier.value = addr;
+              _updateCanContinueStep1();
+            },
+            onDeliverySaved: (v) => _deliveryAddressNotifier.value = v,
+            onDeliveryChanged: (addr) {
+              _deliveryAddressNotifier.value = addr;
+              _updateCanContinueStep1();
+            },
+            pickupAddressError: marked.contains(TripRequiredField.pickupAddress)
+                ? tripRequiredFieldMessage(l, TripRequiredField.pickupAddress)
+                : null,
+            deliveryAddressError:
+                marked.contains(TripRequiredField.deliveryAddress)
+                ? tripRequiredFieldMessage(l, TripRequiredField.deliveryAddress)
+                : null,
+            pickupKey: _fieldKeys[TripRequiredField.pickupAddress],
+            deliveryKey: _fieldKeys[TripRequiredField.deliveryAddress],
+            requiredLabels: true,
+            // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
+            lockedCapacityKg: _isLocked ? widget.lockContext!.weightKg : null,
+          );
+        },
       ),
     ];
   }
@@ -3256,7 +3533,15 @@ class _TripFormContentState extends State<_TripFormContent> {
               availableKgNotifier: _availableKgNotifier,
               cashEnabledNotifier: _cashEnabledNotifier,
               cardEnabledNotifier: _cardEnabledNotifier,
-              kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
+              // Chaque moyen se décoche librement ; la publication exige
+              // qu'il en reste un (cf. `_ensurePaymentMethod`).
+              lockCashWithoutCard: false,
+              paymentErrorNotifier: _paymentErrorNotifier,
+              paymentSectionKey: _paymentSectionKey,
+              // Trajet publié sans prix au kilo : il le reste, sauf ajout.
+              kgPriceAddedNotifier: _kgPriceOptionalOnEdit
+                  ? _kgPriceAddedNotifier
+                  : null,
               mobileMoneyEnabledNotifier: _mobileMoneyEnabledNotifier,
               currencyNotifier: widget.currencyNotifier,
               mobileMoneyAccountActive: mobileMoneyAccountActive,
@@ -3308,14 +3593,13 @@ class _TripFormContentState extends State<_TripFormContent> {
             _arrivalTimeNotifier,
             _arrivalDayOffsetNotifier,
             _deliveryAddressNotifier,
-            _kgPriceEnabledNotifier,
             _transportModeNotifier,
             _stopsNotifier,
             widget.currencyNotifier,
           ]),
           builder: (context, _) => TripLegsSection(
             origin: _firstLegOrigin(),
-            showPrice: _kgPriceEnabledNotifier.value,
+            showPrice: true,
             tripCurrency: _currency,
             paymentRails: _legPaymentRails,
             defaultKg: _availableKgNotifier.value,
@@ -3402,53 +3686,6 @@ class _TripFormContentState extends State<_TripFormContent> {
   }
 
   static const int _totalSteps = 3;
-}
-
-// ─── Champs obligatoires par étape ───────────────────────────────────────────
-
-/// Champs obligatoires de l'étape 0, tels que `_submit()` les exige.
-///
-/// Toute entrée ajoutée ici bloque « Continuer » ET affiche son message sous
-/// le champ concerné : impossible d'ajouter l'un sans l'autre.
-enum _Step0Field {
-  departureCity,
-  arrivalCity,
-  departureDate,
-  departureTime,
-  transportMode,
-  handoverDeadline,
-}
-
-/// Message affiché sous le champ [f]. Repris mot pour mot des gardes de
-/// `_submit()` pour que l'utilisateur lise la même chose aux deux endroits.
-String _step0FieldMessage(AppLocalizations l10n, _Step0Field f) {
-  switch (f) {
-    case _Step0Field.departureCity:
-      return l10n.tripPublishFieldDepartureCityRequired;
-    case _Step0Field.arrivalCity:
-      return l10n.tripPublishFieldArrivalCityRequired;
-    case _Step0Field.departureDate:
-      return l10n.tripPublishFieldDepartureDateRequired;
-    case _Step0Field.departureTime:
-      return l10n.tripPublishFieldDepartureTimeRequired;
-    case _Step0Field.transportMode:
-      return l10n.tripPublishFieldTransportModeRequired;
-    case _Step0Field.handoverDeadline:
-      return l10n.tripPublishFieldHandoverDeadlineRequired;
-  }
-}
-
-/// Champs obligatoires de l'étape 1.
-enum _Step1Field { pickupAddress, deliveryAddress }
-
-/// Message affiché sous le champ [f], même principe que [_step0FieldMessage].
-String _step1FieldMessage(AppLocalizations l10n, _Step1Field f) {
-  switch (f) {
-    case _Step1Field.pickupAddress:
-      return l10n.tripPublishFieldPickupAddressRequired;
-    case _Step1Field.deliveryAddress:
-      return l10n.tripPublishFieldDeliveryAddressRequired;
-  }
 }
 
 // ─── Locked banner & locked-mode helpers ─────────────────────────────────────

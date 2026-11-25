@@ -9,20 +9,59 @@ import 'package:intl/intl.dart';
 
 /// Grille d'un mois où l'on coche des jours précis : le jour du trajet
 /// d'origine est entouré (non cochable), les jours passés sont grisés.
+///
+/// Sans état : les jours cochés et la navigation viennent de l'appelant,
+/// calendrier de série d'un trajet publié ([TripSeriesCalendar.forSeries])
+/// ou dates d'un trajet récurrent à l'étape 1 de la création.
 class TripSeriesCalendar extends StatelessWidget {
-  const TripSeriesCalendar({super.key});
+  const TripSeriesCalendar({
+    super.key,
+    required this.visibleMonth,
+    required this.selected,
+    required this.sourceDay,
+    required this.isSelectable,
+    required this.onToggle,
+    required this.canGoBack,
+    required this.canGoForward,
+    required this.onShowMonth,
+  });
+
+  /// Calendrier lié au [TripSeriesCubit] du contexte.
+  static Widget forSeries() => Builder(
+    builder: (context) {
+      final cubit = context.read<TripSeriesCubit>();
+      final state = context.watch<TripSeriesCubit>().state;
+      return TripSeriesCalendar(
+        visibleMonth: state.visibleMonth,
+        selected: state.selected,
+        sourceDay: cubit.sourceDay,
+        isSelectable: cubit.isSelectable,
+        onToggle: cubit.toggle,
+        canGoBack: cubit.canGoBack,
+        canGoForward: cubit.canGoForward,
+        onShowMonth: cubit.showMonth,
+      );
+    },
+  );
+
+  final DateTime visibleMonth;
+  final List<DateTime> selected;
+  final DateTime? sourceDay;
+  final bool Function(DateTime day) isSelectable;
+  final ValueChanged<DateTime> onToggle;
+  final bool canGoBack;
+  final bool canGoForward;
+  final ValueChanged<int> onShowMonth;
 
   static const _cell = 44.0;
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<TripSeriesCubit>();
-    final state = context.watch<TripSeriesCubit>().state;
     final l10n = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final material = MaterialLocalizations.of(context);
-    final month = state.visibleMonth;
+    final month = visibleMonth;
     final label = DateFormat.yMMMM(l10n.localeName).format(month);
     final firstWeekday = material.firstDayOfWeekIndex;
     final weekdays = [
@@ -48,7 +87,7 @@ class TripSeriesCalendar extends StatelessWidget {
             IconButton(
               key: const Key('trip-series-prev-month'),
               tooltip: l10n.tripSeriesPrevMonth,
-              onPressed: cubit.canGoBack ? () => cubit.showMonth(-1) : null,
+              onPressed: canGoBack ? () => onShowMonth(-1) : null,
               icon: RotatedBox(
                 quarterTurns: 2,
                 child: DonyIcon('chevron-right', size: 20, color: cs.primary),
@@ -64,7 +103,7 @@ class TripSeriesCalendar extends StatelessWidget {
             IconButton(
               key: const Key('trip-series-next-month'),
               tooltip: l10n.tripSeriesNextMonth,
-              onPressed: cubit.canGoForward ? () => cubit.showMonth(1) : null,
+              onPressed: canGoForward ? () => onShowMonth(1) : null,
               icon: DonyIcon('chevron-right', size: 20, color: cs.primary),
             ),
           ],
@@ -94,9 +133,10 @@ class TripSeriesCalendar extends StatelessWidget {
                         ? null
                         : _DayCell(
                             day: day,
-                            selected: state.selected.contains(day),
-                            isSource: day == cubit.sourceDay,
-                            selectable: cubit.isSelectable(day),
+                            selected: selected.contains(day),
+                            isSource: day == sourceDay,
+                            selectable: isSelectable(day),
+                            onToggle: onToggle,
                           ),
                   ),
                 ),
@@ -113,12 +153,14 @@ class _DayCell extends StatelessWidget {
     required this.selected,
     required this.isSource,
     required this.selectable,
+    required this.onToggle,
   });
 
   final DateTime day;
   final bool selected;
   final bool isSource;
   final bool selectable;
+  final ValueChanged<DateTime> onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +204,7 @@ class _DayCell extends StatelessWidget {
       child: InkWell(
         key: Key('trip-series-day-${TripSeriesResult.wireDate(day)}'),
         customBorder: const CircleBorder(),
-        onTap: () => context.read<TripSeriesCubit>().toggle(day),
+        onTap: () => onToggle(day),
         child: cell,
       ),
     );

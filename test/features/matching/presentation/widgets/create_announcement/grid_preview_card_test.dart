@@ -1,3 +1,7 @@
+// Prix par article de l'étape « Prix & conditions » (carte remplie) :
+// affichage des prix de la grille du profil (net sous grille de commission,
+// conversion dans la devise du trajet) et rechargement au retour de l'écran
+// de grille. Anciennement la carte « aperçu de grille » du mode MIXED.
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/active_rates.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
@@ -7,6 +11,8 @@ import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/grid_preview_card.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_price_section.dart';
+import 'package:dony/features/price_grid/data/models/price_grid_suggestion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,44 +34,71 @@ const _items = [
   GridPreviewItem(id: 'a5', label: 'Livre', unitPriceDisplay: 5.25),
 ];
 
+/// Extra reçu par la route de la grille (préremplissage d'une grille vide).
+Object? _lastGridExtra;
+
 /// Monte la carte derrière un GoRouter réel : « Modifier » pousse la route de
 /// la grille, et le retour doit provoquer un rechargement.
 Widget _wrap(
   List<GridPreviewItem> items, {
   AnnouncementFormBloc? bloc,
-  SupportedCurrency? currency,
+  SupportedCurrency currency = SupportedCurrency.eur,
   SupportedCurrency? gridCurrency,
 }) {
+  final formBloc = bloc ?? _MockAnnouncementFormBloc();
+  if (bloc == null) {
+    whenListen(
+      formBloc,
+      const Stream<AnnouncementFormState>.empty(),
+      initialState: AnnouncementFormState(gridPreviewItems: items),
+    );
+  }
+  final priceOption = ValueNotifier<int>(-1);
+  final customPrice = ValueNotifier<double>(6);
+  final customCtrl = TextEditingController();
+  addTearDown(() {
+    priceOption.dispose();
+    customPrice.dispose();
+    customCtrl.dispose();
+  });
   final router = GoRouter(
     initialLocation: '/',
     routes: [
       GoRoute(
         path: '/',
         builder: (context, state) => Scaffold(
-          body: GridPreviewCard(
-            items: items,
-            currency: currency,
-            gridCurrency: gridCurrency,
+          body: SingleChildScrollView(
+            child: ItemPricesCard(
+              currency: currency,
+              gridCurrency: gridCurrency,
+              priceOptionNotifier: priceOption,
+              customPriceNotifier: customPrice,
+              customPriceCtrl: customCtrl,
+            ),
           ),
         ),
       ),
       GoRoute(
         path: '/profile/price-grid',
-        builder: (context, state) => Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () => context.pop(),
-              child: const Text('Retour'),
+        builder: (context, state) {
+          _lastGridExtra = state.extra;
+          return Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () => context.pop(),
+                child: const Text('Retour'),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     ],
   );
 
-  final app = MaterialApp.router(routerConfig: router);
-  if (bloc == null) return app;
-  return BlocProvider<AnnouncementFormBloc>.value(value: bloc, child: app);
+  return BlocProvider<AnnouncementFormBloc>.value(
+    value: formBloc,
+    child: MaterialApp.router(routerConfig: router),
+  );
 }
 
 void main() {
@@ -74,70 +107,36 @@ void main() {
     registerFallbackValue(const AnnouncementGridPreviewLoadRequested());
   });
 
-  group('GridPreviewCard — repli de la liste', () {
-    testWidgets('trois articles ou moins : tout est visible, pas de bouton', (
-      tester,
-    ) async {
-      await tester.pumpWidget(_wrap(_items.take(3).toList()));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Téléphone'), findsOneWidget);
-      expect(find.text('Vêtement'), findsOneWidget);
-      expect(find.text('Chaussures'), findsOneWidget);
-      expect(find.byKey(const Key('grid-preview-see-all')), findsNothing);
-    });
-
-    testWidgets('au-delà de trois : seuls les premiers restent affichés', (
-      tester,
-    ) async {
+  group('Prix par article — liste', () {
+    testWidgets('tous les articles sont listés avec leur prix', (tester) async {
       await tester.pumpWidget(_wrap(_items));
       await tester.pumpAndSettle();
 
-      expect(find.text('Téléphone'), findsOneWidget);
-      expect(find.text('Vêtement'), findsOneWidget);
-      expect(find.text('Chaussures'), findsOneWidget);
-      // Les deux derniers sont repliés dans la feuille.
-      expect(find.text('Sac de riz'), findsNothing);
-      expect(find.text('Livre'), findsNothing);
-      // Et le bouton annonce le total, pas le reste caché.
-      expect(find.text('Voir les 5 articles'), findsOneWidget);
-    });
-
-    testWidgets('la feuille montre tous les articles', (tester) async {
-      await tester.pumpWidget(_wrap(_items));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const Key('grid-preview-see-all')));
-      await tester.pumpAndSettle();
-
+      expect(find.byKey(const Key('item-prices-filled')), findsOneWidget);
       for (final item in _items) {
-        expect(
-          find.text(item.label),
-          findsWidgets,
-          reason: '${item.label} doit apparaître dans la feuille',
-        );
+        expect(find.text(item.label), findsOneWidget);
       }
+      expect(find.text('Vos prix par article'), findsOneWidget);
     });
 
-    testWidgets('la feuille propose de modifier la grille', (tester) async {
+    testWidgets('rappelle que le reste est compté au kilo', (tester) async {
       await tester.pumpWidget(_wrap(_items));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('grid-preview-see-all')));
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('grid-sheet-edit')), findsOneWidget);
-    });
-
-    testWidgets('rappelle que le barème vient du profil', (tester) async {
-      await tester.pumpWidget(_wrap(_items));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('viennent de votre profil'), findsOneWidget);
+      // Aucun prix posé : le prix conseillé de la devise (8 €/kg).
+      final eight = CurrencyFormatter.formatOrPlain(
+        8,
+        SupportedCurrency.eur,
+        compact: true,
+      );
+      expect(
+        find.text('Le reste est compté au kilo, à $eight/kg.'),
+        findsOneWidget,
+      );
     });
   });
 
-  group('GridPreviewCard — sous grille de commission', () {
+  group('Prix par article — sous grille de commission', () {
     const netItems = [
       GridPreviewItem(
         id: 'n1',
@@ -152,11 +151,7 @@ void main() {
     ) async {
       useTestCommissionGrid();
       await tester.pumpWidget(
-        _wrap(
-          netItems,
-          currency: SupportedCurrency.eur,
-          gridCurrency: SupportedCurrency.eur,
-        ),
+        _wrap(netItems, gridCurrency: SupportedCurrency.eur),
       );
       await tester.pumpAndSettle();
 
@@ -174,11 +169,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _wrap(
-          netItems,
-          currency: SupportedCurrency.eur,
-          gridCurrency: SupportedCurrency.eur,
-        ),
+        _wrap(netItems, gridCurrency: SupportedCurrency.eur),
       );
       await tester.pumpAndSettle();
 
@@ -187,72 +178,18 @@ void main() {
         findsOneWidget,
       );
     });
-
-    testWidgets('la feuille dit que le voyageur touche ces prix', (
-      tester,
-    ) async {
-      useTestCommissionGrid();
-      await tester.pumpWidget(
-        _wrap(
-          [...netItems, ..._items],
-          currency: SupportedCurrency.eur,
-          gridCurrency: SupportedCurrency.eur,
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('grid-preview-see-all')));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text(
-          'Prix touchés par le voyageur. Les frais de service Yadony sont '
-          'payés par l\'expéditeur, en plus. En espèces, le voyageur les '
-          'avance sur son solde Yadony et l\'expéditeur les lui rembourse '
-          'dans le paiement.',
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('sans grille, la feuille garde la note actuelle', (
-      tester,
-    ) async {
-      await tester.pumpWidget(_wrap(_items, currency: SupportedCurrency.eur));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('grid-preview-see-all')));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text(
-          'Prix payés par l\'expéditeur, frais de service Yadony compris.',
-        ),
-        findsOneWidget,
-      );
-    });
   });
 
-  group('GridPreviewCard — grille vide', () {
-    testWidgets('invite à composer la grille plutôt que de constater le vide', (
-      tester,
-    ) async {
-      await tester.pumpWidget(_wrap(const []));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Aucun prix par article'), findsOneWidget);
-      expect(find.byKey(const Key('grid-preview-create')), findsOneWidget);
-      expect(find.byKey(const Key('grid-preview-see-all')), findsNothing);
-    });
-  });
-
-  group('GridPreviewCard — rafraîchissement au retour', () {
+  group('Prix par article — rafraîchissement au retour', () {
     late AnnouncementFormBloc bloc;
 
     setUp(() {
+      _lastGridExtra = 'non visité';
       bloc = _MockAnnouncementFormBloc();
       whenListen(
         bloc,
         const Stream<AnnouncementFormState>.empty(),
-        initialState: const AnnouncementFormState(),
+        initialState: const AnnouncementFormState(gridPreviewItems: _items),
       );
     });
 
@@ -262,19 +199,19 @@ void main() {
       await tester.pumpWidget(_wrap(_items, bloc: bloc));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('grid-preview-edit')));
+      await tester.tap(find.byKey(const Key('item-prices-edit')));
       await tester.pumpAndSettle();
 
       expect(find.text('Retour'), findsOneWidget);
+      // Grille déjà remplie : rien à préremplir.
+      expect(_lastGridExtra, isNull);
     });
 
-    testWidgets('le retour recharge l\'aperçu', (tester) async {
-      // Le BLoC n'émet le chargement qu'à la bascule vers le mode grille :
-      // sans ce rappel explicite, un prix corrigé resterait invisible ici.
+    testWidgets('le retour recharge les prix par article', (tester) async {
       await tester.pumpWidget(_wrap(_items, bloc: bloc));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('grid-preview-edit')));
+      await tester.tap(find.byKey(const Key('item-prices-edit')));
       await tester.pumpAndSettle();
 
       verifyNever(
@@ -289,33 +226,30 @@ void main() {
       ).called(1);
     });
 
-    testWidgets('« Modifier ma grille » depuis la feuille recharge aussi', (
+    testWidgets('openPriceGridAndRefresh transmet les prix de la route', (
       tester,
     ) async {
       await tester.pumpWidget(_wrap(_items, bloc: bloc));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('grid-preview-see-all')));
+      const suggestions = [
+        PriceGridSuggestion(label: 'Téléphone', unitPriceNet: 15),
+      ];
+      final context = tester.element(find.byType(ItemPricesCard));
+      final done = openPriceGridAndRefresh(context, suggestions: suggestions);
       await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const Key('grid-sheet-edit')));
-      await tester.pumpAndSettle();
-
-      // La feuille se referme avant la navigation : aucune route ne doit
-      // rester empilée par-dessus elle.
-      expect(find.byKey(const Key('grid-sheet-edit')), findsNothing);
-      expect(find.text('Retour'), findsOneWidget);
+      expect(_lastGridExtra, suggestions);
 
       await tester.tap(find.text('Retour'));
       await tester.pumpAndSettle();
-
+      await done;
       verify(
         () => bloc.add(any(that: isA<AnnouncementGridPreviewLoadRequested>())),
       ).called(1);
     });
   });
 
-  group('GridPreviewCard — devise du trajet ≠ devise de la grille', () {
+  group('Prix par article — devise du trajet ≠ devise de la grille', () {
     const eurItems = [
       GridPreviewItem(id: 'b1', label: 'Téléphone', unitPriceDisplay: 10),
       GridPreviewItem(id: 'b2', label: 'Vêtement', unitPriceDisplay: 12),
@@ -345,44 +279,10 @@ void main() {
       expect(find.text('Converti depuis EUR au taux du jour'), findsOneWidget);
     });
 
-    testWidgets('la feuille complète affiche aussi les prix convertis', (
-      tester,
-    ) async {
-      ActiveRates.setServerRates({'XOF': 655.957});
-      await tester.pumpWidget(
-        _wrap(
-          [
-            ...eurItems,
-            const GridPreviewItem(
-              id: 'b3',
-              label: 'Livre',
-              unitPriceDisplay: 5,
-            ),
-            const GridPreviewItem(id: 'b4', label: 'Sac', unitPriceDisplay: 20),
-          ],
-          currency: SupportedCurrency.xof,
-          gridCurrency: SupportedCurrency.eur,
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('grid-preview-see-all')));
-      await tester.pumpAndSettle();
-
-      expect(find.text(xof(13119)), findsOneWidget); // 20 € × 655,957
-      expect(
-        find.byKey(const Key('grid-preview-converted-note')),
-        findsNWidgets(2),
-      );
-    });
-
     testWidgets('même devise : prix inchangés, pas de mention', (tester) async {
       ActiveRates.setServerRates({'XOF': 655.957});
       await tester.pumpWidget(
-        _wrap(
-          eurItems,
-          currency: SupportedCurrency.eur,
-          gridCurrency: SupportedCurrency.eur,
-        ),
+        _wrap(eurItems, gridCurrency: SupportedCurrency.eur),
       );
       await tester.pumpAndSettle();
 
@@ -441,18 +341,14 @@ void main() {
     });
   });
 
-  // ── Group: English (i18n) ─────────────────────────────────────────────────
-
-  group('GridPreviewCard — English', () {
-    testWidgets('bouton "Edit" et compteur "See all N items" traduits', (
-      tester,
-    ) async {
+  group('Prix par article — English', () {
+    testWidgets('titre et bouton « Edit » traduits', (tester) async {
       useEnglish();
       await tester.pumpWidget(_wrap(_items));
       await tester.pumpAndSettle();
 
       expect(find.text('Edit'), findsOneWidget);
-      expect(find.text('See all 5 items'), findsOneWidget);
+      expect(find.text('Your prices per item'), findsWidgets);
     });
   });
 }

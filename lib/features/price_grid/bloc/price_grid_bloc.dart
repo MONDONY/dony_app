@@ -20,6 +20,7 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     on<PriceGridItemUpdateRequested>(_onUpdate);
     on<PriceGridItemDeleteRequested>(_onDelete);
     on<PriceGridItemsReorderRequested>(_onReorder);
+    on<PriceGridSuggestionsAddRequested>(_onSuggestionsAdd);
   }
 
   Future<void> _onLoad(
@@ -77,6 +78,46 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     );
     if (!ok) return;
     unawaited(_analytics.logEvent(AnalyticsEvents.priceGridItemAdded));
+    if (wasEmpty) {
+      unawaited(_analytics.logEvent(AnalyticsEvents.priceGridCreated));
+    }
+  }
+
+  /// Les articles partent un par un, dans l'ordre proposé, puis la grille
+  /// est relue une seule fois. Un article refusé (doublon, borne) n'arrête
+  /// pas les suivants : la grille finale dit ce qui a été retenu.
+  Future<void> _onSuggestionsAdd(
+    PriceGridSuggestionsAddRequested event,
+    Emitter<PriceGridState> emit,
+  ) async {
+    if (event.suggestions.isEmpty) return;
+    final current = state;
+    final wasEmpty = current is PriceGridLoaded && current.items.isEmpty;
+    var added = 0;
+    final ok = await _mutate(emit, () async {
+      Object? firstError;
+      for (final suggestion in event.suggestions) {
+        try {
+          await _repository.addItem(
+            label: suggestion.label,
+            unitPriceNet: suggestion.unitPriceNet,
+          );
+          added++;
+        } catch (e) {
+          firstError ??= e;
+        }
+      }
+      if (added == 0 && firstError != null) throw firstError;
+    });
+    if (!ok || added == 0) return;
+    for (var i = 0; i < added; i++) {
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.priceGridItemAdded,
+          properties: const {'source': 'route_suggestion'},
+        ),
+      );
+    }
     if (wasEmpty) {
       unawaited(_analytics.logEvent(AnalyticsEvents.priceGridCreated));
     }

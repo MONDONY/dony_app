@@ -89,7 +89,12 @@ void main() {
       'calendrier', (tester) async {
     await pump(tester);
 
-    final dateField = find.textContaining('12 oct. 2026').first;
+    // Format court en demi-largeur (« lun. 12 oct. »), sans l'année.
+    final dateField = find.byKey(const Key('departureDateField'));
+    expect(
+      find.descendant(of: dateField, matching: find.textContaining('12 oct.')),
+      findsOneWidget,
+    );
     await tester.ensureVisible(dateField);
     await tester.tap(dateField);
     await tester.pump();

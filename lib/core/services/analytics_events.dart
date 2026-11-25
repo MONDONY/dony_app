@@ -129,6 +129,19 @@ abstract final class AnalyticsEvents {
   static const tripSeriesCreated = 'trip_series_created';
   static const tripSeriesTemplateSaved = 'trip_series_template_saved';
 
+  /// Récurrence choisie à l'étape 1 de la création d'un trajet.
+  static const tripRecurrenceToggled = 'trip_recurrence_toggled';
+  static const tripRecurrenceFrequencyChosen =
+      'trip_recurrence_frequency_chosen';
+  static const tripRecurrenceDatesCustomized =
+      'trip_recurrence_dates_customized';
+
+  /// « Continuer » touché avec des champs obligatoires vides (étapes 1 et 2
+  /// de la création d'un trajet), et pastille d'un champ manquant touchée.
+  static const tripStepBlockedMissingFields =
+      'trip_step_blocked_missing_fields';
+  static const tripMissingFieldChipTapped = 'trip_missing_field_chip_tapped';
+
   /// Voyage à plusieurs étapes (FLUTTER-4D) : étape ajoutée au formulaire.
   static const tripLegAdded = 'trip_leg_added';
   static const tripHidden = 'trip_hidden';
@@ -1298,6 +1311,55 @@ abstract final class AnalyticsEvents {
   static const tripRescheduled = 'trip_rescheduled';
   static const tripRescheduleDecided = 'trip_reschedule_decided';
   static const arrivalInstructionsUpdated = 'arrival_instructions_updated';
+
+  // Étape « Prix & conditions » de la création d'un trajet.
+  /// Prix conseillés de la route chargés (`TripPriceSuggestionCubit`).
+  /// Propriétés `has_kg_price` (médiane du back présente), `sample_size_bracket`
+  /// (`0`/`1-2`/`3-9`/`10-49`/`50+`), `items_count`, `source`
+  /// (`backend`/`fallback`), `currency`.
+  static const tripPriceSuggestionLoaded = 'trip_price_suggestion_loaded';
+
+  /// Prix au kilo monté ou baissé d'un pas. Propriétés `direction`
+  /// (`up`/`down`), `from_suggested` (le prix valait le prix conseillé).
+  static const tripPriceAdjusted = 'trip_price_adjusted';
+
+  /// « Revenir au prix conseillé ». Propriété `source` (`backend`/`fallback`).
+  static const tripPriceResetToSuggested = 'trip_price_reset_to_suggested';
+
+  /// Éditeur des prix par article ouvert. Propriétés `source`
+  /// (`step`/`card_edit`), `suggested_items_count`.
+  static const tripItemPricesOpened = 'trip_item_prices_opened';
+
+  /// Carte « Prix par article » de l'écran de succès d'un trajet publié
+  /// affichée. Propriétés `variant` (`proposal` : grille vide, prix de la
+  /// route proposés / `filled` : le trajet porte des prix par article /
+  /// `none` : grille vide sans prix de route), `suggestions_count`.
+  static const tripPublishedItemPricesShown =
+      'trip_published_item_prices_shown';
+
+  /// « Ajouter » de cette carte : prix de la route ajoutés à la grille du
+  /// profil. Propriété `count` (articles dans la grille ensuite).
+  static const tripPublishedItemPricesAdded =
+      'trip_published_item_prices_added';
+
+  /// … ajout refusé ou impossible. Propriété `error_code`.
+  static const tripPublishedItemPricesAddFailed =
+      'trip_published_item_prices_add_failed';
+
+  /// Éditeur des prix par article ouvert depuis cette carte. Aucune
+  /// propriété.
+  static const tripPublishedItemPricesEditOpened =
+      'trip_published_item_prices_edit_opened';
+
+  /// Modification d'un trajet vendu aux seuls prix par article : « Ajouter un
+  /// prix au kilo » / « Retirer le prix au kilo ». Aucune propriété.
+  static const tripKgPriceAddedOnEdit = 'trip_kg_price_added_on_edit';
+  static const tripKgPriceRemovedOnEdit = 'trip_kg_price_removed_on_edit';
+
+  /// Publication (ou enregistrement) d'un trajet arrêtée : aucun moyen de
+  /// paiement coché. Propriété `action` (`publish`/`save`/`draft`).
+  static const tripPublishBlockedPayment = 'trip_publish_blocked_payment';
+
   // Négociation du prix d'un trajet. L'entonnoir se lit dans cet ordre :
   // ouverture du mode → première proposition → contre-offres → issue.
   // Bascule « J'accepte les propositions de prix » à la création du trajet.

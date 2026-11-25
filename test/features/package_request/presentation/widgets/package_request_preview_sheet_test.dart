@@ -113,7 +113,9 @@ void main() {
     useEnglish();
     await pumpAndOpen(tester, onConfirm: () {}, onSaveDraft: () {});
     expect(find.text('Preview your request'), findsOneWidget);
-    expect(find.text('Card'), findsOneWidget);
+    // Carte et espèces cochées au départ : les deux moyens sont listés.
+    expect(find.textContaining('Card'), findsWidgets);
+    expect(find.textContaining('Cash'), findsWidgets);
     expect(find.text('Post my request'), findsOneWidget);
     expect(find.text('Save as draft'), findsOneWidget);
     expect(find.text('Publier ma demande'), findsNothing);

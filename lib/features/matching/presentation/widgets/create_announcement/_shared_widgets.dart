@@ -43,24 +43,49 @@ class CaSectionLabel extends StatelessWidget {
   final String label;
   final IconData? icon;
   final String? iconAsset;
+
+  /// Astérisque après le libellé : bloc obligatoire.
+  final bool isRequired;
+
+  /// Mention plus discrète après le libellé, ex. « (facultatif) ».
+  final String? note;
   const CaSectionLabel({
     super.key,
     required this.label,
     this.icon,
     this.iconAsset,
+    this.isRequired = false,
+    this.note,
   });
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final labelWidget = Text(
-      label,
-      style: tt.titleMedium?.copyWith(
-        color: cs.onSurfaceVariant,
-        fontWeight: FontWeight.w600,
-      ),
+    final style = tt.titleMedium?.copyWith(
+      color: cs.onSurfaceVariant,
+      fontWeight: FontWeight.w600,
     );
+    final labelWidget = !isRequired && note == null
+        ? Text(label, style: style)
+        : Text.rich(
+            TextSpan(
+              text: label,
+              style: style,
+              children: [
+                if (isRequired)
+                  TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: cs.error),
+                  ),
+                if (note != null)
+                  TextSpan(
+                    text: ' $note',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+              ],
+            ),
+          );
     if (icon == null && iconAsset == null) return labelWidget;
     return Row(
       mainAxisSize: MainAxisSize.min,

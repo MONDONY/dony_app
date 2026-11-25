@@ -5,6 +5,7 @@ import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
+import 'package:dony/features/price_grid/data/models/price_grid_suggestion.dart';
 import 'package:dony/features/price_grid/presentation/price_grid_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -41,11 +42,14 @@ const _items = [
   ),
 ];
 
-Widget _wrap(PriceGridBloc bloc) {
+Widget _wrap(
+  PriceGridBloc bloc, {
+  List<PriceGridSuggestion> suggestions = const [],
+}) {
   return MaterialApp(
     home: BlocProvider<PriceGridBloc>.value(
       value: bloc,
-      child: const PriceGridScreen(),
+      child: PriceGridScreen(suggestions: suggestions),
     ),
   );
 }
@@ -355,6 +359,71 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('raw technical detail'), findsNothing);
+    });
+  });
+
+  group('PriceGridScreen — prix de la route', () {
+    const suggestions = [
+      PriceGridSuggestion(label: 'Téléphone', unitPriceNet: 15),
+      PriceGridSuggestion(label: 'Ordinateur', unitPriceNet: 30),
+    ];
+
+    testWidgets('grille vide : prix proposés, ajout d\'un geste', (
+      tester,
+    ) async {
+      final bloc = _blocWith(const PriceGridLoaded([]));
+      await tester.pumpWidget(_wrap(bloc, suggestions: suggestions));
+      await tester.pump();
+
+      expect(
+        find.byKey(const Key('price-grid-route-suggestions')),
+        findsOneWidget,
+      );
+      expect(find.text('Prix pratiqués sur ce trajet'), findsOneWidget);
+      expect(find.text('Téléphone'), findsOneWidget);
+      expect(find.text('Ordinateur'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('price-grid-apply-suggestions')));
+      await tester.pump();
+      verify(
+        () => bloc.add(
+          any(
+            that: isA<PriceGridSuggestionsAddRequested>().having(
+              (e) => e.suggestions,
+              'suggestions',
+              suggestions,
+            ),
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('grille déjà remplie : les prix proposés ne s\'affichent pas', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          _blocWith(const PriceGridLoaded(_items)),
+          suggestions: suggestions,
+        ),
+      );
+      await tester.pump();
+
+      expect(
+        find.byKey(const Key('price-grid-route-suggestions')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('anglais : titre et bouton traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(_blocWith(const PriceGridLoaded([])), suggestions: suggestions),
+      );
+      await tester.pump();
+
+      expect(find.text('Prices used on this route'), findsOneWidget);
+      expect(find.text('Add these prices'), findsOneWidget);
     });
   });
 }
