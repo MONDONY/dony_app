@@ -223,4 +223,143 @@ void main() {
       findsOneWidget,
     );
   });
+
+  // Repli en milieu de phrase : jamais de majuscule ; en début de phrase :
+  // majuscule. Noms vides, FR puis EN.
+  testWidgets('replis : casse correcte, FR et EN', (t) async {
+    final cases = <(Locale, String, ParcelRole, bool, List<String>)>[
+      (
+        AppL10n.fr,
+        'HANDED_OVER',
+        ParcelRole.sender,
+        false,
+        [
+          'Envoyez le code à votre destinataire',
+          'Sans ce code, votre voyageur ne lui remettra pas le colis.',
+        ],
+      ),
+      (
+        AppL10n.fr,
+        'IN_TRANSIT',
+        ParcelRole.sender,
+        true,
+        [
+          'Gardez votre code de retrait',
+          'Sans ce code, votre voyageur ne vous remettra pas le colis.',
+        ],
+      ),
+      (
+        AppL10n.fr,
+        'ACCEPTED',
+        ParcelRole.sender,
+        false,
+        [
+          'Préparez la remise avec votre voyageur',
+          'Ouvrez le QR avant la rencontre. Après son scan, vous recevrez le '
+              'code de retrait à donner à votre destinataire.',
+        ],
+      ),
+      (
+        AppL10n.fr,
+        'ARRIVED',
+        ParcelRole.sender,
+        false,
+        [
+          "Votre colis est arrivé à la ville d'arrivée",
+          'Votre destinataire doit présenter son code pour prendre le colis. '
+              'Rappelez-le-lui au besoin.',
+        ],
+      ),
+      (
+        AppL10n.fr,
+        'ACCEPTED',
+        ParcelRole.traveler,
+        false,
+        ["À la remise, scannez le QR de l'expéditeur"],
+      ),
+      (
+        AppL10n.en,
+        'HANDED_OVER',
+        ParcelRole.sender,
+        false,
+        [
+          'Send the code to your recipient',
+          'Without this code, your traveler will not hand the parcel over to '
+              'them.',
+        ],
+      ),
+      (
+        AppL10n.en,
+        'IN_TRANSIT',
+        ParcelRole.sender,
+        true,
+        [
+          'Without this code, your traveler will not hand the parcel over to '
+              'you.',
+        ],
+      ),
+      (
+        AppL10n.en,
+        'ACCEPTED',
+        ParcelRole.sender,
+        false,
+        [
+          'Get ready to hand over to your traveler',
+          'Have the QR open before you see them. Once they scan it, you will '
+              'get the pickup code to give to your recipient.',
+        ],
+      ),
+      (
+        AppL10n.en,
+        'ARRIVED',
+        ParcelRole.sender,
+        false,
+        [
+          'Your parcel has arrived in the arrival city',
+          'Your recipient must show their code to collect the parcel. Remind '
+              'them if needed.',
+        ],
+      ),
+      (
+        AppL10n.en,
+        'ARRIVED',
+        ParcelRole.traveler,
+        false,
+        [
+          "Ask the recipient for their 6-digit code. Without a code, call the "
+              "sender.",
+        ],
+      ),
+      (
+        AppL10n.en,
+        'ACCEPTED',
+        ParcelRole.traveler,
+        false,
+        ["At handover, scan the sender's QR"],
+      ),
+    ];
+    for (final c in cases) {
+      await pump(
+        t,
+        _action(
+          c.$2,
+          c.$3,
+          self: c.$4,
+          traveler: '',
+          sender: '',
+          recipient: '',
+          city: '',
+        ),
+        c.$1,
+        Brightness.light,
+      );
+      for (final text in c.$5) {
+        expect(
+          find.text(text),
+          findsOneWidget,
+          reason: '${c.$1} ${c.$2} $text',
+        );
+      }
+    }
+  });
 }

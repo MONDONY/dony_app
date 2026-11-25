@@ -64,7 +64,6 @@ String _cap(String s) =>
 
   final travelerKnown = (a.args['traveler']?.trim() ?? '').isNotEmpty;
   final traveler = arg('traveler', l.nextActionFallbackTraveler);
-  final travelerStart = _cap(traveler);
   final sender = arg('sender', l.nextActionFallbackSender);
   final recipientYour = arg('recipient', l.nextActionFallbackRecipientYour);
   final recipientYourStart = _cap(recipientYour);
@@ -79,13 +78,13 @@ String _cap(String s) =>
       recipientYour,
     ),
     'nextActionSenderCodeTitle' => l.nextActionSenderCodeTitle(recipientYour),
-    'nextActionSenderCodeBody' => l.nextActionSenderCodeBody(travelerStart),
+    'nextActionSenderCodeBody' => l.nextActionSenderCodeBody(traveler),
     'nextActionSenderArrivedTitle' => l.nextActionSenderArrivedTitle(city),
     'nextActionSenderArrivedBody' => l.nextActionSenderArrivedBody(
       recipientYourStart,
     ),
     'nextActionSelfKeepCodeTitle' => l.nextActionSelfKeepCodeTitle,
-    'nextActionSelfKeepCodeBody' => l.nextActionSelfKeepCodeBody(travelerStart),
+    'nextActionSelfKeepCodeBody' => l.nextActionSelfKeepCodeBody(traveler),
     'nextActionSelfWithdrawTitle' => l.nextActionSelfWithdrawTitle,
     'nextActionSelfWithdrawBody' =>
       travelerKnown
