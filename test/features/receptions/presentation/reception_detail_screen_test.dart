@@ -1073,4 +1073,98 @@ void main() {
       expect(find.text('You rated the traveler'), findsOneWidget);
     });
   });
+  // ── Carte « prochaine action » (rappels à chaque étape du colis) ──────────
+  group('carte prochaine action', () {
+    final card = find.byKey(const Key('reception-next-action'));
+
+    testWidgets('reception_arrived_showsCardFirst : en tête, au-dessus de '
+        'l\'étape', (tester) async {
+      stub(ReceptionDetailLoaded(_confirmed(bidStatus: 'ARRIVED')));
+      await pump(tester);
+
+      expect(card, findsOneWidget);
+      expect(
+        find.descendant(of: card, matching: find.text('Retirez votre colis')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.text(
+            'Donnez votre code à Ibrahima pour récupérer le colis.',
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getTopLeft(card).dy,
+        lessThan(tester.getTopLeft(find.byKey(const Key('reception-step'))).dy),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('anglais : carte traduite', (tester) async {
+      stub(ReceptionDetailLoaded(_confirmed(bidStatus: 'ARRIVED')));
+      await pump(tester, locale: AppL10n.en);
+
+      final l = lookupAppLocalizations(AppL10n.en);
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.text(l.nextActionRecipientArrivedTitle),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    // Le numéro du voyageur n'est jamais servi au destinataire (ni dans la
+    // réponse de réception, ni par `GET /bids/{id}/contact`, réservé à
+    // l'expéditeur et au voyageur) : sans numéro, pas de bouton « Appeler »,
+    // et les boutons du bas restent ceux d'aujourd'hui, dans le même ordre.
+    testWidgets('callButtonHiddenWhenPhoneMissing : ARRIVED, boutons du bas '
+        'inchangés', (tester) async {
+      stub(ReceptionDetailLoaded(_confirmed(bidStatus: 'ARRIVED')));
+      await pump(tester);
+
+      expect(find.textContaining('Appeler'), findsNothing);
+      final message = find.byKey(const Key('reception-message-traveler'));
+      final tracking = find.byKey(const Key('reception-view-tracking'));
+      final withdraw = find.byKey(const Key('reception-withdraw'));
+      expect(message, findsOneWidget);
+      expect(tracking, findsOneWidget);
+      expect(withdraw, findsOneWidget);
+      expect(
+        tester.getTopLeft(message).dy,
+        lessThan(tester.getTopLeft(tracking).dy),
+      );
+      expect(
+        tester.getTopLeft(tracking).dy,
+        lessThan(tester.getTopLeft(withdraw).dy),
+      );
+    });
+
+    for (final status in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT']) {
+      testWidgets('$status : pas de carte (le code et la consigne suffisent)', (
+        tester,
+      ) async {
+        stub(ReceptionDetailLoaded(_confirmed(bidStatus: status)));
+        await pump(tester);
+        expect(card, findsNothing);
+      });
+    }
+
+    testWidgets('COMPLETED : pas de carte', (tester) async {
+      stub(
+        ReceptionDetailLoaded(_confirmed(bidStatus: 'COMPLETED', code: null)),
+      );
+      await pump(tester);
+      expect(card, findsNothing);
+    });
+
+    testWidgets('lien à confirmer : pas de carte', (tester) async {
+      stub(const ReceptionDetailLoaded(_pending));
+      await pump(tester);
+      expect(card, findsNothing);
+    });
+  });
 }

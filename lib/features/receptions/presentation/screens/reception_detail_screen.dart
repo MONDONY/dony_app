@@ -4,6 +4,8 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/next_action.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/next_action_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/copy_code_button.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -16,6 +18,7 @@ import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/receptions/presentation/widgets/reception_leave_confirm_sheet.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
+import 'package:dony/features/video_modal/data/models/parcel_role.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -623,8 +626,27 @@ class _ConfirmedContent extends StatelessWidget {
         ),
     ];
 
+    // Prochaine action (rappels à chaque étape du colis) : en tête, à
+    // l'arrivée seulement ([nextActionFor] ne rend rien avant, le code et sa
+    // consigne suffisent).
+    final nextAction = nextActionFor(
+      NextActionInput(
+        status: reception.bidStatus,
+        role: ParcelRole.recipient,
+        travelerName: reception.travelerFirstName ?? '',
+        senderName: reception.senderFirstName ?? '',
+        recipientName: reception.recipientName ?? '',
+        arrivalCity: reception.arrivalCity ?? '',
+      ),
+    );
+
     return _StaggeredColumn(
       children: [
+        if (nextAction != null)
+          NextActionCard(
+            key: const Key('reception-next-action'),
+            action: nextAction,
+          ),
         _Hero(
           key: const Key('reception-step'),
           color: heroColor,

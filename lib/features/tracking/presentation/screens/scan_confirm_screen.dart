@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/utils/button_first_name.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/matching/presentation/widgets/counterpart_call_launcher.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -43,6 +45,8 @@ class ScanConfirmScreen extends StatefulWidget {
     this.gpsLabel,
     this.scanMethod,
     this.deliveryWindow,
+    this.senderName,
+    this.senderPhoneAvailable = false,
   });
 
   final String bidId;
@@ -60,6 +64,15 @@ class ScanConfirmScreen extends StatefulWidget {
   /// pas atteint (422 `trip-not-departed`, FLUTTER-CB). `null` : inconnu, le
   /// serveur tranche.
   final DeliveryWindow? deliveryWindow;
+
+  /// Expéditeur du colis (ARRIVEE) : sous le champ du code, « Le destinataire
+  /// n'a pas le code ? » et le lien « Appeler {prénom} ».
+  final String? senderName;
+
+  /// Le numéro de l'expéditeur est communicable (`senderPhoneAvailable` du
+  /// colis, fenêtre de contact et réglage « Masquer mon numéro » compris).
+  /// Faux ou inconnu (colis identifié sans fiche) : ni question ni lien.
+  final bool senderPhoneAvailable;
 
   @override
   State<ScanConfirmScreen> createState() => _ScanConfirmScreenState();
@@ -381,26 +394,45 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
 
                 const SizedBox(height: DonySpacing.lg),
 
-                // Champ code pour ARRIVEE
+                // Champ code pour ARRIVEE. Avertissement orange (rappels à
+                // chaque étape, spec §6.3) : aucune remise sans le code, et
+                // le numéro de suivi DON-… n'en est pas un.
                 if (_isArrivee) ...[
                   Container(
-                    padding: const EdgeInsets.all(DonySpacing.sm),
+                    key: const Key('scan-confirm-no-code-warning'),
+                    padding: const EdgeInsets.all(DonySpacing.md),
                     decoration: BoxDecoration(
-                      color: cs.primaryContainer,
+                      color: cs.warningLight,
                       borderRadius: BorderRadius.circular(DonyRadius.md),
+                      border: Border.all(
+                        color: cs.warning.withValues(alpha: 0.35),
+                      ),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        DonyIcon('info', color: cs.primary, size: 15),
+                        DonyIcon('triangle-alert', color: cs.warning, size: 18),
                         const SizedBox(width: DonySpacing.sm),
                         Expanded(
-                          child: Text(
-                            l.scanConfirmConfirmationCodeHint,
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onPrimaryContainer,
-                              fontWeight: FontWeight.w500,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l.scanConfirmNoCodeTitle,
+                                style: tt.titleSmall?.copyWith(
+                                  color: cs.onSurface,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                l.scanConfirmConfirmationCodeHint,
+                                style: tt.bodySmall?.copyWith(
+                                  color: cs.onSurface,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -442,6 +474,13 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                       ),
                     ),
                   ),
+                  if (widget.senderPhoneAvailable) ...[
+                    const SizedBox(height: DonySpacing.md),
+                    _CallSenderLink(
+                      bidId: widget.bidId,
+                      senderName: widget.senderName,
+                    ),
+                  ],
                   const SizedBox(height: DonySpacing.xl),
                 ],
               ],
@@ -605,6 +644,64 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// « Le destinataire n'a pas le code ? » puis le lien « Appeler {prénom} » :
+/// seul recours quand le destinataire n'a pas son code, l'écran n'offre aucun
+/// contournement. Le numéro de l'expéditeur est demandé au serveur au geste
+/// ([CounterpartCallLauncher]). Lien icône + texte sur une seule ligne, prénom
+/// coupé avant le libellé ([buttonFirstName]).
+class _CallSenderLink extends StatelessWidget {
+  const _CallSenderLink({required this.bidId, required this.senderName});
+
+  final String bidId;
+  final String? senderName;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final name = buttonFirstName(senderName);
+    final label = name.isEmpty ? l.parcelCallSender : l.parcelCallPerson(name);
+    return Column(
+      children: [
+        Text(
+          l.scanConfirmNoCodeQuestion,
+          textAlign: TextAlign.center,
+          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        CounterpartCallLauncher(
+          bidId: bidId,
+          source: 'scan_confirm',
+          builder: (context, onPressed, isLoading) => TextButton.icon(
+            key: const Key('scan-confirm-call-sender'),
+            onPressed: onPressed,
+            icon: isLoading
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: cs.primary,
+                    ),
+                  )
+                : DonyIcon('phone', size: 16, color: cs.primary),
+            label: Text(
+              label,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+            ),
+            style: TextButton.styleFrom(
+              foregroundColor: cs.primary,
+              textStyle: tt.labelLarge,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

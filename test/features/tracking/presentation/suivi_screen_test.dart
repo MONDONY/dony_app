@@ -1419,6 +1419,10 @@ void main() {
         'scanMethod': ScanMethod.manual,
         // Bid sans date de départ : le serveur tranche (FLUTTER-CB).
         'deliveryWindow': null,
+        // Lien « Appeler {expéditeur} » de la saisie du code : expéditeur
+        // sans nom ni numéro communicable dans ce colis.
+        'senderName': null,
+        'senderPhoneAvailable': false,
       });
       GoRouter.of(tester.element(find.text('page /tracking/scan/photo'))).pop();
       await settle(tester);
@@ -2006,6 +2010,10 @@ void main() {
         'scanMethod': ScanMethod.qr,
         // Bid sans date de départ : le serveur tranche (FLUTTER-CB).
         'deliveryWindow': null,
+        // Lien « Appeler {expéditeur} » de la saisie du code : expéditeur
+        // sans nom ni numéro communicable dans ce colis.
+        'senderName': null,
+        'senderPhoneAvailable': false,
       });
     });
 
@@ -2143,6 +2151,10 @@ void main() {
         'scanMethod': ScanMethod.manual,
         // Bid sans date de départ : le serveur tranche (FLUTTER-CB).
         'deliveryWindow': null,
+        // Lien « Appeler {expéditeur} » de la saisie du code : expéditeur
+        // sans nom ni numéro communicable dans ce colis.
+        'senderName': null,
+        'senderPhoneAvailable': false,
       });
     });
 

@@ -39695,6 +39695,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Donnez votre code au voyageur pour récupérer le colis.'**
   String get nextActionRecipientArrivedBodyNoName;
+
+  /// Barre du bas de la fiche colis (expéditeur), colis remis ou en route : ouvre « Prévenir » pour envoyer le code de retrait au destinataire. {name} : prénom du destinataire, coupé avant le libellé pour tenir sur une ligne
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le code à {name}'**
+  String bidDetailSendCodeTo(String name);
+
+  /// Barre du bas de la fiche colis (expéditeur), colis remis ou en route, nom du destinataire inconnu
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le code'**
+  String get bidDetailSendCode;
+
+  /// Barre du bas de la fiche colis (expéditeur), colis arrivé : rouvre « Prévenir » pour renvoyer le code au destinataire. {name} : prénom du destinataire, coupé avant le libellé
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer le code à {name}'**
+  String bidDetailResendCodeTo(String name);
+
+  /// Barre du bas de la fiche colis (expéditeur), colis arrivé, nom du destinataire inconnu
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer le code'**
+  String get bidDetailResendCode;
+
+  /// Barre du bas de la fiche colis, expéditeur qui est son propre destinataire, colis remis ou en route : ouvre la feuille du code de retrait
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mon code'**
+  String get bidDetailSeeMyCode;
+
+  /// Barre du bas de la fiche colis (voyageur), colis arrivé : remise au destinataire contre son code (même action que « Valider la remise »)
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider avec le code'**
+  String get bidDetailValidateWithCode;
+
+  /// Bouton ou lien qui appelle la contrepartie d'un colis. {name} : prénom, coupé avant le libellé pour tenir sur une ligne
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler {name}'**
+  String parcelCallPerson(String name);
+
+  /// Bouton qui appelle le voyageur quand son nom est inconnu
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler le voyageur'**
+  String get parcelCallTraveler;
+
+  /// Lien qui appelle l'expéditeur quand son nom est inconnu (saisie du code par le voyageur)
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler l\'expéditeur'**
+  String get parcelCallSender;
+
+  /// Saisie du code par le voyageur : titre de l'encadré d'avertissement au-dessus du champ
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de code, pas de remise'**
+  String get scanConfirmNoCodeTitle;
+
+  /// Saisie du code par le voyageur : question sous le champ, suivie du lien « Appeler » et du prénom de l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Le destinataire n\'a pas le code ?'**
+  String get scanConfirmNoCodeQuestion;
 }
 
 class _AppLocalizationsDelegate

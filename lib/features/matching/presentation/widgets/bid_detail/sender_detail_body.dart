@@ -10,6 +10,8 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/next_action.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/next_action_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
@@ -27,15 +29,18 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
+import 'package:dony/features/video_modal/data/models/parcel_role.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 /// Corps de l'écran « Détail d'envoi » (vue expéditeur).
 ///
-/// Ordre : billet de colis ; « À traiter » (seulement s'il y a quelque chose :
-/// cartes d'alerte, puis grille des tuiles des demandes qui attendent une
-/// réponse, chacune ouvrant son bottom sheet par [openSenderTodoSheet]) ;
+/// Ordre : billet de colis ; carte « prochaine action » ([NextActionCard],
+/// rien quand [nextActionFor] ne rend rien) ; « À traiter » (seulement s'il y
+/// a quelque chose : cartes d'alerte, puis grille des tuiles des demandes qui
+/// attendent une réponse, chacune ouvrant son bottom sheet par
+/// [openSenderTodoSheet]) ;
 /// informations (supplément, modification ou report sans réponse attendue,
 /// consignes de retrait) ; carte voyageur ; carte paiement ; grille de tuiles
 /// « Votre envoi » (Prévenir, Suivi ou Lieux, Colis et destinataire, Plus de
@@ -389,6 +394,23 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
         ),
     ];
 
+    // Prochaine action (rappels à chaque étape du colis), juste sous le
+    // billet. Rien pendant une remise bloquée par une absence examinée par
+    // l'équipe : « Préparez la remise » contredirait la carte du blocage.
+    final nextAction = SenderHandoverBlockedCard.shouldShow(bid)
+        ? null
+        : nextActionFor(
+            NextActionInput(
+              status: status,
+              role: ParcelRole.sender,
+              recipientIsSender: bid.recipientIsSender,
+              travelerName: bid.travelerName ?? '',
+              senderName: bid.senderName ?? '',
+              recipientName: bid.recipientName ?? '',
+              arrivalCity: bid.arrivalCity ?? '',
+            ),
+          );
+
     // Chaque section porte une clé : l'apparition ou la disparition de
     // « À traiter » ne remonte ni le voyageur, ni le paiement, ni la grille.
     final children = <(String, Widget)>[
@@ -407,6 +429,8 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
           ),
         ),
       ),
+      if (nextAction != null)
+        ('next-action', NextActionCard(action: nextAction)),
       if (actions.isNotEmpty)
         (
           'todo',

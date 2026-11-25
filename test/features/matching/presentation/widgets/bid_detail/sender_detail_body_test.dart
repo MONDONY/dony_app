@@ -27,6 +27,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_entry.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_details_content.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/next_action_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
@@ -123,7 +124,9 @@ BidModel _bid({
   DateTime? departureAt,
   TripRescheduleInfo? reschedule,
   String? cancellationNoShowStatus,
+  bool recipientIsSender = false,
 }) => BidModel(
+  recipientIsSender: recipientIsSender,
   reschedule: reschedule,
   cancellationNoShowStatus: cancellationNoShowStatus,
   recipientAppStatus: recipientAppStatus,
@@ -1778,6 +1781,131 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
 
       expect(find.byType(AmendmentSenderCard), findsNothing);
+    });
+  });
+
+  // ── Carte « prochaine action » (rappels à chaque étape du colis) ──────────
+  group('carte prochaine action', () {
+    Future<void> pumpBody(WidgetTester tester, BidModel bid) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(bid, cancellationBloc, conversationOpenBloc),
+      );
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+    }
+
+    /// Sections du corps présentes, de haut en bas.
+    List<String> sections(WidgetTester tester) {
+      const known = [
+        'billet',
+        'next-action',
+        'todo',
+        'info-handover-blocked',
+        'info-supplement',
+        'info-amendment',
+        'info-reschedule',
+        'info-arrival',
+        'voyageur',
+        'paiement',
+        'shipment',
+        'rating',
+      ];
+      Finder section(String name) => find.byKey(ValueKey<String>(name));
+      final names = [
+        for (final name in known)
+          if (section(name).evaluate().isNotEmpty) name,
+      ];
+      double top(String name) => tester.getTopLeft(section(name)).dy;
+      return names..sort((a, b) => top(a).compareTo(top(b)));
+    }
+
+    for (final (status, title) in [
+      ('ACCEPTED', 'Préparez la remise avec Mamadou'),
+      ('HANDED_OVER', 'Envoyez le code à Fatou'),
+      ('IN_TRANSIT', 'Envoyez le code à Fatou'),
+      ('ARRIVED', 'Votre colis est arrivé à Dakar'),
+    ]) {
+      testWidgets('cardShownBelowBillet : $status, juste sous le billet', (
+        tester,
+      ) async {
+        await pumpBody(
+          tester,
+          _bid(
+            status: status,
+            confirmationCode: status == 'ACCEPTED' ? null : '482913',
+            paymentMethod: BidPaymentMethod.cash,
+          ),
+        );
+
+        final order = sections(tester);
+        expect(order.take(2), ['billet', 'next-action'], reason: '$order');
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('next-action')),
+            matching: find.text(title),
+          ),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    for (final status in ['COMPLETED', 'CANCELLED', 'PENDING']) {
+      testWidgets('$status : aucune carte, aucun espace réservé', (
+        tester,
+      ) async {
+        await pumpBody(tester, _bid(status: status));
+        expect(find.byKey(const ValueKey('next-action')), findsNothing);
+        expect(find.byType(NextActionCard), findsNothing);
+      });
+    }
+
+    testWidgets('selfRecipient_hidesNotifyTile : la tuile « Prévenir » '
+        'disparaît, la carte dit « vous »', (tester) async {
+      await pumpBody(
+        tester,
+        _bid(
+          status: 'IN_TRANSIT',
+          confirmationCode: '482913',
+          recipientIsSender: true,
+        ),
+      );
+
+      expect(_tile('Prévenir Fatou'), findsNothing);
+      expect(find.textContaining('Prévenir'), findsNothing);
+      expect(find.text('Gardez votre code de retrait'), findsOneWidget);
+      // Les autres tuiles restent.
+      expect(_tile('Colis et destinataire'), findsOneWidget);
+    });
+
+    for (final noShow in ['CONTESTED', 'CONFIRMED']) {
+      testWidgets('remise bloquée par une absence $noShow : pas de « Préparez '
+          'la remise », la carte du blocage seule', (tester) async {
+        await pumpBody(
+          tester,
+          _bid(
+            paymentMethod: BidPaymentMethod.cash,
+            cancellationNoShowStatus: noShow,
+          ),
+        );
+        expect(find.byKey(const ValueKey('next-action')), findsNothing);
+        expect(
+          find.byKey(const ValueKey('info-handover-blocked')),
+          findsOneWidget,
+        );
+      });
+    }
+
+    testWidgets('sans le drapeau : la tuile « Prévenir » reste', (
+      tester,
+    ) async {
+      await pumpBody(
+        tester,
+        _bid(status: 'IN_TRANSIT', confirmationCode: '482913'),
+      );
+      expect(_tile('Prévenir Fatou'), findsOneWidget);
     });
   });
 }

@@ -342,14 +342,20 @@ void main() {
     final past = DateTime.now().subtract(const Duration(hours: 2));
     final future = DateTime.now().add(const Duration(days: 2));
 
-    for (final status in ['HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
-      testWidgets('$status, départ passé : un seul bouton « Valider la '
-          'remise », pas de scan du transit', (tester) async {
+    // Colis arrivé : « Valider avec le code », même action (rappels à chaque
+    // étape du colis, spec §6.2).
+    for (final (status, label) in [
+      ('HANDED_OVER', 'Valider la remise'),
+      ('IN_TRANSIT', 'Valider la remise'),
+      ('ARRIVED', 'Valider avec le code'),
+    ]) {
+      testWidgets('$status, départ passé : un seul bouton « $label », pas de '
+          'scan du transit', (tester) async {
         await pumpBar(tester, _bid(status: status, departureAt: past));
 
         expect(find.byType(DonyButton), findsOneWidget);
         final b = button(tester, find.byKey(const Key('traveler-deliver-btn')));
-        expect(b.label, 'Valider la remise');
+        expect(b.label, label);
         expect(b.iconAsset, 'badge-check');
         expect(b.variant, DonyButtonVariant.success);
         expect(b.onPressed, isNotNull);
@@ -364,7 +370,7 @@ void main() {
     testWidgets('départ inconnu : bouton actif', (tester) async {
       await pumpBar(tester, _bid(status: 'ARRIVED'));
       final b = button(tester, find.byKey(const Key('traveler-deliver-btn')));
-      expect(b.label, 'Valider la remise');
+      expect(b.label, 'Valider avec le code');
       expect(b.onPressed, isNotNull);
     });
 

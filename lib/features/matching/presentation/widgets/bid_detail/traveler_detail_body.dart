@@ -7,6 +7,8 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_detail_section.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/next_action.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/next_action_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart'
     show RatingDoneBadge;
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
@@ -22,15 +24,19 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
+import 'package:dony/features/video_modal/data/models/parcel_role.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 /// Corps de l'écran « Détail d'envoi » (vue voyageur).
 ///
-/// Ordre : billet de colis ; hero sans titre quand il ne porte pas de bouton
-/// (demande à décider, attente du paiement, absence signalée : les étapes du
-/// transport n'ont plus de carte d'information, le footer les porte) ;
+/// Ordre : billet de colis ; carte « prochaine action » ([NextActionCard],
+/// rien quand [nextActionFor] ne rend rien, ni avant le départ quand la carte
+/// du verrou dit déjà quoi attendre) ; hero sans titre quand il ne porte pas
+/// de bouton (demande à décider, attente du paiement, absence signalée ; aux
+/// étapes du transport, le hero ne rend rien, la carte « prochaine action »
+/// et le footer disent quoi faire) ;
 /// « À traiter » (ce qui attend un geste du voyageur, seulement s'il y a
 /// quelque chose : les cartes d'alerte, hero à bouton puis modification à
 /// bouton, puis la grille des tuiles des demandes qui attendent une réponse,
@@ -314,6 +320,34 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
         ('info-noshow', DeliveryNoShowProcedureCard(bid: bid, isSender: false)),
     ];
 
+    // Prochaine action (rappels à chaque étape du colis), juste sous le
+    // billet. Le back ne sert jamais `recipientIsSender` au voyageur : faux
+    // ici quoi qu'il arrive. Deux cas sans carte, pour ne jamais empiler deux
+    // consignes qui se contredisent ou se répètent :
+    // - colis remis avant le départ : la carte du verrou
+    //   ([TravelerHandoverLockedCard]) remplace le rappel d'arrivée ;
+    // - déclaration d'absence de l'expéditeur contestée ou confirmée : la
+    //   remise est bloquée, « scannez le QR » serait faux.
+    final status = bid.status;
+    final lockedBeforeDeparture =
+        lockedHint != null &&
+        (status == 'HANDED_OVER' || status == 'IN_TRANSIT');
+    final nextAction =
+        lockedBeforeDeparture ||
+            (status == 'ACCEPTED' &&
+                TravelerStickyBar.scanBlockedBySenderNoShow(bid))
+        ? null
+        : nextActionFor(
+            NextActionInput(
+              status: status,
+              role: ParcelRole.traveler,
+              travelerName: bid.travelerName ?? '',
+              senderName: bid.senderName ?? '',
+              recipientName: bid.recipientName ?? '',
+              arrivalCity: bid.arrivalCity ?? '',
+            ),
+          );
+
     // Chaque section porte une clé : l'apparition ou la disparition de
     // « À traiter » ou d'une information ne remonte ni l'expéditeur, ni le
     // gain, ni la grille. Hors du retrait de l'animation d'entrée (une fois,
@@ -323,6 +357,8 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
       // en interne (colis_billet.dart). On ne lui applique PAS le stagger ici
       // pour éviter une double animation (fade × fade + slide × slide).
       ('billet', ColisBillet(bid: bid, isSender: false)),
+      if (nextAction != null)
+        ('next-action', NextActionCard(action: nextAction)),
       if (hero != null && !heroAction) ('hero', hero),
       if (actions.isNotEmpty)
         (

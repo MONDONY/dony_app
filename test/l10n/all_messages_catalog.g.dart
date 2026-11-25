@@ -8515,6 +8515,74 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'designateYadonyUserAlreadyRecipient': (l) =>
       l.designateYadonyUserAlreadyRecipient,
   'recipientChangeUsernameWarning': (l) => l.recipientChangeUsernameWarning,
+  'cancelScaleNoticeText': (l) => l.cancelScaleNoticeText,
+  'cancelScaleNoticeLink': (l) => l.cancelScaleNoticeLink,
+  'cancelScaleSheetTitle': (l) => l.cancelScaleSheetTitle,
+  'cancelScaleMoreThan': (l) =>
+      l.cancelScaleMoreThan(intPlaceholderValue, intPlaceholderValue),
+  'cancelScaleBetween': (l) => l.cancelScaleBetween(
+    intPlaceholderValue,
+    intPlaceholderValue,
+    intPlaceholderValue,
+  ),
+  'cancelScaleLessThan': (l) =>
+      l.cancelScaleLessThan(intPlaceholderValue, intPlaceholderValue),
+  'cancelScaleCap': (l) => l.cancelScaleCap(placeholderMarker('fee')),
+  'cancelScaleExactAmount': (l) => l.cancelScaleExactAmount,
+  'cancelScaleCashNote': (l) => l.cancelScaleCashNote,
+  'nextActionSenderAcceptedTitle': (l) =>
+      l.nextActionSenderAcceptedTitle(placeholderMarker('traveler')),
+  'nextActionSenderAcceptedBody': (l) =>
+      l.nextActionSenderAcceptedBody(placeholderMarker('recipient')),
+  'nextActionSenderCodeTitle': (l) =>
+      l.nextActionSenderCodeTitle(placeholderMarker('recipient')),
+  'nextActionSenderCodeBody': (l) =>
+      l.nextActionSenderCodeBody(placeholderMarker('traveler')),
+  'nextActionSenderArrivedTitle': (l) =>
+      l.nextActionSenderArrivedTitle(placeholderMarker('city')),
+  'nextActionSenderArrivedBody': (l) =>
+      l.nextActionSenderArrivedBody(placeholderMarker('recipient')),
+  'nextActionSelfKeepCodeTitle': (l) => l.nextActionSelfKeepCodeTitle,
+  'nextActionSelfKeepCodeBody': (l) =>
+      l.nextActionSelfKeepCodeBody(placeholderMarker('traveler')),
+  'nextActionSelfWithdrawTitle': (l) => l.nextActionSelfWithdrawTitle,
+  'nextActionSelfWithdrawBody': (l) =>
+      l.nextActionSelfWithdrawBody(placeholderMarker('traveler')),
+  'nextActionTravelerAcceptedTitle': (l) =>
+      l.nextActionTravelerAcceptedTitle(placeholderMarker('sender')),
+  'nextActionTravelerAcceptedBody': (l) => l.nextActionTravelerAcceptedBody,
+  'nextActionTravelerTransitTitle': (l) => l.nextActionTravelerTransitTitle,
+  'nextActionTravelerTransitBody': (l) => l.nextActionTravelerTransitBody,
+  'nextActionTravelerArrivedTitle': (l) => l.nextActionTravelerArrivedTitle,
+  'nextActionTravelerArrivedBody': (l) => l.nextActionTravelerArrivedBody(
+    placeholderMarker('recipient'),
+    placeholderMarker('sender'),
+  ),
+  'nextActionRecipientArrivedTitle': (l) => l.nextActionRecipientArrivedTitle,
+  'nextActionRecipientArrivedBody': (l) =>
+      l.nextActionRecipientArrivedBody(placeholderMarker('traveler')),
+  'nextActionFallbackTraveler': (l) => l.nextActionFallbackTraveler,
+  'nextActionFallbackSender': (l) => l.nextActionFallbackSender,
+  'nextActionFallbackRecipientYour': (l) => l.nextActionFallbackRecipientYour,
+  'nextActionFallbackCity': (l) => l.nextActionFallbackCity,
+  'nextActionTravelerArrivedBodyNoName': (l) =>
+      l.nextActionTravelerArrivedBodyNoName(placeholderMarker('sender')),
+  'nextActionSelfWithdrawBodyNoName': (l) => l.nextActionSelfWithdrawBodyNoName,
+  'nextActionRecipientArrivedBodyNoName': (l) =>
+      l.nextActionRecipientArrivedBodyNoName,
+  'bidDetailSendCodeTo': (l) =>
+      l.bidDetailSendCodeTo(placeholderMarker('name')),
+  'bidDetailSendCode': (l) => l.bidDetailSendCode,
+  'bidDetailResendCodeTo': (l) =>
+      l.bidDetailResendCodeTo(placeholderMarker('name')),
+  'bidDetailResendCode': (l) => l.bidDetailResendCode,
+  'bidDetailSeeMyCode': (l) => l.bidDetailSeeMyCode,
+  'bidDetailValidateWithCode': (l) => l.bidDetailValidateWithCode,
+  'parcelCallPerson': (l) => l.parcelCallPerson(placeholderMarker('name')),
+  'parcelCallTraveler': (l) => l.parcelCallTraveler,
+  'parcelCallSender': (l) => l.parcelCallSender,
+  'scanConfirmNoCodeTitle': (l) => l.scanConfirmNoCodeTitle,
+  'scanConfirmNoCodeQuestion': (l) => l.scanConfirmNoCodeQuestion,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -9220,4 +9288,20 @@ const textParameters = <String, List<String>>{
   'inquiryLockedBarMessage': ['name'],
   'usernameChangeTooSoon': ['date'],
   'usernameCopySemantics': ['username'],
+  'cancelScaleCap': ['fee'],
+  'nextActionSenderAcceptedTitle': ['traveler'],
+  'nextActionSenderAcceptedBody': ['recipient'],
+  'nextActionSenderCodeTitle': ['recipient'],
+  'nextActionSenderCodeBody': ['traveler'],
+  'nextActionSenderArrivedTitle': ['city'],
+  'nextActionSenderArrivedBody': ['recipient'],
+  'nextActionSelfKeepCodeBody': ['traveler'],
+  'nextActionSelfWithdrawBody': ['traveler'],
+  'nextActionTravelerAcceptedTitle': ['sender'],
+  'nextActionTravelerArrivedBody': ['recipient', 'sender'],
+  'nextActionRecipientArrivedBody': ['traveler'],
+  'nextActionTravelerArrivedBodyNoName': ['sender'],
+  'bidDetailSendCodeTo': ['name'],
+  'bidDetailResendCodeTo': ['name'],
+  'parcelCallPerson': ['name'],
 };

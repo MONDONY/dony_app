@@ -229,6 +229,10 @@ class _DeliverBar extends StatelessWidget {
         'etape': 'ARRIVEE',
         'packageLabel': suiviParcelLabel(bid),
         'deliveryWindow': DeliveryWindow.fromBid(bid),
+        // Lien « Le destinataire n'a pas le code ? Appeler … » de la saisie
+        // du code : seulement si le numéro de l'expéditeur est communicable.
+        'senderName': bid.senderName,
+        'senderPhoneAvailable': bid.senderPhoneAvailable,
       },
     );
   }
@@ -254,13 +258,18 @@ class _DeliverBar extends StatelessWidget {
       // départ » et s'active seul à l'heure du départ ; les deux phrases du
       // verrou sont une carte du corps (même [DeliveryDepartureGate]). Le scan
       // du transit (facultatif) est une entrée du menu ⋮.
+      //
+      // Colis arrivé : « Valider avec le code » (rappels à chaque étape, spec
+      // §6.2), même action ; la remise n'a lieu que contre le code.
       child: DeliveryDepartureGate(
         window: DeliveryWindow.fromBid(bid),
         builder: (context, lockedHint) => DonyButton(
           key: const Key('traveler-deliver-btn'),
-          label: lockedHint == null
-              ? context.l10n.bidDetailConfirmHandover
-              : context.l10n.bidDetailHandoverLockedLabel,
+          label: lockedHint != null
+              ? context.l10n.bidDetailHandoverLockedLabel
+              : bid.status == 'ARRIVED'
+              ? context.l10n.bidDetailValidateWithCode
+              : context.l10n.bidDetailConfirmHandover,
           iconAsset: lockedHint == null ? 'badge-check' : 'clock',
           variant: DonyButtonVariant.success,
           onPressed: lockedHint == null ? () => _deliver(context) : null,

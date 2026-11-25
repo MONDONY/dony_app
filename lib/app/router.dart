@@ -773,6 +773,8 @@ final GoRouter appRouter = GoRouter(
           returnResult: extra['returnResult'] as bool? ?? false,
           scanMethod: _scanMethodExtra(extra),
           deliveryWindow: extra['deliveryWindow'] as DeliveryWindow?,
+          senderName: extra['senderName'] as String?,
+          senderPhoneAvailable: extra['senderPhoneAvailable'] == true,
         );
       },
     ),
@@ -795,6 +797,8 @@ final GoRouter appRouter = GoRouter(
             packageLabel: extra['packageLabel'] as String? ?? '',
             scanMethod: _scanMethodExtra(extra),
             deliveryWindow: extra['deliveryWindow'] as DeliveryWindow?,
+            senderName: extra['senderName'] as String?,
+            senderPhoneAvailable: extra['senderPhoneAvailable'] == true,
           ),
         );
       },

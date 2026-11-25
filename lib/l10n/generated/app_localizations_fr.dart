@@ -24869,4 +24869,43 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get nextActionRecipientArrivedBodyNoName =>
       'Donnez votre code au voyageur pour récupérer le colis.';
+
+  @override
+  String bidDetailSendCodeTo(String name) {
+    return 'Envoyer le code à $name';
+  }
+
+  @override
+  String get bidDetailSendCode => 'Envoyer le code';
+
+  @override
+  String bidDetailResendCodeTo(String name) {
+    return 'Renvoyer le code à $name';
+  }
+
+  @override
+  String get bidDetailResendCode => 'Renvoyer le code';
+
+  @override
+  String get bidDetailSeeMyCode => 'Voir mon code';
+
+  @override
+  String get bidDetailValidateWithCode => 'Valider avec le code';
+
+  @override
+  String parcelCallPerson(String name) {
+    return 'Appeler $name';
+  }
+
+  @override
+  String get parcelCallTraveler => 'Appeler le voyageur';
+
+  @override
+  String get parcelCallSender => 'Appeler l\'expéditeur';
+
+  @override
+  String get scanConfirmNoCodeTitle => 'Pas de code, pas de remise';
+
+  @override
+  String get scanConfirmNoCodeQuestion => 'Le destinataire n\'a pas le code ?';
 }

@@ -42,6 +42,8 @@ class ScanPhotoScreen extends StatefulWidget {
     this.returnResult = false,
     this.scanMethod,
     this.deliveryWindow,
+    this.senderName,
+    this.senderPhoneAvailable = false,
     this.locator = const ScanLocator(),
   });
 
@@ -59,6 +61,11 @@ class ScanPhotoScreen extends StatefulWidget {
   /// Départ du trajet, transmis à la confirmation de livraison (ARRIVEE)
   /// pour y verrouiller le bouton avant le départ ; `null` : inconnu.
   final DeliveryWindow? deliveryWindow;
+
+  /// Expéditeur du colis et joignabilité de son numéro, passés à la saisie du
+  /// code (lien « Le destinataire n'a pas le code ? Appeler … »).
+  final String? senderName;
+  final bool senderPhoneAvailable;
 
   final ScanLocator locator;
 
@@ -188,6 +195,8 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
         'gpsLabel': _position.value?.label,
         'scanMethod': widget.scanMethod,
         'deliveryWindow': widget.deliveryWindow,
+        'senderName': widget.senderName,
+        'senderPhoneAvailable': widget.senderPhoneAvailable,
       },
     );
   }
