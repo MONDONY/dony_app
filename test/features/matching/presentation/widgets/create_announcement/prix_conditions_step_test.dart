@@ -23,7 +23,6 @@ import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
-import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
@@ -103,6 +102,12 @@ Widget _host({
   ValueNotifier<bool>? cashNotifier,
   int initialPriceOption = 0,
   double initialCustomPrice = 0,
+  ValueNotifier<int>? priceOption,
+  ValueNotifier<double>? customPrice,
+  TextEditingController? customPriceController,
+  bool lockCashWithoutCard = true,
+  ValueNotifier<bool>? paymentErrorNotifier,
+  AnnouncementFormBloc? formBloc,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   final resolvedStripeState = stripeState ?? _stripeConfiguredState;
@@ -118,11 +123,12 @@ Widget _host({
   // Contrôleurs / notifiers (cycle de vie géré par le StatefulWidget parent
   // en production ; ici on les crée dans le host et on les laisse se disposer
   // en fin de test — accepté dans un contexte de test unitaire).
-  final priceOptionNotifier = ValueNotifier<int>(initialPriceOption);
-  final customPriceNotifier = ValueNotifier<double>(initialCustomPrice);
+  final priceOptionNotifier =
+      priceOption ?? ValueNotifier<int>(initialPriceOption);
+  final customPriceNotifier =
+      customPrice ?? ValueNotifier<double>(initialCustomPrice);
   final availableKgNotifier = ValueNotifier<double>(initialAvailableKg);
   final cashEnabledNotifier = cashNotifier ?? ValueNotifier<bool>(false);
-  final kgPriceEnabledNotifier = ValueNotifier<bool>(true);
   final mobileMoneyEnabledNotifier = ValueNotifier<bool>(false);
   final currencyNotifier = ValueNotifier<SupportedCurrency>(
     currency ?? SupportedCurrency.eur,
@@ -138,16 +144,19 @@ Widget _host({
   final descriptionCtrl = TextEditingController();
   final customAcceptedCtrl = TextEditingController();
   final refusedCtrl = TextEditingController();
-  final customPriceCtrl = TextEditingController();
+  final customPriceCtrl = customPriceController ?? TextEditingController();
 
   final page = Scaffold(
     body: MultiBlocProvider(
       providers: [
-        BlocProvider<AnnouncementFormBloc>(
-          create: (_) => AnnouncementFormBloc(
-            analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        if (formBloc != null)
+          BlocProvider<AnnouncementFormBloc>.value(value: formBloc)
+        else
+          BlocProvider<AnnouncementFormBloc>(
+            create: (_) => AnnouncementFormBloc(
+              analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+            ),
           ),
-        ),
         BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
         BlocProvider<CommissionMethodBloc>.value(value: mockCommissionBloc),
         if (residenceCountry != null)
@@ -165,7 +174,6 @@ Widget _host({
           availableKgNotifier: availableKgNotifier,
           cashEnabledNotifier: cashEnabledNotifier,
           cardEnabledNotifier: cardEnabledNotifier,
-          kgPriceEnabledNotifier: kgPriceEnabledNotifier,
           mobileMoneyEnabledNotifier: mobileMoneyEnabledNotifier,
           currencyNotifier: currencyNotifier,
           negotiableNotifier: resolvedNegotiableNotifier,
@@ -177,6 +185,9 @@ Widget _host({
           customAcceptedCtrl: customAcceptedCtrl,
           refusedCtrl: refusedCtrl,
           customPriceCtrl: customPriceCtrl,
+          lockCashWithoutCard: lockCashWithoutCard,
+          paymentErrorNotifier: paymentErrorNotifier,
+          paymentSectionKey: const Key('payment-section'),
         ),
       ),
     ),
@@ -259,7 +270,7 @@ void main() {
 
       final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
       await tester.ensureVisible(stripeSwitch);
-      await tester.tap(stripeSwitch);
+      await _tapVisible(tester, stripeSwitch);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 250));
 
@@ -291,7 +302,7 @@ void main() {
 
       final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
       await tester.ensureVisible(stripeSwitch);
-      await tester.tap(stripeSwitch);
+      await _tapVisible(tester, stripeSwitch);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 250));
 
@@ -352,7 +363,7 @@ void main() {
       await tester.pumpWidget(_host(negotiableNotifier: notifier));
       await tester.pump(const Duration(milliseconds: 600));
 
-      await tester.tap(find.byKey(const Key('negotiable-toggle')));
+      await _tapVisible(tester, find.byKey(const Key('negotiable-toggle')));
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(notifier.value, isTrue);
@@ -365,17 +376,124 @@ void main() {
       expect(find.text('Prix par kg'), findsOneWidget);
     });
 
-    testWidgets('les 4 chips de prix prédéfinis sont affichés', (tester) async {
+    testWidgets('plus de bascule de mode ni de puces de prix', (tester) async {
       await _pump(tester);
-      // Repères euro : 7, 8, 9, 10 €/kg.
-      for (final price in KgPriceReference.eur.presets) {
-        expect(
-          find.text(CurrencyFormatter.format(price, SupportedCurrency.eur)),
-          findsOneWidget,
-          reason: 'Chip ${price.toStringAsFixed(0)} EUR doit être présent',
-        );
-      }
+      expect(find.text('Au kilo'), findsNothing);
+      expect(find.text('Articles + kilo'), findsNothing);
+      expect(find.text('Autre prix'), findsNothing);
+      expect(find.byKey(const Key('kg-price-card')), findsOneWidget);
     });
+
+    testWidgets('le repère choisi s\'affiche en gros (7 €/kg)', (tester) async {
+      await _pump(tester);
+      expect(find.byKey(const Key('kg-price-amount')), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('kg-price-amount'))).data,
+        '7',
+      );
+    });
+
+    testWidgets('« + » monte d\'un euro et écrit un prix libre', (
+      tester,
+    ) async {
+      final option = ValueNotifier<int>(1); // 8 €, prix conseillé
+      final custom = ValueNotifier<double>(0);
+      final ctrl = TextEditingController();
+      await tester.pumpWidget(
+        _host(
+          priceOption: option,
+          customPrice: custom,
+          customPriceController: ctrl,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+
+      await _tapVisible(tester, find.byKey(const Key('kg-price-increase')));
+      await tester.pump();
+
+      expect(option.value, KgPriceReference.eur.presets.length);
+      expect(custom.value, 9);
+      expect(ctrl.text, '9');
+      expect(
+        tester.widget<Text>(find.byKey(const Key('kg-price-amount'))).data,
+        '9',
+      );
+    });
+
+    testWidgets('« − » descend d\'un euro', (tester) async {
+      final option = ValueNotifier<int>(1);
+      final custom = ValueNotifier<double>(0);
+      await tester.pumpWidget(_host(priceOption: option, customPrice: custom));
+      await tester.pump(const Duration(milliseconds: 200));
+
+      await _tapVisible(tester, find.byKey(const Key('kg-price-decrease')));
+      await tester.pump();
+
+      expect(custom.value, 7);
+    });
+
+    testWidgets('bornes : « − » inactif à 3 €, « + » inactif à 25 €', (
+      tester,
+    ) async {
+      final option = ValueNotifier<int>(KgPriceReference.eur.presets.length);
+      final custom = ValueNotifier<double>(3);
+      final ctrl = TextEditingController(text: '3');
+      await tester.pumpWidget(
+        _host(
+          priceOption: option,
+          customPrice: custom,
+          customPriceController: ctrl,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+
+      await _tapVisible(tester, find.byKey(const Key('kg-price-decrease')));
+      await tester.pump();
+      expect(custom.value, 3);
+
+      custom.value = 25;
+      ctrl.text = '25';
+      await tester.pump();
+      await _tapVisible(tester, find.byKey(const Key('kg-price-increase')));
+      await tester.pump();
+      expect(custom.value, 25);
+
+      const eur = SupportedCurrency.eur;
+      expect(
+        find.text(
+          'Entre ${CurrencyFormatter.formatOrPlain(3, eur, compact: true)} et '
+          '${CurrencyFormatter.formatOrPlain(25, eur, compact: true)} le kilo',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'prix ≠ conseillé : lien « Revenir au prix conseillé », qui le remet',
+      (tester) async {
+        final option = ValueNotifier<int>(0); // 7 €, conseillé 8 €
+        final custom = ValueNotifier<double>(0);
+        await tester.pumpWidget(
+          _host(priceOption: option, customPrice: custom),
+        );
+        await tester.pump(const Duration(milliseconds: 200));
+
+        final eight = CurrencyFormatter.formatOrPlain(
+          8,
+          SupportedCurrency.eur,
+          compact: true,
+        );
+        expect(find.text('Revenir au prix conseillé ($eight)'), findsOneWidget);
+        await _tapVisible(tester, find.byKey(const Key('kg-price-reset')));
+        await tester.pump();
+
+        expect(custom.value, 8);
+        expect(find.byKey(const Key('kg-price-reset')), findsNothing);
+        // Médiane embarquée (pas de cubit) : jamais de pastille « le plus
+        // courant », qui suppose une médiane mesurée sur la route.
+        expect(find.byKey(const Key('kg-price-most-common')), findsNothing);
+      },
+    );
 
     testWidgets('affiche les montants en CAD à l\'échelle du taux', (
       tester,
@@ -385,149 +503,77 @@ void main() {
 
       // 5 € × 1,47 = 7,35 → 7,50 CA$ ; 10 kg → 75 CA$ net.
       expect(
-        find.text(CurrencyFormatter.format(7.5, SupportedCurrency.cad)),
-        findsOneWidget,
-      );
-      expect(find.text('5€'), findsNothing);
-      expect(
-        find.text(CurrencyFormatter.format(5, SupportedCurrency.cad)),
-        findsNothing,
+        tester.widget<Text>(find.byKey(const Key('kg-price-amount'))).data,
+        anyOf('7,50', '7.50'),
       );
       expect(
         find.textContaining(
-          CurrencyFormatter.format(75, SupportedCurrency.cad),
+          CurrencyFormatter.formatOrPlain(
+            75,
+            SupportedCurrency.cad,
+            compact: true,
+          ),
         ),
         findsOneWidget,
       );
     });
 
-    testWidgets(
-      'XOF : chips 1 000 à 3 000 F CFA et médiane marché 2 000, pas le barème '
-      'euro',
-      (tester) async {
-        await tester.pumpWidget(_host(currency: SupportedCurrency.xof));
-        await tester.pump(const Duration(milliseconds: 200));
-
-        for (final price in KgPriceReference.cfa.presets) {
-          expect(
-            find.text(CurrencyFormatter.format(price, SupportedCurrency.xof)),
-            findsOneWidget,
-            reason: 'Chip ${price.toStringAsFixed(0)} XOF doit être présent',
-          );
-        }
-        expect(
-          find.text(CurrencyFormatter.format(5, SupportedCurrency.xof)),
-          findsNothing,
-        );
-
-        final hint = tester.widget<PriceHintWidget>(
-          find.byType(PriceHintWidget),
-        );
-        expect(hint.marketMedianPrice, 2000);
-        expect(hint.currency, SupportedCurrency.xof);
-      },
-    );
-
-    testWidgets('chip "Autre prix" est affiché', (tester) async {
-      await _pump(tester);
-      expect(find.text('Autre prix'), findsOneWidget);
-    });
-
-    testWidgets('ligne « vous touchez / l\'expéditeur paie » est affichée', (
+    testWidgets('XOF : montant en F CFA, plancher à 1 000 F CFA', (
       tester,
     ) async {
-      await _pump(tester);
-      // availableKg=10, prix index 0 → 5€/kg : vous touchez 50€ (net entier),
-      // l'expéditeur paie 56€ (net × 1,12).
-      expect(find.textContaining('Vous touchez'), findsOneWidget);
+      await tester.pumpWidget(_host(currency: SupportedCurrency.xof));
+      await tester.pump(const Duration(milliseconds: 200));
+
+      // Index 0 du barème CFA : 1 000 F CFA/kg.
+      final amount = tester
+          .widget<Text>(find.byKey(const Key('kg-price-amount')))
+          .data!;
+      expect(amount.replaceAll(RegExp(r'\s'), ''), '1000');
+      expect(
+        find.textContaining(
+          CurrencyFormatter.formatOrPlain(
+            1000,
+            SupportedCurrency.xof,
+            compact: true,
+          ),
+        ),
+        findsWidgets,
+      );
     });
 
-    // ── Frais de service sous grille de commission ────────────────────────────
+    testWidgets('bloc gain : « Vous touchez » le net des kilos', (
+      tester,
+    ) async {
+      await _pump(tester, initialPriceOption: 4, initialCustomPrice: 2);
+      final twenty = CurrencyFormatter.formatOrPlain(
+        20,
+        SupportedCurrency.eur,
+        compact: true,
+      );
+      expect(find.text('Si vous remplissez vos 10 kg'), findsOneWidget);
+      expect(find.text('Vous touchez $twenty'), findsOneWidget);
+      expect(
+        find.text(
+          'Les frais Yadony sont payés par l\'expéditeur, en plus de votre prix.',
+        ),
+        findsOneWidget,
+      );
+    });
 
-    testWidgets('sous grille, 10 kg à 2 € : l\'expéditeur paiera 21,40 €', (
+    testWidgets('sous grille de commission, le gain reste le net', (
       tester,
     ) async {
       useTestCommissionGrid();
-      // Option 4 = « Autre prix » (4 chips préréglés).
       await _pump(tester, initialPriceOption: 4, initialCustomPrice: 2);
 
-      // Net 20 €, frais 7 % = 1,40 € : le brut est 21,40 €, pas 22,40 €.
-      expect(
-        find.text(
-          'Vous touchez ${CurrencyFormatter.format(20, SupportedCurrency.eur)}'
-          ' · l\'expéditeur paie '
-          '${CurrencyFormatter.format(21.4, SupportedCurrency.eur)}',
-        ),
-        findsOneWidget,
+      // Le gain du voyageur ne dépend pas des frais, payés en plus.
+      final twenty = CurrencyFormatter.formatOrPlain(
+        20,
+        SupportedCurrency.eur,
+        compact: true,
       );
-    });
-
-    testWidgets('sous grille, le minimum de frais s\'applique au total', (
-      tester,
-    ) async {
-      useTestCommissionGrid();
-      // 10 kg à 0,50 € : net 5 €, 7 % = 0,35 € relevé au minimum de 1 €.
-      await _pump(tester, initialPriceOption: 4, initialCustomPrice: 0.5);
-
-      expect(
-        find.textContaining(
-          'l\'expéditeur paie '
-          '${CurrencyFormatter.format(6, SupportedCurrency.eur)}',
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('sans grille, total et notice inchangés', (tester) async {
-      await _pump(tester, initialPriceOption: 4, initialCustomPrice: 2);
-
-      // Net 20 €, taux unique : 20 × (1 + taux).
-      expect(
-        find.textContaining(
-          'l\'expéditeur paie '
-          '${CurrencyFormatter.format(20 * (1 + donyCommissionRate), SupportedCurrency.eur)}',
-        ),
-        findsOneWidget,
-      );
-      expect(find.textContaining('min.'), findsNothing);
-    });
-
-    testWidgets('sous grille, la notice dit qui paie les frais, sans minimum', (
-      tester,
-    ) async {
-      useTestCommissionGrid();
-      await _pump(tester);
-      await tester.tap(find.text('Articles + kilo'));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump();
-
-      expect(
-        find.text(
-          'Ces prix sont ceux que vous touchez. Les frais de service Yadony '
-          'sont payés par l\'expéditeur, en plus. En espèces, vous les avancez '
-          'sur votre solde Yadony et l\'expéditeur vous les rembourse dans le '
-          'paiement.',
-        ),
-        findsOneWidget,
-      );
-      expect(find.textContaining('min.'), findsNothing);
-    });
-
-    testWidgets('sans grille, la notice du mode grille est inchangée', (
-      tester,
-    ) async {
-      await _pump(tester);
-      await tester.tap(find.text('Articles + kilo'));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump();
-
-      expect(
-        find.text(
-          'Yadony ajoute ses frais de service sur chaque article et sur le prix au '
-          'kilo',
-        ),
-        findsOneWidget,
-      );
+      expect(find.text('Vous touchez $twenty'), findsOneWidget);
+      expect(find.textContaining('l\'expéditeur paie'), findsNothing);
     });
 
     // ── Section MODES DE PAIEMENT ─────────────────────────────────────────────
@@ -562,7 +608,7 @@ void main() {
           findsNothing,
         );
 
-        await tester.tap(stripeSwitch);
+        await _tapVisible(tester, stripeSwitch);
         await tester.pump();
 
         expect(
@@ -617,7 +663,7 @@ void main() {
         final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
         await tester.ensureVisible(stripeSwitch);
         await tester.pump();
-        await tester.tap(stripeSwitch);
+        await _tapVisible(tester, stripeSwitch);
         await tester.pumpAndSettle();
 
         expect(find.text('stripe-onboarding-intro'), findsOneWidget);
@@ -631,7 +677,7 @@ void main() {
       final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
       await tester.ensureVisible(stripeSwitch);
       await tester.pump();
-      await tester.tap(stripeSwitch);
+      await _tapVisible(tester, stripeSwitch);
       await tester.pump();
 
       // Une fois dans l'encart, une fois dans le message du toucher.
@@ -658,7 +704,7 @@ void main() {
       final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
       await tester.ensureVisible(stripeSwitch);
       await tester.pump();
-      await tester.tap(stripeSwitch);
+      await _tapVisible(tester, stripeSwitch);
       await tester.pump();
 
       expect(find.textContaining('trajets en XOF'), findsNWidgets(2));
@@ -805,7 +851,7 @@ void main() {
           find.byKey(const Key('payment-method-cash')),
         );
         await tester.pump();
-        await tester.tap(find.byKey(const Key('payment-method-cash')));
+        await _tapVisible(tester, find.byKey(const Key('payment-method-cash')));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
         expect(
@@ -882,7 +928,6 @@ void main() {
                       customPriceNotifier: ValueNotifier<double>(0),
                       availableKgNotifier: ValueNotifier<double>(10),
                       cashEnabledNotifier: ValueNotifier<bool>(false),
-                      kgPriceEnabledNotifier: ValueNotifier<bool>(true),
                       mobileMoneyEnabledNotifier: ValueNotifier<bool>(false),
                       currencyNotifier: ValueNotifier<SupportedCurrency>(
                         SupportedCurrency.eur,
@@ -915,7 +960,10 @@ void main() {
         await tester.pump(const Duration(milliseconds: 200));
         await tester.pump();
 
-        await tester.tap(find.byKey(const Key('activate-card-payments-cta')));
+        await _tapVisible(
+          tester,
+          find.byKey(const Key('activate-card-payments-cta')),
+        );
         await tester.pumpAndSettle();
 
         expect(find.text('stripe-onboarding-intro'), findsOneWidget);
@@ -964,7 +1012,7 @@ void main() {
       final cta = find.byKey(const Key('change-residence-country-cta'));
       await tester.ensureVisible(cta);
       await tester.pump();
-      await tester.tap(cta);
+      await _tapVisible(tester, cta);
       await tester.pumpAndSettle();
       expect(find.text('prefs-screen'), findsOneWidget);
     });
@@ -1006,7 +1054,10 @@ void main() {
           find.byType(SingleChildScrollView),
           const Offset(0, -200),
         );
-        await tester.tap(find.byKey(const Key('accepted-content-field')));
+        await _tapVisible(
+          tester,
+          find.byKey(const Key('accepted-content-field')),
+        );
         await tester.pumpAndSettle();
         for (final category in fallbackCatalog) {
           expect(
@@ -1030,7 +1081,10 @@ void main() {
           find.byType(SingleChildScrollView),
           const Offset(0, -200),
         );
-        await tester.tap(find.byKey(const Key('refused-content-field')));
+        await _tapVisible(
+          tester,
+          find.byKey(const Key('refused-content-field')),
+        );
         await tester.pumpAndSettle();
         for (final category in fallbackCatalog) {
           expect(
@@ -1053,14 +1107,20 @@ void main() {
         addTearDown(tester.view.reset);
 
         await _pump(tester);
-        await tester.tap(find.byKey(const Key('accepted-content-field')));
+        await _tapVisible(
+          tester,
+          find.byKey(const Key('accepted-content-field')),
+        );
         await tester.pumpAndSettle();
         await tester.enterText(
           find.byKey(const Key('accepted-content-field')),
           'Poissons',
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('accepted-content-item-add')));
+        await _tapVisible(
+          tester,
+          find.byKey(const Key('accepted-content-item-add')),
+        );
         await tester.pumpAndSettle();
         expect(
           find.byKey(const Key('accepted-content-tag-Poissons')),
@@ -1087,14 +1147,20 @@ void main() {
           find.byType(SingleChildScrollView),
           const Offset(0, -200),
         );
-        await tester.tap(find.byKey(const Key('refused-content-field')));
+        await _tapVisible(
+          tester,
+          find.byKey(const Key('refused-content-field')),
+        );
         await tester.pumpAndSettle();
         await tester.enterText(
           find.byKey(const Key('refused-content-field')),
           'Alcool',
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('refused-content-item-add')));
+        await _tapVisible(
+          tester,
+          find.byKey(const Key('refused-content-item-add')),
+        );
         await tester.pumpAndSettle();
         expect(
           find.byKey(const Key('refused-content-tag-Alcool')),
@@ -1155,62 +1221,32 @@ void main() {
     // ── kgFree — estimation illimitée ─────────────────────────────────────────
 
     testWidgets(
-      'kgFree (availableKg=0) → affiche "Capacité illimitée" et non "Estimation"',
+      'capacité illimitée (availableKg=0) → gain au kilo, pas de total',
       (tester) async {
         await tester.pumpWidget(_host(initialAvailableKg: 0));
         await tester.pump(const Duration(milliseconds: 200));
         await tester.pump();
 
-        expect(find.textContaining('illimitée'), findsOneWidget);
-        expect(find.textContaining('Estimation'), findsNothing);
+        expect(find.text('Pour chaque kilo transporté'), findsOneWidget);
+        expect(find.textContaining('Si vous remplissez'), findsNothing);
       },
     );
   });
 
-  group('Mode MIXED — toggle et aperçu grille', () {
-    testWidgets(
-      'tap "Articles + kilo" affiche le SwitchListTile kg-price-toggle',
-      (tester) async {
-        await _pump(tester);
-        await tester.tap(find.text('Articles + kilo'));
-        await tester.pump(const Duration(milliseconds: 200));
-        await tester.pump();
-        expect(find.byKey(const Key('kg-price-toggle')), findsOneWidget);
-        expect(find.text('Tarif au kilo'), findsOneWidget);
-        expect(
-          find.text('Optionnel avec les prix par article'),
-          findsOneWidget,
-        );
-      },
-    );
-
-    testWidgets('tap "Articles + kilo" puis "Au kilo" masque le toggle kg', (
+  group('Prix par article', () {
+    testWidgets('grille vide : carte d\'invitation facultative', (
       tester,
     ) async {
       await _pump(tester);
-      await tester.tap(find.text('Articles + kilo'));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump();
-      await tester.tap(find.text('Au kilo'));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump();
-      expect(find.byKey(const Key('kg-price-toggle')), findsNothing);
+      expect(find.byKey(const Key('item-prices-empty')), findsOneWidget);
+      expect(find.text('Prix par article'), findsOneWidget);
+      expect(find.text('Facultatif'), findsOneWidget);
+      expect(find.text('Ajouter mes prix'), findsOneWidget);
+      // Sans prix de la route, aucun exemple inventé.
+      expect(find.byKey(const Key('item-prices-examples')), findsNothing);
     });
 
-    testWidgets('mode MIXED sans items — invite à composer la grille', (
-      tester,
-    ) async {
-      await _pump(tester);
-      await tester.tap(find.text('Articles + kilo'));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump();
-      expect(find.text('Aucun prix par article'), findsOneWidget);
-      // L'état vide ne se contente pas de constater : il ouvre l'écran où la
-      // grille se compose.
-      expect(find.byKey(const Key('grid-preview-create')), findsOneWidget);
-    });
-
-    testWidgets('mode MIXED avec items — affiche les labels et prix', (
+    testWidgets('grille remplie : liste des prix, reste au kilo', (
       tester,
     ) async {
       // Utilise un MockBloc synchrone pour éviter les problèmes d'async avec runAsync.
@@ -1247,7 +1283,6 @@ void main() {
       final customPrice = ValueNotifier<double>(0);
       final availKg = ValueNotifier<double>(10);
       final cash = ValueNotifier<bool>(false);
-      final kgEnabled = ValueNotifier<bool>(true);
       final selContent = ValueNotifier<Set<String>>({});
       final custAccepted = ValueNotifier<Set<String>>({});
       final refused = ValueNotifier<Set<String>>({});
@@ -1276,7 +1311,6 @@ void main() {
                   customPriceNotifier: customPrice,
                   availableKgNotifier: availKg,
                   cashEnabledNotifier: cash,
-                  kgPriceEnabledNotifier: kgEnabled,
                   mobileMoneyEnabledNotifier: ValueNotifier<bool>(false),
                   currencyNotifier: ValueNotifier<SupportedCurrency>(
                     SupportedCurrency.eur,
@@ -1312,6 +1346,68 @@ void main() {
     });
   });
 
+  group('Section paiement — au moins un moyen', () {
+    testWidgets('erreur : section en orange avec son message', (tester) async {
+      final error = ValueNotifier<bool>(false);
+      await tester.pumpWidget(_host(paymentErrorNotifier: error));
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(find.byKey(const Key('payment-methods-error')), findsNothing);
+      expect(find.byKey(const Key('payment-section')), findsOneWidget);
+
+      error.value = true;
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(find.byKey(const Key('payment-methods-error')), findsOneWidget);
+      expect(
+        find.text('Choisissez au moins un moyen de paiement'),
+        findsOneWidget,
+      );
+
+      error.value = false;
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(find.byKey(const Key('payment-methods-error')), findsNothing);
+    });
+
+    testWidgets(
+      'sans verrou (création) : les espèces se décochent même sans carte',
+      (tester) async {
+        final cash = ValueNotifier<bool>(true);
+        await tester.pumpWidget(
+          _host(
+            stripeState: _stripeNotConfiguredState,
+            cashNotifier: cash,
+            lockCashWithoutCard: false,
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.pump();
+
+        final cashSwitch = find.byKey(const Key('payment-method-cash'));
+        await tester.ensureVisible(cashSwitch);
+        await _tapVisible(tester, cashSwitch);
+        await tester.pump();
+
+        expect(cash.value, isFalse);
+        expect(tester.widget<SwitchListTile>(cashSwitch).value, isFalse);
+        // Pas de mention « toujours acceptées » : rien n'est verrouillé.
+        expect(find.textContaining('Toujours accepté'), findsNothing);
+      },
+    );
+
+    testWidgets('avec verrou (modèle) : sans carte, les espèces restent', (
+      tester,
+    ) async {
+      final cash = ValueNotifier<bool>(false);
+      await tester.pumpWidget(
+        _host(stripeState: _stripeNotConfiguredState, cashNotifier: cash),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+
+      expect(cash.value, isTrue);
+    });
+  });
+
   // ── Group: English (i18n) ─────────────────────────────────────────────────
 
   group('PrixConditionsStep — English', () {
@@ -1329,4 +1425,26 @@ void main() {
       expect(find.text('I accept price proposals'), findsOneWidget);
     });
   });
+
+  group('PrixConditionsStep — prix en anglais', () {
+    testWidgets('gain, carte article et bornes traduits', (tester) async {
+      useEnglish();
+      await _pump(tester);
+      expect(find.text('If you fill your 10 kg'), findsOneWidget);
+      expect(find.text('Price per item'), findsOneWidget);
+      expect(find.text('Add my prices'), findsOneWidget);
+      expect(find.textContaining('per kilo'), findsWidgets);
+    });
+  });
+}
+
+/// La section prix (carte « − / + », gain, prix par article) allonge l'étape :
+/// un élément plus bas peut sortir de l'écran de test. On l'y ramène avant de
+/// le toucher, sinon le toucher tombe à côté.
+Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
+  if (finder.evaluate().isNotEmpty) {
+    await tester.ensureVisible(finder.first);
+    await tester.pump();
+  }
+  await tester.tap(finder);
 }

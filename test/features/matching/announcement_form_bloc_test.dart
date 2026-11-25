@@ -746,6 +746,78 @@ void main() {
       },
     );
 
+    // ── Mode déduit de la grille (prix au kilo unique) ──────────────────────
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'grille remplie lue : mode MIXED déduit, grille marquée lue',
+      build: () {
+        final mockRepo = MockPriceGridRepository();
+        when(() => mockRepo.getItems()).thenAnswer(
+          (_) async => const [
+            PriceGridItemModel(
+              id: 'p1',
+              label: 'Téléphone',
+              unitPriceNet: 15,
+              unitPriceDisplay: 16,
+              position: 0,
+            ),
+          ],
+        );
+        return _makeBloc(priceGridRepository: mockRepo);
+      },
+      act: (b) => b.add(const AnnouncementGridPreviewLoadRequested()),
+      expect: () => [
+        isA<AnnouncementFormState>()
+            .having((s) => s.pricingMode, 'mode', PricingMode.mixed)
+            .having((s) => s.gridLoaded, 'gridLoaded', isTrue)
+            .having((s) => s.gridPreviewItems.length, 'items', 1),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'grille vide lue : mode KG, même si un brouillon disait MIXED',
+      build: () {
+        final mockRepo = MockPriceGridRepository();
+        when(() => mockRepo.getItems()).thenAnswer((_) async => const []);
+        return _makeBloc(priceGridRepository: mockRepo);
+      },
+      seed: () => const AnnouncementFormState(pricingMode: PricingMode.mixed),
+      act: (b) => b.add(const AnnouncementGridPreviewLoadRequested()),
+      expect: () => [
+        isA<AnnouncementFormState>()
+            .having((s) => s.pricingMode, 'mode', PricingMode.kg)
+            .having((s) => s.gridLoaded, 'gridLoaded', isTrue),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'grille déjà lue : un mode demandé (brouillon, modèle) est ignoré',
+      build: () => _makeBloc(),
+      seed: () => const AnnouncementFormState(gridLoaded: true),
+      act: (b) =>
+          b.add(const AnnouncementPricingModeSetRequested(PricingMode.mixed)),
+      expect: () => <AnnouncementFormState>[],
+    );
+
+    test('publication arrêtée sans moyen de paiement : analytics', () async {
+      final backend = MockAnalyticsBackend();
+      final analytics = makeEnabledAnalytics(backend);
+      await analytics.onConfigured();
+      final b = _makeBloc(analytics: analytics);
+      b.add(const AnnouncementPublishBlockedPaymentRequested('publish'));
+      await Future<void>.delayed(Duration.zero);
+      verify(
+        () => backend.capture(
+          AnalyticsEvents.tripPublishBlockedPayment,
+          any(that: containsPair('action', 'publish')),
+        ),
+      ).called(1);
+      expect(const AnnouncementPublishBlockedPaymentRequested('save').props, [
+        'save',
+      ]);
+      await b.close();
+    });
+
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'AnnouncementPricePerKgClearedRequested → pricePerKg == null',
       build: () => _makeBloc(),

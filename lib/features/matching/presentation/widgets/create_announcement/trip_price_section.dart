@@ -401,8 +401,8 @@ class KgPriceEarningsBlock extends StatelessWidget {
                     ) ??
                     suggestion.suggestedPricePerKg;
                 // Capacité illimitée : pas de total, le gain se lit au kilo.
-                final unlimited = unit == CapacityUnit.kgFree;
                 final kg = availableKgNotifier.value;
+                final unlimited = unit == CapacityUnit.kgFree || kg <= 0;
                 final net = unlimited ? price : price * kg;
                 return Container(
                   key: const Key('kg-price-earnings'),

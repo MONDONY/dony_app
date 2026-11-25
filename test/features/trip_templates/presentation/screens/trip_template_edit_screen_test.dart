@@ -252,13 +252,21 @@ void main() {
         await tester.pump(const Duration(milliseconds: 400));
       }
 
+      // Repère CFA (le prix posé garde son rang : 1 500 F CFA/kg) et bornes
+      // du sélecteur en F CFA, jamais le barème euro.
+      final amount = tester
+          .widget<Text>(find.byKey(const Key('kg-price-amount')))
+          .data!;
+      expect(amount.replaceAll(RegExp(r'\s'), ''), '1500');
       expect(
-        find.text(CurrencyFormatter.format(1000, SupportedCurrency.xof)),
-        findsOneWidget,
-      );
-      expect(
-        find.text(CurrencyFormatter.format(3000, SupportedCurrency.xof)),
-        findsOneWidget,
+        find.textContaining(
+          CurrencyFormatter.formatOrPlain(
+            1000,
+            SupportedCurrency.xof,
+            compact: true,
+          ),
+        ),
+        findsWidgets,
       );
       expect(
         find.text(CurrencyFormatter.format(5, SupportedCurrency.xof)),
@@ -612,8 +620,14 @@ void main() {
           findsOneWidget,
         );
         expect(
-          find.text(CurrencyFormatter.format(1000, SupportedCurrency.xof)),
-          findsOneWidget,
+          find.textContaining(
+            CurrencyFormatter.formatOrPlain(
+              1000,
+              SupportedCurrency.xof,
+              compact: true,
+            ),
+          ),
+          findsWidgets,
         );
         expect(find.text('Enregistrer le modèle'), findsOneWidget);
       },
@@ -782,48 +796,45 @@ void main() {
       },
     );
 
-    testWidgets(
-      'édition : prix hors chips sélectionne Autre prix, paiement et note '
-      'préremplis',
-      (tester) async {
-        tester.view.physicalSize = const Size(800, 3000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.reset);
-        const template = TripTemplate(
-          id: 't1',
-          label: 'Paris-Dakar',
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          transportMode: 'PLANE',
-          capacityUnit: 'KG_FREE',
-          availableKg: 10,
-          pricePerKg: 9.5,
-          acceptedCategories: ['Vêtements & tissus'],
-          currency: 'EUR',
-          acceptedPaymentMethods: ['STRIPE', 'CASH'],
-          negotiable: true,
-          description: 'Note',
-        );
-        await tester.pumpWidget(
-          _wrap(const TripTemplateEditScreen(template: template), bloc),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
+    testWidgets('édition : prix hors repères en prix libre, paiement et note '
+        'préremplis', (tester) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      const template = TripTemplate(
+        id: 't1',
+        label: 'Paris-Dakar',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        transportMode: 'PLANE',
+        capacityUnit: 'KG_FREE',
+        availableKg: 10,
+        pricePerKg: 9.5,
+        acceptedCategories: ['Vêtements & tissus'],
+        currency: 'EUR',
+        acceptedPaymentMethods: ['STRIPE', 'CASH'],
+        negotiable: true,
+        description: 'Note',
+      );
+      await tester.pumpWidget(
+        _wrap(const TripTemplateEditScreen(template: template), bloc),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
 
-        final fields =
-            (tester.state<State<TripTemplateEditScreen>>(
-                          find.byType(TripTemplateEditScreen),
-                        )
-                        as dynamic)
-                    .fieldsForTest
-                as TripFormFields;
-        expect(fields.isCustomPrice, isTrue);
-        expect(fields.customPrice.value, 9.5);
-        expect(fields.cashEnabled.value, isTrue);
-        expect(fields.negotiable.value, isTrue);
-        expect(fields.descriptionCtrl.text, 'Note');
-        expect(fields.availableKg.value, 10);
-      },
-    );
+      final fields =
+          (tester.state<State<TripTemplateEditScreen>>(
+                        find.byType(TripTemplateEditScreen),
+                      )
+                      as dynamic)
+                  .fieldsForTest
+              as TripFormFields;
+      expect(fields.isCustomPrice, isTrue);
+      expect(fields.customPrice.value, 9.5);
+      expect(fields.cashEnabled.value, isTrue);
+      expect(fields.negotiable.value, isTrue);
+      expect(fields.descriptionCtrl.text, 'Note');
+      expect(fields.availableKg.value, 10);
+    });
 
     testWidgets(
       'édition valise 32 kg / 64 kg : la capacité du modèle prime sur le '
@@ -892,15 +903,10 @@ void main() {
                   .fieldsForTest
               as TripFormFields;
 
-      await tester.ensureVisible(find.text('Autre prix'));
-      await tester.tap(find.text('Autre prix'));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      final priceField = find.byWidgetPredicate(
-        (w) => w is DonyTextField && w.controller == fields.customPriceCtrl,
-      );
-      await tester.ensureVisible(priceField);
-      await tester.enterText(priceField, '0');
+      // Prix libre posé à la main (plus de champ de saisie dans l'étape :
+      // un brouillon ou une ancienne valeur peut encore l'amener).
+      fields.customPriceCtrl.text = '0';
+      fields.priceOption.value = fields.presets.length;
       await tester.pump(const Duration(milliseconds: 300));
 
       final button = tester.widget<DonyButton>(
@@ -928,26 +934,21 @@ void main() {
                   .fieldsForTest
               as TripFormFields;
 
-      await tester.ensureVisible(find.text('Autre prix'));
-      await tester.tap(find.text('Autre prix'));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      final priceField = find.byWidgetPredicate(
-        (w) => w is DonyTextField && w.controller == fields.customPriceCtrl,
-      );
-      await tester.ensureVisible(priceField);
       DonyButton save() => tester.widget<DonyButton>(
         find.widgetWithText(DonyButton, 'Enregistrer le modèle'),
       );
 
-      await tester.enterText(priceField, '0,99');
+      // Nouveau modèle : le prix conseillé de la devise est posé d'office.
+      expect(fields.pricePerKg, 8);
+      expect(save().onPressed, isNotNull);
+
+      fields.customPriceCtrl.text = '0,99';
+      fields.priceOption.value = fields.presets.length;
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.textContaining('Prix trop bas : minimum'), findsOneWidget);
       expect(save().onPressed, isNull);
 
-      await tester.enterText(priceField, '1');
+      fields.customPriceCtrl.text = '1';
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.textContaining('Prix trop bas'), findsNothing);
       expect(save().onPressed, isNotNull);
     });
   });

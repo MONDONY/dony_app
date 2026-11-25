@@ -26,7 +26,7 @@ class AnnouncementPayload extends Equatable {
     this.description,
     this.acceptedContentTypes = const [],
     this.refusedTypes = const [],
-    this.acceptedPaymentMethods = const ['STRIPE'],
+    this.acceptedPaymentMethods = const ['STRIPE', 'CASH'],
     this.capacityUnit,
     this.pricingMode = 'KG',
     required this.handoverDeadline,
