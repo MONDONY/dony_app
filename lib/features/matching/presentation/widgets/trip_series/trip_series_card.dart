@@ -34,13 +34,18 @@ class TripSeriesCard extends StatelessWidget {
         if (autoDates.isNotEmpty) unawaited(cubit.submitDates(autoDates));
         return cubit;
       },
-      child: const _CardBody(),
+      child: _CardBody(auto: autoDates.isNotEmpty),
     );
   }
 }
 
 class _CardBody extends StatelessWidget {
-  const _CardBody();
+  const _CardBody({required this.auto});
+
+  /// Série partie d'elle-même (récurrence de l'étape 1) : son échec ou son
+  /// résultat partiel s'affiche sur la carte. Ouverte au calendrier, c'est
+  /// la feuille qui les montre.
+  final bool auto;
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +116,8 @@ class _CardBody extends StatelessWidget {
                         ],
                         // Échec de la série : le motif, puis le calendrier
                         // reste proposé, dates gardées.
-                        if (state.status == TripSeriesStatus.failed) ...[
+                        if (auto &&
+                            state.status == TripSeriesStatus.failed) ...[
                           const SizedBox(height: DonySpacing.xs),
                           Text(
                             tripSeriesErrorText(context, state.errorCode),
@@ -119,7 +125,7 @@ class _CardBody extends StatelessWidget {
                             style: tt.bodySmall?.copyWith(color: cs.error),
                           ),
                         ],
-                        if (done && failedCount > 0) ...[
+                        if (auto && done && failedCount > 0) ...[
                           const SizedBox(height: DonySpacing.xs),
                           Text(
                             '${l10n.tripSeriesSomeFailed(failedCount)} '
