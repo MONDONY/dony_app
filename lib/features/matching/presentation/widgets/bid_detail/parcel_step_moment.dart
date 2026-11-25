@@ -56,6 +56,8 @@ VideoModalMoment? bidParcelStepMoment(
       ParcelModalVariable.arrivalCity.key: bid.arrivalCity ?? '',
     },
     canSendCode: isSender && SenderStickyBar.canSendCode(bid),
+    // Émis par la fiche de ce colis : « Voir le colis » ferme le modal.
+    onDetailScreen: true,
     openers: isSender
         ? ParcelActionOpeners(
             qr: (context) =>

@@ -96,9 +96,12 @@ class VideoModalBloc extends Bloc<VideoModalEvent, VideoModalState> {
         );
       }
     }
-    // « Ne plus afficher » : la version ne revient plus de ce lancement, même
-    // hors de la limite de session.
-    if (event.event == VideoModalEventType.dontShowAgain) {
+    // « Ne plus afficher » d'une campagne « une fois par colis » : hors de la
+    // limite de session, elle reviendrait au colis suivant du même lancement.
+    // La version est écartée ici ; les autres fréquences gardent leur
+    // comportement (le back l'écarte au prochain chargement).
+    if (event.event == VideoModalEventType.dontShowAgain &&
+        event.campaign.isOncePerParcel) {
       emit(
         state.copyWith(
           suppressed: {

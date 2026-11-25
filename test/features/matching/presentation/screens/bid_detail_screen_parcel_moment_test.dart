@@ -244,6 +244,7 @@ void main() {
     final moment = moments.emitted.single;
     expect(moment.parcel!.bidId, 'bid-001');
     expect(moment.parcel!.roles, {ParcelRole.sender});
+    expect(moment.parcel!.onDetailScreen, isTrue);
     expect(moment.variables['voyageur'], 'Moussa');
     expect(moment.variables.values.join(), isNot(contains('482913')));
     // Ouvert sur l'écran du colis.
@@ -315,6 +316,21 @@ void main() {
     await load(tester, _bid('PENDING'));
     await load(tester, _bid('ACCEPTED'));
     expect(moments.emitted, isEmpty);
+  });
+
+  testWidgets('lecteur pas encore connu : réessayé au chargement suivant', (
+    tester,
+  ) async {
+    when(() => authBloc.state).thenReturn(const AuthInitial());
+    await pumpScreen(tester, _bid('ARRIVED'));
+    await load(tester, _bid('ARRIVED'));
+    expect(moments.emitted, isEmpty);
+    viewer(_kSenderId);
+    await load(tester, _bid('ARRIVED'));
+    expect(moments.triggers, [VideoModalTrigger.parcelArrived]);
+    expect(moments.emitted.single.parcel!.roles, {ParcelRole.sender});
+    await load(tester, _bid('ARRIVED'));
+    expect(moments.emitted, hasLength(1));
   });
 
   testWidgets('lecteur ni expéditeur ni voyageur : aucun moment', (

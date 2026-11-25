@@ -117,13 +117,16 @@ VideoModalMoment? _receptionParcelStepMoment(
     openers: ParcelActionOpeners(
       tracking: (context) => openTimeline(context, reception),
     ),
+    // Émis par la réception de ce colis : « Voir le colis » ferme le modal.
+    onDetailScreen: true,
   );
 }
 
 /// Émet le moment d'étape du colis une fois par ouverture de l'écran, au
-/// premier chargement réussi (après un échec, au chargement de
-/// « Réessayer ») ; ni les gestes ni les relectures qui suivent ne le
-/// réémettent. Le modal s'ouvre sur cet écran.
+/// premier chargement où le rôle destinataire est acquis (lien confirmé ;
+/// après un échec, au chargement de « Réessayer » ; lien confirmé pendant
+/// l'ouverture : à la confirmation) ; ni les gestes ni les relectures qui
+/// suivent ne le réémettent. Le modal s'ouvre sur cet écran.
 class _ParcelStepNotifier extends StatefulWidget {
   const _ParcelStepNotifier({required this.openTimeline, required this.child});
 
@@ -143,9 +146,13 @@ class _ParcelStepNotifierState extends State<_ParcelStepNotifier> {
         listenWhen: (_, current) =>
             !_evaluated && current is ReceptionDetailLoaded,
         listener: (context, state) {
+          final reception = (state as ReceptionDetailLoaded).reception;
+          // Lien en attente : pas encore destinataire, l'ouverture n'est pas
+          // consommée.
+          if (!reception.isConfirmed) return;
           _evaluated = true;
           final moment = _receptionParcelStepMoment(
-            (state as ReceptionDetailLoaded).reception,
+            reception,
             widget.openTimeline,
           );
           if (moment != null) {

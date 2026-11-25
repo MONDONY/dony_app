@@ -83,6 +83,7 @@ class ParcelActionContext extends Equatable {
     required this.roles,
     this.canSendCode = false,
     this.openers = const ParcelActionOpeners(),
+    this.onDetailScreen = false,
   });
 
   final String bidId;
@@ -95,6 +96,11 @@ class ParcelActionContext extends Equatable {
   /// (mêmes règles que le bouton du bas « Envoyer le code à … »).
   final bool canSendCode;
   final ParcelActionOpeners openers;
+
+  /// Le moment vient de la fiche de ce colis (fiche colis ou réception), où
+  /// le modal s'ouvre : « Voir le colis » le ferme simplement, sans empiler
+  /// une seconde fiche du même colis.
+  final bool onDetailScreen;
 
   bool get _isSender => roles.contains(ParcelRole.sender);
 
@@ -139,5 +145,6 @@ class ParcelActionContext extends Equatable {
     openers.qr != null,
     openers.sendCode != null,
     openers.tracking != null,
+    onDetailScreen,
   ];
 }

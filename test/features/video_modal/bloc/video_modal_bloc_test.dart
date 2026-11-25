@@ -185,15 +185,7 @@ void main() {
           event: event,
         ),
       ),
-      // « Ne plus afficher » écarte la version pour le reste du lancement ;
-      // les autres réponses ne changent pas l'état.
-      expect: () => event == VideoModalEventType.dontShowAgain
-          ? [
-              VideoModalState(
-                suppressed: {VideoModalState.suppressionKey(campaign())},
-              ),
-            ]
-          : <VideoModalState>[],
+      expect: () => <VideoModalState>[],
       verify: (_) {
         verify(
           () => repo.record(campaign(), event, realSession: false),
@@ -255,13 +247,8 @@ void main() {
         event: VideoModalEventType.dontShowAgain,
       ),
     ),
-    // Ne compte pas comme un affichage : « un modal par session » intact ;
-    // la version est écartée pour le reste du lancement.
-    expect: () => [
-      VideoModalState(
-        suppressed: {VideoModalState.suppressionKey(infoCampaign())},
-      ),
-    ],
+    // Ne compte pas comme un affichage : « un modal par session » intact.
+    expect: () => <VideoModalState>[],
     verify: (_) {
       verify(
         () => analytics.logEvent(
@@ -371,4 +358,70 @@ void main() {
     },
     verify: (b) => expect(b.state.usedSlots, VideoModalSlot.values.toSet()),
   );
+
+  group('« Ne plus afficher » et fréquences hors limite de session', () {
+    blocTest<VideoModalBloc, VideoModalState>(
+      'une fois par colis : la version est écartée pour le lancement',
+      build: build,
+      act: (b) => b.add(
+        VideoModalAnswerRequested(
+          campaign: infoCampaign(
+            id: 'p1',
+            triggers: {VideoModalTrigger.parcelArrived},
+            frequency: VideoModalFrequency.oncePerParcel,
+          ),
+          trigger: VideoModalTrigger.parcelArrived,
+          event: VideoModalEventType.dontShowAgain,
+        ),
+      ),
+      expect: () => [
+        const VideoModalState(suppressed: {'p1#1'}),
+      ],
+      verify: (b) {
+        final ready = b.state.copyWith(
+          status: VideoModalStatus.ready,
+          campaigns: [
+            infoCampaign(
+              id: 'p1',
+              triggers: {VideoModalTrigger.parcelArrived},
+              frequency: VideoModalFrequency.oncePerParcel,
+            ),
+          ],
+        );
+        expect(ready.candidateFor({VideoModalTrigger.parcelArrived}), isNull);
+      },
+    );
+
+    blocTest<VideoModalBloc, VideoModalState>(
+      'à chaque fois : comportement inchangé, aucun état, toujours proposée',
+      build: build,
+      act: (b) => b.add(
+        VideoModalAnswerRequested(
+          campaign: campaign(
+            id: 'e',
+            triggers: {VideoModalTrigger.deliveryConfirmed},
+            frequency: VideoModalFrequency.everyTime,
+          ),
+          trigger: VideoModalTrigger.deliveryConfirmed,
+          event: VideoModalEventType.dontShowAgain,
+        ),
+      ),
+      expect: () => <VideoModalState>[],
+      verify: (b) {
+        final everyTime = campaign(
+          id: 'e',
+          triggers: {VideoModalTrigger.deliveryConfirmed},
+          frequency: VideoModalFrequency.everyTime,
+        );
+        final ready = b.state.copyWith(
+          status: VideoModalStatus.ready,
+          campaigns: [everyTime],
+        );
+        expect(
+          ready.candidateFor({VideoModalTrigger.deliveryConfirmed}),
+          everyTime,
+        );
+      },
+    );
+  });
 }

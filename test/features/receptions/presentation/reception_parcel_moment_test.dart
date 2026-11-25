@@ -124,6 +124,8 @@ void main() {
     expect(moment.parcel!.bidId, _id);
     expect(moment.parcel!.roles, {ParcelRole.recipient});
     expect(moment.parcel!.detailRoute, '/receptions/$_id');
+    // Émis par la réception de ce colis : « Voir le colis » ferme le modal.
+    expect(moment.parcel!.onDetailScreen, isTrue);
     expect(moment.variables, {
       'destinataire': 'Moussa Diop',
       'voyageur': 'Ibrahima',
@@ -158,15 +160,23 @@ void main() {
     }
   });
 
-  testWidgets('lien en attente : aucun moment, même confirmé ensuite', (
-    tester,
-  ) async {
-    await pump(tester, [
-      ReceptionDetailLoaded(_reception(linkStatus: 'PENDING')),
-      ReceptionDetailLoaded(_reception(), action: ReceptionAction.confirmed),
-    ]);
-    expect(moments.emitted, isEmpty);
-  });
+  testWidgets(
+    'lien en attente : rien ; confirmé pendant l\'ouverture : une fois',
+    (tester) async {
+      await pump(tester, [
+        ReceptionDetailLoaded(_reception(linkStatus: 'PENDING')),
+      ]);
+      expect(moments.emitted, isEmpty);
+      await tester.pumpWidget(const SizedBox());
+      await pump(tester, [
+        ReceptionDetailLoaded(_reception(linkStatus: 'PENDING')),
+        ReceptionDetailLoaded(_reception(), action: ReceptionAction.confirmed),
+        ReceptionDetailLoaded(_reception()),
+      ]);
+      expect(moments.triggers, [VideoModalTrigger.parcelArrived]);
+      expect(moments.emitted.single.parcel!.roles, {ParcelRole.recipient});
+    },
+  );
 
   testWidgets('gestes et relectures de la même ouverture : une seule fois', (
     tester,

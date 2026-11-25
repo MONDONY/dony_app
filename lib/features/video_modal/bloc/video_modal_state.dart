@@ -48,10 +48,10 @@ class VideoModalState extends Equatable {
   final String? loadedLang;
   final bool? loadedForRealSession;
 
-  /// Versions dont « Ne plus afficher » a été coché pendant ce lancement
-  /// ([suppressionKey]) : définitif, même pour une campagne hors de la limite
-  /// de session (« à chaque fois », « une fois par colis »). Au prochain
-  /// chargement, le back ne les envoie plus.
+  /// Versions « une fois par colis » dont « Ne plus afficher » a été coché
+  /// pendant ce lancement ([suppressionKey]) : hors de la limite de session,
+  /// elles reviendraient au colis suivant. Au prochain chargement, le back ne
+  /// les envoie plus. Les autres fréquences n'y figurent jamais.
   final Set<String> suppressed;
 
   /// Campagne à ouvrir pour l'un de ces déclencheurs, ou `null`. À

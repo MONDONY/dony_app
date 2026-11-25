@@ -173,7 +173,8 @@ class _BidDetailViewState extends State<_BidDetailView>
 
   /// Le moment d'étape du colis (modals programmés depuis l'admin) a été
   /// évalué pour cette ouverture de la fiche : une fois, au premier
-  /// chargement du colis ; ni un rebuild ni un relevé ne le réémettent.
+  /// chargement du colis où le rôle du lecteur est connu ; ni un rebuild ni
+  /// un relevé ne le réémettent.
   bool _parcelStepEvaluated = false;
 
   final _existingPaymentNotifier = ValueNotifier<PaymentModel?>(null);
@@ -465,17 +466,18 @@ class _BidDetailViewState extends State<_BidDetailView>
     });
   }
 
-  /// Modal d'étape du colis : au premier chargement de cette ouverture, le
-  /// moment de l'étape (ACCEPTED, HANDED_OVER, IN_TRANSIT, ARRIVED,
-  /// COMPLETED) part avec le rôle du lecteur ; rien hors des rails. Le modal
-  /// s'ouvre sur cette fiche ([context], qui voit les BLoCs de l'écran).
+  /// Modal d'étape du colis : au premier chargement de cette ouverture où le
+  /// rôle du lecteur est connu, le moment de l'étape (ACCEPTED, HANDED_OVER,
+  /// IN_TRANSIT, ARRIVED, COMPLETED) part avec ce rôle ; rien hors des rails.
+  /// Lecteur pas encore connu (état transitoire de l'AuthBloc) : l'ouverture
+  /// n'est pas consommée, le chargement suivant réessaie. Le modal s'ouvre sur
+  /// cette fiche ([context], qui voit les BLoCs de l'écran).
   void _maybeNotifyParcelStep(BuildContext context, BidModel bid) {
     if (_parcelStepEvaluated) return;
+    final viewerId = _resolveViewerId(context.read<AuthBloc>().state);
+    if (bidViewerRoles(bid, viewerId).isEmpty) return;
     _parcelStepEvaluated = true;
-    final moment = bidParcelStepMoment(
-      bid,
-      viewerId: _resolveViewerId(context.read<AuthBloc>().state),
-    );
+    final moment = bidParcelStepMoment(bid, viewerId: viewerId);
     if (moment != null) {
       VideoModalMoments.notifyParcelStep(moment, origin: context);
     }

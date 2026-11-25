@@ -80,6 +80,7 @@ class VideoModalMoment extends Equatable {
     required Map<String, String> variables,
     bool canSendCode = false,
     ParcelActionOpeners openers = const ParcelActionOpeners(),
+    bool onDetailScreen = false,
   }) => VideoModalMoment._(
     trigger,
     parcel: ParcelActionContext(
@@ -87,6 +88,7 @@ class VideoModalMoment extends Equatable {
       roles: Set.unmodifiable(roles),
       canSendCode: canSendCode,
       openers: openers,
+      onDetailScreen: onDetailScreen,
     ),
     variables: Map.unmodifiable(variables),
   );

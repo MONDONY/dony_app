@@ -162,6 +162,7 @@ void main() {
     Set<ParcelRole> roles = const {ParcelRole.sender},
     Map<String, String> variables = const {},
     bool canSendCode = true,
+    bool onDetailScreen = false,
   }) => VideoModalMoment.parcelStep(
     trigger: trigger,
     bidId: bidId,
@@ -169,6 +170,7 @@ void main() {
     variables: variables,
     canSendCode: canSendCode,
     openers: openers(),
+    onDetailScreen: onDetailScreen,
   );
 
   VideoModalCampaign parcelInfo({
@@ -684,6 +686,32 @@ void main() {
       expect(find.text('colis bid-1'), findsOneWidget);
     });
 
+    testWidgets('détail du colis émis par sa fiche : le modal se ferme', (
+      tester,
+    ) async {
+      usePhone360(tester);
+      loadResult = [
+        parcelInfo(
+          frequency: 'EVERY_TIME',
+          primaryLabel: 'Voir le colis',
+          primary: const {'kind': 'SCREEN', 'screen': 'PARCEL_DETAIL'},
+        ),
+      ];
+      await pumpHost(tester);
+      final before = router.routerDelegate.currentConfiguration.matches.length;
+      await emitStep(tester, step(onDetailScreen: true));
+      await tapAndSettle(tester, 'info-modal-primary');
+      expect(primary(), findsNothing);
+      expectNoPage(tester);
+      expect(
+        router.routerDelegate.currentConfiguration.matches,
+        hasLength(before),
+      );
+      // Aucune copie de la fiche, donc aucun nouveau moment.
+      await settleAfterOpenDelay(tester);
+      expect(find.text('Votre colis est arrivé'), findsNothing);
+    });
+
     testWidgets('détail du colis : la réception pour le destinataire', (
       tester,
     ) async {
@@ -743,6 +771,88 @@ void main() {
       await tester.pumpAndSettle();
       return captured;
     }
+
+    /// Comme dans l'app : la fiche (ou la réception) est poussée par-dessus un
+    /// onglet. Rend le contexte de l'écran poussé et le routeur.
+    Future<(BuildContext, GoRouter)> pumpPushed(
+      WidgetTester tester,
+      String path,
+    ) async {
+      BuildContext? pushed;
+      Widget page(String label) => Scaffold(
+        body: Builder(
+          builder: (context) {
+            if (label != 'accueil') pushed = context;
+            return Text(label);
+          },
+        ),
+      );
+      final r = GoRouter(
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => page('accueil')),
+          GoRoute(
+            path: '/bids/:id',
+            builder: (_, state) => page('colis ${state.pathParameters['id']}'),
+          ),
+          GoRoute(
+            path: '/receptions/:id',
+            builder: (_, state) =>
+                page('réception ${state.pathParameters['id']}'),
+          ),
+        ],
+      );
+      addTearDown(r.dispose);
+      await tester.pumpWidget(MaterialApp.router(routerConfig: r));
+      await tester.pumpAndSettle();
+      unawaited(r.push(path));
+      await tester.pumpAndSettle();
+      return (pushed!, r);
+    }
+
+    for (final (path, roles, label) in [
+      ('/bids/bid-1', const {ParcelRole.sender}, 'colis bid-1'),
+      ('/bids/bid-1', const {ParcelRole.traveler}, 'colis bid-1'),
+      ('/receptions/bid-1', const {ParcelRole.recipient}, 'réception bid-1'),
+    ]) {
+      testWidgets(
+        '$path poussé (${roles.single.wire}) : « Voir le colis » ne le double pas',
+        (tester) async {
+          final (context, r) = await pumpPushed(tester, path);
+          final before = r.routerDelegate.currentConfiguration.matches.length;
+          final left = await VideoModalPresenter.runInfoAction(
+            context,
+            const VideoModalAction.openScreen(InfoScreen.parcelDetail),
+            parcel: parcel(roles),
+          );
+          await tester.pumpAndSettle();
+          expect(left, isFalse);
+          expect(
+            r.routerDelegate.currentConfiguration.matches,
+            hasLength(before),
+          );
+          expect(find.text(label), findsOneWidget);
+        },
+      );
+    }
+
+    testWidgets('fiche d\'un autre colis au sommet : la bonne fiche s\'ouvre', (
+      tester,
+    ) async {
+      final (context, r) = await pumpPushed(tester, '/bids/bid-9');
+      final before = r.routerDelegate.currentConfiguration.matches.length;
+      final left = await VideoModalPresenter.runInfoAction(
+        context,
+        const VideoModalAction.openScreen(InfoScreen.parcelDetail),
+        parcel: parcel(const {ParcelRole.sender}),
+      );
+      await tester.pumpAndSettle();
+      expect(left, isTrue);
+      expect(
+        r.routerDelegate.currentConfiguration.matches,
+        hasLength(before + 1),
+      );
+      expect(find.text('colis bid-1'), findsOneWidget);
+    });
 
     testWidgets('déjà sur la fiche du colis : rien ne s\'empile', (
       tester,

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/app/deep_link_gate.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/app_log.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
@@ -254,9 +255,11 @@ abstract final class VideoModalPresenter {
   /// Bouton `PARCEL_*` d'un modal d'étape. Un bouton qui ne s'applique pas
   /// (rôle, code absent) n'est normalement pas affiché ; exécuté quand même,
   /// il ne fait rien. Le détail ouvre la fiche du colis (ou la réception du
-  /// destinataire), sauf si la personne y est déjà : le modal se ferme
-  /// simplement sur elle. Une fenêtre qui échoue (colis inconnu, périmé) ne
-  /// casse rien.
+  /// destinataire), sauf si la personne y est déjà (modal émis par cette
+  /// fiche, ou fiche de ce colis au sommet de la pile) : le modal se ferme
+  /// simplement sur elle, rien ne s'empile. Seul le détail compare l'écran
+  /// courant : QR, « Prévenir » et suivi ouvrent une feuille par-dessus. Une
+  /// fenêtre qui échoue (colis inconnu, périmé) ne casse rien.
   static Future<bool> _runParcelAction(
     BuildContext context,
     InfoScreen screen,
@@ -265,7 +268,10 @@ abstract final class VideoModalPresenter {
     if (!parcel.canRun(screen)) return false;
     if (screen == InfoScreen.parcelDetail) {
       final route = parcel.detailRoute;
-      if (_currentPath(context) == route) return false;
+      if (parcel.onDetailScreen ||
+          _topPath(context)?.toLowerCase() == route.toLowerCase()) {
+        return false;
+      }
       unawaited(context.push<Object?>(route));
       return true;
     }
@@ -282,12 +288,13 @@ abstract final class VideoModalPresenter {
     return true;
   }
 
-  /// Chemin affiché par le routeur, `null` hors GoRouter.
-  static String? _currentPath(BuildContext context) {
+  /// Chemin de l'écran au sommet de la pile, écrans poussés compris
+  /// ([topRouteLocation] : `currentConfiguration.uri` reste sur la route de
+  /// base après un `push`). `null` hors GoRouter.
+  static String? _topPath(BuildContext context) {
     try {
-      return GoRouter.maybeOf(
-        context,
-      )?.routerDelegate.currentConfiguration.uri.path;
+      final router = GoRouter.maybeOf(context);
+      return router == null ? null : topRouteLocation(router);
     } on Object {
       return null;
     }
