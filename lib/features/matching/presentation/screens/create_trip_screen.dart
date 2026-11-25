@@ -55,6 +55,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_missing_fields.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_price_section.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_recurrence_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_published/trip_published_item_prices_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_series/trip_series_card.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
@@ -2843,6 +2844,11 @@ class _TripFormContentState extends State<_TripFormContent> {
             final recurrenceDates = isEdit || state is AnnouncementTripCreated
                 ? const <DateTime>[]
                 : context.read<TripRecurrenceCubit>().state.seriesDates;
+            // Prix de la route déjà chargés par l'étape prix : la carte
+            // « Prix par article » de l'écran de succès les reprend.
+            final routeSuggestion = context
+                .read<TripPriceSuggestionCubit>()
+                .state;
             final stripe = context.read<StripeAccountBloc>().state;
             final needsPayouts =
                 !isEdit &&
@@ -2941,17 +2947,27 @@ class _TripFormContentState extends State<_TripFormContent> {
                       analyticsContext: isEdit
                           ? 'trip_published'
                           : 'trip_published_v2',
-                      // Trajet récurrent : un trajet direct tout juste créé
-                      // peut être répété à d'autres dates (yadony-back #525).
-                      extra:
-                          !isEdit &&
-                              state is! AnnouncementTripCreated &&
-                              announcement.tripGroupId == null
-                          ? TripSeriesCard(
-                              announcement: announcement,
-                              autoDates: recurrenceDates,
-                            )
-                          : null,
+                      // Création : prix par article du trajet publié, ou
+                      // proposition des prix de la route si la grille est
+                      // vide ; puis, pour un trajet direct, la récurrence
+                      // (yadony-back #525).
+                      extra: isEdit
+                          ? null
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                TripPublishedItemPricesCard(
+                                  announcement: announcement,
+                                  routeSuggestion: routeSuggestion,
+                                ),
+                                if (state is! AnnouncementTripCreated &&
+                                    announcement.tripGroupId == null)
+                                  TripSeriesCard(
+                                    announcement: announcement,
+                                    autoDates: recurrenceDates,
+                                  ),
+                              ],
+                            ),
                       secondaryLabel: isEdit ? null : l.tripPublishSuccessCta,
                       onSecondary: isEdit ? null : viewTrip,
                       secondaryIconAsset: null,

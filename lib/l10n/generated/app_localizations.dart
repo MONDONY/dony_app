@@ -39641,6 +39641,60 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{count, plural, =1{Publication de l\'autre date…} other{Publication des {count} autres dates…}}'**
   String tripRecurrenceSeriesPublishing(int count);
+
+  /// Écran de succès d'un trajet publié, grille vide : titre de la proposition
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous n\'avez pas mis de prix par article'**
+  String get tripPublishedItemPricesProposalTitle;
+
+  /// Écran de succès, grille vide : texte au-dessus des prix de la route
+  ///
+  /// In fr, this message translates to:
+  /// **'Les téléphones et ordinateurs rapportent plus avec un prix fixe. Voici les prix pratiqués sur ce trajet : gardez-les ou changez-les.'**
+  String get tripPublishedItemPricesProposalBody;
+
+  /// Écran de succès : la grille est figée à la publication, les prix ajoutés ne changent pas le trajet publié
+  ///
+  /// In fr, this message translates to:
+  /// **'Ils vaudront pour vos prochains trajets, pas pour celui-ci.'**
+  String get tripPublishedItemPricesNextTrips;
+
+  /// Écran de succès, grille vide sans prix de route
+  ///
+  /// In fr, this message translates to:
+  /// **'Un téléphone ou un ordinateur rapporte plus avec un prix fixe. Vos prix vaudront pour vos prochains trajets.'**
+  String get tripPublishedItemPricesEmptyBody;
+
+  /// Écran de succès : ajoute les prix proposés à la grille (très court, à côté de « Modifier »)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter'**
+  String get tripPublishedItemPricesAddCta;
+
+  /// Écran de succès : prix ajoutés à la grille du profil
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix ajoutés pour vos prochains trajets'**
+  String get tripPublishedItemPricesAddedTitle;
+
+  /// Écran de succès : nombre d'articles de la grille après l'ajout
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 prix par article dans votre profil. Ce trajet garde son prix au kilo.} other{{count} prix par article dans votre profil. Ce trajet garde son prix au kilo.}}'**
+  String tripPublishedItemPricesAddedBody(int count);
+
+  /// Écran de succès : ouvre la grille du profil après l'ajout (court)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes prix'**
+  String get tripPublishedItemPricesSeeCta;
+
+  /// Écran de succès : échec de l'ajout des prix proposés
+  ///
+  /// In fr, this message translates to:
+  /// **'Les prix n\'ont pas pu être ajoutés. Réessayez.'**
+  String get tripPublishedItemPricesAddFailed;
 }
 
 class _AppLocalizationsDelegate

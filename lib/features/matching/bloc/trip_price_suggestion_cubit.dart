@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/kg_price_stepper.dart';
@@ -7,6 +8,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/trip_price_suggestion.dart';
 import 'package:dony/features/matching/data/repositories/price_suggestion_repository.dart';
+import 'package:dony/features/price_grid/data/models/price_grid_suggestion.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -210,4 +212,25 @@ String sampleSizeBracket(int size) {
   if (size < 10) return '3-9';
   if (size < 50) return '10-49';
   return '50+';
+}
+
+/// Prix pratiqués sur la route, prêts à remplir une grille vide.
+///
+/// La grille est tenue dans la devise active du voyageur : des prix de route
+/// dans une autre devise y seraient faux, on n'en propose alors aucun. Chaque
+/// montant est ramené dans les bornes d'un article de grille.
+List<PriceGridSuggestion> gridSuggestionsFrom(
+  TripPriceSuggestionState suggestion,
+) {
+  final gridCurrency = ActiveCurrency.current ?? SupportedCurrency.eur;
+  if (suggestion.currency != gridCurrency) return const [];
+  final min = minGridItemPriceFor(gridCurrency);
+  final max = maxUnitPriceFor(gridCurrency);
+  return [
+    for (final item in suggestion.items)
+      PriceGridSuggestion(
+        label: item.label,
+        unitPriceNet: item.unitPrice.clamp(min, max).toDouble(),
+      ),
+  ];
 }

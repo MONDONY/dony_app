@@ -174,6 +174,7 @@ import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_missing_fields_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_mobile_money_networks_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_price_suggestion_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_published_item_prices_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_recurrence_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_series_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
@@ -797,6 +798,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<TripPriceSuggestionCubit>(
     () => TripPriceSuggestionCubit(
+      getIt<PriceSuggestionRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  // Carte « Prix par article » de l'écran de succès d'un trajet publié.
+  getIt.registerFactory<TripPublishedItemPricesCubit>(
+    () => TripPublishedItemPricesCubit(
       getIt<PriceSuggestionRepository>(),
       getIt<AnalyticsService>(),
     ),
