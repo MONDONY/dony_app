@@ -24609,17 +24609,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nextActionSenderCodeBody(String traveler) {
-    return 'Without this code, $traveler will not hand over the parcel to them.';
+    return 'Without this code, $traveler will not hand the parcel over to them.';
   }
 
   @override
-  String nextActionSenderArrivedTitle(String traveler, String city) {
-    return '$traveler has arrived in $city';
+  String nextActionSenderArrivedTitle(String city) {
+    return 'Your parcel has arrived in $city';
   }
 
   @override
   String nextActionSenderArrivedBody(String recipient) {
-    return '$recipient must show them their code to collect the parcel. Remind them if they do not have it.';
+    return '$recipient must show their code to collect the parcel. Remind them if needed.';
   }
 
   @override
@@ -24660,7 +24660,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nextActionTravelerArrivedBody(String recipient, String sender) {
-    return 'Ask $recipient for their 6-digit code. If they do not have it, call $sender.';
+    return 'Ask $recipient for their 6-digit code. Without a code, call $sender.';
   }
 
   @override
@@ -24685,6 +24685,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nextActionTravelerArrivedBodyNoName(String sender) {
-    return 'Ask the recipient for their 6-digit code. If they do not have it, call $sender.';
+    return 'Ask the recipient for their 6-digit code. Without a code, call $sender.';
   }
+
+  @override
+  String get nextActionSelfWithdrawBodyNoName =>
+      'Give your code to the traveler so they hand the parcel over to you.';
+
+  @override
+  String get nextActionRecipientArrivedBodyNoName =>
+      'Give your code to the traveler so they hand the parcel over to you.';
 }

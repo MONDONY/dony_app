@@ -155,7 +155,7 @@ void main() {
     );
     expect(
       find.text(
-        "Demandez au destinataire son code à 6 chiffres. S'il ne l'a pas, appelez l'expéditeur.",
+        "Demandez au destinataire son code à 6 chiffres. Sans code, appelez l'expéditeur.",
       ),
       findsOneWidget,
     );
@@ -170,5 +170,57 @@ void main() {
     );
     expect(find.byType(ButtonStyleButton), findsNothing);
     expect(find.byType(InkWell), findsNothing);
+  });
+
+  testWidgets('FR : textes neutres (expéditeur ARRIVED, voyageur, repli)', (
+    t,
+  ) async {
+    await pump(
+      t,
+      _action('ARRIVED', ParcelRole.sender, recipient: ''),
+      AppL10n.fr,
+      Brightness.light,
+    );
+    expect(find.text('Votre colis est arrivé à Dakar'), findsOneWidget);
+    expect(
+      find.text(
+        'Votre destinataire doit présenter son code pour prendre le colis. '
+        'Rappelez-le-lui au besoin.',
+      ),
+      findsOneWidget,
+    );
+    await pump(
+      t,
+      _action('ARRIVED', ParcelRole.recipient, traveler: ''),
+      AppL10n.fr,
+      Brightness.light,
+    );
+    expect(
+      find.text('Donnez votre code au voyageur pour récupérer le colis.'),
+      findsOneWidget,
+    );
+    await pump(
+      t,
+      _action('ARRIVED', ParcelRole.sender, self: true),
+      AppL10n.fr,
+      Brightness.light,
+    );
+    expect(
+      find.text('Donnez votre code à Moussa pour récupérer le colis.'),
+      findsOneWidget,
+    );
+    await pump(
+      t,
+      _action('ACCEPTED', ParcelRole.sender),
+      AppL10n.fr,
+      Brightness.light,
+    );
+    expect(
+      find.text(
+        'Ouvrez le QR avant la rencontre. Après son scan, vous recevrez le '
+        'code de retrait à donner à Mariam.',
+      ),
+      findsOneWidget,
+    );
   });
 }

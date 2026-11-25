@@ -24774,7 +24774,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nextActionSenderAcceptedBody(String recipient) {
-    return 'Ouvrez le QR avant de la voir. Après son scan, vous recevrez le code de retrait à donner à $recipient.';
+    return 'Ouvrez le QR avant la rencontre. Après son scan, vous recevrez le code de retrait à donner à $recipient.';
   }
 
   @override
@@ -24788,13 +24788,13 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String nextActionSenderArrivedTitle(String traveler, String city) {
-    return '$traveler est arrivé à $city';
+  String nextActionSenderArrivedTitle(String city) {
+    return 'Votre colis est arrivé à $city';
   }
 
   @override
   String nextActionSenderArrivedBody(String recipient) {
-    return '$recipient doit lui montrer son code pour prendre le colis. Rappelez-le-lui s\'il ne l\'a pas.';
+    return '$recipient doit présenter son code pour prendre le colis. Rappelez-le-lui au besoin.';
   }
 
   @override
@@ -24810,7 +24810,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nextActionSelfWithdrawBody(String traveler) {
-    return 'Donnez votre code à $traveler pour qu\'il vous remette le colis.';
+    return 'Donnez votre code à $traveler pour récupérer le colis.';
   }
 
   @override
@@ -24834,7 +24834,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nextActionTravelerArrivedBody(String recipient, String sender) {
-    return 'Demandez à $recipient son code à 6 chiffres. S\'il ne l\'a pas, appelez $sender.';
+    return 'Demandez à $recipient son code à 6 chiffres. Sans code, appelez $sender.';
   }
 
   @override
@@ -24842,7 +24842,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nextActionRecipientArrivedBody(String traveler) {
-    return 'Donnez votre code à $traveler pour qu\'il vous remette le colis.';
+    return 'Donnez votre code à $traveler pour récupérer le colis.';
   }
 
   @override
@@ -24859,6 +24859,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nextActionTravelerArrivedBodyNoName(String sender) {
-    return 'Demandez au destinataire son code à 6 chiffres. S\'il ne l\'a pas, appelez $sender.';
+    return 'Demandez au destinataire son code à 6 chiffres. Sans code, appelez $sender.';
   }
+
+  @override
+  String get nextActionSelfWithdrawBodyNoName =>
+      'Donnez votre code au voyageur pour récupérer le colis.';
+
+  @override
+  String get nextActionRecipientArrivedBodyNoName =>
+      'Donnez votre code au voyageur pour récupérer le colis.';
 }

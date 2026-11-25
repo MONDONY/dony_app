@@ -62,21 +62,13 @@ String _cap(String s) =>
     return start ? _cap(s) : s;
   }
 
+  final travelerKnown = (a.args['traveler']?.trim() ?? '').isNotEmpty;
   final traveler = arg('traveler', l.nextActionFallbackTraveler);
-  final travelerStart = arg(
-    'traveler',
-    l.nextActionFallbackTraveler,
-    start: true,
-  );
+  final travelerStart = _cap(traveler);
   final sender = arg('sender', l.nextActionFallbackSender);
   final recipientYour = arg('recipient', l.nextActionFallbackRecipientYour);
-  final recipientYourStart = arg(
-    'recipient',
-    l.nextActionFallbackRecipientYour,
-    start: true,
-  );
+  final recipientYourStart = _cap(recipientYour);
   final recipientKnown = (a.args['recipient']?.trim() ?? '').isNotEmpty;
-  final recipientThe = a.args['recipient']?.trim() ?? '';
   final city = arg('city', l.nextActionFallbackCity);
 
   String text(String key) => switch (key) {
@@ -88,19 +80,19 @@ String _cap(String s) =>
     ),
     'nextActionSenderCodeTitle' => l.nextActionSenderCodeTitle(recipientYour),
     'nextActionSenderCodeBody' => l.nextActionSenderCodeBody(travelerStart),
-    'nextActionSenderArrivedTitle' => l.nextActionSenderArrivedTitle(
-      travelerStart,
-      city,
-    ),
+    'nextActionSenderArrivedTitle' => l.nextActionSenderArrivedTitle(city),
     'nextActionSenderArrivedBody' => l.nextActionSenderArrivedBody(
       recipientYourStart,
     ),
     'nextActionSelfKeepCodeTitle' => l.nextActionSelfKeepCodeTitle,
     'nextActionSelfKeepCodeBody' => l.nextActionSelfKeepCodeBody(travelerStart),
     'nextActionSelfWithdrawTitle' => l.nextActionSelfWithdrawTitle,
-    'nextActionSelfWithdrawBody' => l.nextActionSelfWithdrawBody(traveler),
+    'nextActionSelfWithdrawBody' =>
+      travelerKnown
+          ? l.nextActionSelfWithdrawBody(traveler)
+          : l.nextActionSelfWithdrawBodyNoName,
     'nextActionTravelerAcceptedTitle' => l.nextActionTravelerAcceptedTitle(
-      arg('sender', l.nextActionFallbackSender),
+      sender,
     ),
     'nextActionTravelerAcceptedBody' => l.nextActionTravelerAcceptedBody,
     'nextActionTravelerTransitTitle' => l.nextActionTravelerTransitTitle,
@@ -108,12 +100,13 @@ String _cap(String s) =>
     'nextActionTravelerArrivedTitle' => l.nextActionTravelerArrivedTitle,
     'nextActionTravelerArrivedBody' =>
       recipientKnown
-          ? l.nextActionTravelerArrivedBody(recipientThe, sender)
+          ? l.nextActionTravelerArrivedBody(a.args['recipient']!.trim(), sender)
           : l.nextActionTravelerArrivedBodyNoName(sender),
     'nextActionRecipientArrivedTitle' => l.nextActionRecipientArrivedTitle,
-    'nextActionRecipientArrivedBody' => l.nextActionRecipientArrivedBody(
-      traveler,
-    ),
+    'nextActionRecipientArrivedBody' =>
+      travelerKnown
+          ? l.nextActionRecipientArrivedBody(traveler)
+          : l.nextActionRecipientArrivedBodyNoName,
     _ => '',
   };
 

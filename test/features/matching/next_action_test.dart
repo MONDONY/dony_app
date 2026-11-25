@@ -67,7 +67,7 @@ void main() {
       expect(a.bodyKey, 'nextActionSelfWithdrawBody');
     });
 
-    test('selfRecipient_sender_inTransit : ACCEPTED garde le texte normal', () {
+    test('selfRecipient_sender_accepted : ACCEPTED garde le texte normal', () {
       final a = nextActionFor(_in('ACCEPTED', ParcelRole.sender, self: true))!;
       expect(a.titleKey, 'nextActionSenderAcceptedTitle');
     });

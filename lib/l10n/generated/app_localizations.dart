@@ -39555,7 +39555,7 @@ abstract class AppLocalizations {
   /// Carte prochaine action, expéditeur, avant la remise : texte
   ///
   /// In fr, this message translates to:
-  /// **'Ouvrez le QR avant de la voir. Après son scan, vous recevrez le code de retrait à donner à {recipient}.'**
+  /// **'Ouvrez le QR avant la rencontre. Après son scan, vous recevrez le code de retrait à donner à {recipient}.'**
   String nextActionSenderAcceptedBody(String recipient);
 
   /// Carte prochaine action, expéditeur, colis remis ou en route : titre
@@ -39573,13 +39573,13 @@ abstract class AppLocalizations {
   /// Carte prochaine action, expéditeur, colis arrivé : titre
   ///
   /// In fr, this message translates to:
-  /// **'{traveler} est arrivé à {city}'**
-  String nextActionSenderArrivedTitle(String traveler, String city);
+  /// **'Votre colis est arrivé à {city}'**
+  String nextActionSenderArrivedTitle(String city);
 
   /// Carte prochaine action, expéditeur, colis arrivé : texte
   ///
   /// In fr, this message translates to:
-  /// **'{recipient} doit lui montrer son code pour prendre le colis. Rappelez-le-lui s\'il ne l\'a pas.'**
+  /// **'{recipient} doit présenter son code pour prendre le colis. Rappelez-le-lui au besoin.'**
   String nextActionSenderArrivedBody(String recipient);
 
   /// Carte prochaine action, expéditeur qui est son propre destinataire, colis remis ou en route : titre
@@ -39603,7 +39603,7 @@ abstract class AppLocalizations {
   /// Carte prochaine action, expéditeur qui est son propre destinataire, colis arrivé : texte
   ///
   /// In fr, this message translates to:
-  /// **'Donnez votre code à {traveler} pour qu\'il vous remette le colis.'**
+  /// **'Donnez votre code à {traveler} pour récupérer le colis.'**
   String nextActionSelfWithdrawBody(String traveler);
 
   /// Carte prochaine action, voyageur, avant la remise : titre
@@ -39639,7 +39639,7 @@ abstract class AppLocalizations {
   /// Carte prochaine action, voyageur, colis arrivé : texte
   ///
   /// In fr, this message translates to:
-  /// **'Demandez à {recipient} son code à 6 chiffres. S\'il ne l\'a pas, appelez {sender}.'**
+  /// **'Demandez à {recipient} son code à 6 chiffres. Sans code, appelez {sender}.'**
   String nextActionTravelerArrivedBody(String recipient, String sender);
 
   /// Carte prochaine action, destinataire, colis arrivé : titre
@@ -39651,7 +39651,7 @@ abstract class AppLocalizations {
   /// Carte prochaine action, destinataire, colis arrivé : texte
   ///
   /// In fr, this message translates to:
-  /// **'Donnez votre code à {traveler} pour qu\'il vous remette le colis.'**
+  /// **'Donnez votre code à {traveler} pour récupérer le colis.'**
   String nextActionRecipientArrivedBody(String traveler);
 
   /// Repli quand le nom du voyageur est inconnu
@@ -39681,8 +39681,20 @@ abstract class AppLocalizations {
   /// Carte prochaine action, voyageur, colis arrivé : texte quand le nom du destinataire est inconnu
   ///
   /// In fr, this message translates to:
-  /// **'Demandez au destinataire son code à 6 chiffres. S\'il ne l\'a pas, appelez {sender}.'**
+  /// **'Demandez au destinataire son code à 6 chiffres. Sans code, appelez {sender}.'**
   String nextActionTravelerArrivedBodyNoName(String sender);
+
+  /// Carte prochaine action, expéditeur qui est son propre destinataire, colis arrivé : texte sans nom de voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Donnez votre code au voyageur pour récupérer le colis.'**
+  String get nextActionSelfWithdrawBodyNoName;
+
+  /// Carte prochaine action, destinataire, colis arrivé : texte sans nom de voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Donnez votre code au voyageur pour récupérer le colis.'**
+  String get nextActionRecipientArrivedBodyNoName;
 }
 
 class _AppLocalizationsDelegate
