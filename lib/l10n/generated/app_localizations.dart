@@ -5006,71 +5006,11 @@ abstract class AppLocalizations {
   /// **'Configurez votre compte Stripe pour que vos expéditeurs paient par carte, et recevez plus de colis.'**
   String get tripPublishIntroStripeSubtitle;
 
-  /// Option « au kilo » du toggle de mode de tarification, étape Prix & conditions
-  ///
-  /// In fr, this message translates to:
-  /// **'Au kilo'**
-  String get tripPublishPricingModeKg;
-
-  /// Option « grille + kilo » du toggle de mode de tarification
-  ///
-  /// In fr, this message translates to:
-  /// **'Articles + kilo'**
-  String get tripPublishPricingModeMixed;
-
   /// Libellé de la section prix au kg, réutilisé comme libellé du champ de prix personnalisé
   ///
   /// In fr, this message translates to:
   /// **'Prix par kg'**
   String get tripPublishPricePerKgSectionLabel;
-
-  /// Titre du toggle « Tarif au kilo », visible en mode grille
-  ///
-  /// In fr, this message translates to:
-  /// **'Tarif au kilo'**
-  String get tripPublishKgPriceToggleTitle;
-
-  /// Sous-titre du toggle « Tarif au kilo »
-  ///
-  /// In fr, this message translates to:
-  /// **'Optionnel avec les prix par article'**
-  String get tripPublishKgPriceToggleSubtitle;
-
-  /// Libellé de la puce « Autre prix » du sélecteur de prix au kg
-  ///
-  /// In fr, this message translates to:
-  /// **'Autre prix'**
-  String get tripPublishCustomPriceChipLabel;
-
-  /// Indice du champ de saisie du prix personnalisé au kg
-  ///
-  /// In fr, this message translates to:
-  /// **'ex: 12'**
-  String get tripPublishCustomPriceFieldHint;
-
-  /// Invite affichée tant qu'aucun prix au kg n'est sélectionné
-  ///
-  /// In fr, this message translates to:
-  /// **'Sélectionnez un prix pour voir l\'estimation'**
-  String get tripPublishPriceSelectPrompt;
-
-  /// Note affichée à la place de l'estimation quand la capacité est Kg libre
-  ///
-  /// In fr, this message translates to:
-  /// **'Capacité illimitée : estimation selon la demande'**
-  String get tripPublishUnlimitedCapacityEstimateNote;
-
-  /// Ligne d'estimation du prix au kg, montants déjà formatés dans la devise
-  ///
-  /// In fr, this message translates to:
-  /// **'Vous touchez {travelerNet} · l\'expéditeur paie {senderTotal}'**
-  String tripPublishPriceEstimateLine(String travelerNet, String senderTotal);
-
-  /// Note sous l'aperçu de grille en mode mixte, sans taux (FLUTTER-R6)
-  ///
-  /// In fr, this message translates to:
-  /// **'Yadony ajoute ses frais de service sur chaque article et sur le prix au kilo'**
-  String get tripPublishGridCommissionNotice;
 
   /// Titre du toggle d'ouverture aux propositions de prix des expéditeurs
   ///
@@ -5279,65 +5219,11 @@ abstract class AppLocalizations {
   /// **'Vos prix par article'**
   String get tripPublishGridPreviewLabel;
 
-  /// Bouton pour ouvrir la feuille listant tous les articles de la grille
-  ///
-  /// In fr, this message translates to:
-  /// **'Voir les {count} articles'**
-  String tripPublishGridPreviewSeeAll(int count);
-
-  /// Note sous l'aperçu de grille rappelant que la grille est un réglage de profil
-  ///
-  /// In fr, this message translates to:
-  /// **'Ces prix viennent de votre profil. Les modifier les change sur tous vos trajets.'**
-  String get tripPublishGridPreviewNote;
-
   /// Mention sous l'aperçu de grille quand les prix (exprimés dans la devise active du voyageur) sont convertis dans la devise du trajet
   ///
   /// In fr, this message translates to:
   /// **'Converti depuis {currency} au taux du jour'**
   String tripPublishGridPreviewConvertedNote(String currency);
-
-  /// Titre de la feuille listant tous les articles de la grille
-  ///
-  /// In fr, this message translates to:
-  /// **'Vos prix par article'**
-  String get tripPublishGridSheetTitle;
-
-  /// Sous-titre de la feuille de grille complète
-  ///
-  /// In fr, this message translates to:
-  /// **'Valable sur tous vos trajets'**
-  String get tripPublishGridSheetSubtitle;
-
-  /// Bouton sticky de la feuille de grille complète
-  ///
-  /// In fr, this message translates to:
-  /// **'Modifier mes prix'**
-  String get tripPublishGridSheetEditCta;
-
-  /// Note sous la liste d'articles de la feuille de grille complète, sans taux (FLUTTER-R6)
-  ///
-  /// In fr, this message translates to:
-  /// **'Prix payés par l\'expéditeur, frais de service Yadony compris.'**
-  String get tripPublishGridSheetCommissionNote;
-
-  /// Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucun prix par article'**
-  String get tripPublishGridEmptyTitle;
-
-  /// Sous-titre de la carte grille vide
-  ///
-  /// In fr, this message translates to:
-  /// **'Ajoutez au moins une étiquette pour que les expéditeurs réservent article par article.'**
-  String get tripPublishGridEmptySubtitle;
-
-  /// Bouton de la carte grille vide, ouvre l'écran de grille du profil
-  ///
-  /// In fr, this message translates to:
-  /// **'Ajouter mes prix par article'**
-  String get tripPublishGridComposeCta;
 
   /// Badge sur l'aperçu du corridor une fois départ et arrivée sélectionnés
   ///
@@ -10006,36 +9892,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ajouter un {label}'**
   String bidCreateGridItemAddSemantic(String label);
-
-  /// Avertissement prix trop bas (price_hint_widget.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Prix bas : risque de méfiance de l\'expéditeur'**
-  String get bidCreatePriceTooLowHint;
-
-  /// Avertissement prix trop élevé (price_hint_widget.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Prix élevé : peu de demandes attendues'**
-  String get bidCreatePriceTooHighHint;
-
-  /// Préfixe du prix médian de marché avec corridor (price_hint_widget.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Marché {corridor} : '**
-  String bidCreateMarketPriceCorridor(String corridor);
-
-  /// Préfixe du prix médian de marché sans corridor (price_hint_widget.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Marché '**
-  String get bidCreateMarketPriceLabel;
-
-  /// Suffixe affiché après le prix médian de marché (price_hint_widget.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **' · Votre prix est compétitif.'**
-  String get bidCreateCompetitivePriceSuffix;
 
   /// Statut du disclaimer avec sa date de signature (bid_details_content, tâche D2)
   ///
@@ -35031,18 +34887,6 @@ abstract class AppLocalizations {
   /// **'Au plus {max}'**
   String walletTopupAmountAtMost(String max);
 
-  /// Sous l'aperçu de la grille à l'étape Prix & conditions quand une grille de commission est en vigueur : qui paie les frais de service. Jamais le minimum (YADONY-FLUTTER-PROD-1J). Variante de tripPublishGridCommissionNotice.
-  ///
-  /// In fr, this message translates to:
-  /// **'Ces prix sont ceux que vous touchez. Les frais de service Yadony sont payés par l\'expéditeur, en plus. En espèces, vous les avancez sur votre solde Yadony et l\'expéditeur vous les rembourse dans le paiement.'**
-  String get tripPublishGridCommissionNoticeGrid;
-
-  /// Pied de la feuille complète de l'aperçu de grille quand une grille de commission est en vigueur. Jamais le minimum (YADONY-FLUTTER-PROD-1J).
-  ///
-  /// In fr, this message translates to:
-  /// **'Prix touchés par le voyageur. Les frais de service Yadony sont payés par l\'expéditeur, en plus. En espèces, le voyageur les avance sur son solde Yadony et l\'expéditeur les lui rembourse dans le paiement.'**
-  String get tripPublishGridSheetCommissionNoteGrid;
-
   /// Pied de l'écran de la grille de prix du voyageur quand une grille de commission est en vigueur. Jamais le minimum (YADONY-FLUTTER-PROD-1J).
   ///
   /// In fr, this message translates to:
@@ -39545,6 +39389,126 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les frais ne s\'appliquent pas aux paiements en espèces.'**
   String get cancelScaleCashNote;
+
+  /// Bouton − du prix au kilo (lecteur d'écran)
+  ///
+  /// In fr, this message translates to:
+  /// **'Baisser le prix de {step}'**
+  String tripPublishKgPriceDecrease(String step);
+
+  /// Bouton + du prix au kilo (lecteur d'écran)
+  ///
+  /// In fr, this message translates to:
+  /// **'Monter le prix de {step}'**
+  String tripPublishKgPriceIncrease(String step);
+
+  /// Lecture du gros montant du prix au kilo
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix au kilo : {price}'**
+  String tripPublishKgPriceSemantics(String price);
+
+  /// Pastille quand le prix vaut la médiane de la route
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix le plus courant sur ce trajet'**
+  String get tripPublishKgPriceMostCommon;
+
+  /// Lien qui remet le prix conseillé, une seule ligne
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenir au prix conseillé ({price})'**
+  String tripPublishKgPriceReset(String price);
+
+  /// Bornes du sélecteur de prix au kilo
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre {min} et {max} le kilo'**
+  String tripPublishKgPriceBounds(String min, String max);
+
+  /// Bloc gain : kilos du trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Si vous remplissez vos {kg} kg'**
+  String tripPublishEarningsIfFull(String kg);
+
+  /// Bloc gain : capacité illimitée
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour chaque kilo transporté'**
+  String get tripPublishEarningsPerKg;
+
+  /// Bloc gain : montant net voyageur, déjà formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous touchez {amount}'**
+  String tripPublishEarningsAmount(String amount);
+
+  /// Bloc gain : qui paie les frais
+  ///
+  /// In fr, this message translates to:
+  /// **'Les frais Yadony sont payés par l\'expéditeur, en plus de votre prix.'**
+  String get tripPublishEarningsFeesNote;
+
+  /// Titre de la carte d'invitation aux prix par article
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix par article'**
+  String get tripPublishItemPricesTitle;
+
+  /// Étiquette de la carte prix par article
+  ///
+  /// In fr, this message translates to:
+  /// **'Facultatif'**
+  String get tripPublishItemPricesOptional;
+
+  /// Texte de la carte d'invitation aux prix par article
+  ///
+  /// In fr, this message translates to:
+  /// **'Un téléphone ou un ordinateur pèse peu mais vaut plus. Fixez-leur un prix, l\'expéditeur le voit tout de suite.'**
+  String get tripPublishItemPricesPitch;
+
+  /// Exemple de prix pratiqué sur la route
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} · {price}'**
+  String tripPublishItemPriceExample(String label, String price);
+
+  /// Bouton de la carte prix par article (court, une ligne)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter mes prix'**
+  String get tripPublishItemPricesAddCta;
+
+  /// Sous la liste des prix par article
+  ///
+  /// In fr, this message translates to:
+  /// **'Le reste est compté au kilo, à {price}/kg.'**
+  String tripPublishItemPricesRestPerKg(String price);
+
+  /// Publication arrêtée : aucun moyen de paiement coché
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez au moins un moyen de paiement'**
+  String get tripPublishPaymentMethodMissing;
+
+  /// Écran grille vide : titre des prix suggérés de la route
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix pratiqués sur ce trajet'**
+  String get priceGridRouteSuggestionsTitle;
+
+  /// Écran grille vide : explication des prix suggérés
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez-les tels quels, vous pourrez les ajuster ensuite. Ces prix servent sur tous vos trajets.'**
+  String get priceGridRouteSuggestionsSubtitle;
+
+  /// Écran grille vide : ajoute tous les prix suggérés (court)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter ces prix'**
+  String get priceGridRouteSuggestionsApplyCta;
 }
 
 class _AppLocalizationsDelegate

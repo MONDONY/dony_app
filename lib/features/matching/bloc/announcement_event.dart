@@ -33,6 +33,9 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final String? description;
   final List<String> acceptedContentTypes;
   final List<String> refusedTypes;
+
+  /// Carte et espèces par défaut : les espèces sont cochées d'office à la
+  /// création d'un trajet, la carte reste retenue quand elle est disponible.
   final List<String> acceptedPaymentMethods;
   final String? capacityUnit;
   final String pricingMode;
@@ -68,7 +71,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     this.description,
     this.acceptedContentTypes = const [],
     this.refusedTypes = const [],
-    this.acceptedPaymentMethods = const ['STRIPE'],
+    this.acceptedPaymentMethods = const ['STRIPE', 'CASH'],
     this.capacityUnit,
     this.pricingMode = 'KG',
     required this.handoverDeadline,
@@ -279,7 +282,7 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     this.description,
     this.acceptedContentTypes = const [],
     this.refusedTypes = const [],
-    this.acceptedPaymentMethods = const ['STRIPE'],
+    this.acceptedPaymentMethods = const ['STRIPE', 'CASH'],
     this.capacityUnit,
     this.pricingMode = 'KG',
     required this.handoverDeadline,

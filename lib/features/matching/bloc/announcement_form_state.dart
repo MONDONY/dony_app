@@ -99,6 +99,10 @@ class AnnouncementFormState extends Equatable {
   final PricingMode pricingMode;
   final List<GridPreviewItem> gridPreviewItems;
 
+  /// La grille du voyageur a été lue au moins une fois : [pricingMode] en
+  /// est alors déduit (articles présents → MIXED, sinon KG).
+  final bool gridLoaded;
+
   const AnnouncementFormState({
     this.departureCity,
     this.arrivalCity,
@@ -121,6 +125,7 @@ class AnnouncementFormState extends Equatable {
     this.rejectedTypes = const [],
     this.pricingMode = PricingMode.kg,
     this.gridPreviewItems = const [],
+    this.gridLoaded = false,
   });
 
   bool get isFormValid =>
@@ -180,6 +185,7 @@ class AnnouncementFormState extends Equatable {
     List<String>? rejectedTypes,
     PricingMode? pricingMode,
     List<GridPreviewItem>? gridPreviewItems,
+    bool? gridLoaded,
   }) {
     return AnnouncementFormState(
       departureCity: departureCity ?? this.departureCity,
@@ -219,6 +225,7 @@ class AnnouncementFormState extends Equatable {
       rejectedTypes: rejectedTypes ?? this.rejectedTypes,
       pricingMode: pricingMode ?? this.pricingMode,
       gridPreviewItems: gridPreviewItems ?? this.gridPreviewItems,
+      gridLoaded: gridLoaded ?? this.gridLoaded,
     );
   }
 
@@ -245,5 +252,6 @@ class AnnouncementFormState extends Equatable {
     rejectedTypes,
     pricingMode,
     gridPreviewItems,
+    gridLoaded,
   ];
 }

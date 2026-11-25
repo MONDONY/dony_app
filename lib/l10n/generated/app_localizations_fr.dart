@@ -2956,43 +2956,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Configurez votre compte Stripe pour que vos expéditeurs paient par carte, et recevez plus de colis.';
 
   @override
-  String get tripPublishPricingModeKg => 'Au kilo';
-
-  @override
-  String get tripPublishPricingModeMixed => 'Articles + kilo';
-
-  @override
   String get tripPublishPricePerKgSectionLabel => 'Prix par kg';
-
-  @override
-  String get tripPublishKgPriceToggleTitle => 'Tarif au kilo';
-
-  @override
-  String get tripPublishKgPriceToggleSubtitle =>
-      'Optionnel avec les prix par article';
-
-  @override
-  String get tripPublishCustomPriceChipLabel => 'Autre prix';
-
-  @override
-  String get tripPublishCustomPriceFieldHint => 'ex: 12';
-
-  @override
-  String get tripPublishPriceSelectPrompt =>
-      'Sélectionnez un prix pour voir l\'estimation';
-
-  @override
-  String get tripPublishUnlimitedCapacityEstimateNote =>
-      'Capacité illimitée : estimation selon la demande';
-
-  @override
-  String tripPublishPriceEstimateLine(String travelerNet, String senderTotal) {
-    return 'Vous touchez $travelerNet · l\'expéditeur paie $senderTotal';
-  }
-
-  @override
-  String get tripPublishGridCommissionNotice =>
-      'Yadony ajoute ses frais de service sur chaque article et sur le prix au kilo';
 
   @override
   String get tripPublishNegotiableToggleTitle =>
@@ -3128,41 +3092,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishGridPreviewLabel => 'Vos prix par article';
 
   @override
-  String tripPublishGridPreviewSeeAll(int count) {
-    return 'Voir les $count articles';
-  }
-
-  @override
-  String get tripPublishGridPreviewNote =>
-      'Ces prix viennent de votre profil. Les modifier les change sur tous vos trajets.';
-
-  @override
   String tripPublishGridPreviewConvertedNote(String currency) {
     return 'Converti depuis $currency au taux du jour';
   }
-
-  @override
-  String get tripPublishGridSheetTitle => 'Vos prix par article';
-
-  @override
-  String get tripPublishGridSheetSubtitle => 'Valable sur tous vos trajets';
-
-  @override
-  String get tripPublishGridSheetEditCta => 'Modifier mes prix';
-
-  @override
-  String get tripPublishGridSheetCommissionNote =>
-      'Prix payés par l\'expéditeur, frais de service Yadony compris.';
-
-  @override
-  String get tripPublishGridEmptyTitle => 'Aucun prix par article';
-
-  @override
-  String get tripPublishGridEmptySubtitle =>
-      'Ajoutez au moins une étiquette pour que les expéditeurs réservent article par article.';
-
-  @override
-  String get tripPublishGridComposeCta => 'Ajouter mes prix par article';
 
   @override
   String get tripPublishCorridorConfirmedBadge => 'Confirmé';
@@ -6039,25 +5971,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String bidCreateGridItemAddSemantic(String label) {
     return 'Ajouter un $label';
   }
-
-  @override
-  String get bidCreatePriceTooLowHint =>
-      'Prix bas : risque de méfiance de l\'expéditeur';
-
-  @override
-  String get bidCreatePriceTooHighHint =>
-      'Prix élevé : peu de demandes attendues';
-
-  @override
-  String bidCreateMarketPriceCorridor(String corridor) {
-    return 'Marché $corridor : ';
-  }
-
-  @override
-  String get bidCreateMarketPriceLabel => 'Marché ';
-
-  @override
-  String get bidCreateCompetitivePriceSuffix => ' · Votre prix est compétitif.';
 
   @override
   String bidCreateDisclaimerSigned(String dateTime) {
@@ -21723,14 +21636,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get tripPublishGridCommissionNoticeGrid =>
-      'Ces prix sont ceux que vous touchez. Les frais de service Yadony sont payés par l\'expéditeur, en plus. En espèces, vous les avancez sur votre solde Yadony et l\'expéditeur vous les rembourse dans le paiement.';
-
-  @override
-  String get tripPublishGridSheetCommissionNoteGrid =>
-      'Prix touchés par le voyageur. Les frais de service Yadony sont payés par l\'expéditeur, en plus. En espèces, le voyageur les avance sur son solde Yadony et l\'expéditeur les lui rembourse dans le paiement.';
-
-  @override
   String get priceGridCommissionNoticeGrid =>
       'Vous encaissez exactement votre montant : les frais de service Yadony sont payés par l\'expéditeur. En espèces, vous les avancez sur votre solde Yadony et l\'expéditeur vous les rembourse dans le paiement.';
 
@@ -24766,4 +24671,87 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get cancelScaleCashNote =>
       'Les frais ne s\'appliquent pas aux paiements en espèces.';
+
+  @override
+  String tripPublishKgPriceDecrease(String step) {
+    return 'Baisser le prix de $step';
+  }
+
+  @override
+  String tripPublishKgPriceIncrease(String step) {
+    return 'Monter le prix de $step';
+  }
+
+  @override
+  String tripPublishKgPriceSemantics(String price) {
+    return 'Prix au kilo : $price';
+  }
+
+  @override
+  String get tripPublishKgPriceMostCommon =>
+      'Prix le plus courant sur ce trajet';
+
+  @override
+  String tripPublishKgPriceReset(String price) {
+    return 'Revenir au prix conseillé ($price)';
+  }
+
+  @override
+  String tripPublishKgPriceBounds(String min, String max) {
+    return 'Entre $min et $max le kilo';
+  }
+
+  @override
+  String tripPublishEarningsIfFull(String kg) {
+    return 'Si vous remplissez vos $kg kg';
+  }
+
+  @override
+  String get tripPublishEarningsPerKg => 'Pour chaque kilo transporté';
+
+  @override
+  String tripPublishEarningsAmount(String amount) {
+    return 'Vous touchez $amount';
+  }
+
+  @override
+  String get tripPublishEarningsFeesNote =>
+      'Les frais Yadony sont payés par l\'expéditeur, en plus de votre prix.';
+
+  @override
+  String get tripPublishItemPricesTitle => 'Prix par article';
+
+  @override
+  String get tripPublishItemPricesOptional => 'Facultatif';
+
+  @override
+  String get tripPublishItemPricesPitch =>
+      'Un téléphone ou un ordinateur pèse peu mais vaut plus. Fixez-leur un prix, l\'expéditeur le voit tout de suite.';
+
+  @override
+  String tripPublishItemPriceExample(String label, String price) {
+    return '$label · $price';
+  }
+
+  @override
+  String get tripPublishItemPricesAddCta => 'Ajouter mes prix';
+
+  @override
+  String tripPublishItemPricesRestPerKg(String price) {
+    return 'Le reste est compté au kilo, à $price/kg.';
+  }
+
+  @override
+  String get tripPublishPaymentMethodMissing =>
+      'Choisissez au moins un moyen de paiement';
+
+  @override
+  String get priceGridRouteSuggestionsTitle => 'Prix pratiqués sur ce trajet';
+
+  @override
+  String get priceGridRouteSuggestionsSubtitle =>
+      'Ajoutez-les tels quels, vous pourrez les ajuster ensuite. Ces prix servent sur tous vos trajets.';
+
+  @override
+  String get priceGridRouteSuggestionsApplyCta => 'Ajouter ces prix';
 }

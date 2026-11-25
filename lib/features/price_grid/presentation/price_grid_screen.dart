@@ -14,13 +14,18 @@ import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
+import 'package:dony/features/price_grid/data/models/price_grid_suggestion.dart';
 import 'package:dony/features/price_grid/presentation/price_grid_item_form_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PriceGridScreen extends StatelessWidget {
-  const PriceGridScreen({super.key});
+  const PriceGridScreen({super.key, this.suggestions = const []});
+
+  /// Prix pratiqués sur la route d'un trajet en cours de publication,
+  /// proposés tant que la grille est vide (étape « Prix & conditions »).
+  final List<PriceGridSuggestion> suggestions;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +80,7 @@ class PriceGridScreen extends StatelessWidget {
     }
 
     if (state is PriceGridLoaded) {
-      return _LoadedView(items: state.items);
+      return _LoadedView(items: state.items, suggestions: suggestions);
     }
 
     return const SizedBox.shrink();
@@ -150,9 +155,10 @@ class _ErrorView extends StatelessWidget {
 // ── Loaded view ─────────────────────────────────────────────────────────────
 
 class _LoadedView extends StatefulWidget {
-  const _LoadedView({required this.items});
+  const _LoadedView({required this.items, this.suggestions = const []});
 
   final List<PriceGridItemModel> items;
+  final List<PriceGridSuggestion> suggestions;
 
   @override
   State<_LoadedView> createState() => _LoadedViewState();
@@ -178,6 +184,15 @@ class _LoadedViewState extends State<_LoadedView> {
     final footerMinimum = commissionMinimumFor(ActiveCurrency.current?.code);
 
     if (items.isEmpty) {
+      if (widget.suggestions.isNotEmpty) {
+        return _RouteSuggestions(
+          suggestions: widget.suggestions,
+          onApply: () => context.read<PriceGridBloc>().add(
+            PriceGridSuggestionsAddRequested(widget.suggestions),
+          ),
+          onAddOther: () => _openAddSheet(context),
+        );
+      }
       return _EmptyGrid(onAdd: () => _openAddSheet(context));
     }
 
@@ -335,6 +350,72 @@ class _ScopeStamp extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
       ),
+    );
+  }
+}
+
+// ── Route suggestions ───────────────────────────────────────────────────────
+
+/// Grille vide ouverte depuis la publication d'un trajet : les prix pratiqués
+/// sur la route sont proposés tels quels, à ajouter d'un geste.
+class _RouteSuggestions extends StatelessWidget {
+  const _RouteSuggestions({
+    required this.suggestions,
+    required this.onApply,
+    required this.onAddOther,
+  });
+
+  final List<PriceGridSuggestion> suggestions;
+  final VoidCallback onApply;
+  final VoidCallback onAddOther;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    return ListView(
+      key: const Key('price-grid-route-suggestions'),
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.lg,
+        DonySpacing.lg,
+        MediaQuery.paddingOf(context).bottom + DonySpacing.xl,
+      ),
+      children: [
+        Text(l.priceGridRouteSuggestionsTitle, style: tt.titleLarge),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          l.priceGridRouteSuggestionsSubtitle,
+          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.base),
+        for (final suggestion in suggestions)
+          Padding(
+            padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+            child: DonyPriceTag(
+              label: suggestion.label,
+              emoji: emojiForLabel(suggestion.label),
+              price: formatPriceActive(suggestion.unitPriceNet),
+              compact: true,
+            ),
+          ),
+        const SizedBox(height: DonySpacing.base),
+        DonyButton(
+          key: const Key('price-grid-apply-suggestions'),
+          label: l.priceGridRouteSuggestionsApplyCta,
+          iconAsset: 'check',
+          onPressed: onApply,
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        DonyButton(
+          key: const Key('price-grid-add-other'),
+          label: l.priceGridAddLabelButton,
+          iconAsset: 'plus',
+          variant: DonyButtonVariant.secondary,
+          onPressed: onAddOther,
+        ),
+      ],
     );
   }
 }

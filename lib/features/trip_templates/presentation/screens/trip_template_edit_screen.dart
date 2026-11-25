@@ -92,6 +92,11 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       // rester coché.
       _onCurrencyChanged();
     } else {
+      // Nouveau modèle : prix conseillé de la devise (médiane embarquée),
+      // ajusté ensuite par « − / + ».
+      _fields.selectPrice(
+        KgPriceReference.forCurrency(_fields.currency.value).marketMedian,
+      );
       // Nouveau modèle : le kg par défaut part tout de suite dans le bloc,
       // que le compteur de valises affiche. Sans cet envoi, le bloc restait
       // à `null` (compteur sur 23 kg) et le modèle s'enregistrait avec le
@@ -101,6 +106,11 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
         bloc.add(AvailableKgChanged(_fields.availableKg.value));
       }
     }
+    // Prix par article : la grille du profil est lue d'emblée, le mode de
+    // tarification du modèle en découle (cf. AnnouncementFormBloc).
+    context.read<AnnouncementFormBloc>().add(
+      const AnnouncementGridPreviewLoadRequested(),
+    );
     _labelCtrl.addListener(_recomputeCanContinue);
     _fields.arrivalTime.addListener(_onArrivalTimeChanged);
     _fields.departureCity.addListener(_recomputeCanContinue);
@@ -108,7 +118,6 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _step.addListener(_recomputeCanContinue);
     _fields.priceOption.addListener(_recomputeCanContinue);
     _fields.customPriceCtrl.addListener(_recomputeCanContinue);
-    _fields.kgPriceEnabled.addListener(_recomputeCanContinue);
     _fields.currency.addListener(_recomputeCanContinue);
     _recomputeCanContinue();
 
@@ -121,7 +130,6 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _fields.priceOption.addListener(_syncPriceToFormBloc);
     _fields.customPrice.addListener(_syncPriceToFormBloc);
     _fields.availableKg.addListener(_syncKgToFormBloc);
-    _fields.kgPriceEnabled.addListener(_onKgToggleChanged);
     _fields.currency.addListener(_onCurrencyChanged);
   }
 
@@ -134,7 +142,6 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 
   void _syncPriceToFormBloc() {
     if (!mounted) return;
-    if (!_fields.kgPriceEnabled.value) return; // évite d'écraser le clear
     if (_fields.priceOption.value == -1) return; // pas encore de sélection
     context.read<AnnouncementFormBloc>().add(
       PriceChanged(_fields.pricePerKg!, currency: _fields.currency.value),
@@ -155,16 +162,6 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     final bloc = context.read<AnnouncementFormBloc>();
     if (bloc.state.availableKg == _fields.availableKg.value) return;
     bloc.add(AvailableKgChanged(_fields.availableKg.value));
-  }
-
-  void _onKgToggleChanged() {
-    if (!mounted) return;
-    if (!_fields.kgPriceEnabled.value) {
-      context.read<AnnouncementFormBloc>().add(
-        const AnnouncementPricePerKgClearedRequested(),
-      );
-      _fields.priceOption.value = 0; // reset chips visuellement
-    }
   }
 
   /// Remet la bascule mobile money à `false` quand la devise quitte la zone
@@ -202,8 +199,12 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _fields.pickupAddress.value = t.pickupAddress;
     _fields.deliveryAddress.value = t.deliveryAddress;
     _fields.availableKg.value = t.availableKg.toDouble();
-    _fields.kgPriceEnabled.value = !t.usesPriceGrid || t.pricePerKg != null;
-    _fields.selectPrice(t.pricePerKg);
+    // Modèle « grille seule » (d'avant le prix unique) : prix conseillé de
+    // la devise, le prix au kilo est désormais toujours renseigné.
+    _fields.selectPrice(
+      t.pricePerKg ??
+          KgPriceReference.forCurrency(_fields.currency.value).marketMedian,
+    );
     _fields.cashEnabled.value = t.acceptedPaymentMethods.contains('CASH');
     _fields.mobileMoneyEnabled.value = t.acceptedPaymentMethods.contains(
       'MOBILE_MONEY',
@@ -258,7 +259,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 
   /// Étape 0 : nom, villes et transport. Étape 1 (Lieux & capacité) :
   /// adresses optionnelles dans un modèle, toujours valide. Étape 2 (Prix &
-  /// conditions) : prix requis si le tarif au kilo est actif, borné par
+  /// conditions) : prix au kilo requis, borné par
   /// [minUnitPriceFor] et [maxUnitPriceFor] si c'est un prix libre
   /// (FLUTTER-GK).
   void _recomputeCanContinue() {
@@ -266,7 +267,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
         _labelCtrl.text.trim().isNotEmpty &&
         (_fields.departureCity.value?.trim().isNotEmpty ?? false) &&
         (_fields.arrivalCity.value?.trim().isNotEmpty ?? false);
-    var step2Ok = !_fields.kgPriceEnabled.value || _fields.pricePerKg != null;
+    var step2Ok = _fields.pricePerKg != null;
     if (step2Ok && _fields.isCustomPrice) {
       final parsed = parsePriceInput(_fields.customPriceCtrl.text);
       step2Ok =
@@ -303,12 +304,10 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   void dispose() {
     _fields.priceOption.removeListener(_recomputeCanContinue);
     _fields.customPriceCtrl.removeListener(_recomputeCanContinue);
-    _fields.kgPriceEnabled.removeListener(_recomputeCanContinue);
     _fields.currency.removeListener(_recomputeCanContinue);
     _fields.priceOption.removeListener(_syncPriceToFormBloc);
     _fields.customPrice.removeListener(_syncPriceToFormBloc);
     _fields.availableKg.removeListener(_syncKgToFormBloc);
-    _fields.kgPriceEnabled.removeListener(_onKgToggleChanged);
     _fields.currency.removeListener(_onCurrencyChanged);
     _labelCtrl.dispose();
     _step.dispose();
@@ -679,7 +678,6 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               customPriceNotifier: _fields.customPrice,
               availableKgNotifier: _fields.availableKg,
               cashEnabledNotifier: _fields.cashEnabled,
-              kgPriceEnabledNotifier: _fields.kgPriceEnabled,
               mobileMoneyEnabledNotifier: _fields.mobileMoneyEnabled,
               currencyNotifier: _fields.currency,
               mobileMoneyAccountActive: mobileMoneyAccountActiveFrom(

@@ -14,6 +14,14 @@ enum FormSubmissionStatus { idle, submitting, success, error }
 /// .error], réservé à l'exception serveur typée.
 enum PackageRequestFormError { budgetRequired }
 
+/// Moyens de paiement d'une nouvelle demande d'envoi : espèces et carte
+/// cochées au départ. Plus l'expéditeur en accepte, plus de voyageurs peuvent
+/// lui répondre. La devise filtre ensuite ce qu'elle ne permet pas.
+const Set<PaymentMethod> kDefaultPackageRequestPaymentMethods = {
+  PaymentMethod.stripe,
+  PaymentMethod.cash,
+};
+
 class PackageRequestFormState extends Equatable {
   const PackageRequestFormState({
     this.currentStep = 0,
@@ -31,7 +39,7 @@ class PackageRequestFormState extends Equatable {
     this.pickupNeighborhood,
     this.deliveryNeighborhood,
     this.negotiable = true,
-    this.acceptedPaymentMethods = const {PaymentMethod.stripe},
+    this.acceptedPaymentMethods = kDefaultPackageRequestPaymentMethods,
     this.totalBudgetEur,
     this.promoCode,
     this.submissionStatus = FormSubmissionStatus.idle,
@@ -64,6 +72,8 @@ class PackageRequestFormState extends Equatable {
   final String? pickupNeighborhood;
   final String? deliveryNeighborhood;
   final bool negotiable;
+
+  /// Espèces et carte cochées au départ ([kDefaultPackageRequestPaymentMethods]).
   final Set<PaymentMethod> acceptedPaymentMethods;
   final double? totalBudgetEur;
 

@@ -883,17 +883,7 @@
   "tripPublishIntroVerifyHint": "The button becomes “{continueLabel}” once your identity is verified.",
   "tripPublishIntroStripeTitle": "Activate card payments",
   "tripPublishIntroStripeSubtitle": "Set up your Stripe account so your senders can pay by card, and get more parcels.",
-  "tripPublishPricingModeKg": "By the kilo",
-  "tripPublishPricingModeMixed": "Items + kilo",
   "tripPublishPricePerKgSectionLabel": "Price per kg",
-  "tripPublishKgPriceToggleTitle": "Price per kilo",
-  "tripPublishKgPriceToggleSubtitle": "Optional with prices per item",
-  "tripPublishCustomPriceChipLabel": "Other price",
-  "tripPublishCustomPriceFieldHint": "e.g. 12",
-  "tripPublishPriceSelectPrompt": "Select a price to see the estimate",
-  "tripPublishUnlimitedCapacityEstimateNote": "Unlimited capacity: estimate based on demand",
-  "tripPublishPriceEstimateLine": "You get {travelerNet} · the sender pays {senderTotal}",
-  "tripPublishGridCommissionNotice": "Yadony adds its service fee to every item and to the price per kilo",
   "tripPublishNegotiableToggleTitle": "I accept price proposals",
   "tripPublishNegotiableToggleSubtitle": "Senders will be able to propose an amount, and you're always free to decline",
   "tripPublishPaymentMethodsSectionLabel": "Accepted payment methods",
@@ -948,16 +938,7 @@
   "tripPublishLockedPriceNoteSubtitle": "This parcel's amount was agreed with the sender and can't be changed here.",
   "tripPublishAgreedPriceLabel": "Total price agreed",
   "tripPublishGridPreviewLabel": "Your prices per item",
-  "tripPublishGridPreviewSeeAll": "See all {count} items",
-  "tripPublishGridPreviewNote": "These prices come from your profile. Editing them changes them on all your trips.",
   "tripPublishGridPreviewConvertedNote": "Converted from {currency} at today's rate",
-  "tripPublishGridSheetTitle": "Your prices per item",
-  "tripPublishGridSheetSubtitle": "Valid on all your trips",
-  "tripPublishGridSheetEditCta": "Edit my prices",
-  "tripPublishGridSheetCommissionNote": "Prices paid by the sender, Yadony service fee included.",
-  "tripPublishGridEmptyTitle": "No prices per item",
-  "tripPublishGridEmptySubtitle": "Add at least one item so senders can book item by item.",
-  "tripPublishGridComposeCta": "Add my prices per item",
   "tripPublishCorridorConfirmedBadge": "Confirmed",
   "tripPublishRouteSectionLabel": "Trip",
   "tripPublishDepartureCityLabel": "Departure city",
@@ -2070,31 +2051,6 @@
         "type": "String"
       }
     }
-  },
-  "bidCreatePriceTooLowHint": "Low price: risk of distrust from the sender",
-  "@bidCreatePriceTooLowHint": {
-    "description": "Avertissement prix trop bas (price_hint_widget.dart)"
-  },
-  "bidCreatePriceTooHighHint": "High price: few requests expected",
-  "@bidCreatePriceTooHighHint": {
-    "description": "Avertissement prix trop élevé (price_hint_widget.dart)"
-  },
-  "bidCreateMarketPriceCorridor": "Market {corridor}: ",
-  "@bidCreateMarketPriceCorridor": {
-    "description": "Préfixe du prix médian de marché avec corridor (price_hint_widget.dart)",
-    "placeholders": {
-      "corridor": {
-        "type": "String"
-      }
-    }
-  },
-  "bidCreateMarketPriceLabel": "Market ",
-  "@bidCreateMarketPriceLabel": {
-    "description": "Préfixe du prix médian de marché sans corridor (price_hint_widget.dart)"
-  },
-  "bidCreateCompetitivePriceSuffix": " · Your price is competitive.",
-  "@bidCreateCompetitivePriceSuffix": {
-    "description": "Suffixe affiché après le prix médian de marché (price_hint_widget.dart)"
   },
   "bidCreateDisclaimerSigned": "Disclaimer signed on {dateTime}",
   "@bidCreateDisclaimerSigned": {
@@ -10894,8 +10850,6 @@
   "@walletTopupAmountAtLeast": {"placeholders": {"min": {"type": "String"}}},
   "walletTopupAmountAtMost": "At most {max}",
   "@walletTopupAmountAtMost": {"placeholders": {"max": {"type": "String"}}},
-  "tripPublishGridCommissionNoticeGrid": "These are the prices you receive. The Yadony service fee is paid by the sender, on top. For cash, you advance it from your Yadony balance and the sender pays it back in the payment.",
-  "tripPublishGridSheetCommissionNoteGrid": "Prices received by the traveler. The Yadony service fee is paid by the sender, on top. For cash, the traveler advances it from their Yadony balance and the sender pays it back in the payment.",
   "priceGridCommissionNoticeGrid": "You collect exactly your amount: the Yadony service fee is paid by the sender. For cash, you advance it from your Yadony balance and the sender pays it back in the payment.",
   "priceGridSenderWillPayMessageGrid": "The sender will pay {paid}, including {fee} Yadony service fee.",
   "@priceGridSenderWillPayMessageGrid": {"placeholders": {"paid": {"type": "String"}, "fee": {"type": "String"}}},
@@ -12124,5 +12078,25 @@
   "cancelScaleLessThan": "Less than {days, plural, =1{1 day} other{{days} days}}, on the day of departure or after: {percent}%",
   "cancelScaleCap": "Cap: {fee} per parcel",
   "cancelScaleExactAmount": "The exact amount is shown before you confirm a cancellation.",
-  "cancelScaleCashNote": "Fees do not apply to cash payments."
+  "cancelScaleCashNote": "Fees do not apply to cash payments.",
+  "tripPublishKgPriceDecrease": "Lower the price by {step}",
+  "tripPublishKgPriceIncrease": "Raise the price by {step}",
+  "tripPublishKgPriceSemantics": "Price per kilo: {price}",
+  "tripPublishKgPriceMostCommon": "Most common price on this route",
+  "tripPublishKgPriceReset": "Back to suggested price ({price})",
+  "tripPublishKgPriceBounds": "Between {min} and {max} per kilo",
+  "tripPublishEarningsIfFull": "If you fill your {kg} kg",
+  "tripPublishEarningsPerKg": "For every kilo you carry",
+  "tripPublishEarningsAmount": "You get {amount}",
+  "tripPublishEarningsFeesNote": "Yadony fees are paid by the sender, on top of your price.",
+  "tripPublishItemPricesTitle": "Price per item",
+  "tripPublishItemPricesOptional": "Optional",
+  "tripPublishItemPricesPitch": "A phone or a laptop weighs little but is worth more. Set them a price, senders see it right away.",
+  "tripPublishItemPriceExample": "{label} · {price}",
+  "tripPublishItemPricesAddCta": "Add my prices",
+  "tripPublishItemPricesRestPerKg": "Everything else is charged per kilo, at {price}/kg.",
+  "tripPublishPaymentMethodMissing": "Choose at least one payment method",
+  "priceGridRouteSuggestionsTitle": "Prices used on this route",
+  "priceGridRouteSuggestionsSubtitle": "Add them as they are, you can adjust them later. These prices apply to all your trips.",
+  "priceGridRouteSuggestionsApplyCta": "Add these prices"
 }

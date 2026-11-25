@@ -1556,57 +1556,9 @@
   "@tripPublishIntroStripeSubtitle": {
     "description": "Texte du rappel Stripe (voyageur) dans l'intro de publication d'un trajet"
   },
-  "tripPublishPricingModeKg": "Au kilo",
-  "@tripPublishPricingModeKg": {
-    "description": "Option « au kilo » du toggle de mode de tarification, étape Prix & conditions"
-  },
-  "tripPublishPricingModeMixed": "Articles + kilo",
-  "@tripPublishPricingModeMixed": {
-    "description": "Option « grille + kilo » du toggle de mode de tarification"
-  },
   "tripPublishPricePerKgSectionLabel": "Prix par kg",
   "@tripPublishPricePerKgSectionLabel": {
     "description": "Libellé de la section prix au kg, réutilisé comme libellé du champ de prix personnalisé"
-  },
-  "tripPublishKgPriceToggleTitle": "Tarif au kilo",
-  "@tripPublishKgPriceToggleTitle": {
-    "description": "Titre du toggle « Tarif au kilo », visible en mode grille"
-  },
-  "tripPublishKgPriceToggleSubtitle": "Optionnel avec les prix par article",
-  "@tripPublishKgPriceToggleSubtitle": {
-    "description": "Sous-titre du toggle « Tarif au kilo »"
-  },
-  "tripPublishCustomPriceChipLabel": "Autre prix",
-  "@tripPublishCustomPriceChipLabel": {
-    "description": "Libellé de la puce « Autre prix » du sélecteur de prix au kg"
-  },
-  "tripPublishCustomPriceFieldHint": "ex: 12",
-  "@tripPublishCustomPriceFieldHint": {
-    "description": "Indice du champ de saisie du prix personnalisé au kg"
-  },
-  "tripPublishPriceSelectPrompt": "Sélectionnez un prix pour voir l'estimation",
-  "@tripPublishPriceSelectPrompt": {
-    "description": "Invite affichée tant qu'aucun prix au kg n'est sélectionné"
-  },
-  "tripPublishUnlimitedCapacityEstimateNote": "Capacité illimitée : estimation selon la demande",
-  "@tripPublishUnlimitedCapacityEstimateNote": {
-    "description": "Note affichée à la place de l'estimation quand la capacité est Kg libre"
-  },
-  "tripPublishPriceEstimateLine": "Vous touchez {travelerNet} · l'expéditeur paie {senderTotal}",
-  "@tripPublishPriceEstimateLine": {
-    "description": "Ligne d'estimation du prix au kg, montants déjà formatés dans la devise",
-    "placeholders": {
-      "travelerNet": {
-        "type": "String"
-      },
-      "senderTotal": {
-        "type": "String"
-      }
-    }
-  },
-  "tripPublishGridCommissionNotice": "Yadony ajoute ses frais de service sur chaque article et sur le prix au kilo",
-  "@tripPublishGridCommissionNotice": {
-    "description": "Note sous l'aperçu de grille en mode mixte, sans taux (FLUTTER-R6)"
   },
   "tripPublishNegotiableToggleTitle": "J'accepte les propositions de prix",
   "@tripPublishNegotiableToggleTitle": {
@@ -1765,19 +1717,6 @@
   "@tripPublishGridPreviewLabel": {
     "description": "Libellé au-dessus de l'aperçu de grille, étape Prix & conditions"
   },
-  "tripPublishGridPreviewSeeAll": "Voir les {count} articles",
-  "@tripPublishGridPreviewSeeAll": {
-    "description": "Bouton pour ouvrir la feuille listant tous les articles de la grille",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "tripPublishGridPreviewNote": "Ces prix viennent de votre profil. Les modifier les change sur tous vos trajets.",
-  "@tripPublishGridPreviewNote": {
-    "description": "Note sous l'aperçu de grille rappelant que la grille est un réglage de profil"
-  },
   "tripPublishGridPreviewConvertedNote": "Converti depuis {currency} au taux du jour",
   "@tripPublishGridPreviewConvertedNote": {
     "description": "Mention sous l'aperçu de grille quand les prix (exprimés dans la devise active du voyageur) sont convertis dans la devise du trajet",
@@ -1787,34 +1726,6 @@
         "example": "EUR"
       }
     }
-  },
-  "tripPublishGridSheetTitle": "Vos prix par article",
-  "@tripPublishGridSheetTitle": {
-    "description": "Titre de la feuille listant tous les articles de la grille"
-  },
-  "tripPublishGridSheetSubtitle": "Valable sur tous vos trajets",
-  "@tripPublishGridSheetSubtitle": {
-    "description": "Sous-titre de la feuille de grille complète"
-  },
-  "tripPublishGridSheetEditCta": "Modifier mes prix",
-  "@tripPublishGridSheetEditCta": {
-    "description": "Bouton sticky de la feuille de grille complète"
-  },
-  "tripPublishGridSheetCommissionNote": "Prix payés par l'expéditeur, frais de service Yadony compris.",
-  "@tripPublishGridSheetCommissionNote": {
-    "description": "Note sous la liste d'articles de la feuille de grille complète, sans taux (FLUTTER-R6)"
-  },
-  "tripPublishGridEmptyTitle": "Aucun prix par article",
-  "@tripPublishGridEmptyTitle": {
-    "description": "Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette"
-  },
-  "tripPublishGridEmptySubtitle": "Ajoutez au moins une étiquette pour que les expéditeurs réservent article par article.",
-  "@tripPublishGridEmptySubtitle": {
-    "description": "Sous-titre de la carte grille vide"
-  },
-  "tripPublishGridComposeCta": "Ajouter mes prix par article",
-  "@tripPublishGridComposeCta": {
-    "description": "Bouton de la carte grille vide, ouvre l'écran de grille du profil"
   },
   "tripPublishCorridorConfirmedBadge": "Confirmé",
   "@tripPublishCorridorConfirmedBadge": {
@@ -5515,31 +5426,6 @@
         "type": "String"
       }
     }
-  },
-  "bidCreatePriceTooLowHint": "Prix bas : risque de méfiance de l'expéditeur",
-  "@bidCreatePriceTooLowHint": {
-    "description": "Avertissement prix trop bas (price_hint_widget.dart)"
-  },
-  "bidCreatePriceTooHighHint": "Prix élevé : peu de demandes attendues",
-  "@bidCreatePriceTooHighHint": {
-    "description": "Avertissement prix trop élevé (price_hint_widget.dart)"
-  },
-  "bidCreateMarketPriceCorridor": "Marché {corridor} : ",
-  "@bidCreateMarketPriceCorridor": {
-    "description": "Préfixe du prix médian de marché avec corridor (price_hint_widget.dart)",
-    "placeholders": {
-      "corridor": {
-        "type": "String"
-      }
-    }
-  },
-  "bidCreateMarketPriceLabel": "Marché ",
-  "@bidCreateMarketPriceLabel": {
-    "description": "Préfixe du prix médian de marché sans corridor (price_hint_widget.dart)"
-  },
-  "bidCreateCompetitivePriceSuffix": " · Votre prix est compétitif.",
-  "@bidCreateCompetitivePriceSuffix": {
-    "description": "Suffixe affiché après le prix médian de marché (price_hint_widget.dart)"
   },
   "bidCreateDisclaimerSigned": "Disclaimer signé le {dateTime}",
   "@bidCreateDisclaimerSigned": {
@@ -22263,10 +22149,6 @@
   "@walletTopupAmountAtLeast": {"description": "Seule borne publiée par l'opérateur : le minimum, sous le montant saisi (wallet_topup_amount_screen.dart). {min} : montant formaté.", "placeholders": {"min": {"type": "String"}}},
   "walletTopupAmountAtMost": "Au plus {max}",
   "@walletTopupAmountAtMost": {"description": "Seule borne publiée par l'opérateur : le maximum, sous le montant saisi (wallet_topup_amount_screen.dart). {max} : montant formaté.", "placeholders": {"max": {"type": "String"}}},
-  "tripPublishGridCommissionNoticeGrid": "Ces prix sont ceux que vous touchez. Les frais de service Yadony sont payés par l'expéditeur, en plus. En espèces, vous les avancez sur votre solde Yadony et l'expéditeur vous les rembourse dans le paiement.",
-  "@tripPublishGridCommissionNoticeGrid": {"description": "Sous l'aperçu de la grille à l'étape Prix & conditions quand une grille de commission est en vigueur : qui paie les frais de service. Jamais le minimum (YADONY-FLUTTER-PROD-1J). Variante de tripPublishGridCommissionNotice."},
-  "tripPublishGridSheetCommissionNoteGrid": "Prix touchés par le voyageur. Les frais de service Yadony sont payés par l'expéditeur, en plus. En espèces, le voyageur les avance sur son solde Yadony et l'expéditeur les lui rembourse dans le paiement.",
-  "@tripPublishGridSheetCommissionNoteGrid": {"description": "Pied de la feuille complète de l'aperçu de grille quand une grille de commission est en vigueur. Jamais le minimum (YADONY-FLUTTER-PROD-1J)."},
   "priceGridCommissionNoticeGrid": "Vous encaissez exactement votre montant : les frais de service Yadony sont payés par l'expéditeur. En espèces, vous les avancez sur votre solde Yadony et l'expéditeur vous les rembourse dans le paiement.",
   "@priceGridCommissionNoticeGrid": {"description": "Pied de l'écran de la grille de prix du voyageur quand une grille de commission est en vigueur. Jamais le minimum (YADONY-FLUTTER-PROD-1J)."},
   "priceGridSenderWillPayMessageGrid": "L'expéditeur paiera {paid}, dont {fee} de frais de service Yadony.",
@@ -23921,5 +23803,45 @@
   "cancelScaleExactAmount": "Le montant exact est affiché avant que vous confirmiez une annulation.",
   "@cancelScaleExactAmount": {"description": "Barème : le montant exact est montré avant la confirmation."},
   "cancelScaleCashNote": "Les frais ne s'appliquent pas aux paiements en espèces.",
-  "@cancelScaleCashNote": {"description": "Barème : exclusion des paiements en espèces."}
+  "@cancelScaleCashNote": {"description": "Barème : exclusion des paiements en espèces."},
+  "tripPublishKgPriceDecrease": "Baisser le prix de {step}",
+  "@tripPublishKgPriceDecrease": {"description": "Bouton − du prix au kilo (lecteur d'écran)", "placeholders": {"step": {"type": "String"}}},
+  "tripPublishKgPriceIncrease": "Monter le prix de {step}",
+  "@tripPublishKgPriceIncrease": {"description": "Bouton + du prix au kilo (lecteur d'écran)", "placeholders": {"step": {"type": "String"}}},
+  "tripPublishKgPriceSemantics": "Prix au kilo : {price}",
+  "@tripPublishKgPriceSemantics": {"description": "Lecture du gros montant du prix au kilo", "placeholders": {"price": {"type": "String"}}},
+  "tripPublishKgPriceMostCommon": "Prix le plus courant sur ce trajet",
+  "@tripPublishKgPriceMostCommon": {"description": "Pastille quand le prix vaut la médiane de la route"},
+  "tripPublishKgPriceReset": "Revenir au prix conseillé ({price})",
+  "@tripPublishKgPriceReset": {"description": "Lien qui remet le prix conseillé, une seule ligne", "placeholders": {"price": {"type": "String"}}},
+  "tripPublishKgPriceBounds": "Entre {min} et {max} le kilo",
+  "@tripPublishKgPriceBounds": {"description": "Bornes du sélecteur de prix au kilo", "placeholders": {"min": {"type": "String"}, "max": {"type": "String"}}},
+  "tripPublishEarningsIfFull": "Si vous remplissez vos {kg} kg",
+  "@tripPublishEarningsIfFull": {"description": "Bloc gain : kilos du trajet", "placeholders": {"kg": {"type": "String"}}},
+  "tripPublishEarningsPerKg": "Pour chaque kilo transporté",
+  "@tripPublishEarningsPerKg": {"description": "Bloc gain : capacité illimitée"},
+  "tripPublishEarningsAmount": "Vous touchez {amount}",
+  "@tripPublishEarningsAmount": {"description": "Bloc gain : montant net voyageur, déjà formaté", "placeholders": {"amount": {"type": "String"}}},
+  "tripPublishEarningsFeesNote": "Les frais Yadony sont payés par l'expéditeur, en plus de votre prix.",
+  "@tripPublishEarningsFeesNote": {"description": "Bloc gain : qui paie les frais"},
+  "tripPublishItemPricesTitle": "Prix par article",
+  "@tripPublishItemPricesTitle": {"description": "Titre de la carte d'invitation aux prix par article"},
+  "tripPublishItemPricesOptional": "Facultatif",
+  "@tripPublishItemPricesOptional": {"description": "Étiquette de la carte prix par article"},
+  "tripPublishItemPricesPitch": "Un téléphone ou un ordinateur pèse peu mais vaut plus. Fixez-leur un prix, l'expéditeur le voit tout de suite.",
+  "@tripPublishItemPricesPitch": {"description": "Texte de la carte d'invitation aux prix par article"},
+  "tripPublishItemPriceExample": "{label} · {price}",
+  "@tripPublishItemPriceExample": {"description": "Exemple de prix pratiqué sur la route", "placeholders": {"label": {"type": "String"}, "price": {"type": "String"}}},
+  "tripPublishItemPricesAddCta": "Ajouter mes prix",
+  "@tripPublishItemPricesAddCta": {"description": "Bouton de la carte prix par article (court, une ligne)"},
+  "tripPublishItemPricesRestPerKg": "Le reste est compté au kilo, à {price}/kg.",
+  "@tripPublishItemPricesRestPerKg": {"description": "Sous la liste des prix par article", "placeholders": {"price": {"type": "String"}}},
+  "tripPublishPaymentMethodMissing": "Choisissez au moins un moyen de paiement",
+  "@tripPublishPaymentMethodMissing": {"description": "Publication arrêtée : aucun moyen de paiement coché"},
+  "priceGridRouteSuggestionsTitle": "Prix pratiqués sur ce trajet",
+  "@priceGridRouteSuggestionsTitle": {"description": "Écran grille vide : titre des prix suggérés de la route"},
+  "priceGridRouteSuggestionsSubtitle": "Ajoutez-les tels quels, vous pourrez les ajuster ensuite. Ces prix servent sur tous vos trajets.",
+  "@priceGridRouteSuggestionsSubtitle": {"description": "Écran grille vide : explication des prix suggérés"},
+  "priceGridRouteSuggestionsApplyCta": "Ajouter ces prix",
+  "@priceGridRouteSuggestionsApplyCta": {"description": "Écran grille vide : ajoute tous les prix suggérés (court)"}
 }

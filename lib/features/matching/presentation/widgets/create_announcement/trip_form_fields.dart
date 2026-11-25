@@ -34,8 +34,8 @@ class TripFormFields {
   /// Index de chip ; -1 = aucune sélection ; `presets.length` = « Autre prix ».
   final priceOption = ValueNotifier<int>(-1);
   final customPrice = ValueNotifier<double>(6.0);
-  final kgPriceEnabled = ValueNotifier<bool>(true);
-  final cashEnabled = ValueNotifier<bool>(false);
+  // Espèces cochées d'office, comme à la création d'un trajet.
+  final cashEnabled = ValueNotifier<bool>(true);
   final mobileMoneyEnabled = ValueNotifier<bool>(false);
   final negotiable = ValueNotifier<bool>(false);
   // Valeurs de donnée (libellés ContentCategory) : comparées au catalogue par
@@ -58,10 +58,9 @@ class TripFormFields {
 
   bool get isCustomPrice => priceOption.value == presets.length;
 
-  /// Net voyageur au kilo, ou nul si non renseigné ou si le prix au kilo est
-  /// désactivé (mode grille seule).
+  /// Net voyageur au kilo, ou nul si non renseigné.
   double? get pricePerKg {
-    if (!kgPriceEnabled.value || priceOption.value < 0) return null;
+    if (priceOption.value < 0) return null;
     if (isCustomPrice) return customPrice.value;
     return presets[priceOption.value.clamp(0, presets.length - 1)];
   }
@@ -111,7 +110,6 @@ class TripFormFields {
     availableKg.dispose();
     priceOption.dispose();
     customPrice.dispose();
-    kgPriceEnabled.dispose();
     cashEnabled.dispose();
     mobileMoneyEnabled.dispose();
     negotiable.dispose();

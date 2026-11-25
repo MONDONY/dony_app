@@ -110,7 +110,7 @@ class PackageRequestFormBloc
       deliveryNeighborhood: r.deliveryNeighborhood,
       negotiable: r.negotiable,
       acceptedPaymentMethods: r.acceptedPaymentMethods.isEmpty
-          ? const {PaymentMethod.stripe}
+          ? kDefaultPackageRequestPaymentMethods
           : r.acceptedPaymentMethods,
       totalBudgetEur: gross,
       targetPriceEur: gross,

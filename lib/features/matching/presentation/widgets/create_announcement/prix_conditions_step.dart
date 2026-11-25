@@ -6,27 +6,23 @@ import 'dart:async';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/pricing/commission_pricing.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
-import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_switch_confirm_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/grid_preview_card.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/payment_setup_notice.dart';
-import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_price_section.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/residence_country_settings.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -48,7 +44,6 @@ class PrixConditionsStep extends StatelessWidget {
   final ValueNotifier<double> customPriceNotifier;
   final ValueNotifier<double> availableKgNotifier;
   final ValueNotifier<bool> cashEnabledNotifier;
-  final ValueNotifier<bool> kgPriceEnabledNotifier; // ← NOUVEAU
 
   /// Le voyageur garde la carte sur ce trajet (FLUTTER-FT). Coché par défaut,
   /// décochable seulement quand la carte est disponible (Stripe Connect prêt,
@@ -127,6 +122,21 @@ class PrixConditionsStep extends StatelessWidget {
   /// mobile money explique la devise au lieu de proposer d'en changer.
   final bool currencyLocked;
 
+  /// Sans carte, les espèces restent cochées et verrouillées (règle des
+  /// modèles de trajet). À `false` (création et modification d'un trajet),
+  /// chaque moyen se décoche librement : la publication vérifie qu'il en
+  /// reste au moins un (cf. [paymentErrorNotifier]).
+  final bool lockCashWithoutCard;
+
+  /// Passe à `true` quand une publication a été arrêtée faute de moyen de
+  /// paiement : la section passe en orange avec son message. Propriété de
+  /// l'écran hôte, qui la remet à `false` dès qu'un moyen est coché.
+  final ValueListenable<bool>? paymentErrorNotifier;
+
+  /// Clé posée sur la section des moyens de paiement, pour que l'hôte y fasse
+  /// défiler l'écran quand la publication est arrêtée.
+  final Key? paymentSectionKey;
+
   const PrixConditionsStep({
     super.key,
     this.currency,
@@ -135,7 +145,6 @@ class PrixConditionsStep extends StatelessWidget {
     required this.customPriceNotifier,
     required this.availableKgNotifier,
     required this.cashEnabledNotifier,
-    required this.kgPriceEnabledNotifier, // ← NOUVEAU
     this.cardEnabledNotifier,
     required this.mobileMoneyEnabledNotifier,
     required this.currencyNotifier,
@@ -156,23 +165,15 @@ class PrixConditionsStep extends StatelessWidget {
     this.lockedTotalPriceEur,
     this.showPaymentMethods = true,
     this.currencyLocked = false,
+    this.lockCashWithoutCard = true,
+    this.paymentErrorNotifier,
+    this.paymentSectionKey,
   });
 
-  /// Repères de la devise de l'annonce : chips, médiane, fourchette.
-  KgPriceReference get _reference =>
-      KgPriceReference.forCurrency(currency ?? SupportedCurrency.eur);
-
-  List<double> get _presets => _reference.presets;
-
-  bool get _isCustomPrice => priceOptionNotifier.value == _presets.length;
-
-  double get _pricePerKg => _isCustomPrice
-      ? customPriceNotifier.value
-      : _presets[priceOptionNotifier.value.clamp(0, _presets.length - 1)];
+  SupportedCurrency get _currency => currency ?? SupportedCurrency.eur;
 
   @override
   Widget build(BuildContext context) {
-    // TODO(refactor): décomposer en _PriceSection / _PaymentSection / _ContentSection / _NoteSection
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
@@ -192,369 +193,41 @@ class PrixConditionsStep extends StatelessWidget {
                 )
               : const _LockedPriceNote(),
         if (!lockPrice) ...[
-          // ── MODE DE TARIFICATION ──────────────────────────────────────────────
-          BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-            buildWhen: (p, c) => p.pricingMode != c.pricingMode,
-            builder: (context, formState) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                ),
-                padding: const EdgeInsets.all(3),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _ModeToggleOption(
-                        label: l.tripPublishPricingModeKg,
-                        active: formState.pricingMode == PricingMode.kg,
-                        onTap: () => context.read<AnnouncementFormBloc>().add(
-                          const AnnouncementPricingModeSetRequested(
-                            PricingMode.kg,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: _ModeToggleOption(
-                        label: l.tripPublishPricingModeMixed,
-                        active: formState.pricingMode == PricingMode.mixed,
-                        onTap: () => context.read<AnnouncementFormBloc>().add(
-                          const AnnouncementPricingModeSetRequested(
-                            PricingMode.mixed,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+          // ── PRIX AU KILO ──────────────────────────────────────────────────
+          // Un seul prix au kilo, réglé par « − / + » autour du prix conseillé
+          // de la route. Le mode de tarification n'est plus un choix : il se
+          // déduit des prix par article (grille remplie → MIXED).
+          AiFieldMark(
+            fields: const ['pricePerKg', 'pricingMode'],
+            child: CaSectionLabel(
+              label: l.tripPublishPricePerKgSectionLabel,
+              iconAsset: 'tag',
+            ),
+          ),
+          const SizedBox(height: DonySpacing.md),
+          KgPriceStepperCard(
+            currency: _currency,
+            priceOptionNotifier: priceOptionNotifier,
+            customPriceNotifier: customPriceNotifier,
+            customPriceCtrl: customPriceCtrl,
           ).animate().fadeIn(delay: 50.ms),
           const SizedBox(height: DonySpacing.md),
-
-          // ── PRIX PAR KG ───────────────────────────────────────────────────────
-          BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-            buildWhen: (p, c) => p.pricingMode != c.pricingMode,
-            builder: (context, formState) {
-              final isMixed = formState.pricingMode == PricingMode.mixed;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AiFieldMark(
-                    fields: const ['pricePerKg', 'pricingMode'],
-                    child: CaSectionLabel(
-                      label: l.tripPublishPricePerKgSectionLabel,
-                      iconAsset: 'tag',
-                    ),
-                  ),
-                  const SizedBox(height: DonySpacing.md),
-                  // ── Toggle "Tarif au kilo" (MIXED uniquement) ─────────────
-                  if (isMixed)
-                    ValueListenableBuilder<bool>(
-                      valueListenable: kgPriceEnabledNotifier,
-                      builder: (context, kgEnabled, _) {
-                        return SwitchListTile(
-                          key: const Key('kg-price-toggle'),
-                          value: kgEnabled,
-                          onChanged: (v) => kgPriceEnabledNotifier.value = v,
-                          activeThumbColor: cs.primary,
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(
-                            l.tripPublishKgPriceToggleTitle,
-                            style: tt.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          subtitle: Text(
-                            l.tripPublishKgPriceToggleSubtitle,
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  // ── Chips (cachées si toggle OFF) ─────────────────────────
-                  ValueListenableBuilder<bool>(
-                    valueListenable: kgPriceEnabledNotifier,
-                    builder: (context, kgEnabled, _) {
-                      if (!kgEnabled) return const SizedBox.shrink();
-                      return ListenableBuilder(
-                        listenable: Listenable.merge([
-                          priceOptionNotifier,
-                          customPriceNotifier,
-                          availableKgNotifier,
-                        ]),
-                        builder: (context, _) {
-                          final selectedIdx = priceOptionNotifier.value;
-                          final isCustom = _isCustomPrice;
-                          final pricePerKg = _pricePerKg;
-                          final kg = availableKgNotifier.value;
-                          final travelerNet = kg * pricePerKg;
-                          // Sous grille, le prix saisi est le net du voyageur et les frais de
-                          // service (minimum compris) s'ajoutent au total ; sans
-                          // grille, le taux unique s'applique comme avant.
-                          final senderTotal = senderPriceForNet(
-                            travelerNet,
-                            currency?.code,
-                          ).gross;
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // ── Chips preset ──────────────────────────
-                              Row(
-                                children: List.generate(_presets.length, (i) {
-                                  final selected = selectedIdx == i;
-                                  return Expanded(
-                                    child: Padding(
-                                      padding: EdgeInsets.only(
-                                        left: i == 0 ? 0 : DonySpacing.xs,
-                                        right: DonySpacing.xs,
-                                      ),
-                                      child: GestureDetector(
-                                        onTap: () =>
-                                            priceOptionNotifier.value = i,
-                                        child: AnimatedContainer(
-                                          duration: 180.ms,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: DonySpacing.md,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: selected
-                                                ? cs.successLight
-                                                : cs.surface,
-                                            borderRadius: BorderRadius.circular(
-                                              DonyRadius.lg,
-                                            ),
-                                            border: Border.all(
-                                              color: selected
-                                                  ? cs.success
-                                                  : cs.outline,
-                                              width: selected ? 1.5 : 1,
-                                            ),
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              CurrencyFormatter.formatOrPlain(
-                                                _presets[i],
-                                                currency,
-                                              ),
-                                              style: tt.titleMedium?.copyWith(
-                                                color: selected
-                                                    ? cs.success
-                                                    : cs.onSurface,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }),
-                              ),
-                              const SizedBox(height: DonySpacing.xs),
-                              // ── Chip "Autre" ──────────────────────────
-                              GestureDetector(
-                                onTap: () {
-                                  priceOptionNotifier.value = _presets.length;
-                                  WidgetsBinding.instance.addPostFrameCallback((
-                                    _,
-                                  ) {
-                                    FocusScope.of(context).unfocus();
-                                  });
-                                },
-                                child: AnimatedContainer(
-                                  duration: 180.ms,
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: DonySpacing.sm,
-                                    horizontal: DonySpacing.base,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isCustom
-                                        ? cs.successLight
-                                        : cs.surface,
-                                    borderRadius: BorderRadius.circular(
-                                      DonyRadius.lg,
-                                    ),
-                                    border: Border.all(
-                                      color: isCustom ? cs.success : cs.outline,
-                                      width: isCustom ? 1.5 : 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      DonyIcon(
-                                        'square-pen',
-                                        size: 16,
-                                        color: isCustom
-                                            ? cs.success
-                                            : cs.onSurfaceVariant,
-                                      ),
-                                      const SizedBox(width: DonySpacing.xs),
-                                      Flexible(
-                                        child: Text(
-                                          l.tripPublishCustomPriceChipLabel,
-                                          style: tt.bodyMedium?.copyWith(
-                                            color: isCustom
-                                                ? cs.success
-                                                : cs.onSurfaceVariant,
-                                            fontWeight: isCustom
-                                                ? FontWeight.w600
-                                                : FontWeight.normal,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              // ── Champ prix custom ─────────────────────
-                              if (isCustom) ...[
-                                const SizedBox(height: DonySpacing.sm),
-                                ValueListenableBuilder<TextEditingValue>(
-                                  valueListenable: customPriceCtrl,
-                                  builder: (context, value, _) => DonyTextField(
-                                    label: l.tripPublishPricePerKgSectionLabel,
-                                    hint: l.tripPublishCustomPriceFieldHint,
-                                    controller: customPriceCtrl,
-                                    key: const Key('trip-custom-price'),
-                                    // Bornes de la devise de l'annonce
-                                    // (FLUTTER-GK) : le CTA reste grisé tant
-                                    // que le prix est hors bornes.
-                                    errorText: unitPriceBoundsError(
-                                      l,
-                                      parsePriceInput(value.text),
-                                      currency ?? SupportedCurrency.eur,
-                                    ),
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                          decimal: true,
-                                        ),
-                                    suffixIcon: Padding(
-                                      padding: const EdgeInsets.only(
-                                        right: DonySpacing.md,
-                                      ),
-                                      child: Text(
-                                        '${currency?.symbol ?? ''}/kg',
-                                        style: tt.bodyMedium?.copyWith(
-                                          color: cs.onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ),
-                                    onChanged: (v) {
-                                      final parsed = double.tryParse(
-                                        v.replaceAll(',', '.'),
-                                      );
-                                      if (parsed != null && parsed > 0) {
-                                        customPriceNotifier.value = parsed;
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(height: DonySpacing.sm),
-                              Text(
-                                selectedIdx == -1
-                                    ? l.tripPublishPriceSelectPrompt
-                                    : kg == 0
-                                    ? l.tripPublishUnlimitedCapacityEstimateNote
-                                    : l.tripPublishPriceEstimateLine(
-                                        CurrencyFormatter.formatOrPlain(
-                                          travelerNet,
-                                          currency,
-                                        ),
-                                        CurrencyFormatter.formatOrPlain(
-                                          senderTotal,
-                                          currency,
-                                        ),
-                                      ),
-                                style: tt.bodySmall?.copyWith(
-                                  color: selectedIdx == -1
-                                      ? cs.error.withValues(alpha: 0.7)
-                                      : cs.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ],
-              );
-            },
+          KgPriceEarningsBlock(
+            currency: _currency,
+            priceOptionNotifier: priceOptionNotifier,
+            customPriceNotifier: customPriceNotifier,
+            customPriceCtrl: customPriceCtrl,
+            availableKgNotifier: availableKgNotifier,
+          ).animate().fadeIn(delay: 80.ms),
+          const SizedBox(height: DonySpacing.md),
+          // ── PRIX PAR ARTICLE (facultatif) ─────────────────────────────────
+          ItemPricesCard(
+            currency: _currency,
+            gridCurrency: gridCurrency,
+            priceOptionNotifier: priceOptionNotifier,
+            customPriceNotifier: customPriceNotifier,
+            customPriceCtrl: customPriceCtrl,
           ).animate().fadeIn(delay: 100.ms),
-          // ── Price hint (masqué si toggle OFF) ────────────────────────────────
-          ValueListenableBuilder<bool>(
-            valueListenable: kgPriceEnabledNotifier,
-            builder: (context, kgEnabled, _) {
-              if (!kgEnabled) return const SizedBox.shrink();
-              return BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-                buildWhen: (p, c) =>
-                    p.priceWarning != c.priceWarning ||
-                    p.pricePerKg != c.pricePerKg ||
-                    p.departureCity != c.departureCity ||
-                    p.arrivalCity != c.arrivalCity,
-                builder: (context, formState) {
-                  final dep = formState.departureCity;
-                  final arr = formState.arrivalCity;
-                  final corridor = (dep != null && arr != null)
-                      ? '$dep – $arr'
-                      : null;
-                  return PriceHintWidget(
-                    marketMedianPrice: _reference.marketMedian,
-                    warning: formState.priceWarning,
-                    corridor: corridor,
-                    currency: currency,
-                  );
-                },
-              );
-            },
-          ),
-
-          // ── APERÇU GRILLE (mode MIXED) ────────────────────────────────────────
-          BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-            buildWhen: (p, c) =>
-                p.pricingMode != c.pricingMode ||
-                p.gridPreviewItems != c.gridPreviewItems,
-            builder: (context, formState) {
-              if (formState.pricingMode != PricingMode.mixed) {
-                return const SizedBox.shrink();
-              }
-              // Grille en vigueur pour la devise : le minimum sert de témoin, il
-              // n'est jamais affiché (YADONY-FLUTTER-PROD-1J).
-              final commissionMinimum = commissionMinimumFor(currency?.code);
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: DonySpacing.md),
-                  GridPreviewCard(
-                    items: formState.gridPreviewItems,
-                    currency: currency,
-                    gridCurrency: gridCurrency,
-                  ),
-                  const SizedBox(height: DonySpacing.sm),
-                  Container(
-                    padding: const EdgeInsets.all(DonySpacing.sm),
-                    decoration: BoxDecoration(
-                      color: cs.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(DonyRadius.sm),
-                    ),
-                    child: Text(
-                      commissionMinimum == null
-                          ? l.tripPublishGridCommissionNotice
-                          : l.tripPublishGridCommissionNoticeGrid,
-                      style: tt.bodySmall?.copyWith(color: cs.primary),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
           // ── OUVERTURE AUX PROPOSITIONS DE PRIX ────────────────────────────
           const SizedBox(height: DonySpacing.md),
           ValueListenableBuilder<bool>(
@@ -589,50 +262,71 @@ class PrixConditionsStep extends StatelessWidget {
         // Masqué dans le flux trajet dédié : le mode de paiement est déjà fixé
         // par la négociation (lockContext.paymentMethod).
         if (showPaymentMethods) ...[
-          AiFieldMark(
-            fields: const ['cardEnabled', 'cashEnabled', 'mobileMoneyEnabled'],
-            child: CaSectionLabel(
-              label: l.tripPublishPaymentMethodsSectionLabel,
-              iconAsset: 'banknote',
+          ValueListenableBuilder<bool>(
+            valueListenable:
+                paymentErrorNotifier ??
+                const AlwaysStoppedAnimation<bool>(false),
+            builder: (context, paymentError, _) => _PaymentSectionFrame(
+              key: paymentSectionKey,
+              error: paymentError,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AiFieldMark(
+                    fields: const [
+                      'cardEnabled',
+                      'cashEnabled',
+                      'mobileMoneyEnabled',
+                    ],
+                    child: CaSectionLabel(
+                      label: l.tripPublishPaymentMethodsSectionLabel,
+                      iconAsset: 'banknote',
+                    ),
+                  ),
+                  const SizedBox(height: DonySpacing.sm),
+                  BlocBuilder<StripeAccountBloc, StripeAccountState>(
+                    builder: (ctx, stripeState) =>
+                        ValueListenableBuilder<SupportedCurrency>(
+                          valueListenable: currencyNotifier,
+                          builder: (ctx, currencyValue, _) {
+                            final cardStatus = _cardStatusFor(
+                              stripeState,
+                              currencyValue,
+                            );
+                            final cardNotifier = cardEnabledNotifier;
+                            if (cardNotifier == null) {
+                              return _buildPaymentMethodsCard(
+                                tt,
+                                cs,
+                                ctx,
+                                l,
+                                cardStatus: cardStatus,
+                                currency: currencyValue,
+                                cardOn: cardStatus == _CardStatus.active,
+                              );
+                            }
+                            return ValueListenableBuilder<bool>(
+                              valueListenable: cardNotifier,
+                              builder: (ctx, cardWanted, _) =>
+                                  _buildPaymentMethodsCard(
+                                    tt,
+                                    cs,
+                                    ctx,
+                                    l,
+                                    cardStatus: cardStatus,
+                                    currency: currencyValue,
+                                    cardOn:
+                                        cardStatus == _CardStatus.active &&
+                                        cardWanted,
+                                  ),
+                            );
+                          },
+                        ),
+                  ).animate().fadeIn(delay: 180.ms),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: DonySpacing.sm),
-          BlocBuilder<StripeAccountBloc, StripeAccountState>(
-            builder: (ctx, stripeState) =>
-                ValueListenableBuilder<SupportedCurrency>(
-                  valueListenable: currencyNotifier,
-                  builder: (ctx, currencyValue, _) {
-                    final cardStatus = _cardStatusFor(
-                      stripeState,
-                      currencyValue,
-                    );
-                    final cardNotifier = cardEnabledNotifier;
-                    if (cardNotifier == null) {
-                      return _buildPaymentMethodsCard(
-                        tt,
-                        cs,
-                        ctx,
-                        l,
-                        cardStatus: cardStatus,
-                        currency: currencyValue,
-                        cardOn: cardStatus == _CardStatus.active,
-                      );
-                    }
-                    return ValueListenableBuilder<bool>(
-                      valueListenable: cardNotifier,
-                      builder: (ctx, cardWanted, _) => _buildPaymentMethodsCard(
-                        tt,
-                        cs,
-                        ctx,
-                        l,
-                        cardStatus: cardStatus,
-                        currency: currencyValue,
-                        cardOn: cardStatus == _CardStatus.active && cardWanted,
-                      ),
-                    );
-                  },
-                ),
-          ).animate().fadeIn(delay: 180.ms),
           const SizedBox(height: DonySpacing.xxl),
         ], // fin de la section paiement (masquée quand !showPaymentMethods)
         // ── CE QUE J'ACCEPTE ──────────────────────────────────────────────────
@@ -864,7 +558,7 @@ class PrixConditionsStep extends StatelessWidget {
     // ajoute d'office, l'écran les montre donc activées et verrouillées. Au
     // moins un mode de paiement est requis pour publier. Post-frame pour ne
     // pas muter d'état pendant le build.
-    final cashLocked = !cardOn;
+    final cashLocked = lockCashWithoutCard && !cardOn;
     if (cashLocked && !cashEnabledNotifier.value) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         cashEnabledNotifier.value = true;
@@ -888,7 +582,9 @@ class PrixConditionsStep extends StatelessWidget {
               // verrouillées : un trajet garde toujours un moyen de paiement.
               _CardStatus.active when cardNotifier != null => (wanted) {
                 cardNotifier.value = wanted;
-                if (!wanted && !cashEnabledNotifier.value) {
+                if (lockCashWithoutCard &&
+                    !wanted &&
+                    !cashEnabledNotifier.value) {
                   DonySnackbar.show(
                     ctx,
                     message: l.tripPublishPaymentMethodRequired,
@@ -1256,49 +952,62 @@ enum _CardStatus {
   checking,
 }
 
-/// Bouton de sélection du mode de tarification dans le toggle.
-class _ModeToggleOption extends StatelessWidget {
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _ModeToggleOption({
-    required this.label,
-    required this.active,
-    required this.onTap,
+/// Cadre de la section « Modes de paiement acceptés ». Passe en orange, avec
+/// son message, quand une publication a été arrêtée faute de moyen coché.
+class _PaymentSectionFrame extends StatelessWidget {
+  const _PaymentSectionFrame({
+    super.key,
+    required this.error,
+    required this.child,
   });
+
+  final bool error;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
-        decoration: BoxDecoration(
-          color: active ? cs.surface : Colors.transparent,
-          borderRadius: BorderRadius.circular(DonyRadius.sm),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      padding: EdgeInsets.all(error ? DonySpacing.md : 0),
+      decoration: BoxDecoration(
+        color: error ? cs.warningLight : Colors.transparent,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(
+          color: error ? cs.warning : Colors.transparent,
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          child,
+          if (error) ...[
+            const SizedBox(height: DonySpacing.sm),
+            Semantics(
+              liveRegion: true,
+              child: Row(
+                key: const Key('payment-methods-error'),
+                children: [
+                  DonyIcon('circle-alert', size: 16, color: cs.warning),
+                  const SizedBox(width: DonySpacing.xs + 2),
+                  Expanded(
+                    child: Text(
+                      context.l10n.tripPublishPaymentMethodMissing,
+                      style: tt.bodySmall?.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: cs.warning,
+                      ),
+                    ),
                   ),
-                ]
-              : null,
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: tt.labelMedium?.copyWith(
-              color: active ? cs.primary : cs.onSurfaceVariant,
-              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                ],
+              ),
             ),
-          ),
-        ),
+          ],
+        ],
       ),
     );
   }
