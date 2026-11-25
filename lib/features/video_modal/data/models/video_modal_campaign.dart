@@ -1,3 +1,4 @@
+import 'package:dony/features/video_modal/data/models/parcel_role.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
 import 'package:equatable/equatable.dart';
 
@@ -26,7 +27,15 @@ enum VideoModalTrigger {
   formAbandoned('FORM_ABANDONED'),
   tripViewedRepeatedly('TRIP_VIEWED_REPEATEDLY'),
   paymentFailed('PAYMENT_FAILED'),
-  appUpdated('APP_UPDATED');
+  appUpdated('APP_UPDATED'),
+
+  // Étapes d'un colis : l'app les déclenche avec le colis concerné (bidId) et
+  // le rôle de la personne ; un modal par colis et par étape (ONCE_PER_PARCEL).
+  parcelAccepted('PARCEL_ACCEPTED'),
+  parcelHandedOver('PARCEL_HANDED_OVER'),
+  parcelInTransit('PARCEL_IN_TRANSIT'),
+  parcelArrived('PARCEL_ARRIVED'),
+  parcelDelivered('PARCEL_DELIVERED');
 
   const VideoModalTrigger(this.wire);
 
@@ -49,6 +58,17 @@ enum VideoModalTrigger {
     publishTrip ||
     sendParcel => false,
     _ => true,
+  };
+
+  /// Étape de la vie d'un colis (compte comme un moment, avec le colis en
+  /// contexte).
+  bool get isParcelStep => switch (this) {
+    parcelAccepted ||
+    parcelHandedOver ||
+    parcelInTransit ||
+    parcelArrived ||
+    parcelDelivered => true,
+    _ => false,
   };
 
   /// Les `corridors` d'une campagne s'appliquent à ce déclencheur.
@@ -216,9 +236,22 @@ enum InfoScreen {
   myMoney('MY_MONEY', '/payments/money'),
   referral('REFERRAL', '/profile/referral'),
   tripAlerts('TRIP_ALERTS', '/corridor-alerts'),
-  help('HELP', '/profile/help/faq');
+  help('HELP', '/profile/help/faq'),
 
-  const InfoScreen(this.wire, this.route, {this.isShellTab = false});
+  // Écrans d'un colis : ils exigent le colis (bidId) du moment, fourni à
+  // l'exécution du bouton. La route est un repère jamais naviguée telle
+  // quelle : voir [needsParcelContext].
+  parcelDetail('PARCEL_DETAIL', '/parcel', needsParcelContext: true),
+  parcelQr('PARCEL_QR', '/parcel', needsParcelContext: true),
+  parcelSendCode('PARCEL_SEND_CODE', '/parcel', needsParcelContext: true),
+  parcelTracking('PARCEL_TRACKING', '/parcel', needsParcelContext: true);
+
+  const InfoScreen(
+    this.wire,
+    this.route, {
+    this.isShellTab = false,
+    this.needsParcelContext = false,
+  });
 
   final String wire;
 
@@ -228,6 +261,11 @@ enum InfoScreen {
 
   /// Onglet du shell : on y va avec `go`, les autres écrans se poussent.
   final bool isShellTab;
+
+  /// Écran propre à un colis : la route finale dépend du `bidId` et du rôle,
+  /// connus seulement à l'exécution (le [route] n'est alors qu'un repère, ne
+  /// jamais l'ouvrir directement).
+  final bool needsParcelContext;
 
   static InfoScreen? fromWire(Object? value) {
     for (final s in values) {
@@ -275,7 +313,11 @@ enum VideoModalFrequency {
 
   /// À chaque fois que l'action se produit : aucun plafond, aucun drapeau de
   /// session (un modal d'écran ou de moment peut revenir à chaque occurrence).
-  everyTime('EVERY_TIME');
+  everyTime('EVERY_TIME'),
+
+  /// Une fois par colis (étapes de colis) : le back compte par colis, pas
+  /// l'app, donc aucun plafond local.
+  oncePerParcel('ONCE_PER_PARCEL');
 
   const VideoModalFrequency(this.wire);
 
@@ -445,6 +487,7 @@ class VideoModalCampaign extends Equatable {
     this.lastShownAt,
     this.triggerOptions = const VideoModalTriggerOptions(),
     this.corridors = const [],
+    this.parcelRoles = const {},
   });
 
   static const defaultMaxDisplays = 3;
@@ -509,6 +552,9 @@ class VideoModalCampaign extends Equatable {
   final VideoModalTriggerOptions triggerOptions;
   final List<VideoModalCorridor> corridors;
 
+  /// Étapes de colis : rôles ciblés, ensemble vide pour tous les rôles.
+  final Set<ParcelRole> parcelRoles;
+
   /// Plafond d'affichages de la version, `null` : pas de plafond (à chaque
   /// lancement, tous les N jours).
   int? get displayCap => switch (frequency) {
@@ -516,7 +562,8 @@ class VideoModalCampaign extends Equatable {
     VideoModalFrequency.upToN => maxDisplays,
     VideoModalFrequency.everyOpen ||
     VideoModalFrequency.everyNDays ||
-    VideoModalFrequency.everyTime => null,
+    VideoModalFrequency.everyTime ||
+    VideoModalFrequency.oncePerParcel => null,
   };
 
   /// Le plafond d'affichages n'est pas atteint.
@@ -590,6 +637,11 @@ class VideoModalCampaign extends Equatable {
     if (rawCorridors is List && rawCorridors.isNotEmpty && corridors.isEmpty) {
       return null;
     }
+    // Rôles inconnus ignorés ; absent ou illisible : tous les rôles.
+    final rawRoles = json['parcelRoles'];
+    final parcelRoles = rawRoles is List
+        ? rawRoles.map(ParcelRole.fromWire).whereType<ParcelRole>().toSet()
+        : const <ParcelRole>{};
     final size = _int(json['sizePercent']);
     final rawHighlights = json['highlights'];
     final highlights = rawHighlights is List
@@ -642,6 +694,7 @@ class VideoModalCampaign extends Equatable {
       lastShownAt: _instant(json['lastShownAt']),
       triggerOptions: VideoModalTriggerOptions.parse(json['triggerOptions']),
       corridors: corridors,
+      parcelRoles: parcelRoles,
     );
   }
 
@@ -779,5 +832,6 @@ class VideoModalCampaign extends Equatable {
     lastShownAt,
     triggerOptions,
     corridors,
+    parcelRoles,
   ];
 }

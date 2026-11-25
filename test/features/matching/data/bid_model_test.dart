@@ -526,4 +526,18 @@ void main() {
       expect(model.currency, 'EUR');
     });
   });
+
+  group('BidModel.recipientIsSender', () {
+    test('bidModel_recipientIsSender_defaultsFalseWhenAbsent', () {
+      expect(BidModel.fromJson(_minimalJson).recipientIsSender, isFalse);
+    });
+
+    test('bidModel_recipientIsSender_parsesTrue', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'recipientIsSender': true,
+      });
+      expect(model.recipientIsSender, isTrue);
+    });
+  });
 }

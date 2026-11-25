@@ -108,6 +108,8 @@ class VideoModalLocalHistory extends Equatable {
         if (current.displays >= campaign.maxDisplays) return false;
       case VideoModalFrequency.everyOpen:
       case VideoModalFrequency.everyTime:
+      case VideoModalFrequency.oncePerParcel:
+        // Le back compte par colis : pas de plafond local.
         break;
       case VideoModalFrequency.everyNDays:
         final last = current.lastShownAt;

@@ -163,6 +163,11 @@ class BidModel {
   @JsonKey(defaultValue: false)
   final bool recipientDeclined;
 
+  /// Vue expéditeur : il est lui-même le destinataire (il récupère son colis).
+  /// Le back ne sert jamais `true` au voyageur. `false` sur un back antérieur.
+  @JsonKey(defaultValue: false)
+  final bool recipientIsSender;
+
   /// Colis chez le voyageur dont le code de retrait a été effacé (trop
   /// d'essais faux) ou a expiré (yadony-back #461, FLUTTER-G2). Servi aux
   /// deux parties : l'expéditeur le régénère, le voyageur le lui demande.
@@ -378,6 +383,7 @@ class BidModel {
     this.recipientDesignatedByUsername = false,
     this.recipientUsername,
     this.recipientDeclined = false,
+    this.recipientIsSender = false,
     this.pickupCodeRenewalNeeded = false,
     this.recipientReplacementRequestedAt,
     required this.status,
