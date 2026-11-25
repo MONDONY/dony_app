@@ -1033,6 +1033,11 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// Le voyageur ouvre son trajet aux propositions de prix des expéditeurs.
   final _negotiableNotifier = ValueNotifier<bool>(false);
 
+  /// Modification d'un trajet vendu aux seuls prix par article (aucun prix
+  /// au kilo publié) : il le reste, sauf si le voyageur ajoute lui-même un
+  /// prix au kilo (« Ajouter un prix au kilo »).
+  final _kgPriceAddedNotifier = ValueNotifier<bool>(false);
+
   /// Le prix au kilo affiché a été posé par l'app (prix conseillé de la
   /// route), pas par le voyageur : un nouveau prix conseillé (réponse du
   /// back, changement de route ou de devise) le remplace. Le moindre geste
@@ -1089,8 +1094,17 @@ class _TripFormContentState extends State<_TripFormContent> {
   //   (bien plus bas) de l'euro, ou l'inverse laisserait passer un montant
   //   que le serveur refuserait. Le plancher (1 €/kg converti) arrête les
   //   8 XOF/kg saisis en croyant taper des euros (FLUTTER-GK).
+  /// Modification d'un trajet publié sans prix au kilo (prix par article
+  /// seuls) : le prix au kilo y est facultatif.
+  bool get _kgPriceOptionalOnEdit =>
+      _isEdit &&
+      !widget.lockCorridorAndDate &&
+      widget.announcement!.pricePerKg == null;
+
   bool get _isPriceValid {
     if (_isLocked) return true;
+    // Trajet sans prix au kilo gardé tel quel : rien à valider.
+    if (_kgPriceOptionalOnEdit && !_kgPriceAddedNotifier.value) return true;
     final idx = _priceOptionNotifier.value;
     if (idx == -1) return false;
     if (!_isCustomPrice) return true;
@@ -1270,6 +1284,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       );
     }
     _priceOptionNotifier.addListener(_onPriceTouched);
+    _kgPriceAddedNotifier.addListener(_onKgPriceAddedChanged);
     _customPriceNotifier.addListener(_onPriceTouched);
     _transportModeNotifier.addListener(_syncCanSubmit);
     _priceOptionNotifier.addListener(_syncCanSubmit);
@@ -1384,6 +1399,28 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   /// Un geste sur le prix (« − / + », retour au prix conseillé, brouillon,
   /// modèle, IA) le fige : un prix conseillé arrivé ensuite ne l'écrase plus.
+  /// « Ajouter un prix au kilo » / « Retirer le prix au kilo » en
+  /// modification d'un trajet sans prix au kilo : la carte − / + part du prix
+  /// conseillé, et le retrait remet le trajet tel qu'il était publié.
+  void _onKgPriceAddedChanged() {
+    if (!mounted || !_kgPriceOptionalOnEdit) return;
+    if (_kgPriceAddedNotifier.value) {
+      writeKgPrice(
+        price: _suggestedPricePerKg,
+        currency: _currency,
+        priceOptionNotifier: _priceOptionNotifier,
+        customPriceNotifier: _customPriceNotifier,
+        customPriceCtrl: _customPriceCtrl,
+      );
+    } else {
+      _priceOptionNotifier.value = -1;
+      context.read<AnnouncementFormBloc>().add(
+        const AnnouncementPricePerKgClearedRequested(),
+      );
+    }
+    _syncCanSubmit();
+  }
+
   void _onPriceTouched() {
     if (_applyingAutoPrice) return;
     _priceIsAutoSuggested = false;
@@ -1562,6 +1599,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _mobileMoneyEnabledNotifier,
     _stopsNotifier,
     _negotiableNotifier,
+    _kgPriceAddedNotifier,
     _descriptionCtrl,
     _customAcceptedCtrl,
     _refusedCtrl,
@@ -1601,6 +1639,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       _mobileMoneyEnabledNotifier.value,
       _stopsNotifier.value,
       _negotiableNotifier.value,
+      _kgPriceAddedNotifier.value,
       set(_selectedContentNotifier.value),
       set(_customAcceptedNotifier.value),
       set(_refusedTypesNotifier.value),
@@ -1972,6 +2011,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     widget.currencyNotifier.removeListener(_syncCanSubmit);
     widget.currencyNotifier.removeListener(_onCurrencyChanged);
     _paymentErrorNotifier.dispose();
+    _kgPriceAddedNotifier.removeListener(_onKgPriceAddedChanged);
+    _kgPriceAddedNotifier.dispose();
     _cashEnabledNotifier.dispose();
     _cardEnabledNotifier.dispose();
     _stopsNotifier.dispose();
@@ -2285,10 +2326,20 @@ class _TripFormContentState extends State<_TripFormContent> {
 
     final formBlocState = context.read<AnnouncementFormBloc>().state;
     final capacityUnitWire = formBlocState.capacityUnit.toWire();
-    final pricingModeWire = formBlocState.pricingMode == PricingMode.mixed
+    // Trajet publié sans prix au kilo et gardé ainsi : même envoi
+    // qu'avant (mode d'origine, prix du bloc vide). Prix au kilo ajouté :
+    // articles + reste au kilo (MIXED).
+    final keepsNoKgPrice =
+        _kgPriceOptionalOnEdit && !_kgPriceAddedNotifier.value;
+    final addedKgPrice = _kgPriceOptionalOnEdit && _kgPriceAddedNotifier.value;
+    final pricingModeWire = keepsNoKgPrice
+        ? widget.announcement!.pricingMode
+        : addedKgPrice || formBlocState.pricingMode == PricingMode.mixed
         ? 'MIXED'
         : 'KG';
-    final pricePerKgToSubmit = formBlocState.pricePerKg ?? 0.0;
+    final pricePerKgToSubmit = keepsNoKgPrice
+        ? 0.0
+        : formBlocState.pricePerKg ?? 0.0;
 
     final handoverDeadline = _resolveHandoverDeadline();
     if (handoverDeadline == null) {
@@ -3466,6 +3517,10 @@ class _TripFormContentState extends State<_TripFormContent> {
               lockCashWithoutCard: false,
               paymentErrorNotifier: _paymentErrorNotifier,
               paymentSectionKey: _paymentSectionKey,
+              // Trajet publié sans prix au kilo : il le reste, sauf ajout.
+              kgPriceAddedNotifier: _kgPriceOptionalOnEdit
+                  ? _kgPriceAddedNotifier
+                  : null,
               mobileMoneyEnabledNotifier: _mobileMoneyEnabledNotifier,
               currencyNotifier: widget.currencyNotifier,
               mobileMoneyAccountActive: mobileMoneyAccountActive,

@@ -23843,5 +23843,11 @@
   "priceGridRouteSuggestionsSubtitle": "Ajoutez-les tels quels, vous pourrez les ajuster ensuite. Ces prix servent sur tous vos trajets.",
   "@priceGridRouteSuggestionsSubtitle": {"description": "Écran grille vide : explication des prix suggérés"},
   "priceGridRouteSuggestionsApplyCta": "Ajouter ces prix",
-  "@priceGridRouteSuggestionsApplyCta": {"description": "Écran grille vide : ajoute tous les prix suggérés (court)"}
+  "@priceGridRouteSuggestionsApplyCta": {"description": "Écran grille vide : ajoute tous les prix suggérés (court)"},
+  "tripEditKgPriceNoneInfo": "Ce trajet est vendu uniquement aux prix par article",
+  "@tripEditKgPriceNoneInfo": {"description": "Modification d'un trajet sans prix au kilo"},
+  "tripEditKgPriceAddCta": "Ajouter un prix au kilo",
+  "@tripEditKgPriceAddCta": {"description": "Lien texte, une ligne"},
+  "tripEditKgPriceRemoveCta": "Retirer le prix au kilo",
+  "@tripEditKgPriceRemoveCta": {"description": "Lien texte, une ligne"}
 }

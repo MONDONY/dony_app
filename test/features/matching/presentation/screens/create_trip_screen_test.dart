@@ -398,7 +398,8 @@ AnnouncementModel _makeFullAnnouncement({
   TripStops? stops,
   String currency = 'EUR',
   String status = 'ACTIVE',
-  double pricePerKg = 8.0,
+  double? pricePerKg = 8.0,
+  String pricingMode = 'KG',
   Set<BidPaymentMethod> acceptedPaymentMethods = const {
     BidPaymentMethod.stripe,
     BidPaymentMethod.cash,
@@ -443,6 +444,7 @@ AnnouncementModel _makeFullAnnouncement({
   currency: currency,
   currencyEditable: currencyEditable,
   capacityUnit: capacityUnit,
+  pricingMode: pricingMode,
 );
 
 /// Returns a minimal `LockedTripContext` suitable for locked-mode tests.
@@ -2655,6 +2657,123 @@ void main() {
           ),
         ),
       ).called(1);
+    });
+
+    // ── Trajet publié aux seuls prix par article (sans prix au kilo) ────────
+    group('modification sans prix au kilo', () {
+      AnnouncementModel gridOnly() =>
+          _makeFullAnnouncement(pricePerKg: null, pricingMode: 'MIXED');
+
+      AnnouncementUpdateRequested lastUpdate() =>
+          verify(
+                () => announcementBloc.add(
+                  captureAny(that: isA<AnnouncementUpdateRequested>()),
+                ),
+              ).captured.last
+              as AnnouncementUpdateRequested;
+
+      testWidgets('pas de carte − / + : ligne d\'info et lien d\'ajout', (
+        tester,
+      ) async {
+        await navigateToStep2(tester, announcement: gridOnly());
+
+        expect(find.byKey(const Key('kg-price-none-on-edit')), findsOneWidget);
+        expect(
+          find.text('Ce trajet est vendu uniquement aux prix par article'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('kg-price-card')), findsNothing);
+        expect(find.byKey(const Key('kg-price-earnings')), findsNothing);
+        // « Enregistrer » reste possible sans prix au kilo.
+        expect(
+          tester
+              .widget<DonyButton>(
+                find.byKey(const Key('create-announcement-submit')),
+              )
+              .onPressed,
+          isNotNull,
+        );
+      });
+
+      testWidgets('enregistrer sans ajout : même envoi qu\'avant (mode '
+          'd\'origine, aucun prix au kilo)', (tester) async {
+        await navigateToStep2(tester, announcement: gridOnly());
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        final event = lastUpdate();
+        expect(event.pricingMode, 'MIXED');
+        expect(event.pricePerKg, 0);
+      });
+
+      testWidgets('« Ajouter un prix au kilo » : carte au prix conseillé, '
+          'enregistré en MIXED avec ce prix', (tester) async {
+        await navigateToStep2(tester, announcement: gridOnly());
+
+        final add = find.byKey(const Key('kg-price-add-on-edit'));
+        await tester.ensureVisible(add);
+        await tester.tap(add);
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.byKey(const Key('kg-price-card')), findsOneWidget);
+        expect(
+          tester.widget<Text>(find.byKey(const Key('kg-price-amount'))).data,
+          '8',
+        );
+        expect(
+          find.byKey(const Key('kg-price-remove-on-edit')),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        final event = lastUpdate();
+        expect(event.pricingMode, 'MIXED');
+        expect(event.pricePerKg, 8);
+      });
+
+      testWidgets('« Retirer le prix au kilo » : retour au trajet d\'origine', (
+        tester,
+      ) async {
+        await navigateToStep2(tester, announcement: gridOnly());
+
+        final add = find.byKey(const Key('kg-price-add-on-edit'));
+        await tester.ensureVisible(add);
+        await tester.tap(add);
+        await tester.pump(const Duration(milliseconds: 400));
+        final remove = find.byKey(const Key('kg-price-remove-on-edit'));
+        await tester.ensureVisible(remove);
+        await tester.tap(remove);
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.byKey(const Key('kg-price-card')), findsNothing);
+        expect(find.byKey(const Key('kg-price-none-on-edit')), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        final event = lastUpdate();
+        expect(event.pricingMode, 'MIXED');
+        expect(event.pricePerKg, 0);
+      });
+
+      testWidgets('trajet qui avait un prix au kilo : carte inchangée, '
+          'aucun lien d\'ajout ni de retrait', (tester) async {
+        await navigateToStep2(tester);
+
+        expect(find.byKey(const Key('kg-price-card')), findsOneWidget);
+        expect(find.byKey(const Key('kg-price-none-on-edit')), findsNothing);
+        expect(find.byKey(const Key('kg-price-add-on-edit')), findsNothing);
+        expect(find.byKey(const Key('kg-price-remove-on-edit')), findsNothing);
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+        final event = lastUpdate();
+        expect(event.pricePerKg, 8);
+        expect(event.pricingMode, 'KG');
+      });
     });
 
     testWidgets('FLUTTER-GE : les escales préremplies repartent à '

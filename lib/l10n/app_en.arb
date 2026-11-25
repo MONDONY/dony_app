@@ -12098,5 +12098,8 @@
   "tripPublishPaymentMethodMissing": "Choose at least one payment method",
   "priceGridRouteSuggestionsTitle": "Prices used on this route",
   "priceGridRouteSuggestionsSubtitle": "Add them as they are, you can adjust them later. These prices apply to all your trips.",
-  "priceGridRouteSuggestionsApplyCta": "Add these prices"
+  "priceGridRouteSuggestionsApplyCta": "Add these prices",
+  "tripEditKgPriceNoneInfo": "This trip is sold at item prices only",
+  "tripEditKgPriceAddCta": "Add a price per kilo",
+  "tripEditKgPriceRemoveCta": "Remove the price per kilo"
 }

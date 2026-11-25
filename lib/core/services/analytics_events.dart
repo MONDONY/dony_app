@@ -1310,6 +1310,11 @@ abstract final class AnalyticsEvents {
   /// (`step`/`card_edit`), `suggested_items_count`.
   static const tripItemPricesOpened = 'trip_item_prices_opened';
 
+  /// Modification d'un trajet vendu aux seuls prix par article : « Ajouter un
+  /// prix au kilo » / « Retirer le prix au kilo ». Aucune propriété.
+  static const tripKgPriceAddedOnEdit = 'trip_kg_price_added_on_edit';
+  static const tripKgPriceRemovedOnEdit = 'trip_kg_price_removed_on_edit';
+
   /// Publication (ou enregistrement) d'un trajet arrêtée : aucun moyen de
   /// paiement coché. Propriété `action` (`publish`/`save`/`draft`).
   static const tripPublishBlockedPayment = 'trip_publish_blocked_payment';

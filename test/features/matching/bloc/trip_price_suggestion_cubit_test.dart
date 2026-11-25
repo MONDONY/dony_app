@@ -234,6 +234,19 @@ void main() {
       ).called(1);
     });
 
+    test('kgPriceAddedOnEdit / kgPriceRemovedOnEdit', () async {
+      cubit
+        ..kgPriceAddedOnEdit()
+        ..kgPriceRemovedOnEdit();
+      await flush();
+      verify(
+        () => backend.capture(AnalyticsEvents.tripKgPriceAddedOnEdit, any()),
+      ).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.tripKgPriceRemovedOnEdit, any()),
+      ).called(1);
+    });
+
     test('priceResetToSuggested', () async {
       cubit.priceResetToSuggested();
       await flush();

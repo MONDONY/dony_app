@@ -24754,4 +24754,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get priceGridRouteSuggestionsApplyCta => 'Ajouter ces prix';
+
+  @override
+  String get tripEditKgPriceNoneInfo =>
+      'Ce trajet est vendu uniquement aux prix par article';
+
+  @override
+  String get tripEditKgPriceAddCta => 'Ajouter un prix au kilo';
+
+  @override
+  String get tripEditKgPriceRemoveCta => 'Retirer le prix au kilo';
 }

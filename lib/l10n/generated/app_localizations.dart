@@ -39509,6 +39509,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ajouter ces prix'**
   String get priceGridRouteSuggestionsApplyCta;
+
+  /// Modification d'un trajet sans prix au kilo
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet est vendu uniquement aux prix par article'**
+  String get tripEditKgPriceNoneInfo;
+
+  /// Lien texte, une ligne
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un prix au kilo'**
+  String get tripEditKgPriceAddCta;
+
+  /// Lien texte, une ligne
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer le prix au kilo'**
+  String get tripEditKgPriceRemoveCta;
 }
 
 class _AppLocalizationsDelegate

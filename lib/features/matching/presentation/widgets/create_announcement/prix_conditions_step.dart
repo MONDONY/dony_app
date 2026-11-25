@@ -12,6 +12,7 @@ import 'package:dony/features/content_categories/data/content_category_model.dar
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
+import 'package:dony/features/matching/bloc/trip_price_suggestion_cubit.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_switch_confirm_sheet.dart';
@@ -137,6 +138,12 @@ class PrixConditionsStep extends StatelessWidget {
   /// défiler l'écran quand la publication est arrêtée.
   final Key? paymentSectionKey;
 
+  /// Modification d'un trajet publié sans prix au kilo (prix par article
+  /// seuls) : `false` tant que le voyageur n'a pas ajouté de prix au kilo, la
+  /// carte « − / + » cède alors la place à une ligne d'information. `null`
+  /// partout ailleurs : le prix au kilo est toujours présent.
+  final ValueNotifier<bool>? kgPriceAddedNotifier;
+
   const PrixConditionsStep({
     super.key,
     this.currency,
@@ -168,9 +175,32 @@ class PrixConditionsStep extends StatelessWidget {
     this.lockCashWithoutCard = true,
     this.paymentErrorNotifier,
     this.paymentSectionKey,
+    this.kgPriceAddedNotifier,
   });
 
   SupportedCurrency get _currency => currency ?? SupportedCurrency.eur;
+
+  /// Carte « − / + » du prix au kilo et gain du voyageur.
+  Widget _kgPriceCard() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      KgPriceStepperCard(
+        currency: _currency,
+        priceOptionNotifier: priceOptionNotifier,
+        customPriceNotifier: customPriceNotifier,
+        customPriceCtrl: customPriceCtrl,
+      ).animate().fadeIn(delay: 50.ms),
+      const SizedBox(height: DonySpacing.md),
+      KgPriceEarningsBlock(
+        currency: _currency,
+        priceOptionNotifier: priceOptionNotifier,
+        customPriceNotifier: customPriceNotifier,
+        customPriceCtrl: customPriceCtrl,
+        availableKgNotifier: availableKgNotifier,
+      ).animate().fadeIn(delay: 80.ms),
+      const SizedBox(height: DonySpacing.md),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -205,25 +235,45 @@ class PrixConditionsStep extends StatelessWidget {
             ),
           ),
           const SizedBox(height: DonySpacing.md),
-          KgPriceStepperCard(
-            currency: _currency,
-            priceOptionNotifier: priceOptionNotifier,
-            customPriceNotifier: customPriceNotifier,
-            customPriceCtrl: customPriceCtrl,
-          ).animate().fadeIn(delay: 50.ms),
-          const SizedBox(height: DonySpacing.md),
-          KgPriceEarningsBlock(
-            currency: _currency,
-            priceOptionNotifier: priceOptionNotifier,
-            customPriceNotifier: customPriceNotifier,
-            customPriceCtrl: customPriceCtrl,
-            availableKgNotifier: availableKgNotifier,
-          ).animate().fadeIn(delay: 80.ms),
-          const SizedBox(height: DonySpacing.md),
+          if (kgPriceAddedNotifier case final added?)
+            // Trajet publié sans prix au kilo (modification) : il le reste,
+            // sauf si le voyageur en ajoute un.
+            ValueListenableBuilder<bool>(
+              valueListenable: added,
+              builder: (context, isAdded, _) => isAdded
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _kgPriceCard(),
+                        _OptionalKgPriceLink(
+                          linkKey: const Key('kg-price-remove-on-edit'),
+                          icon: 'minus',
+                          label: l.tripEditKgPriceRemoveCta,
+                          onTap: () {
+                            added.value = false;
+                            context
+                                .read<TripPriceSuggestionCubit?>()
+                                ?.kgPriceRemovedOnEdit();
+                          },
+                        ),
+                      ],
+                    )
+                  : _NoKgPriceNotice(
+                      onAdd: () {
+                        added.value = true;
+                        context
+                            .read<TripPriceSuggestionCubit?>()
+                            ?.kgPriceAddedOnEdit();
+                      },
+                    ),
+            )
+          else
+            _kgPriceCard(),
           // ── PRIX PAR ARTICLE (facultatif) ─────────────────────────────────
           ItemPricesCard(
             currency: _currency,
             gridCurrency: gridCurrency,
+            kgPriceShown: kgPriceAddedNotifier,
             priceOptionNotifier: priceOptionNotifier,
             customPriceNotifier: customPriceNotifier,
             customPriceCtrl: customPriceCtrl,
@@ -1008,6 +1058,96 @@ class _PaymentSectionFrame extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Modification d'un trajet vendu aux seuls prix par article : pas de carte
+/// prix au kilo, mais une ligne qui le dit et un lien pour en ajouter un.
+class _NoKgPriceNotice extends StatelessWidget {
+  const _NoKgPriceNotice({required this.onAdd});
+
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    return Container(
+      key: const Key('kg-price-none-on-edit'),
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: DonySpacing.md),
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.base,
+        DonySpacing.md,
+        DonySpacing.base,
+        DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DonyIcon('tag', size: 18, color: cs.onSurfaceVariant),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  l.tripEditKgPriceNoneInfo,
+                  style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                ),
+              ),
+            ],
+          ),
+          _OptionalKgPriceLink(
+            linkKey: const Key('kg-price-add-on-edit'),
+            icon: 'plus',
+            label: l.tripEditKgPriceAddCta,
+            onTap: onAdd,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Lien texte avec icône, sur une seule ligne (« Ajouter un prix au kilo »,
+/// « Retirer le prix au kilo »).
+class _OptionalKgPriceLink extends StatelessWidget {
+  const _OptionalKgPriceLink({
+    required this.linkKey,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  /// Posée sur le bouton lui-même (pas sur l'alignement pleine largeur).
+  final Key linkKey;
+  final String icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TextButton.icon(
+        key: linkKey,
+        style: TextButton.styleFrom(
+          minimumSize: const Size(44, 44),
+          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
+        ),
+        onPressed: onTap,
+        icon: DonyIcon(icon, size: 16, color: cs.primary),
+        label: Text(label, maxLines: 1, softWrap: false),
       ),
     );
   }

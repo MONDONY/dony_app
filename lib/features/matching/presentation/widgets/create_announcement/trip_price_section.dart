@@ -17,6 +17,7 @@ import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/grid_preview_card.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_suggestion.dart';
 import 'package:dony/l10n/l10n.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -469,7 +470,12 @@ class ItemPricesCard extends StatelessWidget {
     required this.priceOptionNotifier,
     required this.customPriceNotifier,
     required this.customPriceCtrl,
+    this.kgPriceShown,
   });
+
+  /// Le trajet a un prix au kilo (`null` : toujours). Sans lui, la ligne « Le
+  /// reste est compté au kilo » disparaît : le reste n'est pas vendu.
+  final ValueListenable<bool>? kgPriceShown;
 
   /// Devise du trajet.
   final SupportedCurrency currency;
@@ -509,6 +515,7 @@ class ItemPricesCard extends StatelessWidget {
                 priceOptionNotifier: priceOptionNotifier,
                 customPriceNotifier: customPriceNotifier,
                 customPriceCtrl: customPriceCtrl,
+                kgPriceShown: kgPriceShown,
                 onEdit: () => _open(
                   context,
                   cubit,
@@ -692,7 +699,10 @@ class _FilledItemPricesCard extends StatelessWidget {
     required this.customPriceNotifier,
     required this.customPriceCtrl,
     required this.onEdit,
+    this.kgPriceShown,
   });
+
+  final ValueListenable<bool>? kgPriceShown;
 
   final SupportedCurrency currency;
   final SupportedCurrency? gridCurrency;
@@ -784,8 +794,12 @@ class _FilledItemPricesCard extends StatelessWidget {
               priceOptionNotifier,
               customPriceNotifier,
               customPriceCtrl,
+              ?kgPriceShown,
             ]),
             builder: (context, _) {
+              if (kgPriceShown?.value == false) {
+                return const SizedBox.shrink();
+              }
               final price =
                   currentKgPrice(
                     currency: currency,

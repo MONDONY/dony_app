@@ -30,6 +30,7 @@ import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -108,6 +109,7 @@ Widget _host({
   bool lockCashWithoutCard = true,
   ValueNotifier<bool>? paymentErrorNotifier,
   AnnouncementFormBloc? formBloc,
+  ValueNotifier<bool>? kgPriceAddedNotifier,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   final resolvedStripeState = stripeState ?? _stripeConfiguredState;
@@ -188,6 +190,7 @@ Widget _host({
           lockCashWithoutCard: lockCashWithoutCard,
           paymentErrorNotifier: paymentErrorNotifier,
           paymentSectionKey: const Key('payment-section'),
+          kgPriceAddedNotifier: kgPriceAddedNotifier,
         ),
       ),
     ),
@@ -1343,6 +1346,108 @@ void main() {
         find.text(CurrencyFormatter.format(10.5, SupportedCurrency.eur)),
         findsOneWidget,
       );
+    });
+  });
+
+  group('Modification sans prix au kilo', () {
+    for (final english in [false, true]) {
+      testWidgets(
+        '${english ? 'en' : 'fr'} : ligne d\'info, ajout puis retrait, liens '
+        'sur une ligne à 360 dp',
+        (tester) async {
+          if (english) useEnglish();
+          tester.view.physicalSize = const Size(360, 2400);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.reset);
+          final added = ValueNotifier<bool>(false);
+          await tester.pumpWidget(
+            _host(
+              priceOption: ValueNotifier<int>(-1),
+              kgPriceAddedNotifier: added,
+            ),
+          );
+          await tester.pump(const Duration(milliseconds: 300));
+
+          expect(
+            find.byKey(const Key('kg-price-none-on-edit')),
+            findsOneWidget,
+          );
+          expect(find.byKey(const Key('kg-price-card')), findsNothing);
+          expect(
+            find.text(
+              english
+                  ? 'This trip is sold at item prices only'
+                  : 'Ce trajet est vendu uniquement aux prix par article',
+            ),
+            findsOneWidget,
+          );
+
+          Future<void> expectOneLine(Key key) async {
+            final text = find.descendant(
+              of: find.byKey(key),
+              matching: find.byType(Text),
+            );
+            final paragraph = tester.renderObject<RenderParagraph>(text.first);
+            expect(paragraph.didExceedMaxLines, isFalse);
+            // Icône et texte sur la même ligne.
+            final icon = find.descendant(
+              of: find.byKey(key),
+              matching: find.byType(DonyIcon),
+            );
+            expect(
+              (tester.getCenter(icon).dy - tester.getCenter(text.first).dy)
+                  .abs(),
+              lessThan(4),
+            );
+          }
+
+          await expectOneLine(const Key('kg-price-add-on-edit'));
+          await _tapVisible(
+            tester,
+            find.byKey(const Key('kg-price-add-on-edit')),
+          );
+          await tester.pump(const Duration(milliseconds: 300));
+          expect(added.value, isTrue);
+          expect(find.byKey(const Key('kg-price-card')), findsOneWidget);
+          await expectOneLine(const Key('kg-price-remove-on-edit'));
+
+          await _tapVisible(
+            tester,
+            find.byKey(const Key('kg-price-remove-on-edit')),
+          );
+          await tester.pump(const Duration(milliseconds: 300));
+          expect(added.value, isFalse);
+          expect(find.byKey(const Key('kg-price-card')), findsNothing);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+
+    testWidgets('grille remplie sans prix au kilo : pas de « reste au kilo »', (
+      tester,
+    ) async {
+      final bloc = _MockAnnouncementFormBloc();
+      when(() => bloc.state).thenReturn(
+        const AnnouncementFormState(
+          gridPreviewItems: [
+            GridPreviewItem(id: 'g', label: 'Téléphone', unitPriceDisplay: 15),
+          ],
+        ),
+      );
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+      final added = ValueNotifier<bool>(false);
+      await tester.pumpWidget(
+        _host(formBloc: bloc, kgPriceAddedNotifier: added),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('item-prices-filled')), findsOneWidget);
+      expect(find.byKey(const Key('item-prices-rest-per-kg')), findsNothing);
+
+      added.value = true;
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('item-prices-rest-per-kg')), findsOneWidget);
+      // Fondu de la carte prix apparue.
+      await tester.pump(const Duration(seconds: 1));
     });
   });
 

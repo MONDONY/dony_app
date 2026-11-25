@@ -178,6 +178,17 @@ class TripPriceSuggestionCubit extends Cubit<TripPriceSuggestionState> {
     );
   }
 
+  /// Modification d'un trajet vendu aux seuls prix par article : le
+  /// voyageur ajoute un prix au kilo.
+  void kgPriceAddedOnEdit() {
+    unawaited(_analytics.logEvent(AnalyticsEvents.tripKgPriceAddedOnEdit));
+  }
+
+  /// … puis le retire (le trajet reste aux seuls prix par article).
+  void kgPriceRemovedOnEdit() {
+    unawaited(_analytics.logEvent(AnalyticsEvents.tripKgPriceRemovedOnEdit));
+  }
+
   /// Ouverture de l'éditeur des prix par article.
   void itemPricesOpened(TripItemPricesSource source) {
     unawaited(
