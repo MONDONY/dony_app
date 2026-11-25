@@ -24591,4 +24591,100 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelScaleCashNote => 'Fees do not apply to cash payments.';
+
+  @override
+  String nextActionSenderAcceptedTitle(String traveler) {
+    return 'Get ready to hand over to $traveler';
+  }
+
+  @override
+  String nextActionSenderAcceptedBody(String recipient) {
+    return 'Have the QR open before you see them. Once they scan it, you will get the pickup code to give to $recipient.';
+  }
+
+  @override
+  String nextActionSenderCodeTitle(String recipient) {
+    return 'Send the code to $recipient';
+  }
+
+  @override
+  String nextActionSenderCodeBody(String traveler) {
+    return 'Without this code, $traveler will not hand over the parcel to them.';
+  }
+
+  @override
+  String nextActionSenderArrivedTitle(String traveler, String city) {
+    return '$traveler has arrived in $city';
+  }
+
+  @override
+  String nextActionSenderArrivedBody(String recipient) {
+    return '$recipient must show them their code to collect the parcel. Remind them if they do not have it.';
+  }
+
+  @override
+  String get nextActionSelfKeepCodeTitle => 'Keep your pickup code';
+
+  @override
+  String nextActionSelfKeepCodeBody(String traveler) {
+    return 'Without this code, $traveler will not hand the parcel over to you.';
+  }
+
+  @override
+  String get nextActionSelfWithdrawTitle => 'Collect your parcel';
+
+  @override
+  String nextActionSelfWithdrawBody(String traveler) {
+    return 'Give your code to $traveler so they hand the parcel over to you.';
+  }
+
+  @override
+  String nextActionTravelerAcceptedTitle(String sender) {
+    return 'At handover, scan $sender\'s QR';
+  }
+
+  @override
+  String get nextActionTravelerAcceptedBody =>
+      'On arrival, hand over nothing without the recipient\'s 6-digit code.';
+
+  @override
+  String get nextActionTravelerTransitTitle => 'Reminder for arrival';
+
+  @override
+  String get nextActionTravelerTransitBody =>
+      'The recipient will give you a 6-digit code. It is not the DON-… number.';
+
+  @override
+  String get nextActionTravelerArrivedTitle =>
+      'Hand over nothing without the code';
+
+  @override
+  String nextActionTravelerArrivedBody(String recipient, String sender) {
+    return 'Ask $recipient for their 6-digit code. If they do not have it, call $sender.';
+  }
+
+  @override
+  String get nextActionRecipientArrivedTitle => 'Collect your parcel';
+
+  @override
+  String nextActionRecipientArrivedBody(String traveler) {
+    return 'Give your code to $traveler so they hand the parcel over to you.';
+  }
+
+  @override
+  String get nextActionFallbackTraveler => 'your traveler';
+
+  @override
+  String get nextActionFallbackSender => 'the sender';
+
+  @override
+  String get nextActionFallbackRecipientYour => 'your recipient';
+
+  @override
+  String get nextActionFallbackCity => 'the arrival city';
+
+  @override
+  String nextActionTravelerArrivedBodyNoName(String sender) {
+    return 'Ask the recipient for their 6-digit code. If they do not have it, call $sender.';
+  }
 }
