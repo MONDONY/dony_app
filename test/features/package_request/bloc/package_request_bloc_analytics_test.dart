@@ -105,7 +105,7 @@ void main() {
             that: allOf([
               containsPair('corridor', 'Paris→Dakar'),
               containsPair('negotiable', true),
-              containsPair('payment_methods', ['STRIPE']),
+              containsPair('payment_methods', ['STRIPE', 'CASH']),
               containsPair('from_ai', false),
               contains('is_draft'),
               contains('currency'),
@@ -177,7 +177,7 @@ void main() {
             that: allOf([
               containsPair('corridor', 'Paris→Dakar'),
               containsPair('negotiable', true),
-              containsPair('payment_methods', ['STRIPE']),
+              containsPair('payment_methods', ['STRIPE', 'CASH']),
               containsPair('from_ai', true),
               contains('is_draft'),
               contains('currency'),

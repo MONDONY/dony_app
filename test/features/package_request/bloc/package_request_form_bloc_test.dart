@@ -187,7 +187,7 @@ void main() {
           transportMode: TransportMode.plane,
           categories: const ['Vêtements'],
           negotiable: true,
-          acceptedPaymentMethods: {PaymentMethod.stripe},
+          acceptedPaymentMethods: kDefaultPackageRequestPaymentMethods,
           totalBudgetEur: 25,
         ),
       ).called(1);
@@ -1549,7 +1549,7 @@ void main() {
             transportMode: TransportMode.plane,
             categories: const ['Vêtements'],
             negotiable: true,
-            acceptedPaymentMethods: {PaymentMethod.stripe},
+            acceptedPaymentMethods: kDefaultPackageRequestPaymentMethods,
             totalBudgetEur: 25,
           ),
         ).called(1);

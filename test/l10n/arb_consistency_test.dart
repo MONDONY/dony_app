@@ -104,6 +104,7 @@ int _matchingBrace(String text, int openIndex) {
 /// Clés dont l'anglais est volontairement identique au français.
 /// Toute nouvelle entrée doit être justifiée en commentaire.
 const _sameInBothLanguages = <String>{
+  'tripPublishItemPriceExample', // « {label} · {price} » : article et montant seuls
   'profileSectionGpPro', // « GP PRO » : nom du statut, même mot
   'travelerStatusOptionGpPro', // « GP Pro » : nom du statut, même mot
   'profileTravelerStatusGpPro', // « GP Pro » : nom du statut, même mot
