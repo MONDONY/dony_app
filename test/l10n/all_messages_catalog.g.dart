@@ -8556,6 +8556,19 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripRecurrenceDatesDone': (l) => l.tripRecurrenceDatesDone,
   'tripRecurrenceSeriesPublishing': (l) =>
       l.tripRecurrenceSeriesPublishing(intPlaceholderValue),
+  'tripPublishedItemPricesProposalTitle': (l) =>
+      l.tripPublishedItemPricesProposalTitle,
+  'tripPublishedItemPricesProposalBody': (l) =>
+      l.tripPublishedItemPricesProposalBody,
+  'tripPublishedItemPricesNextTrips': (l) => l.tripPublishedItemPricesNextTrips,
+  'tripPublishedItemPricesEmptyBody': (l) => l.tripPublishedItemPricesEmptyBody,
+  'tripPublishedItemPricesAddCta': (l) => l.tripPublishedItemPricesAddCta,
+  'tripPublishedItemPricesAddedTitle': (l) =>
+      l.tripPublishedItemPricesAddedTitle,
+  'tripPublishedItemPricesAddedBody': (l) =>
+      l.tripPublishedItemPricesAddedBody(intPlaceholderValue),
+  'tripPublishedItemPricesSeeCta': (l) => l.tripPublishedItemPricesSeeCta,
+  'tripPublishedItemPricesAddFailed': (l) => l.tripPublishedItemPricesAddFailed,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

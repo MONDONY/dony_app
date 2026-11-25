@@ -1323,6 +1323,27 @@ abstract final class AnalyticsEvents {
   /// (`step`/`card_edit`), `suggested_items_count`.
   static const tripItemPricesOpened = 'trip_item_prices_opened';
 
+  /// Carte « Prix par article » de l'écran de succès d'un trajet publié
+  /// affichée. Propriétés `variant` (`proposal` : grille vide, prix de la
+  /// route proposés / `filled` : le trajet porte des prix par article /
+  /// `none` : grille vide sans prix de route), `suggestions_count`.
+  static const tripPublishedItemPricesShown =
+      'trip_published_item_prices_shown';
+
+  /// « Ajouter » de cette carte : prix de la route ajoutés à la grille du
+  /// profil. Propriété `count` (articles dans la grille ensuite).
+  static const tripPublishedItemPricesAdded =
+      'trip_published_item_prices_added';
+
+  /// … ajout refusé ou impossible. Propriété `error_code`.
+  static const tripPublishedItemPricesAddFailed =
+      'trip_published_item_prices_add_failed';
+
+  /// Éditeur des prix par article ouvert depuis cette carte. Aucune
+  /// propriété.
+  static const tripPublishedItemPricesEditOpened =
+      'trip_published_item_prices_edit_opened';
+
   /// Modification d'un trajet vendu aux seuls prix par article : « Ajouter un
   /// prix au kilo » / « Retirer le prix au kilo ». Aucune propriété.
   static const tripKgPriceAddedOnEdit = 'trip_kg_price_added_on_edit';

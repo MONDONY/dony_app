@@ -3,7 +3,6 @@
 // par article (grille du profil) en option.
 import 'dart:ui' show PathMetric;
 
-import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -15,13 +14,15 @@ import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/bloc/trip_price_suggestion_cubit.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/grid_preview_card.dart';
-import 'package:dony/features/price_grid/data/models/price_grid_suggestion.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+
+export 'package:dony/features/matching/bloc/trip_price_suggestion_cubit.dart'
+    show gridSuggestionsFrom;
 
 /// Prix au kilo actuellement retenu par les notifiers du formulaire, `null`
 /// tant qu'aucun prix n'est posé.
@@ -540,27 +541,6 @@ class ItemPricesCard extends StatelessWidget {
       suggestions: gridSuggestionsFrom(suggestion),
     );
   }
-}
-
-/// Prix pratiqués sur la route, prêts à remplir une grille vide.
-///
-/// La grille est tenue dans la devise active du voyageur : des prix de route
-/// dans une autre devise y seraient faux, on n'en propose alors aucun. Chaque
-/// montant est ramené dans les bornes d'un article de grille.
-List<PriceGridSuggestion> gridSuggestionsFrom(
-  TripPriceSuggestionState suggestion,
-) {
-  final gridCurrency = ActiveCurrency.current ?? SupportedCurrency.eur;
-  if (suggestion.currency != gridCurrency) return const [];
-  final min = minGridItemPriceFor(gridCurrency);
-  final max = maxUnitPriceFor(gridCurrency);
-  return [
-    for (final item in suggestion.items)
-      PriceGridSuggestion(
-        label: item.label,
-        unitPriceNet: item.unitPrice.clamp(min, max).toDouble(),
-      ),
-  ];
 }
 
 class _EmptyItemPricesCard extends StatelessWidget {

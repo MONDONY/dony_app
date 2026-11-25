@@ -12120,5 +12120,14 @@
   "tripRecurrenceDatesSheetTitle": "Dates of your trips",
   "tripRecurrenceDatesSheetSubtitle": "The first trip leaves on {date}. Tap a day to add or remove it.",
   "tripRecurrenceDatesDone": "Done",
-  "tripRecurrenceSeriesPublishing": "{count, plural, =1{Publishing the other date…} other{Publishing the {count} other dates…}}"
+  "tripRecurrenceSeriesPublishing": "{count, plural, =1{Publishing the other date…} other{Publishing the {count} other dates…}}",
+  "tripPublishedItemPricesProposalTitle": "You haven't set prices per item",
+  "tripPublishedItemPricesProposalBody": "Phones and laptops earn more with a fixed price. Here are the prices used on this route: keep them or change them.",
+  "tripPublishedItemPricesNextTrips": "They will apply to your next trips, not this one.",
+  "tripPublishedItemPricesEmptyBody": "A phone or a laptop earns more with a fixed price. Your prices will apply to your next trips.",
+  "tripPublishedItemPricesAddCta": "Add",
+  "tripPublishedItemPricesAddedTitle": "Prices added for your next trips",
+  "tripPublishedItemPricesAddedBody": "{count, plural, =1{1 price per item in your profile. This trip keeps its price per kg.} other{{count} prices per item in your profile. This trip keeps its price per kg.}}",
+  "tripPublishedItemPricesSeeCta": "See my prices",
+  "tripPublishedItemPricesAddFailed": "The prices could not be added. Please try again."
 }

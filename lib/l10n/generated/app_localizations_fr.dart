@@ -24856,4 +24856,47 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get tripPublishedItemPricesProposalTitle =>
+      'Vous n\'avez pas mis de prix par article';
+
+  @override
+  String get tripPublishedItemPricesProposalBody =>
+      'Les téléphones et ordinateurs rapportent plus avec un prix fixe. Voici les prix pratiqués sur ce trajet : gardez-les ou changez-les.';
+
+  @override
+  String get tripPublishedItemPricesNextTrips =>
+      'Ils vaudront pour vos prochains trajets, pas pour celui-ci.';
+
+  @override
+  String get tripPublishedItemPricesEmptyBody =>
+      'Un téléphone ou un ordinateur rapporte plus avec un prix fixe. Vos prix vaudront pour vos prochains trajets.';
+
+  @override
+  String get tripPublishedItemPricesAddCta => 'Ajouter';
+
+  @override
+  String get tripPublishedItemPricesAddedTitle =>
+      'Prix ajoutés pour vos prochains trajets';
+
+  @override
+  String tripPublishedItemPricesAddedBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count prix par article dans votre profil. Ce trajet garde son prix au kilo.',
+      one:
+          '1 prix par article dans votre profil. Ce trajet garde son prix au kilo.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripPublishedItemPricesSeeCta => 'Voir mes prix';
+
+  @override
+  String get tripPublishedItemPricesAddFailed =>
+      'Les prix n\'ont pas pu être ajoutés. Réessayez.';
 }

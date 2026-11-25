@@ -24679,4 +24679,47 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get tripPublishedItemPricesProposalTitle =>
+      'You haven\'t set prices per item';
+
+  @override
+  String get tripPublishedItemPricesProposalBody =>
+      'Phones and laptops earn more with a fixed price. Here are the prices used on this route: keep them or change them.';
+
+  @override
+  String get tripPublishedItemPricesNextTrips =>
+      'They will apply to your next trips, not this one.';
+
+  @override
+  String get tripPublishedItemPricesEmptyBody =>
+      'A phone or a laptop earns more with a fixed price. Your prices will apply to your next trips.';
+
+  @override
+  String get tripPublishedItemPricesAddCta => 'Add';
+
+  @override
+  String get tripPublishedItemPricesAddedTitle =>
+      'Prices added for your next trips';
+
+  @override
+  String tripPublishedItemPricesAddedBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count prices per item in your profile. This trip keeps its price per kg.',
+      one:
+          '1 price per item in your profile. This trip keeps its price per kg.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripPublishedItemPricesSeeCta => 'See my prices';
+
+  @override
+  String get tripPublishedItemPricesAddFailed =>
+      'The prices could not be added. Please try again.';
 }
