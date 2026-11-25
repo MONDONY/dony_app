@@ -803,8 +803,13 @@ final GoRouter appRouter = GoRouter(
     // ── Écrans d'intro avant publication (conditions + responsabilités) ──────
     GoRoute(
       path: '/trips/publish-intro',
-      builder: (context, state) =>
-          const PublishIntroScreen(role: PublishIntroRole.trip),
+      // `?resume=kyc` : retour d'une vérification d'identité demandée au
+      // clic sur « Publier », la saisie gardée se rouvre directement.
+      builder: (context, state) => PublishIntroScreen(
+        role: PublishIntroRole.trip,
+        resumeLocalDraft:
+            state.uri.queryParameters[publishResumeParam] == publishResumeKyc,
+      ),
     ),
     // Limite mensuelle de trajets atteinte : arrête la création (extra
     // `PublishBlockedArgs`, rend `true` si plus rien ne bloque).
@@ -822,8 +827,13 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/parcels/send-intro',
-      builder: (context, state) =>
-          const PublishIntroScreen(role: PublishIntroRole.parcel),
+      // `?resume=kyc` : retour d'une vérification d'identité demandée au
+      // clic sur « Publier », la saisie gardée se rouvre directement.
+      builder: (context, state) => PublishIntroScreen(
+        role: PublishIntroRole.parcel,
+        resumeLocalDraft:
+            state.uri.queryParameters[publishResumeParam] == publishResumeKyc,
+      ),
     ),
     // ── Lecteur plein écran d'un modal vidéo (VideoModalPresenter) ──────────
     GoRoute(

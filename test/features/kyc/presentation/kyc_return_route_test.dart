@@ -14,6 +14,20 @@ void main() {
       );
     });
 
+    test('garde les retours qui rouvrent la saisie (resume=kyc)', () {
+      expect(kycReturnRouteOrNull(kycResumeTripRoute), kycResumeTripRoute);
+      expect(kycReturnRouteOrNull(kycResumeParcelRoute), kycResumeParcelRoute);
+      expect(kycResumeTripRoute, '/trips/publish-intro?resume=kyc');
+      expect(kycResumeParcelRoute, '/parcels/send-intro?resume=kyc');
+    });
+
+    test('kycReturnKeepsDraft : seulement pour les retours resume=kyc', () {
+      expect(kycReturnKeepsDraft(kycResumeTripRoute), isTrue);
+      expect(kycReturnKeepsDraft(kycResumeParcelRoute), isTrue);
+      expect(kycReturnKeepsDraft('/trips/publish-intro'), isFalse);
+      expect(kycReturnKeepsDraft(null), isFalse);
+    });
+
     test('refuse tout le reste (extra requis, lien forgé, externe)', () {
       expect(kycReturnRouteOrNull(null), isNull);
       expect(kycReturnRouteOrNull('/bids/new'), isNull);
@@ -34,6 +48,14 @@ void main() {
       final uri = Uri.parse(location);
       expect(uri.path, '/kyc/verify');
       expect(uri.queryParameters, {kycReturnParam: '/parcels/send-intro'});
+    });
+
+    test('retour resume=kyc : transporté encodé puis relu intact', () {
+      final uri = Uri.parse(kycVerifyLocation(returnTo: kycResumeTripRoute));
+      expect(
+        kycReturnRouteOrNull(uri.queryParameters[kycReturnParam]),
+        kycResumeTripRoute,
+      );
     });
 
     test('écran de retour refusé : ignoré', () {

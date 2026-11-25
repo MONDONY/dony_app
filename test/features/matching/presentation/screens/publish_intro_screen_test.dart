@@ -81,6 +81,7 @@ Future<void> _pump(
   List<Object> serverDrafts = const [],
   List<TripTemplate> tripTemplates = const [],
   AuthRepository? authRepository,
+  bool resumeLocalDraft = false,
 }) async {
   tester.view.physicalSize = const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
@@ -192,7 +193,10 @@ Future<void> _pump(
             BlocProvider<AuthBloc>.value(value: authBloc),
             BlocProvider<StripeAccountBloc>.value(value: stripeBloc),
           ],
-          child: PublishIntroScreen(role: role),
+          child: PublishIntroScreen(
+            role: role,
+            resumeLocalDraft: resumeLocalDraft,
+          ),
         ),
       ),
       GoRoute(
@@ -335,155 +339,125 @@ void main() {
       },
     );
 
-    group('profil en cache périmé (identité validée hors du flux Didit)', () {
-      testWidgets(
-        'cache non vérifié, serveur VERIFIED : pas de blocage, formulaire direct',
-        (tester) async {
-          final repo = _MockAuthRepository();
-          when(
-            () => repo.getProfile(),
-          ).thenAnswer((_) async => _user(kycStatus: 'VERIFIED'));
-          await _pump(
-            tester,
-            role: PublishIntroRole.trip,
-            kycStatus: 'NOT_STARTED',
-            commitmentRequired: false,
-            authRepository: repo,
-          );
-          await tester.pumpAndSettle();
+    group('identité non vérifiée : plus de blocage avant le formulaire', () {
+      testWidgets('engagements à accepter : information discrète, case et '
+          'Continuer, puis formulaire', (tester) async {
+        final repo = _MockAuthRepository();
+        await _pump(
+          tester,
+          role: PublishIntroRole.trip,
+          kycStatus: 'NOT_STARTED',
+          authRepository: repo,
+        );
 
-          verify(() => repo.getProfile()).called(1);
-          expect(visited, ['/trips/create']);
-          expect(
-            find.textContaining('identité doit être vérifiée'),
-            findsNothing,
-          );
-        },
-      );
+        expect(
+          find.text(
+            'Vous vérifierez votre identité avant de publier, en 2 minutes.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Vérifier mon identité'), findsNothing);
+        expect(find.text('Continuer'), findsOneWidget);
+        expect(find.textContaining('Identité vérifiée'), findsNothing);
 
-      testWidgets('cache non vérifié, serveur non vérifié : blocage conservé', (
+        await _check(tester);
+        await tester.tap(find.text('Continuer'));
+        await tester.pumpAndSettle();
+
+        expect(visited, ['/trips/create']);
+        // L'identité n'est plus relue ici : elle l'est au clic sur Publier.
+        verifyNever(() => repo.getProfile());
+      });
+
+      testWidgets('engagements déjà acceptés : formulaire direct', (
         tester,
       ) async {
-        final repo = _MockAuthRepository();
-        when(
-          () => repo.getProfile(),
-        ).thenAnswer((_) async => _user(kycStatus: 'NOT_STARTED'));
         await _pump(
           tester,
           role: PublishIntroRole.trip,
           kycStatus: 'NOT_STARTED',
           commitmentRequired: false,
-          authRepository: repo,
         );
         await tester.pumpAndSettle();
 
-        expect(visited, isEmpty);
-        expect(find.text('Vérifier mon identité'), findsOneWidget);
-        expect(
-          find.textContaining('identité doit être vérifiée'),
-          findsOneWidget,
-        );
+        expect(visited, ['/trips/create']);
       });
 
-      testWidgets('serveur injoignable : blocage conservé (comme avant)', (
-        tester,
-      ) async {
-        final repo = _MockAuthRepository();
-        when(() => repo.getProfile()).thenThrow(Exception('hors ligne'));
+      testWidgets('colis, PENDING : information et formulaire', (tester) async {
+        await _pump(
+          tester,
+          role: PublishIntroRole.parcel,
+          kycStatus: 'PENDING',
+        );
+        expect(
+          find.byKey(const Key('publish-intro-kyc-notice')),
+          findsOneWidget,
+        );
+        await _check(tester);
+        await tester.tap(find.text('Continuer'));
+        await tester.pumpAndSettle();
+        expect(visited, ['/package-requests/new']);
+      });
+
+      testWidgets('retour de la vérification (resume=kyc) : le brouillon '
+          'gardé se rouvre sans la feuille des brouillons', (tester) async {
         await _pump(
           tester,
           role: PublishIntroRole.trip,
-          kycStatus: 'NOT_STARTED',
-          authRepository: repo,
+          kycStatus: 'VERIFIED',
+          commitmentRequired: false,
+          localDraft: const {
+            'step': 2,
+            'departureCity': 'Paris',
+            'kycGate': true,
+          },
+          serverDrafts: [tripFixture()],
+          resumeLocalDraft: true,
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Vérifier mon identité'), findsOneWidget);
-        expect(visited, isEmpty);
+        expect(visited, ['/trips/create']);
+        final args = extras.single! as CreateTripArgs;
+        expect(args.resumeDraft?.departureCity, 'Paris');
+        expect(args.fromKycGate, isTrue);
       });
 
-      testWidgets(
-        'cache vérifié : aucune relecture du serveur (comportement nominal)',
-        (tester) async {
-          final repo = _MockAuthRepository();
-          await _pump(
-            tester,
-            role: PublishIntroRole.trip,
-            kycStatus: 'VERIFIED',
-            commitmentRequired: false,
-            authRepository: repo,
-          );
-          await tester.pumpAndSettle();
-
-          verifyNever(() => repo.getProfile());
-          expect(visited, ['/trips/create']);
-        },
-      );
-
-      testWidgets(
-        'tap sur « Vérifier » : le serveur dit VERIFIED, la feuille ne s\'ouvre pas',
-        (tester) async {
-          final repo = _MockAuthRepository();
-          // Premier appel (démarrage) : encore non vérifié ; second (tap) :
-          // l'admin a validé entre-temps.
-          var calls = 0;
-          when(() => repo.getProfile()).thenAnswer((_) async {
-            calls++;
-            return _user(kycStatus: calls == 1 ? 'NOT_STARTED' : 'VERIFIED');
-          });
-          await _pump(
-            tester,
-            role: PublishIntroRole.trip,
-            kycStatus: 'NOT_STARTED',
-            commitmentRequired: false,
-            authRepository: repo,
-          );
-          await tester.pumpAndSettle();
-          expect(visited, isEmpty);
-
-          await tester.tap(find.text('Vérifier mon identité'));
-          await tester.pumpAndSettle();
-
-          expect(calls, 2);
-          expect(visited, ['/trips/create']);
-        },
-      );
-    });
-
-    testWidgets('non vérifié : bouton Vérifier + invite, pas de Continuer', (
-      tester,
-    ) async {
-      await _pump(
+      testWidgets('colis, resume=kyc : le brouillon gardé passe au wizard', (
         tester,
-        role: PublishIntroRole.trip,
-        kycStatus: 'NOT_STARTED',
-      );
+      ) async {
+        await _pump(
+          tester,
+          role: PublishIntroRole.parcel,
+          kycStatus: 'VERIFIED',
+          commitmentRequired: false,
+          localDraft: const {
+            'step': 2,
+            'departureCity': 'Lyon',
+            'kycGate': true,
+          },
+          resumeLocalDraft: true,
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Vérifier mon identité'), findsOneWidget);
-      expect(find.textContaining('Le bouton devient'), findsOneWidget);
-      expect(find.text('Continuer'), findsNothing);
-      expect(
-        find.textContaining('identité doit être vérifiée'),
-        findsOneWidget,
-      );
-    });
+        expect(visited, ['/package-requests/new']);
+        final resume = extras.single! as PackageRequestDraftResume;
+        expect(resume.data['kycGate'], isTrue);
+      });
 
-    testWidgets('non vérifié : phrase complète en français (gras + chemin '
-        'reconstitués depuis une clé unique paramétrée)', (tester) async {
-      await _pump(
+      testWidgets('resume=kyc sans brouillon local : aiguillage habituel', (
         tester,
-        role: PublishIntroRole.trip,
-        kycStatus: 'NOT_STARTED',
-      );
-
-      expect(
-        find.text(
-          'Avant de publier, votre identité doit être vérifiée. '
-          'Rendez-vous dans Profil › Vérifications pour la valider '
-          '(2 min).',
-        ),
-        findsOneWidget,
-      );
+      ) async {
+        await _pump(
+          tester,
+          role: PublishIntroRole.trip,
+          kycStatus: 'VERIFIED',
+          commitmentRequired: false,
+          resumeLocalDraft: true,
+        );
+        await tester.pumpAndSettle();
+        expect(visited, ['/trips/create']);
+        expect((extras.single! as CreateTripArgs).resumeDraft, isNull);
+      });
     });
 
     testWidgets(
@@ -542,23 +516,6 @@ void main() {
 
       expect(visited, ['/trips/create']);
       expect(find.text('Vos engagements de voyageur'), findsNothing);
-    });
-
-    testWidgets('accepté mais non vérifié : écran sans case à cocher', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        role: PublishIntroRole.trip,
-        kycStatus: 'NOT_STARTED',
-        commitmentRequired: false,
-      );
-
-      expect(find.text('Vérifier mon identité'), findsOneWidget);
-      expect(
-        find.byKey(const Key('publish-commitment-checkbox')),
-        findsNothing,
-      );
     });
 
     testWidgets('texte mis à jour (409) : message et case décochée', (
@@ -958,9 +915,7 @@ void main() {
       expect(find.text('Post a parcel'), findsOneWidget);
     });
 
-    testWidgets('trajet, non vérifié : phrase complète en anglais', (
-      tester,
-    ) async {
+    testWidgets('trajet, non vérifié : information traduite', (tester) async {
       useEnglish();
       await _pump(
         tester,
@@ -970,8 +925,7 @@ void main() {
 
       expect(
         find.text(
-          'Before you post, your identity must be verified. Go to '
-          'Profile › Verifications to verify it (2 min).',
+          "You'll verify your identity before posting. It takes 2 minutes.",
         ),
         findsOneWidget,
       );

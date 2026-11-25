@@ -6,12 +6,22 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
+import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/kyc/bloc/kyc_event.dart';
+import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -68,6 +78,13 @@ class _StaticHelpCenterSource implements HelpCenterConfigSource {
 class _MockRepo extends Mock implements PackageRequestRepository {}
 
 class _MockCityRepo extends Mock implements CityRepository {}
+
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
+
+class _MockKycBloc extends MockBloc<KycEvent, KycState> implements KycBloc {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _MockMobileMoneyAccountBloc
     extends MockBloc<MobileMoneyAccountEvent, MobileMoneyAccountState>
@@ -260,6 +277,8 @@ void main() {
     String helpConfigJson = _emptyHelpConfigJson,
     bool wizardAlone = false,
     PackageRequest? wizardExtra,
+    String? kycStatus,
+    Map<String, dynamic>? resumeData,
   }) {
     final router = GoRouter(
       initialLocation: wizardAlone ? '/wizard' : '/',
@@ -299,6 +318,9 @@ void main() {
             )..add(const HelpCenterLoadRequested()),
             child: PackageRequestCreateScreen(
               initial: state.extra as PackageRequest?,
+              resuming: resumeData == null
+                  ? null
+                  : PackageRequestDraftResume(resumeData),
             ),
           ),
         ),
@@ -332,7 +354,7 @@ void main() {
         ),
       ],
     );
-    return MaterialApp.router(
+    final app = MaterialApp.router(
       routerConfig: router,
       theme: AppTheme.light(),
       localizationsDelegates: const [
@@ -341,6 +363,35 @@ void main() {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
+    );
+    if (kycStatus == null) return app;
+    // Compte connecté : la vérification d'identité au clic sur « Publier »
+    // lit son statut.
+    final authBloc = _MockAuthBloc();
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: AuthAuthenticated(
+        UserModel(
+          id: 'sender-1',
+          roles: const ['SENDER'],
+          kycStatus: kycStatus,
+          status: 'ACTIVE',
+        ),
+      ),
+    );
+    final kycBloc = _MockKycBloc();
+    whenListen(
+      kycBloc,
+      const Stream<KycState>.empty(),
+      initialState: const KycInitial(),
+    );
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>.value(value: authBloc),
+        BlocProvider<KycBloc>.value(value: kycBloc),
+      ],
+      child: app,
     );
   }
 
@@ -387,8 +438,14 @@ void main() {
   /// Pousse le wizard jusqu'à l'étape 3 (budget) sans la soumettre — utile
   /// pour piloter le CTA « Aperçu » et la sheet qu'il ouvre depuis l'UI
   /// réelle, plutôt que de dispatcher `FormStep3Submitted` directement.
-  Future<void> driveToStep3(WidgetTester tester) async {
-    await tester.pumpWidget(buildHarness());
+  Future<void> driveToStep3(
+    WidgetTester tester, {
+    String? kycStatus,
+    Map<String, dynamic>? resumeData,
+  }) async {
+    await tester.pumpWidget(
+      buildHarness(kycStatus: kycStatus, resumeData: resumeData),
+    );
     await tester.tap(find.byKey(const Key('open-create')));
     await tester.pumpAndSettle();
 
@@ -774,6 +831,117 @@ void main() {
       expect(find.text('Demande publiée !'), findsOneWidget);
     },
   );
+
+  group('identité non vérifiée au clic sur « Publier »', () {
+    late _MockAnalyticsService analytics;
+
+    setUp(() {
+      analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerSingleton<AnalyticsService>(analytics);
+    });
+
+    tearDown(() => getIt.unregister<AnalyticsService>());
+
+    Future<void> publish(WidgetTester tester) async {
+      await tester.tap(find.text('Aperçu'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('preview-publish')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('saisie gardée en brouillon (kyc_gate) puis feuille '
+        '« Dernière étape », rien n\'est publié', (tester) async {
+      await driveToStep3(tester, kycStatus: 'NOT_STARTED');
+      await publish(tester);
+
+      verifyNever(createCall(saveAsDraft: false));
+      final stored = await draftStore.read(FormDraftKind.packageRequest);
+      expect(stored, isNotNull);
+      expect(FormDraftCubit.isFromKycGate(stored!.data), isTrue);
+      expect(stored.data['departureCity'], 'Paris');
+      expect(stored.step, 2);
+      expect(
+        find.text('Dernière étape : vérifiez votre identité'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Votre demande est enregistrée. Vérifiez votre identité (environ 2 '
+          'minutes) puis publiez-la.',
+        ),
+        findsOneWidget,
+      );
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.publishKycGateShown,
+          properties: {'role': 'sender', 'kyc_status': 'not_started'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('vérification en cours : la demande attend en brouillon', (
+      tester,
+    ) async {
+      await driveToStep3(tester, kycStatus: 'PENDING');
+      await publish(tester);
+      verifyNever(createCall(saveAsDraft: false));
+      expect(find.text('Vérification en cours'), findsOneWidget);
+      expect(
+        find.textContaining('Votre demande est enregistrée : elle vous attend'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('brouillon serveur toujours permis sans identité vérifiée', (
+      tester,
+    ) async {
+      await driveToStep3(tester, kycStatus: 'NOT_STARTED');
+      await tester.tap(find.text('Aperçu'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('preview-save-draft')));
+      await tester.pumpAndSettle();
+      expect(captureSaveAsDraftCalls(), [true]);
+      expect(
+        find.text('Dernière étape : vérifiez votre identité'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('identité vérifiée : publication directe, aucune feuille', (
+      tester,
+    ) async {
+      await driveToStep3(tester, kycStatus: 'VERIFIED');
+      await publish(tester);
+      expect(captureSaveAsDraftCalls(), [false]);
+      expect(find.text('Demande publiée !'), findsOneWidget);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.publishKycGateResumed,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    testWidgets('retour vérifié (brouillon kyc_gate repris) : publication '
+        'puis publish_kyc_gate_resumed', (tester) async {
+      await driveToStep3(
+        tester,
+        kycStatus: 'VERIFIED',
+        resumeData: const {'step': 0, 'kycGate': true},
+      );
+      await publish(tester);
+      expect(captureSaveAsDraftCalls(), [false]);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.publishKycGateResumed,
+          properties: {'role': 'sender'},
+        ),
+      ).called(1);
+    });
+  });
 
   testWidgets('enregistrer en brouillon depuis l\'aperçu (saveAsDraft: true)', (
     tester,

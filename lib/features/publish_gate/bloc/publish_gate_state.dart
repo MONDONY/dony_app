@@ -6,7 +6,7 @@ enum PublishGateStatus {
   /// Lecture des engagements.
   loading,
 
-  /// Écran des engagements affiché (à accepter, ou identité à vérifier).
+  /// Écran des engagements affiché, à accepter.
   intro,
 
   /// Acceptation en cours d'envoi.

@@ -12,13 +12,34 @@ const String kKycVerifyRoute = '/kyc/verify';
 /// montrait que la moitié des comptes vérifiés ne publiaient jamais rien.
 const String kycReturnParam = 'next';
 
+/// Paramètre des écrans d'engagements : la publication a été arrêtée par la
+/// vérification d'identité, la saisie gardée en brouillon local se rouvre
+/// directement, sans la feuille des brouillons.
+const String publishResumeParam = 'resume';
+const String publishResumeKyc = 'kyc';
+
+/// Retour au formulaire de trajet rempli, après la vérification.
+const String kycResumeTripRoute =
+    '/trips/publish-intro?$publishResumeParam=$publishResumeKyc';
+
+/// Retour au formulaire de demande d'envoi rempli, après la vérification.
+const String kycResumeParcelRoute =
+    '/parcels/send-intro?$publishResumeParam=$publishResumeKyc';
+
 /// Seuls écrans où revenir. `go` ne transporte pas d'`extra` : une route qui
 /// en dépend (ex. `/bids/new`) planterait. Liste fermée aussi pour qu'un lien
 /// forgé ne puisse pas rediriger ailleurs.
 const Set<String> kycReturnRoutes = {
   '/trips/publish-intro',
   '/parcels/send-intro',
+  kycResumeTripRoute,
+  kycResumeParcelRoute,
 };
+
+/// Le retour rouvre une saisie gardée en brouillon (vérification demandée au
+/// clic sur « Publier »).
+bool kycReturnKeepsDraft(String? returnTo) =>
+    returnTo == kycResumeTripRoute || returnTo == kycResumeParcelRoute;
 
 /// [raw] s'il fait partie de [kycReturnRoutes], `null` sinon.
 String? kycReturnRouteOrNull(String? raw) =>

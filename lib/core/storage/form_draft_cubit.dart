@@ -11,7 +11,11 @@ enum FormDraftSource {
   exitDialog('exit_dialog'),
 
   /// Bouton « Brouillon » de la barre du formulaire.
-  appBar('app_bar');
+  appBar('app_bar'),
+
+  /// Publication arrêtée par la vérification d'identité : la saisie est
+  /// gardée avant d'ouvrir la feuille de vérification.
+  kycGate('kyc_gate');
 
   const FormDraftSource(this.wire);
 
@@ -34,12 +38,23 @@ class FormDraftCubit extends Cubit<FormDraftStatus> {
   final AnalyticsService _analytics;
   final FormDraftKind kind;
 
+  /// Clé posée dans la saisie gardée par la vérification d'identité : à la
+  /// reprise, le formulaire sait que la publication avait été arrêtée là.
+  static const kycGateMarker = 'kycGate';
+
+  /// Saisie gardée par la vérification d'identité ([FormDraftSource.kycGate]).
+  static bool isFromKycGate(Map<String, dynamic>? data) =>
+      data?[kycGateMarker] == true;
+
   /// Enregistre la saisie. Rend `false` si le trousseau a refusé l'écriture.
   Future<bool> save(
     Map<String, dynamic> data, {
     required FormDraftSource source,
   }) async {
-    final saved = await _store.save(kind, data);
+    final saved = await _store.save(
+      kind,
+      source == FormDraftSource.kycGate ? {...data, kycGateMarker: true} : data,
+    );
     if (saved) {
       unawaited(
         _analytics.logEvent(

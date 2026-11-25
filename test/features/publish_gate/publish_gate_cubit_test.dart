@@ -73,50 +73,38 @@ void main() {
     analytics: analytics,
   );
 
-  group('relecture du serveur avant le blocage identité', () {
-    test('cache non vérifié, serveur VERIFIED : engagements déjà acceptés, on '
-        'passe aux brouillons', () async {
+  group('identité non vérifiée : plus aucun blocage', () {
+    // L'identité se vérifie au clic sur « Publier » (PublishKycGateCubit) :
+    // l'aiguillage ne la lit plus du tout.
+    test('engagements déjà acceptés : brouillons puis formulaire, sans écran '
+        'des engagements', () async {
       when(
         () => commitmentRepo.fetch(),
       ).thenAnswer((_) async => commitments(travelerRequired: false));
       final cubit = build(PublishCommitmentRole.traveler);
-      var rechecks = 0;
-      await cubit.start(
-        kycVerified: false,
-        recheckKyc: () async {
-          rechecks++;
-          return true;
-        },
-      );
-      expect(rechecks, 1);
-      expect(cubit.state.status, PublishGateStatus.ready);
+      final statuses = <PublishGateStatus>[];
+      final sub = cubit.stream.listen((s) => statuses.add(s.status));
+      await cubit.start();
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
+      expect(statuses, [
+        PublishGateStatus.loading,
+        PublishGateStatus.loading,
+        PublishGateStatus.checkingDrafts,
+        PublishGateStatus.ready,
+      ]);
+      expect(cubit.state.introShown, isFalse);
       await cubit.close();
     });
 
-    test('cache non vérifié, serveur non vérifié : écran conservé', () async {
-      when(
-        () => commitmentRepo.fetch(),
-      ).thenAnswer((_) async => commitments(travelerRequired: false));
-      final cubit = build(PublishCommitmentRole.traveler);
-      await cubit.start(kycVerified: false, recheckKyc: () async => false);
+    test('engagements à accepter : écran des engagements, puis formulaire '
+        'après acceptation, sans étape d\'identité', () async {
+      when(() => commitmentRepo.fetch()).thenAnswer((_) async => commitments());
+      final cubit = build(PublishCommitmentRole.sender);
+      await cubit.start();
       expect(cubit.state.status, PublishGateStatus.intro);
-      await cubit.close();
-    });
-
-    test('cache vérifié : aucune relecture', () async {
-      when(
-        () => commitmentRepo.fetch(),
-      ).thenAnswer((_) async => commitments(travelerRequired: false));
-      final cubit = build(PublishCommitmentRole.traveler);
-      var rechecks = 0;
-      await cubit.start(
-        kycVerified: true,
-        recheckKyc: () async {
-          rechecks++;
-          return true;
-        },
-      );
-      expect(rechecks, 0);
+      cubit.setChecked(true);
+      await cubit.accept();
       expect(cubit.state.status, PublishGateStatus.ready);
       await cubit.close();
     });
@@ -132,7 +120,7 @@ void main() {
       final statuses = <PublishGateStatus>[];
       final sub = cubit.stream.listen((s) => statuses.add(s.status));
 
-      await cubit.start(kycVerified: true);
+      await cubit.start();
       await Future<void>.delayed(Duration.zero);
       await sub.cancel();
 
@@ -151,7 +139,7 @@ void main() {
       ).thenAnswer((_) async => commitments(travelerRequired: false));
       final cubit = build(PublishCommitmentRole.traveler);
 
-      await cubit.start(kycVerified: true);
+      await cubit.start();
 
       expect(cubit.state.status, PublishGateStatus.ready);
     });
@@ -164,7 +152,7 @@ void main() {
       ).thenAnswer((_) async => commitments(travelerRequired: false));
       final cubit = build(PublishCommitmentRole.traveler);
 
-      await cubit.start(kycVerified: true);
+      await cubit.start();
 
       expect(cubit.state.status, PublishGateStatus.ready);
       expect(cubit.state.introShown, isFalse);
@@ -181,7 +169,7 @@ void main() {
       when(() => commitmentRepo.fetch()).thenAnswer((_) async => commitments());
       final cubit = build(PublishCommitmentRole.sender);
 
-      await cubit.start(kycVerified: true);
+      await cubit.start();
 
       expect(cubit.state.status, PublishGateStatus.intro);
       expect(cubit.state.commitmentRequired, isTrue);
@@ -189,16 +177,17 @@ void main() {
       expect(cubit.state.introShown, isTrue);
     });
 
-    test('accepté mais identité non vérifiée : écran affiché', () async {
+    test('accepté, identité non vérifiée : écran sauté, formulaire', () async {
       when(
         () => commitmentRepo.fetch(),
       ).thenAnswer((_) async => commitments(travelerRequired: false));
       final cubit = build(PublishCommitmentRole.traveler);
 
-      await cubit.start(kycVerified: false);
+      await cubit.start();
 
-      expect(cubit.state.status, PublishGateStatus.intro);
+      expect(cubit.state.status, PublishGateStatus.ready);
       expect(cubit.state.commitmentRequired, isFalse);
+      expect(cubit.state.introShown, isFalse);
     });
 
     test(
@@ -209,7 +198,7 @@ void main() {
         ).thenThrow(const NetworkException('x'));
         final cubit = build(PublishCommitmentRole.traveler);
 
-        await cubit.start(kycVerified: true);
+        await cubit.start();
 
         expect(cubit.state.status, PublishGateStatus.intro);
         expect(cubit.state.commitmentRequired, isTrue);
@@ -222,7 +211,7 @@ void main() {
     test('case non cochée : rien n\'est envoyé', () async {
       when(() => commitmentRepo.fetch()).thenAnswer((_) async => commitments());
       final cubit = build(PublishCommitmentRole.traveler);
-      await cubit.start(kycVerified: true);
+      await cubit.start();
 
       await cubit.accept();
 
@@ -233,7 +222,7 @@ void main() {
     test('cochée : acceptation envoyée, tracée, puis brouillons', () async {
       when(() => commitmentRepo.fetch()).thenAnswer((_) async => commitments());
       final cubit = build(PublishCommitmentRole.traveler);
-      await cubit.start(kycVerified: true);
+      await cubit.start();
 
       cubit.setChecked(true);
       await cubit.accept();
@@ -260,7 +249,7 @@ void main() {
         return commitments(version: '2026-11');
       });
       final cubit = build(PublishCommitmentRole.sender);
-      await cubit.start(kycVerified: true);
+      await cubit.start();
 
       cubit.setChecked(true);
       await cubit.accept();
@@ -282,7 +271,7 @@ void main() {
           const ConflictException('x', code: 'publish-commitment-outdated'),
         );
         final cubit = build(PublishCommitmentRole.traveler);
-        await cubit.start(kycVerified: true);
+        await cubit.start();
 
         cubit.setChecked(true);
         await cubit.accept();
@@ -306,7 +295,7 @@ void main() {
         const ConflictException('x', code: 'publish-commitment-outdated'),
       );
       final cubit = build(PublishCommitmentRole.traveler);
-      await cubit.start(kycVerified: true);
+      await cubit.start();
       cubit.setChecked(true);
 
       await cubit.accept();
@@ -321,7 +310,7 @@ void main() {
         () => commitmentRepo.accept(any(), any()),
       ).thenThrow(const ServerException('boom'));
       final cubit = build(PublishCommitmentRole.traveler);
-      await cubit.start(kycVerified: true);
+      await cubit.start();
       cubit.setChecked(true);
 
       await cubit.accept();
@@ -334,7 +323,7 @@ void main() {
     test('back antérieur (404) : on laisse publier, rien de tracé', () async {
       when(() => commitmentRepo.fetch()).thenThrow(const NotFoundException());
       final cubit = build(PublishCommitmentRole.traveler);
-      await cubit.start(kycVerified: true);
+      await cubit.start();
       cubit.setChecked(true);
 
       await cubit.accept();
@@ -354,7 +343,7 @@ void main() {
         () => commitmentRepo.accept(any(), any()),
       ).thenThrow(StateError('x'));
       final cubit = build(PublishCommitmentRole.traveler);
-      await cubit.start(kycVerified: true);
+      await cubit.start();
       cubit.setChecked(true);
 
       await cubit.accept();
@@ -363,13 +352,13 @@ void main() {
     });
 
     test(
-      'déjà accepté (écran montré pour le KYC) : brouillons directement',
+      'déjà accepté : « Continuer » mène aux brouillons sans rien envoyer',
       () async {
         when(
           () => commitmentRepo.fetch(),
         ).thenAnswer((_) async => commitments(travelerRequired: false));
         final cubit = build(PublishCommitmentRole.traveler);
-        await cubit.start(kycVerified: false);
+        await cubit.start();
 
         await cubit.accept();
 
@@ -407,7 +396,7 @@ void main() {
         );
         final cubit = build(PublishCommitmentRole.traveler);
 
-        await cubit.start(kycVerified: true);
+        await cubit.start();
 
         final drafts = cubit.state.drafts;
         expect(drafts.first, isA<LocalPublishDraft>());
@@ -455,7 +444,7 @@ void main() {
       );
       final cubit = build(PublishCommitmentRole.sender);
 
-      await cubit.start(kycVerified: true);
+      await cubit.start();
 
       final drafts = cubit.state.drafts;
       expect(drafts, hasLength(2));
@@ -479,7 +468,7 @@ void main() {
         ).thenThrow(const NetworkException('x'));
         final cubit = build(PublishCommitmentRole.traveler);
 
-        await cubit.start(kycVerified: true);
+        await cubit.start();
 
         expect(cubit.state.status, PublishGateStatus.ready);
         expect(cubit.state.drafts, isEmpty);
@@ -563,7 +552,7 @@ void main() {
       ).thenAnswer((_) async => [templateFixture()]);
       final cubit = build(PublishCommitmentRole.traveler);
 
-      await cubit.start(kycVerified: true);
+      await cubit.start();
 
       expect(cubit.state.drafts, isEmpty);
       expect(cubit.state.templates.single.id, templateFixture().id);
@@ -592,7 +581,7 @@ void main() {
         ).thenThrow(const NetworkException('offline'));
         final cubit = build(PublishCommitmentRole.traveler);
 
-        await cubit.start(kycVerified: true);
+        await cubit.start();
 
         expect(cubit.state.status, PublishGateStatus.ready);
         expect(cubit.state.hasChoices, isFalse);
@@ -605,7 +594,7 @@ void main() {
       ).thenAnswer((_) async => commitments(senderRequired: false));
       final cubit = build(PublishCommitmentRole.sender);
 
-      await cubit.start(kycVerified: true);
+      await cubit.start();
 
       verifyNever(() => templates.getAll());
       expect(cubit.state.templates, isEmpty);

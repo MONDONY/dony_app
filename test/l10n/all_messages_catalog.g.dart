@@ -1007,15 +1007,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.requestPublishIntroWhyBulletPayment,
   'requestPublishIntroWhyBulletTracking': (l) =>
       l.requestPublishIntroWhyBulletTracking,
-  'tripPublishIntroVerifyCallout': (l) => l.tripPublishIntroVerifyCallout(
-    placeholderMarker('identity'),
-    placeholderMarker('path'),
-  ),
-  'tripPublishIntroVerifyIdentity': (l) => l.tripPublishIntroVerifyIdentity,
-  'tripPublishIntroVerifyPath': (l) => l.tripPublishIntroVerifyPath,
-  'tripPublishIntroVerifyButton': (l) => l.tripPublishIntroVerifyButton,
-  'tripPublishIntroVerifyHint': (l) =>
-      l.tripPublishIntroVerifyHint(placeholderMarker('continueLabel')),
   'tripPublishIntroStripeTitle': (l) => l.tripPublishIntroStripeTitle,
   'tripPublishIntroStripeSubtitle': (l) => l.tripPublishIntroStripeSubtitle,
   'tripPublishPricePerKgSectionLabel': (l) =>
@@ -8569,6 +8560,21 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripPublishedItemPricesAddedBody(intPlaceholderValue),
   'tripPublishedItemPricesSeeCta': (l) => l.tripPublishedItemPricesSeeCta,
   'tripPublishedItemPricesAddFailed': (l) => l.tripPublishedItemPricesAddFailed,
+  'publishIntroKycNotice': (l) => l.publishIntroKycNotice,
+  'publishKycGateTitle': (l) => l.publishKycGateTitle,
+  'publishKycGateBodyTrip': (l) => l.publishKycGateBodyTrip,
+  'publishKycGateBodyRequest': (l) => l.publishKycGateBodyRequest,
+  'publishKycGateBodyUnsaved': (l) => l.publishKycGateBodyUnsaved,
+  'publishKycGateRejectedNote': (l) => l.publishKycGateRejectedNote,
+  'publishKycGateVerifyAction': (l) => l.publishKycGateVerifyAction,
+  'publishKycGatePendingTitle': (l) => l.publishKycGatePendingTitle,
+  'publishKycGatePendingBodyTrip': (l) => l.publishKycGatePendingBodyTrip,
+  'publishKycGatePendingBodyRequest': (l) => l.publishKycGatePendingBodyRequest,
+  'publishKycGatePendingBodyUnsaved': (l) => l.publishKycGatePendingBodyUnsaved,
+  'publishKycGatePendingStatusAction': (l) =>
+      l.publishKycGatePendingStatusAction,
+  'kycSessionUnavailable': (l) => l.kycSessionUnavailable,
+  'kycSessionUnavailableDraftSaved': (l) => l.kycSessionUnavailableDraftSaved,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8601,8 +8607,6 @@ const textParameters = <String, List<String>>{
   'commonListLast': ['head', 'last'],
   'tripPublishSuccessSubtitle': ['departureCity', 'arrivalCity'],
   'tripPublishTemplateAppliedMessage': ['label'],
-  'tripPublishIntroVerifyCallout': ['identity', 'path'],
-  'tripPublishIntroVerifyHint': ['continueLabel'],
   'tripPublishCashOnlyBannerNoConnectCountry': ['country'],
   'tripPublishCardCurrencyUnavailableNotice': ['currency'],
   'tripPublishMobileMoneyCurrencyNotice': ['accountCurrency', 'tripCurrency'],

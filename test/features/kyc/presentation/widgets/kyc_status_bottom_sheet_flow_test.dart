@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/error/app_exception.dart';
-import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -236,10 +235,7 @@ void main() {
     await open(tester);
     const error = NetworkException('réseau');
     await emit(tester, const KycError(error));
-    expect(
-      find.text(ErrorPresenter.resolve(error, l10n: en).message),
-      findsOneWidget,
-    );
+    expect(find.text(en.kycSessionUnavailable), findsOneWidget);
     expect(refreshCount(), 1);
 
     await tester.tap(find.text('Try again'));

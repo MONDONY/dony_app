@@ -12,6 +12,7 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
+import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -99,6 +100,49 @@ void main() {
     if (getIt.isRegistered<AuthRepository>()) {
       getIt.unregister<AuthRepository>();
     }
+  });
+
+  group('vérification indisponible (503 session-creation-failed)', () {
+    const error = ServiceUnavailableException(
+      'Impossible de créer la session de vérification',
+    );
+
+    testWidgets('depuis le profil : message dédié, jamais le texte brut', (
+      tester,
+    ) async {
+      when(() => kycBloc.state).thenReturn(const KycError(error));
+      when(() => kycBloc.stream).thenAnswer((_) => const Stream.empty());
+      await _wrap(tester, kycBloc: kycBloc, authBloc: authBloc);
+      expect(
+        find.text(
+          'La vérification d\'identité est momentanément indisponible. '
+          'Réessayez dans quelques minutes.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Impossible de créer'), findsNothing);
+      expect(find.textContaining('AppException'), findsNothing);
+    });
+
+    testWidgets('depuis « Publier » (resume=kyc) : la saisie est enregistrée', (
+      tester,
+    ) async {
+      when(() => kycBloc.state).thenReturn(const KycError(error));
+      when(() => kycBloc.stream).thenAnswer((_) => const Stream.empty());
+      await _wrap(
+        tester,
+        kycBloc: kycBloc,
+        authBloc: authBloc,
+        returnTo: kycResumeParcelRoute,
+      );
+      expect(
+        find.text(
+          'La vérification d\'identité est momentanément indisponible. '
+          'Votre saisie est enregistrée : réessayez dans quelques minutes.',
+        ),
+        findsOneWidget,
+      );
+    });
   });
 
   // Régression : quand l'utilisateur quitte la page Stripe avant de valider,

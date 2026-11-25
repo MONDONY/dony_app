@@ -2904,25 +2904,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'QR tracking from drop-off to receipt.';
 
   @override
-  String tripPublishIntroVerifyCallout(String identity, String path) {
-    return 'Before you post, your **$identity**. Go to $path to verify it (2 min).';
-  }
-
-  @override
-  String get tripPublishIntroVerifyIdentity => 'identity must be verified';
-
-  @override
-  String get tripPublishIntroVerifyPath => 'Profile › Verifications';
-
-  @override
-  String get tripPublishIntroVerifyButton => 'Verify my identity';
-
-  @override
-  String tripPublishIntroVerifyHint(String continueLabel) {
-    return 'The button becomes “$continueLabel” once your identity is verified.';
-  }
-
-  @override
   String get tripPublishIntroStripeTitle => 'Activate card payments';
 
   @override
@@ -24722,4 +24703,56 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tripPublishedItemPricesAddFailed =>
       'The prices could not be added. Please try again.';
+
+  @override
+  String get publishIntroKycNotice =>
+      'You\'ll verify your identity before posting. It takes 2 minutes.';
+
+  @override
+  String get publishKycGateTitle => 'Last step: verify your identity';
+
+  @override
+  String get publishKycGateBodyTrip =>
+      'Your trip is saved. Verify your identity (about 2 minutes), then post it.';
+
+  @override
+  String get publishKycGateBodyRequest =>
+      'Your request is saved. Verify your identity (about 2 minutes), then post it.';
+
+  @override
+  String get publishKycGateBodyUnsaved =>
+      'Verify your identity (about 2 minutes), then post.';
+
+  @override
+  String get publishKycGateRejectedNote =>
+      'Your previous verification didn\'t go through: please try again with a valid ID.';
+
+  @override
+  String get publishKycGateVerifyAction => 'Verify my identity';
+
+  @override
+  String get publishKycGatePendingTitle => 'Verification in progress';
+
+  @override
+  String get publishKycGatePendingBodyTrip =>
+      'We\'re checking your identity and will let you know as soon as it\'s done. Your trip is saved and ready to post.';
+
+  @override
+  String get publishKycGatePendingBodyRequest =>
+      'We\'re checking your identity and will let you know as soon as it\'s done. Your request is saved and ready to post.';
+
+  @override
+  String get publishKycGatePendingBodyUnsaved =>
+      'We\'re checking your identity and will let you know as soon as it\'s done.';
+
+  @override
+  String get publishKycGatePendingStatusAction => 'View my verification';
+
+  @override
+  String get kycSessionUnavailable =>
+      'Identity verification is temporarily unavailable. Please try again in a few minutes.';
+
+  @override
+  String get kycSessionUnavailableDraftSaved =>
+      'Identity verification is temporarily unavailable. Your entry is saved: please try again in a few minutes.';
 }

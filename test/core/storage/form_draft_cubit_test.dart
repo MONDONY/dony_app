@@ -41,6 +41,27 @@ void main() {
     ).called(1);
   });
 
+  test('save depuis la vérification d\'identité : marque le brouillon, '
+      'source kyc_gate', () async {
+    final ok = await cubit.save({'step': 2}, source: FormDraftSource.kycGate);
+
+    expect(ok, isTrue);
+    final stored = await store.read(FormDraftKind.trip);
+    expect(FormDraftCubit.isFromKycGate(stored!.data), isTrue);
+    verify(
+      () => analytics.logEvent(
+        AnalyticsEvents.formDraftSaved,
+        properties: {'kind': 'trip', 'step': 2, 'source': 'kyc_gate'},
+      ),
+    ).called(1);
+  });
+
+  test('isFromKycGate : faux sans marque ou sans brouillon', () {
+    expect(FormDraftCubit.isFromKycGate(null), isFalse);
+    expect(FormDraftCubit.isFromKycGate({'step': 1}), isFalse);
+    expect(FormDraftCubit.isFromKycGate({'kycGate': 'oui'}), isFalse);
+  });
+
   test('save en échec : rien de tracé, état inchangé', () async {
     storage.failWrites = true;
 

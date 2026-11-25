@@ -1498,39 +1498,6 @@
   "@requestPublishIntroWhyBulletTracking": {
     "description": "Puce « comment ça marche », rôle expéditeur : suivi QR"
   },
-  "tripPublishIntroVerifyCallout": "Avant de publier, votre **{identity}**. Rendez-vous dans {path} pour la valider (2 min).",
-  "@tripPublishIntroVerifyCallout": {
-    "description": "Encart d'invite à vérifier son identité avant de publier un trajet. Le segment en gras (identity) et le chemin souligné (path) sont insérés par paramètre puis découpés au rendu",
-    "placeholders": {
-      "identity": {
-        "type": "String"
-      },
-      "path": {
-        "type": "String"
-      }
-    }
-  },
-  "tripPublishIntroVerifyIdentity": "identité doit être vérifiée",
-  "@tripPublishIntroVerifyIdentity": {
-    "description": "Segment en gras (paramètre identity) de l'encart d'invite à vérifier son identité"
-  },
-  "tripPublishIntroVerifyPath": "Profil › Vérifications",
-  "@tripPublishIntroVerifyPath": {
-    "description": "Chemin de menu en gras souligné (paramètre path), dans l'encart d'invite à vérifier son identité"
-  },
-  "tripPublishIntroVerifyButton": "Vérifier mon identité",
-  "@tripPublishIntroVerifyButton": {
-    "description": "Bouton qui ouvre le portail KYC depuis l'intro de publication"
-  },
-  "tripPublishIntroVerifyHint": "Le bouton devient « {continueLabel} » une fois l'identité vérifiée.",
-  "@tripPublishIntroVerifyHint": {
-    "description": "Texte sous le bouton de vérification, tant que l'identité n'est pas vérifiée",
-    "placeholders": {
-      "continueLabel": {
-        "type": "String"
-      }
-    }
-  },
   "tripPublishIntroStripeTitle": "Activez les paiements par carte",
   "@tripPublishIntroStripeTitle": {
     "description": "Titre du rappel Stripe (voyageur) dans l'intro de publication d'un trajet"
@@ -23894,5 +23861,33 @@
   "tripPublishedItemPricesSeeCta": "Voir mes prix",
   "@tripPublishedItemPricesSeeCta": {"description": "Écran de succès : ouvre la grille du profil après l'ajout (court)"},
   "tripPublishedItemPricesAddFailed": "Les prix n'ont pas pu être ajoutés. Réessayez.",
-  "@tripPublishedItemPricesAddFailed": {"description": "Écran de succès : échec de l'ajout des prix proposés"}
+  "@tripPublishedItemPricesAddFailed": {"description": "Écran de succès : échec de l'ajout des prix proposés"},
+  "publishIntroKycNotice": "Vous vérifierez votre identité avant de publier, en 2 minutes.",
+  "@publishIntroKycNotice": {"description": "Écran des engagements (publish_intro_screen.dart) : information non bloquante pour un utilisateur dont l'identité n'est pas encore vérifiée. La vérification est demandée au clic sur Publier."},
+  "publishKycGateTitle": "Dernière étape : vérifiez votre identité",
+  "@publishKycGateTitle": {"description": "Feuille de vérification ouverte au clic sur Publier (publish_kyc_gate_sheet.dart), identité non vérifiée : titre"},
+  "publishKycGateBodyTrip": "Votre trajet est enregistré. Vérifiez votre identité (environ 2 minutes) puis publiez-le.",
+  "@publishKycGateBodyTrip": {"description": "Même feuille, trajet : la saisie a été gardée en brouillon sur le téléphone"},
+  "publishKycGateBodyRequest": "Votre demande est enregistrée. Vérifiez votre identité (environ 2 minutes) puis publiez-la.",
+  "@publishKycGateBodyRequest": {"description": "Même feuille, demande d'envoi : la saisie a été gardée en brouillon sur le téléphone"},
+  "publishKycGateBodyUnsaved": "Vérifiez votre identité (environ 2 minutes) puis publiez.",
+  "@publishKycGateBodyUnsaved": {"description": "Même feuille, quand la saisie n'a pas pu être gardée en brouillon (trousseau refusé, modification d'un trajet publié)"},
+  "publishKycGateRejectedNote": "Votre précédente vérification n'a pas abouti : recommencez-la avec une pièce d'identité valide.",
+  "@publishKycGateRejectedNote": {"description": "Même feuille, ligne ajoutée quand la vérification précédente a été refusée (statut REJECTED)"},
+  "publishKycGateVerifyAction": "Vérifier mon identité",
+  "@publishKycGateVerifyAction": {"description": "Bouton principal de la feuille : démarre la vérification d'identité (court, une ligne)"},
+  "publishKycGatePendingTitle": "Vérification en cours",
+  "@publishKycGatePendingTitle": {"description": "Même feuille, vérification envoyée et en attente (statut PENDING) : titre"},
+  "publishKycGatePendingBodyTrip": "Nous vérifions votre identité et vous préviendrons dès que c'est fait. Votre trajet est enregistré : il vous attend pour être publié.",
+  "@publishKycGatePendingBodyTrip": {"description": "Même feuille, PENDING, trajet gardé en brouillon"},
+  "publishKycGatePendingBodyRequest": "Nous vérifions votre identité et vous préviendrons dès que c'est fait. Votre demande est enregistrée : elle vous attend pour être publiée.",
+  "@publishKycGatePendingBodyRequest": {"description": "Même feuille, PENDING, demande d'envoi gardée en brouillon"},
+  "publishKycGatePendingBodyUnsaved": "Nous vérifions votre identité et vous préviendrons dès que c'est fait.",
+  "@publishKycGatePendingBodyUnsaved": {"description": "Même feuille, PENDING, saisie non gardée en brouillon"},
+  "publishKycGatePendingStatusAction": "Voir ma vérification",
+  "@publishKycGatePendingStatusAction": {"description": "Même feuille, PENDING : ouvre le statut de la vérification (court, une ligne)"},
+  "kycSessionUnavailable": "La vérification d'identité est momentanément indisponible. Réessayez dans quelques minutes.",
+  "@kycSessionUnavailable": {"description": "Création de la session de vérification impossible (503, serveur, hors ligne) : remplace le texte technique de l'erreur"},
+  "kycSessionUnavailableDraftSaved": "La vérification d'identité est momentanément indisponible. Votre saisie est enregistrée : réessayez dans quelques minutes.",
+  "@kycSessionUnavailableDraftSaved": {"description": "Même erreur, quand la vérification a été demandée au clic sur Publier et que la saisie a été gardée en brouillon"}
 }
