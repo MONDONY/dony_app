@@ -4,6 +4,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
@@ -11,15 +12,20 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/utils/format_weight.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/money_keyword_warning.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_fee_scale_notice.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
+import 'package:dony/features/kyc/data/kyc_recheck.dart';
+import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
@@ -41,12 +47,15 @@ import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
+import 'package:dony/features/publish_gate/bloc/publish_kyc_gate_cubit.dart';
+import 'package:dony/features/publish_gate/presentation/publish_kyc_gate_sheet.dart';
 import 'package:dony/features/recipients/data/phone_validation.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:dony/features/traveler_status/data/traveler_status.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/l10n/l10n.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -184,6 +193,26 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// Nul hors mode négociation : les écrans à prix ferme n'ont pas à exiger
   /// ce BLoC de leurs appelants (ni de leurs tests).
   late final BidNegotiationBloc? _negotiationBloc;
+
+  // ── Envoi en cours et vérification d'identité ──────────────────────────────
+  /// Envoi lancé par le bouton final (relecture de l'identité, création de la
+  /// demande, préparation du paiement) : le bouton affiche un chargement et
+  /// ne répond plus, pour ne jamais créer deux demandes (appuis répétés vus
+  /// dans les replays).
+  final _submittingNotifier = ValueNotifier<bool>(false);
+
+  /// Feuille « Dernière étape : vérifiez votre identité », créée au premier
+  /// envoi arrêté par la vérification.
+  PublishKycGateCubit? _kycGate;
+
+  /// Envoi arrêté par la vérification, repris à son retour.
+  VoidCallback? _pendingSend;
+
+  /// Dernier envoi tenté : rejoué après un 403 `contact-kyc-required`.
+  VoidCallback? _lastSend;
+
+  /// Le serveur a confirmé l'identité vérifiée pendant cet écran.
+  bool _identityConfirmed = false;
 
   // ── Mode négociation ────────────────────────────────────────────────────────
   /// Articles que le voyageur n'a pas tarifés, chiffrés par l'expéditeur.
@@ -591,6 +620,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _negotiationBloc?.close();
     }
     _customItemsNotifier.dispose();
+    _submittingNotifier.dispose();
+    unawaited(_kycGate?.close());
     _proposalCtrl.dispose();
     _isDirtyNotifier.dispose();
     _btnConfigNotifier.dispose();
@@ -923,12 +954,20 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _stepNotifier.value = _FormStep.paymentPicker;
   }
 
-  /// Première proposition, étape 2 : l'envoie avec le mode choisi. Les champs
-  /// du formulaire vivent dans ce State et survivent au changement d'étape.
-  void _submitNegotiation() {
+  /// Première proposition, étape 2 : l'envoie avec le mode choisi, après la
+  /// vérification d'identité si le voyageur l'exige.
+  void _submitNegotiation() =>
+      unawaited(_sendWithIdentityCheck(_sendNegotiation));
+
+  /// Envoi de la proposition. Les champs du formulaire vivent dans ce State et
+  /// survivent au changement d'étape comme à la vérification d'identité.
+  void _sendNegotiation() {
     _autoQuoteTimer?.cancel();
     final proposed = _readProposal();
-    if (proposed == null) return;
+    if (proposed == null) {
+      _submittingNotifier.value = false;
+      return;
+    }
     final method = _methodNotifier.value;
     final weight = _weightNotifier.value;
     _negotiationBloc!.add(
@@ -961,6 +1000,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   void _onNegotiationState(BuildContext context, BidNegotiationState state) {
     if (state is BidNegotiationLoaded &&
         state.action == BidNegotiationAction.proposed) {
+      _kycGate?.publicationSucceeded();
       context.pop();
       DonySnackbar.show(
         context,
@@ -968,6 +1008,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         type: DonySnackbarType.success,
       );
     } else if (state is BidNegotiationError) {
+      _submittingNotifier.value = false;
+      if (_isContactKycRequired(state.error)) {
+        unawaited(_onIdentityRefused(state.error));
+        return;
+      }
       unawaited(ErrorPresenter.show(context, state.error));
     }
   }
@@ -1165,10 +1210,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _stepNotifier.value = _FormStep.paymentPicker;
   }
 
-  void _confirmPayment() {
+  /// Bouton final de l'offre : envoie, après la vérification d'identité si le
+  /// voyageur l'exige.
+  void _confirmPayment() => unawaited(_sendWithIdentityCheck(_sendBid));
+
+  void _sendBid() {
     _autoQuoteTimer?.cancel();
     final data = _formData;
-    if (data == null) return;
+    if (data == null) {
+      _submittingNotifier.value = false;
+      return;
+    }
     final method = _methodNotifier.value;
 
     if (method == BidPaymentMethod.cash ||
@@ -1218,15 +1270,164 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     DonySnackbar.show(context, message: message, type: DonySnackbarType.error);
   }
 
+  // ── Vérification d'identité au moment d'envoyer ────────────────────────────
+
+  /// Le voyageur n'accepte que les profils vérifiés (« profils vérifiés
+  /// uniquement », actif par défaut). Le serveur reste l'arbitre : il refuse
+  /// la demande en 403 `contact-kyc-required` (cf. [_onIdentityRefused]).
+  bool get _travelerRequiresVerified =>
+      !(widget.announcement.traveler?.acceptsUnverified ?? false);
+
+  static bool _isContactKycRequired(AppException error) =>
+      error.code == 'contact-kyc-required';
+
+  PublishKycGateCubit? _ensureKycGate() {
+    if (_kycGate != null) return _kycGate;
+    if (!getIt.isRegistered<PublishKycGateCubit>()) return null;
+    return _kycGate = getIt<PublishKycGateCubit>(
+      param1: KycGateSubject.bid,
+      param2: false,
+    );
+  }
+
+  /// Bouton final (envoyer, payer, proposer). Le formulaire s'ouvre sans
+  /// vérification d'identité : elle n'est demandée qu'ici, si le voyageur
+  /// l'exige, après relecture du serveur (identité validée hors de l'app).
+  Future<void> _sendWithIdentityCheck(VoidCallback send) async {
+    if (_submittingNotifier.value) return;
+    _submittingNotifier.value = true;
+    _lastSend = send;
+    final authBloc = maybeRead<AuthBloc>(context);
+    final user = authBloc?.state.currentUser;
+    if (_identityConfirmed ||
+        !_travelerRequiresVerified ||
+        authBloc == null ||
+        user == null ||
+        user.isKycVerified) {
+      send();
+      return;
+    }
+    final status = await recheckKycStatus(authBloc);
+    if (!mounted) return;
+    if (status == kKycVerifiedStatus) {
+      _identityConfirmed = true;
+      send();
+      return;
+    }
+    await _openKycGate(send, kycStatus: status ?? user.kycStatus);
+  }
+
+  /// Feuille « Dernière étape » (ou « Vérification en cours »). Le formulaire
+  /// reste ouvert dessous : la vérification s'ouvre par-dessus et revient ici
+  /// ([_openVerification]), l'envoi reprend sans ressaisie.
+  Future<void> _openKycGate(
+    VoidCallback send, {
+    required String kycStatus,
+  }) async {
+    final gate = _ensureKycGate();
+    if (gate == null) {
+      _submittingNotifier.value = false;
+      return;
+    }
+    _pendingSend = send;
+    // Rien à écrire : la saisie reste dans cet écran.
+    await gate.open(kycStatus: kycStatus, saveDraft: () async => true);
+    if (!mounted) return;
+    _submittingNotifier.value = false;
+    await PublishKycGateSheet.show(
+      context,
+      gate: gate,
+      onVerificationReady: _openVerification,
+    );
+  }
+
+  /// Page du fournisseur puis écran de statut, ouverts par-dessus le
+  /// formulaire (`kycBackParam`) : chacun se referme par un `pop`, l'un sur
+  /// `true` (parcours terminé), l'autre sur l'URL d'une nouvelle tentative.
+  Future<void> _openVerification(String url) async {
+    String? next = url;
+    var showStatus = false;
+    while (next != null || showStatus) {
+      if (!mounted) return;
+      if (next != null) {
+        final done = await context.push<Object?>(
+          kycVerifyLocation(back: true),
+          extra: next,
+        );
+        next = null;
+        showStatus = done == true;
+      } else {
+        final retry = await context.push<Object?>(
+          kycVerifyLocation(back: true),
+        );
+        showStatus = false;
+        next = retry is String ? retry : null;
+      }
+    }
+    if (mounted) await _onKycReturn();
+  }
+
+  /// Retour de la vérification : identité vérifiée, l'envoi arrêté repart ;
+  /// décision en attente, la feuille le dit (la demande reste prête ici).
+  Future<void> _onKycReturn() async {
+    final authBloc = maybeRead<AuthBloc>(context);
+    final send = _pendingSend;
+    if (authBloc == null || send == null) return;
+    _submittingNotifier.value = true;
+    final status = await recheckKycStatus(authBloc);
+    if (!mounted) return;
+    if (status == kKycVerifiedStatus) {
+      _identityConfirmed = true;
+      _pendingSend = null;
+      DonySnackbar.show(
+        context,
+        message: context.l10n.bidKycGateVerifiedMessage,
+        type: DonySnackbarType.success,
+      );
+      send();
+      return;
+    }
+    _submittingNotifier.value = false;
+    if (status == 'PENDING') await _openKycGate(send, kycStatus: status!);
+  }
+
+  /// 403 `contact-kyc-required` malgré le contrôle (profil en cache périmé,
+  /// réglage du voyageur changé) : la feuille de vérification plutôt qu'une
+  /// erreur brute.
+  Future<void> _onIdentityRefused(AppException error) async {
+    final send = _lastSend;
+    final authBloc = maybeRead<AuthBloc>(context);
+    if (send == null || authBloc == null) {
+      unawaited(ErrorPresenter.show(context, error));
+      return;
+    }
+    _identityConfirmed = false;
+    _submittingNotifier.value = true;
+    final status = await recheckKycStatus(authBloc);
+    if (!mounted) return;
+    if (status == kKycVerifiedStatus) {
+      _submittingNotifier.value = false;
+      unawaited(ErrorPresenter.show(context, error));
+      return;
+    }
+    await _openKycGate(
+      send,
+      kycStatus:
+          status ?? authBloc.state.currentUser?.kycStatus ?? 'NOT_STARTED',
+    );
+  }
+
   // ── BLoC listeners ──────────────────────────────────────────────────────────
 
   void _onBidState(BuildContext context, BidState state) {
     if (state is BidCreated) {
+      _kycGate?.publicationSucceeded();
       context.pop();
       if (context.mounted) {
         _showOfflinePaymentSuccess(context, state.bid);
       }
     } else if (state is BidCheckoutReady) {
+      _kycGate?.publicationSucceeded();
       context.read<PaymentBloc>().add(
         BidCheckoutPaymentRequested(
           clientSecret: state.response.clientSecret,
@@ -1273,6 +1474,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       // spécial, bon), pas le calcul local.
       _scheduleAutoQuote();
     } else if (state is BidError) {
+      _submittingNotifier.value = false;
+      if (_isContactKycRequired(state.error)) {
+        unawaited(_onIdentityRefused(state.error));
+        return;
+      }
       ErrorPresenter.show(context, state.error);
       // Trajet parti, complet ou fermé entre-temps : la demande ne pourra plus
       // aboutir, on rend la main au lieu de laisser un formulaire bloqué
@@ -1320,6 +1526,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   Future<void> _onPaymentState(BuildContext context, PaymentState state) async {
     if (state is CheckoutPaymentSheetReady) {
       await _presentPaymentSheet(context, state);
+      // Feuille de paiement refermée sans payer : le bouton revient.
+      if (mounted) _submittingNotifier.value = false;
+    } else if (state is PaymentError) {
+      _submittingNotifier.value = false;
     }
   }
 
@@ -1435,6 +1645,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   ),
                   _StickyBottom(
                     btnConfigNotifier: _btnConfigNotifier,
+                    submittingNotifier: _submittingNotifier,
                     bidBloc: _bidBloc,
                   ),
                 ],
@@ -2260,9 +2471,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 // ── Sticky bottom (bottomNavigationBar) ────────────────────────────────────────
 
 class _StickyBottom extends StatelessWidget {
-  const _StickyBottom({required this.btnConfigNotifier, required this.bidBloc});
+  const _StickyBottom({
+    required this.btnConfigNotifier,
+    required this.submittingNotifier,
+    required this.bidBloc,
+  });
 
   final ValueNotifier<_BtnConfig?> btnConfigNotifier;
+
+  /// Envoi lancé (cf. `_submittingNotifier`) : chargement, bouton inactif.
+  final ValueListenable<bool> submittingNotifier;
   final BidBloc bidBloc;
 
   @override
@@ -2270,12 +2488,13 @@ class _StickyBottom extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).viewPadding.bottom;
 
-    return ValueListenableBuilder<_BtnConfig?>(
-      valueListenable: btnConfigNotifier,
-      builder: (ctx, config, _) => BlocBuilder<BidBloc, BidState>(
+    return ListenableBuilder(
+      listenable: Listenable.merge([btnConfigNotifier, submittingNotifier]),
+      builder: (ctx, _) => BlocBuilder<BidBloc, BidState>(
         bloc: bidBloc,
         builder: (ctx, state) {
-          final isLoading = state is BidLoading;
+          final config = btnConfigNotifier.value;
+          final isLoading = state is BidLoading || submittingNotifier.value;
           return Container(
             decoration: BoxDecoration(
               color: cs.surface,

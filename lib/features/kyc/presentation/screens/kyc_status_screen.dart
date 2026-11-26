@@ -23,11 +23,17 @@ import 'package:go_router/go_router.dart';
 /// Écran de statut KYC : vérifier son identité à tout moment, depuis le
 /// profil ou au moment où une action l'exige (publier, GP Pro).
 class KycStatusScreen extends StatefulWidget {
-  const KycStatusScreen({super.key, this.returnTo});
+  const KycStatusScreen({super.key, this.returnTo, this.popOnExit = false});
 
   /// Écran où revenir une fois vérifié (cf. `kycReturnRoutes`). `null` :
   /// premiers pas ou accueil, selon [kycExitRoute].
   final String? returnTo;
+
+  /// Ouvert par-dessus un écran qui doit survivre (`kycBackParam`, formulaire
+  /// d'une demande sur un trajet) : la sortie le referme par un `pop` (avec
+  /// l'URL du fournisseur pour une nouvelle tentative), et cet écran relit
+  /// lui-même le statut à son retour.
+  final bool popOnExit;
 
   @override
   State<KycStatusScreen> createState() => _KycStatusScreenState();
@@ -100,6 +106,10 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
   /// statut encore en attente n'y donnerait pas accès. Sinon premiers pas tant
   /// que la personne n'a rien fait (guidage après KYC), sinon l'accueil.
   void _leave() {
+    if (widget.popOnExit && context.canPop()) {
+      context.pop();
+      return;
+    }
     final kyc = context.read<KycBloc>().state;
     final justVerified = kyc is KycStatusLoaded && kyc.kycStatus == 'VERIFIED';
     context.go(
@@ -123,6 +133,12 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           if (state is KycSessionCreated) {
             // Préserve l'écran de retour, que la webview transmet à l'écran
             // de statut suivant.
+            // Ouvert par-dessus un écran qui doit survivre : il se referme
+            // sur l'URL du fournisseur, que cet écran ouvre lui-même.
+            if (widget.popOnExit && context.canPop()) {
+              context.pop(state.stripeUrl);
+              return;
+            }
             context.go(
               kycVerifyLocation(returnTo: widget.returnTo),
               extra: state.stripeUrl,

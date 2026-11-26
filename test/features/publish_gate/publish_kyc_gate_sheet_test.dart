@@ -14,7 +14,6 @@ import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/features/publish_gate/bloc/publish_kyc_gate_cubit.dart';
-import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:dony/features/publish_gate/presentation/publish_kyc_gate_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -70,11 +69,11 @@ void main() {
   });
 
   Future<PublishKycGateCubit> gateFor({
-    PublishCommitmentRole role = PublishCommitmentRole.traveler,
+    KycGateSubject subject = KycGateSubject.trip,
     String kycStatus = 'NOT_STARTED',
     bool saved = true,
   }) async {
-    final gate = PublishKycGateCubit(role: role, analytics: analytics);
+    final gate = PublishKycGateCubit(subject: subject, analytics: analytics);
     addTearDown(gate.close);
     await gate.open(kycStatus: kycStatus, saveDraft: () async => saved);
     return gate;
@@ -87,6 +86,7 @@ void main() {
     String? returnTo = kycResumeTripRoute,
     double width = 1170,
     double ratio = 3,
+    Future<void> Function(String url)? onVerificationReady,
   }) async {
     tester.view.physicalSize = Size(width, 2532);
     tester.view.devicePixelRatio = ratio;
@@ -108,6 +108,7 @@ void main() {
                       ctx,
                       gate: gate,
                       returnTo: returnTo,
+                      onVerificationReady: onVerificationReady,
                     ),
                     child: const Text('Open'),
                   ),
@@ -160,7 +161,7 @@ void main() {
     testWidgets('demande gardée : texte au féminin', (tester) async {
       await pump(
         tester,
-        await gateFor(role: PublishCommitmentRole.sender),
+        await gateFor(subject: KycGateSubject.packageRequest),
         returnTo: kycResumeParcelRoute,
       );
       expect(
@@ -285,7 +286,10 @@ void main() {
     testWidgets('demande, sans brouillon : textes adaptés', (tester) async {
       await pump(
         tester,
-        await gateFor(role: PublishCommitmentRole.sender, kycStatus: 'PENDING'),
+        await gateFor(
+          subject: KycGateSubject.packageRequest,
+          kycStatus: 'PENDING',
+        ),
       );
       expect(find.textContaining('Votre demande est enregistrée'), findsOne);
       await tester.tap(find.text('Plus tard'));
@@ -315,6 +319,90 @@ void main() {
         ),
       ).called(1);
       await tester.pump(const Duration(minutes: 6));
+    });
+  });
+
+  group('demande sur un trajet (sender_bid)', () {
+    testWidgets('texte « demande prête », envoi plutôt que publication', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        await gateFor(subject: KycGateSubject.bid),
+        returnTo: null,
+      );
+      expect(find.text('Dernière étape : vérifiez votre identité'), findsOne);
+      expect(
+        find.text(
+          'Votre demande est prête. Vérifiez votre identité (environ 2 '
+          'minutes) puis envoyez-la.',
+        ),
+        findsOne,
+      );
+    });
+
+    testWidgets('anglais', (tester) async {
+      await pump(
+        tester,
+        await gateFor(subject: KycGateSubject.bid),
+        returnTo: null,
+        locale: AppL10n.en,
+      );
+      expect(
+        find.text(
+          'Your request is ready. Verify your identity (about 2 minutes), '
+          'then send it.',
+        ),
+        findsOne,
+      );
+    });
+
+    testWidgets('PENDING : la demande reste prête sur l\'écran', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        await gateFor(subject: KycGateSubject.bid, kycStatus: 'PENDING'),
+        returnTo: null,
+      );
+      expect(find.text('Vérification en cours'), findsOne);
+      expect(
+        find.text(
+          'Nous vérifions votre identité et vous préviendrons dès que c\'est '
+          'fait. Votre demande reste prête sur cet écran : vous l\'enverrez '
+          'dès que votre identité sera vérifiée.',
+        ),
+        findsOne,
+      );
+    });
+
+    testWidgets('session créée : l\'appelant ouvre la vérification, pas de '
+        'go qui viderait la pile', (tester) async {
+      String? opened;
+      await pump(
+        tester,
+        await gateFor(subject: KycGateSubject.bid),
+        returnTo: null,
+        onVerificationReady: (url) async => opened = url,
+      );
+      await tester.tap(find.text('Vérifier mon identité'));
+      await tester.pump();
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.publishKycGateVerifyTapped,
+          properties: {'role': 'sender_bid'},
+        ),
+      ).called(1);
+      states.add(
+        const KycSessionCreated(
+          stripeUrl: 'https://verify.didit.me/b',
+          sessionId: 's2',
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(opened, 'https://verify.didit.me/b');
+      expect(find.textContaining('verify /kyc'), findsNothing);
     });
   });
 

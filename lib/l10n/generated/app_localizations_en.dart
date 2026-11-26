@@ -24938,4 +24938,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kycSessionUnavailableDraftSaved =>
       'Identity verification is temporarily unavailable. Your entry is saved: please try again in a few minutes.';
+
+  @override
+  String get bidKycGateBody =>
+      'Your request is ready. Verify your identity (about 2 minutes), then send it.';
+
+  @override
+  String get bidKycGatePendingBody =>
+      'We\'re checking your identity and will let you know as soon as it\'s done. Your request stays ready on this screen: you can send it once your identity is verified.';
+
+  @override
+  String get bidKycGateVerifiedMessage =>
+      'Identity verified: sending your request.';
 }

@@ -62,4 +62,18 @@ void main() {
       expect(kycVerifyLocation(returnTo: '/bids/new'), '/kyc/verify');
     });
   });
+
+  test('back : paramètre posé et relu, combiné au retour', () {
+    final location = kycVerifyLocation(back: true);
+    expect(Uri.parse(location).queryParameters, {kycBackParam: '1'});
+    expect(kycBackRequested(Uri.parse(location).queryParameters), isTrue);
+    expect(kycBackRequested(const {}), isFalse);
+    expect(
+      Uri.parse(
+        kycVerifyLocation(returnTo: kycResumeTripRoute, back: true),
+      ).queryParameters,
+      {kycReturnParam: kycResumeTripRoute, kycBackParam: '1'},
+    );
+    expect(kycVerifyLocation(), kKycVerifyRoute);
+  });
 }

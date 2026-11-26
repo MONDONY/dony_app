@@ -193,6 +193,8 @@ void main() {
     bool cameraGranted = true,
     String? returnTo,
     bool pushed = false,
+    bool popOnExit = false,
+    void Function(Object? result)? onPopped,
   }) async {
     Widget echo(GoRouterState s) => Scaffold(body: Text('page ${s.uri}'));
     final router = GoRouter(
@@ -211,6 +213,7 @@ void main() {
               cameraPermission: _FakeCameraPermission(cameraGranted),
               openAppSettings: () async {},
               returnTo: returnTo,
+              popOnExit: popOnExit,
             ),
           ),
         ),
@@ -222,7 +225,9 @@ void main() {
     addTearDown(router.dispose);
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     if (pushed) {
-      unawaited(router.push('/kyc/session'));
+      unawaited(
+        router.push<Object?>('/kyc/session').then((r) => onPopped?.call(r)),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
     }
@@ -497,6 +502,25 @@ void main() {
         find.text('page /kyc/verify?next=%2Fparcels%2Fsend-intro'),
         findsOneWidget,
       );
+    });
+  });
+
+  group('ouverte par-dessus un formulaire (back=1)', () {
+    testWidgets('parcours terminé : se referme sur true, sans go vers le '
+        'statut', (tester) async {
+      Object? popped = 'rien';
+      await pump(
+        tester,
+        pushed: true,
+        popOnExit: true,
+        onPopped: (r) => popped = r,
+      );
+      navigate('https://yadony.com/kyc/complete');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(popped, isTrue);
+      expect(find.text('page /profile'), findsOneWidget);
+      expect(find.textContaining('page /kyc/verify'), findsNothing);
     });
   });
 

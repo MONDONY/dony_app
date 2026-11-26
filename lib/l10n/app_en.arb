@@ -12235,5 +12235,8 @@
   "publishKycGatePendingBodyUnsaved": "We're checking your identity and will let you know as soon as it's done.",
   "publishKycGatePendingStatusAction": "View my verification",
   "kycSessionUnavailable": "Identity verification is temporarily unavailable. Please try again in a few minutes.",
-  "kycSessionUnavailableDraftSaved": "Identity verification is temporarily unavailable. Your entry is saved: please try again in a few minutes."
+  "kycSessionUnavailableDraftSaved": "Identity verification is temporarily unavailable. Your entry is saved: please try again in a few minutes.",
+  "bidKycGateBody": "Your request is ready. Verify your identity (about 2 minutes), then send it.",
+  "bidKycGatePendingBody": "We're checking your identity and will let you know as soon as it's done. Your request stays ready on this screen: you can send it once your identity is verified.",
+  "bidKycGateVerifiedMessage": "Identity verified: sending your request."
 }

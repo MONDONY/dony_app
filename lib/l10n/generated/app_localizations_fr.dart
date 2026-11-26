@@ -25113,4 +25113,16 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get kycSessionUnavailableDraftSaved =>
       'La vérification d\'identité est momentanément indisponible. Votre saisie est enregistrée : réessayez dans quelques minutes.';
+
+  @override
+  String get bidKycGateBody =>
+      'Votre demande est prête. Vérifiez votre identité (environ 2 minutes) puis envoyez-la.';
+
+  @override
+  String get bidKycGatePendingBody =>
+      'Nous vérifions votre identité et vous préviendrons dès que c\'est fait. Votre demande reste prête sur cet écran : vous l\'enverrez dès que votre identité sera vérifiée.';
+
+  @override
+  String get bidKycGateVerifiedMessage =>
+      'Identité vérifiée : nous envoyons votre demande.';
 }

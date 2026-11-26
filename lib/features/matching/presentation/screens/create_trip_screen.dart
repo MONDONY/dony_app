@@ -70,7 +70,6 @@ import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/publish_gate/bloc/publish_kyc_gate_cubit.dart';
-import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:dony/features/publish_gate/presentation/publish_kyc_gate_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
@@ -2184,7 +2183,7 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   PublishKycGateCubit _ensureKycGate() =>
       _kycGate ??= getIt<PublishKycGateCubit>(
-        param1: PublishCommitmentRole.traveler,
+        param1: KycGateSubject.trip,
         param2: widget.resumedFromKycGate,
       );
 

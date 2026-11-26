@@ -28,7 +28,12 @@ typedef _StickyBtnConfig = ({
 class KycStatusBottomSheet extends StatefulWidget {
   const KycStatusBottomSheet({super.key});
 
-  static Future<void> show(BuildContext context) async {
+  /// [onVerificationReady] : l'appelant ouvre lui-même la page du
+  /// fournisseur (formulaire resté ouvert dessous) au lieu du `go`.
+  static Future<void> show(
+    BuildContext context, {
+    Future<void> Function(String verificationUrl)? onVerificationReady,
+  }) async {
     final authBloc = context.read<AuthBloc>();
     final authState = authBloc.state;
     final initialKycStatus = authState is AuthAuthenticated
@@ -62,6 +67,10 @@ class KycStatusBottomSheet extends StatefulWidget {
     );
 
     if (stripeUrl != null && context.mounted) {
+      if (onVerificationReady != null) {
+        await onVerificationReady(stripeUrl);
+        return;
+      }
       GoRouter.of(context).go(kKycVerifyRoute, extra: stripeUrl);
     }
   }

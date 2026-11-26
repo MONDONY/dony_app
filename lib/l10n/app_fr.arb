@@ -23982,5 +23982,11 @@
   "kycSessionUnavailable": "La vérification d'identité est momentanément indisponible. Réessayez dans quelques minutes.",
   "@kycSessionUnavailable": {"description": "Création de la session de vérification impossible (503, serveur, hors ligne) : remplace le texte technique de l'erreur"},
   "kycSessionUnavailableDraftSaved": "La vérification d'identité est momentanément indisponible. Votre saisie est enregistrée : réessayez dans quelques minutes.",
-  "@kycSessionUnavailableDraftSaved": {"description": "Même erreur, quand la vérification a été demandée au clic sur Publier et que la saisie a été gardée en brouillon"}
+  "@kycSessionUnavailableDraftSaved": {"description": "Même erreur, quand la vérification a été demandée au clic sur Publier et que la saisie a été gardée en brouillon"},
+  "bidKycGateBody": "Votre demande est prête. Vérifiez votre identité (environ 2 minutes) puis envoyez-la.",
+  "@bidKycGateBody": {"description": "Feuille de vérification ouverte au clic sur le bouton final du formulaire « Faire une demande » (create_bid_bottom_sheet.dart, publish_kyc_gate_sheet.dart), voyageur qui exige un profil vérifié : la saisie reste dans le formulaire"},
+  "bidKycGatePendingBody": "Nous vérifions votre identité et vous préviendrons dès que c'est fait. Votre demande reste prête sur cet écran : vous l'enverrez dès que votre identité sera vérifiée.",
+  "@bidKycGatePendingBody": {"description": "Même feuille, vérification envoyée et en attente (PENDING) : la demande reste remplie dans le formulaire ouvert"},
+  "bidKycGateVerifiedMessage": "Identité vérifiée : nous envoyons votre demande.",
+  "@bidKycGateVerifiedMessage": {"description": "Message de succès au retour d'une vérification réussie, juste avant que l'envoi de la demande (et le paiement) reprenne"}
 }

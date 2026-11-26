@@ -16,14 +16,26 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 Future<bool> recheckKycVerified(
   AuthBloc authBloc, {
   Duration timeout = const Duration(seconds: 5),
+}) async =>
+    await recheckKycStatus(authBloc, timeout: timeout) == kKycVerifiedStatus;
+
+/// Statut d'identité renvoyé par le serveur (`VERIFIED`, `PENDING`,
+/// `REJECTED`, `NOT_STARTED`…), profil de l'app resynchronisé au passage.
+/// `null` sans réponse (hors ligne, délai dépassé, dépôt absent).
+Future<String?> recheckKycStatus(
+  AuthBloc authBloc, {
+  Duration timeout = const Duration(seconds: 5),
 }) async {
   final repository = getItSafe<AuthRepository>();
-  if (repository == null) return false;
+  if (repository == null) return null;
   try {
     final user = await repository.getProfile().timeout(timeout);
     if (!authBloc.isClosed) authBloc.add(AuthUserSynced(user));
-    return user.isKycVerified;
+    return user.isKycVerified ? kKycVerifiedStatus : user.kycStatus;
   } on Object {
-    return false;
+    return null;
   }
 }
+
+/// Statut d'une identité vérifiée.
+const String kKycVerifiedStatus = 'VERIFIED';

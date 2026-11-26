@@ -3,7 +3,6 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/features/publish_gate/bloc/publish_kyc_gate_cubit.dart';
-import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 
 import 'ai_form_draft_test_doubles.dart';
 import 'mock_analytics_backend.dart';
@@ -70,9 +69,9 @@ FormDraftStore registerTestFormDraftCubit({FormDraftStore? store}) {
 /// création, sinon une mesure éteinte. Sans effet s'il l'est déjà.
 void registerTestPublishKycGateCubit() {
   if (getIt.isRegistered<PublishKycGateCubit>()) return;
-  getIt.registerFactoryParam<PublishKycGateCubit, PublishCommitmentRole, bool>(
-    (role, resumed) => PublishKycGateCubit(
-      role: role,
+  getIt.registerFactoryParam<PublishKycGateCubit, KycGateSubject, bool>(
+    (subject, resumed) => PublishKycGateCubit(
+      subject: subject,
       analytics: getIt.isRegistered<AnalyticsService>()
           ? getIt<AnalyticsService>()
           : makeDisabledAnalytics(MockAnalyticsBackend()),
