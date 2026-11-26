@@ -163,6 +163,8 @@
   "errorCallInProgressMessage": "Un appel est déjà en cours dans cette conversation.",
   "errorCallOutOfWindowTitle": "Appel plus disponible",
   "errorCallOutOfWindowMessage": "L'appel est possible de l'acceptation de la commande jusqu'à 3 jours après la livraison.",
+  "errorCallKycRequiredTitle": "Vérification requise",
+  "errorCallKycRequiredMessage": "Seuls les comptes dont l'identité est vérifiée peuvent appeler. Vérifiez votre identité pour appeler.",
   "errorCallBlockedTitle": "Appel impossible",
   "errorCallBlockedMessage": "Vous ne pouvez pas appeler cette personne.",
   "errorCallCalleeUnavailableTitle": "Personne injoignable",
@@ -12334,6 +12336,18 @@
   "kycRequiredMessagePending": "Votre vérification est en cours. Vous pourrez envoyer une fois votre identité validée.",
   "@kycRequiredMessagePending": {
     "description": "Message de la feuille de vérification requise, statut PENDING (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredCallMessageNotStarted": "Pour protéger tout le monde, seuls les comptes vérifiés peuvent appeler. Votre numéro reste caché.",
+  "@kycRequiredCallMessageNotStarted": {
+    "description": "Message de la feuille de vérification requise ouverte depuis l'icône d'appel d'une discussion, statut NOT_STARTED (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredCallMessageRejected": "Votre vérification a échoué. Réessayez pour pouvoir appeler. Votre numéro reste caché.",
+  "@kycRequiredCallMessageRejected": {
+    "description": "Même feuille, statut REJECTED."
+  },
+  "kycRequiredCallMessagePending": "Votre vérification est en cours. Vous pourrez appeler une fois votre identité validée.",
+  "@kycRequiredCallMessagePending": {
+    "description": "Même feuille, statut PENDING."
   },
   "kycRequiredVerifyAction": "Vérifier mon identité",
   "@kycRequiredVerifyAction": {

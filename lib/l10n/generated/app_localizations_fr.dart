@@ -479,6 +479,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'appel est possible de l\'acceptation de la commande jusqu\'à 3 jours après la livraison.';
 
   @override
+  String get errorCallKycRequiredTitle => 'Vérification requise';
+
+  @override
+  String get errorCallKycRequiredMessage =>
+      'Seuls les comptes dont l\'identité est vérifiée peuvent appeler. Vérifiez votre identité pour appeler.';
+
+  @override
   String get errorCallBlockedTitle => 'Appel impossible';
 
   @override
@@ -11435,6 +11442,18 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get kycRequiredMessagePending =>
       'Votre vérification est en cours. Vous pourrez envoyer une fois votre identité validée.';
+
+  @override
+  String get kycRequiredCallMessageNotStarted =>
+      'Pour protéger tout le monde, seuls les comptes vérifiés peuvent appeler. Votre numéro reste caché.';
+
+  @override
+  String get kycRequiredCallMessageRejected =>
+      'Votre vérification a échoué. Réessayez pour pouvoir appeler. Votre numéro reste caché.';
+
+  @override
+  String get kycRequiredCallMessagePending =>
+      'Votre vérification est en cours. Vous pourrez appeler une fois votre identité validée.';
 
   @override
   String get kycRequiredVerifyAction => 'Vérifier mon identité';

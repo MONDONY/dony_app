@@ -114,7 +114,7 @@ void main() {
 
   group('suppression de la conversation', () {
     Future<void> openDialog(WidgetTester tester) async {
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byType(PopupMenuButton<String>));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Supprimer la conversation'));
       await tester.pumpAndSettle();

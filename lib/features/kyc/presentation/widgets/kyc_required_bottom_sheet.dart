@@ -12,15 +12,24 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Ce que la vérification d'identité débloque : adapte le message de la feuille.
+enum KycRequiredPurpose { parcel, call }
+
 class KycRequiredBottomSheet extends StatelessWidget {
-  const KycRequiredBottomSheet({super.key, required this.kycStatus});
+  const KycRequiredBottomSheet({
+    super.key,
+    required this.kycStatus,
+    this.purpose = KycRequiredPurpose.parcel,
+  });
 
   final String kycStatus;
+  final KycRequiredPurpose purpose;
 
   static Future<void> show(
     BuildContext context, {
     required String kycStatus,
     String? returnTo,
+    KycRequiredPurpose purpose = KycRequiredPurpose.parcel,
   }) async {
     if (kycStatus == 'PENDING') {
       final l = context.l10n;
@@ -47,7 +56,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
             ),
           ],
         ),
-        child: KycRequiredBottomSheet(kycStatus: kycStatus),
+        child: KycRequiredBottomSheet(kycStatus: kycStatus, purpose: purpose),
       );
       if (openStatus && context.mounted) {
         await KycStatusBottomSheet.show(context);
@@ -96,7 +105,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
             showKycError(ctx, state.error);
           }
         },
-        child: KycRequiredBottomSheet(kycStatus: kycStatus),
+        child: KycRequiredBottomSheet(kycStatus: kycStatus, purpose: purpose),
       ),
     );
 
@@ -113,10 +122,18 @@ class KycRequiredBottomSheet extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
 
+    final forCall = purpose == KycRequiredPurpose.call;
     final message = switch (kycStatus) {
-      'REJECTED' => l.kycRequiredMessageRejected,
-      'PENDING' => l.kycRequiredMessagePending,
-      _ => l.kycRequiredMessageNotStarted,
+      'REJECTED' =>
+        forCall
+            ? l.kycRequiredCallMessageRejected
+            : l.kycRequiredMessageRejected,
+      'PENDING' =>
+        forCall ? l.kycRequiredCallMessagePending : l.kycRequiredMessagePending,
+      _ =>
+        forCall
+            ? l.kycRequiredCallMessageNotStarted
+            : l.kycRequiredMessageNotStarted,
     };
 
     return Padding(

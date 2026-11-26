@@ -20,6 +20,7 @@ import 'package:dony/features/calls/bloc/call_lock_screen_cubit.dart';
 import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/calls/presentation/widgets/call_lock_screen_prompt.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
+import 'package:dony/features/kyc/presentation/widgets/kyc_required_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
@@ -365,6 +366,24 @@ class _ChatScreenState extends State<ChatScreen> {
     ParticipantModel participant,
     bool canCallByPhone,
   ) async {
+    // Seuls les comptes dont l'identité est vérifiée peuvent appeler (le back
+    // refuse aussi : 403 `call-kyc-required`). L'icône reste visible pour les
+    // autres, qui sont guidés vers la vérification.
+    final user = _MessagingMuteGate.maybeAuthBloc(context)?.state.currentUser;
+    if (user != null && !user.isKycVerified) {
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.callKycPromptShown,
+          properties: {'kyc_status': user.kycStatus},
+        ),
+      );
+      await KycRequiredBottomSheet.show(
+        context,
+        kycStatus: user.kycStatus,
+        purpose: KycRequiredPurpose.call,
+      );
+      return;
+    }
     if (!canCallByPhone) {
       _startInAppCall(participant);
       return;
@@ -882,6 +901,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final canCallInApp = conversation.callAvailable;
     final canCallByPhone =
         canCallInApp &&
+        !conversation.isInquiry &&
         participant.phoneAvailable &&
         smsAuthEnabledListenable.value &&
         !conversation.isRecipientConversation;
@@ -1002,6 +1022,9 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           PopupMenuButton<String>(
+            // Trois points horizontaux, en bout d'en-tête : la place du
+            // scarabée de signalement, retiré de cet écran.
+            icon: DonyIcon('ellipsis', size: 22, color: cs.onSurface),
             onSelected: (value) {
               switch (value) {
                 case 'report':
@@ -1083,7 +1106,6 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ],
           ),
-          const DonyFeedbackButton(),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),

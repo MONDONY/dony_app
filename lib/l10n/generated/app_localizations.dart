@@ -896,6 +896,18 @@ abstract class AppLocalizations {
   /// **'L\'appel est possible de l\'acceptation de la commande jusqu\'à 3 jours après la livraison.'**
   String get errorCallOutOfWindowMessage;
 
+  /// No description provided for @errorCallKycRequiredTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification requise'**
+  String get errorCallKycRequiredTitle;
+
+  /// No description provided for @errorCallKycRequiredMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls les comptes dont l\'identité est vérifiée peuvent appeler. Vérifiez votre identité pour appeler.'**
+  String get errorCallKycRequiredMessage;
+
   /// No description provided for @errorCallBlockedTitle.
   ///
   /// In fr, this message translates to:
@@ -18714,6 +18726,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Votre vérification est en cours. Vous pourrez envoyer une fois votre identité validée.'**
   String get kycRequiredMessagePending;
+
+  /// Message de la feuille de vérification requise ouverte depuis l'icône d'appel d'une discussion, statut NOT_STARTED (kyc_required_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour protéger tout le monde, seuls les comptes vérifiés peuvent appeler. Votre numéro reste caché.'**
+  String get kycRequiredCallMessageNotStarted;
+
+  /// Même feuille, statut REJECTED.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre vérification a échoué. Réessayez pour pouvoir appeler. Votre numéro reste caché.'**
+  String get kycRequiredCallMessageRejected;
+
+  /// Même feuille, statut PENDING.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre vérification est en cours. Vous pourrez appeler une fois votre identité validée.'**
+  String get kycRequiredCallMessagePending;
 
   /// Bouton principal de la feuille de vérification requise (kyc_required_bottom_sheet.dart).
   ///
