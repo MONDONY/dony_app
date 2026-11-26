@@ -7606,6 +7606,15 @@
   "supportWhatsappSubtitle": "Quick answers from the Yadony team on WhatsApp",
   "supportWhatsappCta": "Write on WhatsApp",
   "supportWhatsappMessage": "Hello Yadony, I need help.",
+  "chatSupportCta": "Message Yadony support",
+  "chatSupportMessageWithTrip": "Hello Yadony, I have a question about my chat ({trip}).",
+  "@chatSupportMessageWithTrip": {
+    "placeholders": {
+      "trip": {
+        "type": "String"
+      }
+    }
+  },
   "supportContactSheetTitle": "Contact Yadony",
   "supportContactSheetBody": "WhatsApp isn't available on this phone. Call or text the number directly.",
   "supportContactCall": "Call",

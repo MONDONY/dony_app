@@ -38,6 +38,7 @@ import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:dony/features/messaging/presentation/chat_photo_viewer_screen.dart';
 import 'package:dony/features/messaging/presentation/widgets/chat_photo.dart';
 import 'package:dony/features/messaging/presentation/widgets/chat_retention_banner.dart';
+import 'package:dony/features/messaging/presentation/widgets/chat_support_line.dart';
 import 'package:dony/features/messaging/presentation/widgets/edit_message_sheet.dart';
 import 'package:dony/features/messaging/presentation/widgets/inquiry_booking_card.dart';
 import 'package:dony/features/messaging/presentation/widgets/inquiry_locked_bar.dart';
@@ -1179,6 +1180,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       ? _openInquiryTrip
                       : () => _navigate(trackingPathFor(conversation), null),
                 ),
+              // Question pour l'équipe Yadony : WhatsApp du support, sans
+              // quitter la discussion. Absente tant que le numéro n'est pas
+              // réglé dans l'admin.
+              ChatSupportLine(tripLabel: conversation.tripLabel),
               if (isReadOnly && !conversation.messagesPurged)
                 _ReadOnlyBanner(cs: cs, tt: tt),
               if (conversation.bidStatus != null)

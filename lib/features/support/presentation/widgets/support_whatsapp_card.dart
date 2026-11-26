@@ -183,10 +183,11 @@ Future<void> openSupportWhatsApp(
   BuildContext context,
   SupportContactCubit cubit, {
   required String source,
+  String? message,
 }) async {
   final l = context.l10n;
   final opened = await cubit.openWhatsApp(
-    message: l.supportWhatsappMessage,
+    message: message ?? l.supportWhatsappMessage,
     source: source,
   );
   if (opened || !context.mounted) return;

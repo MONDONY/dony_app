@@ -15117,6 +15117,19 @@
   "@supportWhatsappMessage": {
     "description": "Message pré-rempli dans WhatsApp ou le SMS vers l'équipe Yadony. Sans donnée personnelle."
   },
+  "chatSupportCta": "Écrire au support Yadony",
+  "@chatSupportCta": {
+    "description": "Ligne fine sous la bannière du trajet, en haut d'une discussion (chat_support_line.dart) : ouvre WhatsApp sur l'équipe Yadony. Doit tenir sur une ligne à 360 dp."
+  },
+  "chatSupportMessageWithTrip": "Bonjour Yadony, j'ai une question sur ma discussion ({trip}).",
+  "@chatSupportMessageWithTrip": {
+    "description": "Message pré-rempli depuis une discussion liée à un trajet. Ni nom ni numéro, seulement le trajet.",
+    "placeholders": {
+      "trip": {
+        "type": "String"
+      }
+    }
+  },
   "supportContactSheetTitle": "Contacter Yadony",
   "@supportContactSheetTitle": {
     "description": "Titre de la feuille de repli quand WhatsApp ne s'ouvre pas."

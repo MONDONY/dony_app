@@ -13757,6 +13757,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportWhatsappMessage => 'Bonjour Yadony, j\'ai besoin d\'aide.';
 
   @override
+  String get chatSupportCta => 'Écrire au support Yadony';
+
+  @override
+  String chatSupportMessageWithTrip(String trip) {
+    return 'Bonjour Yadony, j\'ai une question sur ma discussion ($trip).';
+  }
+
+  @override
   String get supportContactSheetTitle => 'Contacter Yadony';
 
   @override
