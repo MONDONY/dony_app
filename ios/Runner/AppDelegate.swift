@@ -5,6 +5,7 @@ import FirebaseCore
 import FirebaseAuth
 import FirebaseMessaging
 import Sentry
+import StoreKit
 import UserNotifications
 import stream_video_push_notification
 
@@ -41,6 +42,54 @@ import stream_video_push_notification
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     registerBadgeChannel(engineBridge.pluginRegistry)
+    registerAppStoreChannel(engineBridge.pluginRegistry)
+  }
+
+  /// Fiche App Store présentée par-dessus l'app (mise à jour). Apple n'offre aucune
+  /// mise à jour depuis l'app : on évite au moins de faire quitter Yadony. Répond
+  /// `false` si rien n'a pu être présenté, Dart ouvre alors le lien App Store.
+  private func registerAppStoreChannel(_ registry: FlutterPluginRegistry) {
+    guard let registrar = registry.registrar(forPlugin: "YadonyAppStore") else {
+      NSLog("[AppStore] Registrar indisponible, fiche intégrée désactivée")
+      return
+    }
+    let channel = FlutterMethodChannel(
+      name: "com.yadony.yadony/app_store",
+      binaryMessenger: registrar.messenger()
+    )
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard call.method == "showProductPage" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      guard let appId = (call.arguments as? [String: Any])?["appId"] as? String,
+            let presenter = self?.topViewController() else {
+        result(false)
+        return
+      }
+      let store = SKStoreProductViewController()
+      store.delegate = AppStoreDismissDelegate.shared
+      presenter.present(store, animated: true)
+      store.loadProduct(
+        withParameters: [SKStoreProductParameterITunesItemIdentifier: appId]
+      ) { loaded, error in
+        if !loaded {
+          NSLog("[AppStore] Fiche non chargée : %@", error?.localizedDescription ?? "?")
+          store.dismiss(animated: true)
+        }
+        result(loaded)
+      }
+    }
+  }
+
+  private func topViewController() -> UIViewController? {
+    let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+    let window = scenes.flatMap { $0.windows }.first { $0.isKeyWindow }
+    var top = window?.rootViewController
+    while let presented = top?.presentedViewController {
+      top = presented
+    }
+    return top
   }
 
   /// Pastille de l'icône. iOS ne laisse que l'application écrire ce nombre : lire les
@@ -159,5 +208,14 @@ import stream_video_push_notification
       didReceiveRemoteNotification: userInfo,
       fetchCompletionHandler: completionHandler
     )
+  }
+}
+
+/// Referme la fiche App Store intégrée quand l'utilisateur touche « OK ».
+final class AppStoreDismissDelegate: NSObject, SKStoreProductViewControllerDelegate {
+  static let shared = AppStoreDismissDelegate()
+
+  func productViewControllerDidFinish(_ viewController: SKStoreProductViewController) {
+    viewController.dismiss(animated: true)
   }
 }
