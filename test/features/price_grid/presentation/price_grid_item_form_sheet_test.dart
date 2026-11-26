@@ -15,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/commission_grid_test_doubles.dart';
+import '../../../helpers/currency_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 
 class _MockPriceGridBloc extends MockBloc<PriceGridEvent, PriceGridState>
@@ -353,34 +354,59 @@ void main() {
       );
     });
 
-    testWidgets('un montant hors plafond bloque et l\'explique', (
+    // Décision du propriétaire : le prix d'un article n'a plus ni plancher ni
+    // plafond (yadony-back #794). Seule règle : un prix strictement positif.
+    testWidgets('en F CFA : 10 F CFA est accepté, sans message d\'erreur', (
       tester,
     ) async {
-      await _open(tester);
+      registerCurrencyPreference('XOF');
+      final bloc = await _open(tester);
       await tester.tap(find.text('Chaussures'));
       await tester.pumpAndSettle();
 
-      // Au-delà du plafond par article.
-      await _type(tester, '9999');
+      await _type(tester, '10');
 
-      expect(find.textContaining('Maximum'), findsOneWidget);
+      expect(find.textContaining('Minimum'), findsNothing);
+      expect(find.textContaining('Maximum'), findsNothing);
+      expect(find.textContaining('L\'expéditeur paiera'), findsOneWidget);
       final btn = tester.widget<DonyButton>(
         find.byKey(const Key('price-grid-submit')),
       );
-      expect(btn.onPressed, isNull);
+      expect(btn.onPressed, isNotNull);
+
+      await tester.tap(find.byKey(const Key('price-grid-submit')));
+      await tester.pumpAndSettle();
+      final captured = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<PriceGridItemAddRequested>().toList();
+      expect(captured.single.unitPriceNet, 10);
     });
 
-    testWidgets('un article sous 5 € bloque et indique le minimum', (
-      tester,
-    ) async {
+    testWidgets('un montant élevé (2 500 €) est accepté, sans message '
+        'd\'erreur', (tester) async {
       await _open(tester);
       await tester.tap(find.text('Chaussures'));
       await tester.pumpAndSettle();
 
-      await _type(tester, '4');
+      await _type(tester, '2500');
 
-      expect(find.textContaining('Minimum'), findsOneWidget);
-      expect(find.textContaining('5'), findsWidgets);
+      expect(find.textContaining('Maximum'), findsNothing);
+      expect(find.textContaining('Minimum'), findsNothing);
+      expect(find.textContaining('L\'expéditeur paiera'), findsOneWidget);
+      final btn = tester.widget<DonyButton>(
+        find.byKey(const Key('price-grid-submit')),
+      );
+      expect(btn.onPressed, isNotNull);
+    });
+
+    testWidgets('un montant nul reste refusé', (tester) async {
+      await _open(tester);
+      await tester.tap(find.text('Chaussures'));
+      await tester.pumpAndSettle();
+
+      await _type(tester, '0');
+
+      expect(find.textContaining('Saisissez le montant'), findsOneWidget);
       final btn = tester.widget<DonyButton>(
         find.byKey(const Key('price-grid-submit')),
       );

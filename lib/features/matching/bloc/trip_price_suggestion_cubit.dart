@@ -217,20 +217,20 @@ String sampleSizeBracket(int size) {
 /// Prix pratiqués sur la route, prêts à remplir une grille vide.
 ///
 /// La grille est tenue dans la devise active du voyageur : des prix de route
-/// dans une autre devise y seraient faux, on n'en propose alors aucun. Chaque
-/// montant est ramené dans les bornes d'un article de grille.
+/// dans une autre devise y seraient faux, on n'en propose alors aucun. Le prix
+/// d'un article n'a pas de bornes : seuls les montants strictement positifs
+/// sont gardés, tels quels.
 List<PriceGridSuggestion> gridSuggestionsFrom(
   TripPriceSuggestionState suggestion,
 ) {
   final gridCurrency = ActiveCurrency.current ?? SupportedCurrency.eur;
   if (suggestion.currency != gridCurrency) return const [];
-  final min = minGridItemPriceFor(gridCurrency);
-  final max = maxUnitPriceFor(gridCurrency);
   return [
     for (final item in suggestion.items)
-      PriceGridSuggestion(
-        label: item.label,
-        unitPriceNet: item.unitPrice.clamp(min, max).toDouble(),
-      ),
+      if (item.unitPrice > 0)
+        PriceGridSuggestion(
+          label: item.label,
+          unitPriceNet: item.unitPrice.toDouble(),
+        ),
   ];
 }
