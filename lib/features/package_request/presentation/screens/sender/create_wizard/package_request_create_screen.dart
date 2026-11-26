@@ -9,6 +9,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/bloc/ai_filled_fields_cubit.dart';
 import 'package:dony/features/ai_form_draft/bloc/ai_form_draft_availability_cubit.dart';
@@ -17,8 +18,12 @@ import 'package:dony/features/ai_form_draft/data/package_request_ai_draft_mapper
 import 'package:dony/features/ai_form_draft/presentation/ai_form_draft_launcher.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_entry_card.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_filled_banner.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/kyc/data/kyc_recheck.dart';
+import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
@@ -36,6 +41,9 @@ import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
+import 'package:dony/features/publish_gate/bloc/publish_kyc_gate_cubit.dart';
+import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
+import 'package:dony/features/publish_gate/presentation/publish_kyc_gate_sheet.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
@@ -175,9 +183,26 @@ class _PackageRequestCreateScreenState
   /// Champs remplis par l'IA : marque « IA » et bandeau.
   final AiFilledFieldsCubit _aiFilled = AiFilledFieldsCubit();
 
+  /// Vérification d'identité au moment de publier. Créé seulement quand elle
+  /// sert (feuille ouverte, ou saisie reprise d'un brouillon gardé par elle).
+  PublishKycGateCubit? _kycGate;
+
+  /// Relecture du serveur puis feuille de vérification en cours : un second
+  /// appui sur « Publier » n'ouvre pas une deuxième feuille.
+  bool _kycGateOpening = false;
+
+  PublishKycGateCubit _ensureKycGate() =>
+      _kycGate ??= getIt<PublishKycGateCubit>(
+        param1: PublishCommitmentRole.sender,
+        param2: FormDraftCubit.isFromKycGate(widget.resuming?.data),
+      );
+
   @override
   void initState() {
     super.initState();
+    // Brouillon gardé par la vérification d'identité : sa publication sera
+    // mesurée (`publish_kyc_gate_resumed`).
+    if (FormDraftCubit.isFromKycGate(widget.resuming?.data)) _ensureKycGate();
     final aiAvailability = _aiAvailability;
     if (aiAvailability != null) unawaited(aiAvailability.refresh());
     // Entrée du tunnel de création, comme `trip_create_started` côté trajet :
@@ -395,6 +420,7 @@ class _PackageRequestCreateScreenState
   @override
   void dispose() {
     _canContinueNotifier.dispose();
+    unawaited(_kycGate?.close());
     unawaited(_draftCubit?.close());
     unawaited(_aiFilled.close());
     super.dispose();
@@ -498,6 +524,8 @@ class _PackageRequestCreateScreenState
           state.createdRequest!.status == PackageRequestStatus.draft;
       final requestId = state.createdRequest!.id;
       final created = state.createdRequest!;
+      // Publication arrêtée plus tôt par la vérification d'identité.
+      if (!isDraft && !isEditing) _kycGate?.publicationSucceeded();
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (routeContext) => DonySuccessScreen(
@@ -840,7 +868,7 @@ class _PackageRequestCreateScreenState
               .length,
           onConfirm: () {
             Navigator.of(context, rootNavigator: true).pop();
-            _step3Key.currentState?.submit();
+            unawaited(_publishOrVerifyIdentity(context));
           },
           onSaveDraft:
               widget.initial == null ||
@@ -851,6 +879,57 @@ class _PackageRequestCreateScreenState
                 }
               : null,
         );
+    }
+  }
+
+  /// « Publier » de l'aperçu. Identité vérifiée : la demande part. Sinon,
+  /// après relecture du serveur (identité validée hors de l'app), la saisie
+  /// est gardée en brouillon local puis la feuille « Dernière étape »
+  /// s'ouvre : la vérification quitte le formulaire, et l'écran des
+  /// engagements le rouvre rempli à son retour (`resume=kyc`). Le brouillon
+  /// serveur, lui, reste permis sans identité vérifiée (pas de contrôle).
+  Future<void> _publishOrVerifyIdentity(BuildContext formContext) async {
+    final authBloc = maybeRead<AuthBloc>(formContext);
+    final user = authBloc?.state.currentUser;
+    if (authBloc == null || user == null || user.isKycVerified) {
+      _step3Key.currentState?.submit();
+      return;
+    }
+    if (_kycGateOpening) return;
+    _kycGateOpening = true;
+    try {
+      final verified = await recheckKycVerified(authBloc);
+      if (!mounted || !formContext.mounted) return;
+      if (verified) {
+        _step3Key.currentState?.submit();
+        return;
+      }
+      final gate = _ensureKycGate();
+      final draftCubit = _draftCubit;
+      await gate.open(
+        kycStatus: user.kycStatus,
+        saveDraft: draftCubit == null
+            ? null
+            : () {
+                final state = formContext.read<PackageRequestFormBloc>().state;
+                return draftCubit.save(
+                  PackageRequestFormDraft.encode(
+                    state,
+                    stepInput: _currentStepInput(state.currentStep),
+                    photos: formContext.read<PackageRequestPhotosCubit>().state,
+                  ),
+                  source: FormDraftSource.kycGate,
+                );
+              },
+      );
+      if (!mounted || !formContext.mounted) return;
+      await PublishKycGateSheet.show(
+        formContext,
+        gate: gate,
+        returnTo: draftCubit == null ? null : kycResumeParcelRoute,
+      );
+    } finally {
+      _kycGateOpening = false;
     }
   }
 }

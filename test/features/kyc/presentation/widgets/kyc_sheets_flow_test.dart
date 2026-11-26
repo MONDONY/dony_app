@@ -184,16 +184,16 @@ void main() {
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('erreur : message affiché, feuille gardée', (tester) async {
+    testWidgets('erreur réseau : message d\'indisponibilité, feuille gardée', (
+      tester,
+    ) async {
       await open(tester);
       const error = NetworkException('réseau');
       states.add(const KycError(error));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
-      expect(
-        find.text(ErrorPresenter.resolve(error, l10n: en).message),
-        findsOneWidget,
-      );
+      expect(find.text(en.kycSessionUnavailable), findsOneWidget);
+      expect(find.textContaining('AppException'), findsNothing);
       expect(find.text('Verification required'), findsOneWidget);
       await tester.pump(const Duration(seconds: 10));
     });
@@ -229,9 +229,23 @@ void main() {
       );
     });
 
-    testWidgets('erreur : message affiché', (tester) async {
+    testWidgets('503 session-creation-failed : message dédié, jamais le '
+        'texte technique', (tester) async {
       await open(tester);
-      const error = ServerException();
+      const error = ServiceUnavailableException(
+        'Impossible de créer la session de vérification',
+      );
+      states.add(const KycError(error));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text(en.kycSessionUnavailable), findsOneWidget);
+      expect(find.textContaining('Impossible de créer'), findsNothing);
+      await tester.pump(const Duration(seconds: 10));
+    });
+
+    testWidgets('refus métier : texte du catalogue', (tester) async {
+      await open(tester);
+      const error = RateLimitException();
       states.add(const KycError(error));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));

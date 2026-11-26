@@ -119,7 +119,8 @@ class _MesColisViewState extends State<_MesColisView> {
   }
 
   /// Même geste que la pill « Envoyer » de la liste d'envois : l'écran d'intro
-  /// applique le gate KYC puis ouvre le wizard.
+  /// (engagements) puis le wizard. L'identité se vérifie au clic sur
+  /// « Publier ».
   Future<void> _onNewRequest() async {
     unawaited(
       getIt<AnalyticsService>().logEvent(

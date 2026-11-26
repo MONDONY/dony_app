@@ -61,11 +61,17 @@ class KycBloc extends Bloc<KycEvent, KycState> {
           ),
         );
       }
-      emit(KycError(unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      emit(KycError(error));
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.kycFailed,
-          properties: {'reason': e.toString()},
+          properties: {
+            'reason': e.toString(),
+            // Code typé (`SERVICE_UNAVAILABLE` pour le 503
+            // `session-creation-failed`, `OFFLINE`…), `unknown` sans code.
+            'error_code': error.code ?? 'unknown',
+          },
         ),
       );
     }

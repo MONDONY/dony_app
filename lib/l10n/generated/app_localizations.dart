@@ -4946,36 +4946,6 @@ abstract class AppLocalizations {
   /// **'Suivi par QR de la remise jusqu\'à la réception.'**
   String get requestPublishIntroWhyBulletTracking;
 
-  /// Encart d'invite à vérifier son identité avant de publier un trajet. Le segment en gras (identity) et le chemin souligné (path) sont insérés par paramètre puis découpés au rendu
-  ///
-  /// In fr, this message translates to:
-  /// **'Avant de publier, votre **{identity}**. Rendez-vous dans {path} pour la valider (2 min).'**
-  String tripPublishIntroVerifyCallout(String identity, String path);
-
-  /// Segment en gras (paramètre identity) de l'encart d'invite à vérifier son identité
-  ///
-  /// In fr, this message translates to:
-  /// **'identité doit être vérifiée'**
-  String get tripPublishIntroVerifyIdentity;
-
-  /// Chemin de menu en gras souligné (paramètre path), dans l'encart d'invite à vérifier son identité
-  ///
-  /// In fr, this message translates to:
-  /// **'Profil › Vérifications'**
-  String get tripPublishIntroVerifyPath;
-
-  /// Bouton qui ouvre le portail KYC depuis l'intro de publication
-  ///
-  /// In fr, this message translates to:
-  /// **'Vérifier mon identité'**
-  String get tripPublishIntroVerifyButton;
-
-  /// Texte sous le bouton de vérification, tant que l'identité n'est pas vérifiée
-  ///
-  /// In fr, this message translates to:
-  /// **'Le bouton devient « {continueLabel} » une fois l\'identité vérifiée.'**
-  String tripPublishIntroVerifyHint(String continueLabel);
-
   /// Titre du rappel Stripe (voyageur) dans l'intro de publication d'un trajet
   ///
   /// In fr, this message translates to:
@@ -39695,6 +39665,90 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les prix n\'ont pas pu être ajoutés. Réessayez.'**
   String get tripPublishedItemPricesAddFailed;
+
+  /// Écran des engagements (publish_intro_screen.dart) : information non bloquante pour un utilisateur dont l'identité n'est pas encore vérifiée. La vérification est demandée au clic sur Publier.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous vérifierez votre identité avant de publier, en 2 minutes.'**
+  String get publishIntroKycNotice;
+
+  /// Feuille de vérification ouverte au clic sur Publier (publish_kyc_gate_sheet.dart), identité non vérifiée : titre
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière étape : vérifiez votre identité'**
+  String get publishKycGateTitle;
+
+  /// Même feuille, trajet : la saisie a été gardée en brouillon sur le téléphone
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre trajet est enregistré. Vérifiez votre identité (environ 2 minutes) puis publiez-le.'**
+  String get publishKycGateBodyTrip;
+
+  /// Même feuille, demande d'envoi : la saisie a été gardée en brouillon sur le téléphone
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre demande est enregistrée. Vérifiez votre identité (environ 2 minutes) puis publiez-la.'**
+  String get publishKycGateBodyRequest;
+
+  /// Même feuille, quand la saisie n'a pas pu être gardée en brouillon (trousseau refusé, modification d'un trajet publié)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre identité (environ 2 minutes) puis publiez.'**
+  String get publishKycGateBodyUnsaved;
+
+  /// Même feuille, ligne ajoutée quand la vérification précédente a été refusée (statut REJECTED)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre précédente vérification n\'a pas abouti : recommencez-la avec une pièce d\'identité valide.'**
+  String get publishKycGateRejectedNote;
+
+  /// Bouton principal de la feuille : démarre la vérification d'identité (court, une ligne)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier mon identité'**
+  String get publishKycGateVerifyAction;
+
+  /// Même feuille, vérification envoyée et en attente (statut PENDING) : titre
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification en cours'**
+  String get publishKycGatePendingTitle;
+
+  /// Même feuille, PENDING, trajet gardé en brouillon
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous vérifions votre identité et vous préviendrons dès que c\'est fait. Votre trajet est enregistré : il vous attend pour être publié.'**
+  String get publishKycGatePendingBodyTrip;
+
+  /// Même feuille, PENDING, demande d'envoi gardée en brouillon
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous vérifions votre identité et vous préviendrons dès que c\'est fait. Votre demande est enregistrée : elle vous attend pour être publiée.'**
+  String get publishKycGatePendingBodyRequest;
+
+  /// Même feuille, PENDING, saisie non gardée en brouillon
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous vérifions votre identité et vous préviendrons dès que c\'est fait.'**
+  String get publishKycGatePendingBodyUnsaved;
+
+  /// Même feuille, PENDING : ouvre le statut de la vérification (court, une ligne)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir ma vérification'**
+  String get publishKycGatePendingStatusAction;
+
+  /// Création de la session de vérification impossible (503, serveur, hors ligne) : remplace le texte technique de l'erreur
+  ///
+  /// In fr, this message translates to:
+  /// **'La vérification d\'identité est momentanément indisponible. Réessayez dans quelques minutes.'**
+  String get kycSessionUnavailable;
+
+  /// Même erreur, quand la vérification a été demandée au clic sur Publier et que la saisie a été gardée en brouillon
+  ///
+  /// In fr, this message translates to:
+  /// **'La vérification d\'identité est momentanément indisponible. Votre saisie est enregistrée : réessayez dans quelques minutes.'**
+  String get kycSessionUnavailableDraftSaved;
 }
 
 class _AppLocalizationsDelegate

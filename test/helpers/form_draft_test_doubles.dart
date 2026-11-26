@@ -1,6 +1,9 @@
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
+import 'package:dony/features/publish_gate/bloc/publish_kyc_gate_cubit.dart';
+import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 
 import 'ai_form_draft_test_doubles.dart';
 import 'mock_analytics_backend.dart';
@@ -48,6 +51,7 @@ FormDraftStore registerTestFormDraftCubit({FormDraftStore? store}) {
   // Les écrans de publication lisent la disponibilité de « Créer avec l'IA »
   // en création : éteinte par défaut dans les tests.
   registerUnavailableAiFormDraft();
+  registerTestPublishKycGateCubit();
   final effective = store ?? testFormDraftStore();
   if (!getIt.isRegistered<FormDraftCubit>()) {
     getIt.registerFactoryParam<FormDraftCubit, FormDraftKind, void>(
@@ -59,4 +63,20 @@ FormDraftStore registerTestFormDraftCubit({FormDraftStore? store}) {
     );
   }
   return effective;
+}
+
+/// Enregistre `PublishKycGateCubit` (vérification d'identité au clic sur
+/// « Publier ») sur l'`AnalyticsService` du test s'il existe au moment de la
+/// création, sinon une mesure éteinte. Sans effet s'il l'est déjà.
+void registerTestPublishKycGateCubit() {
+  if (getIt.isRegistered<PublishKycGateCubit>()) return;
+  getIt.registerFactoryParam<PublishKycGateCubit, PublishCommitmentRole, bool>(
+    (role, resumed) => PublishKycGateCubit(
+      role: role,
+      analytics: getIt.isRegistered<AnalyticsService>()
+          ? getIt<AnalyticsService>()
+          : makeDisabledAnalytics(MockAnalyticsBackend()),
+      resumedFromGate: resumed,
+    ),
+  );
 }
