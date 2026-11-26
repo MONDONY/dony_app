@@ -37,7 +37,8 @@ enum PublishDraftChoice {
 ///
 /// Première publication du rôle (ou nouvelle version du texte) : écran des
 /// engagements, case à cocher, acceptation enregistrée sur le serveur. Les
-/// fois suivantes, l'écran est sauté. Dans les deux cas, s'il reste des
+/// fois suivantes, l'écran est sauté. L'identité ne bloque jamais ici : elle
+/// se vérifie au clic sur « Publier ». Dans les deux cas, s'il reste des
 /// brouillons (sur ce téléphone ou sur le serveur), la feuille « Terminer ou
 /// créer » passe avant le formulaire.
 ///
@@ -77,23 +78,15 @@ class PublishGateCubit extends Cubit<PublishGateState> {
     PublishCommitmentRole.sender => FormDraftKind.packageRequest,
   };
 
-  /// [kycVerified] faux : l'écran reste affiché, il porte le chemin vers la
-  /// vérification d'identité, préalable à toute publication.
+  /// Lit les engagements du rôle. Déjà acceptés : brouillons puis
+  /// formulaire. Sinon : écran des engagements.
   ///
-  /// [recheckKyc] : appelé seulement quand l'identité semble non vérifiée
-  /// d'après le profil en cache, avant d'afficher ce blocage. Il relit le profil
-  /// auprès du serveur : `true` (VERIFIED) laisse passer, sinon le blocage
-  /// reste. L'identité peut être validée hors de l'app sans qu'aucune push
-  /// n'ait rafraîchi le cache.
-  Future<void> start({
-    required bool kycVerified,
-    Future<bool> Function()? recheckKyc,
-  }) async {
+  /// L'identité n'est plus lue ici : un utilisateur non vérifié entre dans
+  /// le formulaire et ne la vérifie qu'au clic sur « Publier »
+  /// (`PublishKycGateCubit`). Le bloquer avant même de remplir quoi que ce
+  /// soit le faisait partir.
+  Future<void> start() async {
     emit(const PublishGateState());
-    if (!kycVerified && recheckKyc != null) {
-      kycVerified = await recheckKyc();
-      if (isClosed) return;
-    }
     PublishCommitments? fetched;
     try {
       fetched = await _commitments.fetch();
@@ -104,7 +97,7 @@ class PublishGateCubit extends Cubit<PublishGateState> {
     }
     if (isClosed) return;
     final required = fetched?.of(role).required ?? true;
-    if (!required && kycVerified) {
+    if (!required) {
       emit(
         state.copyWith(
           commitmentRequired: false,

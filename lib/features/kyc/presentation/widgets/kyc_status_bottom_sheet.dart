@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
-import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -13,6 +12,7 @@ import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/presentation/kyc_rejection_messages.dart';
 import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
+import 'package:dony/features/kyc/presentation/kyc_session_error.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -289,10 +289,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
                 _buildErrorContent(
                   cs,
                   tt,
-                  ErrorPresenter.resolve(
-                    effectiveState.error,
-                    l10n: context.l10n,
-                  ).message,
+                  kycErrorMessage(context.l10n, effectiveState.error),
                 ),
             ],
           ).animate().fadeIn(duration: 300.ms),

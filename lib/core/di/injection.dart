@@ -271,6 +271,7 @@ import 'package:dony/features/profile/data/datasources/help_center_remote_config
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/publish_gate/bloc/publish_gate_cubit.dart';
+import 'package:dony/features/publish_gate/bloc/publish_kyc_gate_cubit.dart';
 import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:dony/features/publish_gate/data/repositories/publish_commitment_repository.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
@@ -727,6 +728,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       packageRequests: getIt<PackageRequestRepository>(),
       templates: getIt<TripTemplateRepository>(),
       analytics: getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactoryParam<PublishKycGateCubit, PublishCommitmentRole, bool>(
+    (role, resumedFromGate) => PublishKycGateCubit(
+      role: role,
+      analytics: getIt<AnalyticsService>(),
+      resumedFromGate: resumedFromGate,
     ),
   );
   getIt.registerFactoryParam<FormDraftCubit, FormDraftKind, void>(

@@ -2901,8 +2901,10 @@ void main() {
     );
 
     testWidgets(
-      'gate KYC — utilisateur non vérifié : bloque le dispatch et ouvre KycOnboardingBottomSheet',
+      'gate KYC — modification, vérification en cours : bloque le dispatch '
+      'et ouvre « Vérification en cours », sans brouillon local',
       (tester) async {
+        registerTestPublishKycGateCubit();
         await navigateToStep2(
           tester,
           authState: AuthAuthenticated(_makeUser(kycStatus: 'PENDING')),
@@ -2912,7 +2914,14 @@ void main() {
         await tester.pumpAndSettle();
 
         verifyNever(() => announcementBloc.add(any()));
-        expect(find.text('Vérifiez votre identité'), findsOneWidget);
+        expect(find.text('Vérification en cours'), findsOneWidget);
+        expect(
+          find.text(
+            'Nous vérifions votre identité et vous préviendrons dès que '
+            'c\'est fait.',
+          ),
+          findsOneWidget,
+        );
       },
     );
 
@@ -5433,6 +5442,182 @@ void main() {
       await pumpAt(tester, 2);
       expect(amount(tester), '8');
       expect(find.byKey(const Key('kg-price-most-common')), findsNothing);
+    });
+
+    group('identité non vérifiée au clic sur « Publier »', () {
+      late FormDraftStore store;
+      late _MockAnnouncementBloc announcementBloc;
+
+      setUp(() {
+        store = testFormDraftStore(storage: InMemoryFormDraftStorage());
+        getIt.unregister<FormDraftCubit>();
+        registerTestFormDraftCubit(store: store);
+        announcementBloc = _MockAnnouncementBloc();
+        when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+        when(
+          () => announcementBloc.stream,
+        ).thenAnswer((_) => const Stream.empty());
+        getIt.unregister<AnnouncementBloc>();
+        getIt.registerFactory<AnnouncementBloc>(() => announcementBloc);
+      });
+
+      tearDown(() {
+        getIt.unregister<AnnouncementBloc>();
+        getIt.registerFactory<AnnouncementBloc>(() {
+          final b = _MockAnnouncementBloc();
+          when(() => b.state).thenReturn(AnnouncementInitial());
+          when(() => b.stream).thenAnswer((_) => const Stream.empty());
+          return b;
+        });
+      });
+
+      Future<void> pumpUnverified(
+        WidgetTester tester, {
+        String kycStatus = 'NOT_STARTED',
+        bool fromKycGate = false,
+      }) async {
+        tester.view.physicalSize = const Size(800, 1024);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        registerCurrencyPreference('EUR');
+        await pumpAndDrain(
+          tester,
+          _wrapWithRouter(
+            CreateTripScreen(
+              args: CreateTripArgs(
+                resumeDraft: draftAt(2, priceOption: 0),
+                fromKycGate: fromKycGate,
+              ),
+            ),
+            // Statut voyageur déjà donné : seule la vérification d'identité
+            // peut arrêter la publication.
+            authState: AuthAuthenticated(
+              UserModel(
+                id: 'user-test-1',
+                roles: const ['TRAVELER'],
+                kycStatus: kycStatus,
+                status: 'ACTIVE',
+                travelerStatus: TravelerStatus.individual,
+              ),
+            ),
+          ),
+        );
+        for (var i = 0; i < 4; i++) {
+          await tester.pump(const Duration(milliseconds: 400));
+        }
+      }
+
+      Future<void> publishFromPreview(WidgetTester tester) async {
+        await tester.tap(find.byKey(const Key('create-announcement-preview')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Publier l\'annonce'));
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('saisie gardée en brouillon (source kyc_gate) PUIS feuille '
+          '« Dernière étape », aucun envoi', (tester) async {
+        await pumpUnverified(tester);
+        await publishFromPreview(tester);
+
+        verifyNever(() => announcementBloc.add(any()));
+        final stored = await store.read(FormDraftKind.trip);
+        expect(stored, isNotNull);
+        expect(FormDraftCubit.isFromKycGate(stored!.data), isTrue);
+        expect(stored.data['departureCity'], 'Paris');
+        expect(stored.step, 2);
+        expect(
+          find.text('Dernière étape : vérifiez votre identité'),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            'Votre trajet est enregistré. Vérifiez votre identité (environ '
+            '2 minutes) puis publiez-le.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Vérifier mon identité'), findsOneWidget);
+        verify(
+          () => getIt<AnalyticsService>().logEvent(
+            AnalyticsEvents.publishKycGateShown,
+            properties: {'role': 'traveler', 'kyc_status': 'not_started'},
+          ),
+        ).called(1);
+        // « Plus tard » : le formulaire rempli reste là.
+        await tester.tap(find.text('Plus tard'));
+        await tester.pumpAndSettle();
+        expect(find.byType(PrixConditionsStep), findsOneWidget);
+      });
+
+      testWidgets('vérification en cours : feuille « Vérification en cours », '
+          'le trajet attend en brouillon', (tester) async {
+        await pumpUnverified(tester, kycStatus: 'PENDING');
+        await publishFromPreview(tester);
+        verifyNever(() => announcementBloc.add(any()));
+        expect(find.text('Vérification en cours'), findsOneWidget);
+        expect(
+          find.textContaining('Votre trajet est enregistré : il vous attend'),
+          findsOneWidget,
+        );
+        expect(await store.read(FormDraftKind.trip), isNotNull);
+      });
+
+      testWidgets('« Enregistrer comme brouillon » reste permis sans '
+          'identité vérifiée : envoi au serveur, aucune feuille', (
+        tester,
+      ) async {
+        await pumpUnverified(tester);
+        await tester.tap(find.byKey(const Key('create-announcement-preview')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Enregistrer comme brouillon'));
+        await tester.pumpAndSettle();
+        verify(
+          () => announcementBloc.add(
+            any(
+              that: predicate<AnnouncementEvent>(
+                (e) => e is AnnouncementCreateRequested && e.saveAsDraft,
+                'brouillon serveur',
+              ),
+            ),
+          ),
+        ).called(1);
+        expect(
+          find.text('Dernière étape : vérifiez votre identité'),
+          findsNothing,
+        );
+      });
+
+      testWidgets('retour vérifié (brouillon kyc_gate repris) : publication '
+          'envoyée puis publish_kyc_gate_resumed', (tester) async {
+        final states = StreamController<AnnouncementState>.broadcast();
+        addTearDown(states.close);
+        when(() => announcementBloc.stream).thenAnswer((_) => states.stream);
+        await pumpUnverified(tester, kycStatus: 'VERIFIED', fromKycGate: true);
+        await publishFromPreview(tester);
+
+        verify(
+          () => announcementBloc.add(
+            any(
+              that: predicate<AnnouncementEvent>(
+                (e) => e is AnnouncementCreateRequested && !e.saveAsDraft,
+                'publication',
+              ),
+            ),
+          ),
+        ).called(1);
+        states.add(AnnouncementCreated(_makeFullAnnouncement()));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+        verify(
+          () => getIt<AnalyticsService>().logEvent(
+            AnalyticsEvents.publishKycGateResumed,
+            properties: {'role': 'traveler'},
+          ),
+        ).called(1);
+        // Minuteries de l'écran de succès.
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump(const Duration(minutes: 1));
+      });
     });
 
     testWidgets('aucun moyen de paiement : l\'aperçu ne s\'ouvre pas, la '

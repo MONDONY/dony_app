@@ -12,6 +12,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
+import 'package:dony/core/utils/maybe_read.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/bloc/ai_filled_fields_cubit.dart';
 import 'package:dony/features/ai_form_draft/bloc/ai_form_draft_availability_cubit.dart';
@@ -26,7 +27,7 @@ import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/kyc/data/kyc_recheck.dart';
-import 'package:dony/features/kyc/presentation/widgets/kyc_onboarding_bottom_sheet.dart';
+import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -68,6 +69,9 @@ import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
+import 'package:dony/features/publish_gate/bloc/publish_kyc_gate_cubit.dart';
+import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
+import 'package:dony/features/publish_gate/presentation/publish_kyc_gate_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/traveler_status/data/publishing_eligibility.dart';
 import 'package:dony/features/traveler_status/presentation/publish_blocked_screen.dart';
@@ -99,6 +103,11 @@ class CreateTripArgs {
   /// modèle est appliqué dès l'ouverture, les dates restent à choisir.
   final TripTemplate? template;
 
+  /// [resumeDraft] avait été gardé par la vérification d'identité, au clic
+  /// sur « Publier » : sa publication se mesure en
+  /// `publish_kyc_gate_resumed`.
+  final bool fromKycGate;
+
   const CreateTripArgs({
     this.announcement,
     this.lockContext,
@@ -106,6 +115,7 @@ class CreateTripArgs {
     this.lockCorridorAndDate = false,
     this.resumeDraft,
     this.template,
+    this.fromKycGate = false,
   });
 }
 
@@ -609,6 +619,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                             _restoreDraft = restore;
                           },
                           dirtyNotifier: _isDirtyNotifier,
+                          resumedFromKycGate:
+                              _draftsEnabled && (args?.fromKycGate ?? false),
                         ),
                       ],
                     ),
@@ -935,6 +947,9 @@ class _TripFormContent extends StatefulWidget {
   /// Modèle à appliquer dès l'ouverture (cf. `CreateTripArgs.template`).
   final TripTemplate? initialTemplate;
 
+  /// Saisie reprise d'un brouillon gardé par la vérification d'identité.
+  final bool resumedFromKycGate;
+
   const _TripFormContent({
     super.key,
     this.announcement,
@@ -954,6 +969,7 @@ class _TripFormContent extends StatefulWidget {
     this.onPaymentMethodsReady,
     this.onPaymentGuardReady,
     this.onDraftHandlersReady,
+    this.resumedFromKycGate = false,
   });
 
   @override
@@ -1144,6 +1160,9 @@ class _TripFormContentState extends State<_TripFormContent> {
   @override
   void initState() {
     super.initState();
+    // Brouillon gardé par la vérification d'identité : sa publication sera
+    // mesurée (`publish_kyc_gate_resumed`).
+    if (widget.resumedFromKycGate) _ensureKycGate();
     unawaited(_loadCatalog());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -1980,6 +1999,7 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   @override
   void dispose() {
+    unawaited(_kycGate?.close());
     _departureCityNotifier.removeListener(_updateCanContinue);
     _arrivalCityNotifier.removeListener(_updateCanContinue);
     _departureDateNotifier.removeListener(_updateCanContinue);
@@ -2154,17 +2174,65 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// l'AuthBloc ait publié le profil resynchronisé.
   bool _kycRecheckedVerified = false;
 
+  /// Relecture du serveur puis feuille de vérification en cours : un second
+  /// appui sur « Publier » n'ouvre pas une deuxième feuille.
+  bool _kycGateOpening = false;
+
+  /// Vérification d'identité au moment de publier. Créé seulement quand elle
+  /// sert (feuille ouverte, ou saisie reprise d'un brouillon gardé par elle).
+  PublishKycGateCubit? _kycGate;
+
+  PublishKycGateCubit _ensureKycGate() =>
+      _kycGate ??= getIt<PublishKycGateCubit>(
+        param1: PublishCommitmentRole.traveler,
+        param2: widget.resumedFromKycGate,
+      );
+
   /// Le cache dit « identité non vérifiée » : on relit le serveur avant de
   /// bloquer (validation faite hors de l'app, sans push).
   Future<void> _recheckKycThenSubmit() async {
-    final verified = await recheckKycVerified(context.read<AuthBloc>());
-    if (!mounted) return;
-    if (verified) {
-      _kycRecheckedVerified = true;
-      _submit();
-      return;
+    if (_kycGateOpening) return;
+    _kycGateOpening = true;
+    try {
+      final verified = await recheckKycVerified(context.read<AuthBloc>());
+      if (!mounted) return;
+      if (verified) {
+        _kycRecheckedVerified = true;
+        _submit();
+        return;
+      }
+      await _openKycGate();
+    } finally {
+      _kycGateOpening = false;
     }
-    unawaited(KycOnboardingBottomSheet.show(context));
+  }
+
+  /// Identité non vérifiée au clic sur « Publier » : la saisie est d'abord
+  /// gardée en brouillon local (la vérification quitte le formulaire), puis
+  /// la feuille « Dernière étape » s'ouvre. Au retour d'une vérification
+  /// réussie, l'écran des engagements rouvre ce brouillon (`resume=kyc`).
+  /// Sans brouillon local (modification d'un trajet publié), rien n'est
+  /// gardé et la vérification ramène à l'accueil.
+  Future<void> _openKycGate() async {
+    final gate = _ensureKycGate();
+    final draftCubit = maybeRead<FormDraftCubit>(context);
+    final kycStatus =
+        context.read<AuthBloc>().state.currentUser?.kycStatus ?? 'NOT_STARTED';
+    await gate.open(
+      kycStatus: kycStatus,
+      saveDraft: draftCubit == null
+          ? null
+          : () => draftCubit.save(
+              _draftSnapshot().toJson(),
+              source: FormDraftSource.kycGate,
+            ),
+    );
+    if (!mounted) return;
+    await PublishKycGateSheet.show(
+      context,
+      gate: gate,
+      returnTo: draftCubit == null ? null : kycResumeTripRoute,
+    );
   }
 
   void _submit({bool saveAsDraft = false}) {
@@ -2839,6 +2907,8 @@ class _TripFormContentState extends State<_TripFormContent> {
               unawaited(_showDraftSaved(context, announcement));
               return;
             }
+            // Publication arrêtée plus tôt par la vérification d'identité.
+            if (!isEdit) _kycGate?.publicationSucceeded();
             // Récurrence choisie à l'étape 1 : la série part depuis la carte
             // de l'écran de succès (trajet direct seulement).
             final recurrenceDates = isEdit || state is AnnouncementTripCreated

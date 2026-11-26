@@ -117,6 +117,14 @@ abstract final class AnalyticsEvents {
   static const publishDraftsSheetShown = 'publish_drafts_sheet_shown';
   static const publishDraftChosen = 'publish_draft_chosen';
 
+  /// Vérification d'identité demandée au clic sur « Publier » (et non plus
+  /// avant le formulaire) : feuille « Dernière étape » montrée (`role`,
+  /// `kyc_status`), « Vérifier mon identité » touché (`role`), puis
+  /// publication réussie après la vérification (`role`).
+  static const publishKycGateShown = 'publish_kyc_gate_shown';
+  static const publishKycGateVerifyTapped = 'publish_kyc_gate_verify_tapped';
+  static const publishKycGateResumed = 'publish_kyc_gate_resumed';
+
   /// Trajet récurrent par dates précises : calendrier ouvert depuis l'écran
   /// de succès, série créée, modèle enregistré depuis le trajet.
   /// Bandeau de mise à jour douce (`recommended_build` de Remote Config) :

@@ -4,12 +4,11 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
-import 'package:dony/features/kyc/data/kyc_recheck.dart';
-import 'package:dony/features/kyc/presentation/widgets/kyc_required_bottom_sheet.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
@@ -47,31 +46,34 @@ UserModel? _currentUser(AuthState authState) => switch (authState) {
 /// les boutons « Publier ».
 ///
 /// Première publication du rôle (ou nouveau texte des engagements) : l'écran
-/// rappelle la condition d'accès (identité vérifiée) et les engagements du
-/// rôle, qu'il faut lire jusqu'en bas pour cocher « J'ai lu… » puis
-/// continuer. Ensuite, l'écran ne s'affiche plus : on passe directement au
-/// formulaire, ou d'abord par la feuille des brouillons s'il en reste. Le
-/// même écran sert aux deux flux — voyageur (bleu) et expéditeur
-/// (terracotta) — pilotés par [role].
+/// rappelle les engagements du rôle, qu'il faut lire jusqu'en bas pour cocher
+/// « J'ai lu… » puis continuer. Ensuite, l'écran ne s'affiche plus : on passe
+/// directement au formulaire, ou d'abord par la feuille des brouillons s'il
+/// en reste. Le même écran sert aux deux flux, voyageur (bleu) et expéditeur
+/// (terracotta), pilotés par [role].
+///
+/// L'identité ne bloque plus ici : un utilisateur non vérifié lit une simple
+/// information et entre dans le formulaire. La vérification lui est demandée
+/// au clic sur « Publier » (`PublishKycGateSheet`).
 class PublishIntroScreen extends StatelessWidget {
-  const PublishIntroScreen({super.key, required this.role});
+  const PublishIntroScreen({
+    super.key,
+    required this.role,
+    this.resumeLocalDraft = false,
+  });
 
   final PublishIntroRole role;
+
+  /// Retour d'une vérification d'identité demandée au clic sur « Publier »
+  /// (`?resume=kyc`) : le brouillon local gardé à ce moment se rouvre
+  /// directement, sans passer par la feuille des brouillons.
+  final bool resumeLocalDraft;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<PublishGateCubit>(
-      create: (ctx) {
-        final verified =
-            _currentUser(ctx.read<AuthBloc>().state)?.isKycVerified ?? false;
-        final authBloc = ctx.read<AuthBloc>();
-        return getIt<PublishGateCubit>(param1: role.commitmentRole)..start(
-          kycVerified: verified,
-          // Profil en cache non vérifié : on relit le serveur avant de
-          // bloquer (identité validée hors de l'app).
-          recheckKyc: () => recheckKycVerified(authBloc),
-        );
-      },
+      create: (_) =>
+          getIt<PublishGateCubit>(param1: role.commitmentRole)..start(),
       child: BlocConsumer<PublishGateCubit, PublishGateState>(
         listenWhen: (prev, next) =>
             (next.status == PublishGateStatus.ready &&
@@ -110,6 +112,13 @@ class PublishIntroScreen extends StatelessWidget {
     PublishGateState gate,
   ) async {
     final cubit = context.read<PublishGateCubit>();
+    if (resumeLocalDraft) {
+      final local = gate.drafts.whereType<LocalPublishDraft>().firstOrNull;
+      if (local != null) {
+        _openForm(context, local);
+        return;
+      }
+    }
     if (!gate.hasChoices) {
       _openForm(context, null);
       return;
@@ -154,6 +163,7 @@ class PublishIntroScreen extends StatelessWidget {
           '/trips/create',
           extra: CreateTripArgs(
             resumeDraft: TripFormDraft.fromJson(d.draft.data),
+            fromKycGate: FormDraftCubit.isFromKycGate(d.draft.data),
           ),
         );
       case (PublishIntroRole.trip, ServerTripDraftSeries()):
@@ -256,7 +266,6 @@ class PublishIntroScreen extends StatelessWidget {
                           _ConditionCallout(
                             verified: verified,
                             verifiedText: config.verifiedText,
-                            onVerify: () => unawaited(_startKyc(context, user)),
                           ),
                           // Rappel voyageur : activer Stripe pour encaisser par carte —
                           // se masque tout seul si le compte est déjà opérationnel.
@@ -307,39 +316,13 @@ class PublishIntroScreen extends StatelessWidget {
             ),
           ),
           _CtaBar(
-            verified: verified,
             accentVariant: config.buttonVariant,
             isLoading: busy,
             needsCheck: needsCheck,
             onContinue: () =>
                 unawaited(context.read<PublishGateCubit>().accept()),
-            onVerify: () => unawaited(_startKyc(context, user)),
           ),
         ],
-      ),
-    );
-  }
-
-  Future<void> _startKyc(BuildContext context, UserModel? user) async {
-    // Avant d'ouvrir la vérification, on s'assure côté serveur que l'identité
-    // n'a pas déjà été validée (cache périmé) : dans ce cas on relance
-    // l'aiguillage au lieu de bloquer.
-    final cubit = context.read<PublishGateCubit>();
-    final verified = await recheckKycVerified(context.read<AuthBloc>());
-    if (!context.mounted) return;
-    if (verified) {
-      unawaited(cubit.start(kycVerified: true));
-      return;
-    }
-    unawaited(
-      KycRequiredBottomSheet.show(
-        context,
-        kycStatus: user?.kycStatus ?? 'NOT_STARTED',
-        // Revenir ici une fois vérifié, pour enchaîner sur la publication.
-        returnTo: switch (role) {
-          PublishIntroRole.trip => '/trips/publish-intro',
-          PublishIntroRole.parcel => '/parcels/send-intro',
-        },
       ),
     );
   }
@@ -473,21 +456,15 @@ class _Hero extends StatelessWidget {
 }
 
 class _ConditionCallout extends StatelessWidget {
-  const _ConditionCallout({
-    required this.verified,
-    required this.verifiedText,
-    required this.onVerify,
-  });
+  const _ConditionCallout({required this.verified, required this.verifiedText});
 
   final bool verified;
   final String verifiedText;
-  final VoidCallback onVerify;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final l10n = context.l10n;
 
     if (verified) {
       return _CalloutShell(
@@ -501,52 +478,27 @@ class _ConditionCallout extends StatelessWidget {
       );
     }
 
-    // Non vérifié : tout l'encart est tapable et lance le portail KYC.
-    //
-    // La phrase complète (segment en gras + chemin souligné) vient d'une
-    // clé unique paramétrée (tripPublishIntroVerifyCallout) plutôt que de
-    // fragments séparés : `identity` porte le mot en gras, `path` le chemin
-    // de menu souligné. On les repère dans le rendu par leur position (comme
-    // `_boldSpans` le fait pour les marqueurs `**`) pour reconstituer les
-    // styles distincts.
-    final identity = l10n.tripPublishIntroVerifyIdentity;
-    final path = l10n.tripPublishIntroVerifyPath;
-    final calloutText = l10n.tripPublishIntroVerifyCallout(identity, path);
-    final pathIndex = calloutText.indexOf(path);
-    final beforePath = pathIndex >= 0
-        ? calloutText.substring(0, pathIndex)
-        : calloutText;
-    final afterPath = pathIndex >= 0
-        ? calloutText.substring(pathIndex + path.length)
-        : '';
-
-    return InkWell(
-      onTap: onVerify,
-      borderRadius: BorderRadius.circular(16),
-      child: _CalloutShell(
-        bg: cs.warningLight,
-        iconBg: cs.warning,
-        iconAsset: 'circle-alert',
-        child: Text.rich(
-          TextSpan(
-            style: tt.bodyMedium?.copyWith(color: cs.onSurface, height: 1.45),
-            children: [
-              _boldSpans(beforePath, tt.bodyMedium!, cs.onSurface),
-              if (pathIndex >= 0)
-                TextSpan(
-                  text: path,
-                  style: tt.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: cs.warning,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              if (pathIndex >= 0)
-                _boldSpans(afterPath, tt.bodyMedium!, cs.onSurface),
-            ],
+    // Non vérifié : simple information, rien à toucher. La vérification est
+    // demandée au clic sur « Publier », une fois le formulaire rempli.
+    return Row(
+      key: const Key('publish-intro-kyc-notice'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: DonyIcon('shield-check', size: 16, color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(width: DonySpacing.sm),
+        Expanded(
+          child: Text(
+            context.l10n.publishIntroKycNotice,
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              height: 1.4,
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -883,15 +835,12 @@ class _CommitmentCheck extends StatelessWidget {
 
 class _CtaBar extends StatelessWidget {
   const _CtaBar({
-    required this.verified,
     required this.accentVariant,
     required this.isLoading,
     required this.needsCheck,
     required this.onContinue,
-    required this.onVerify,
   });
 
-  final bool verified;
   final DonyButtonVariant accentVariant;
 
   /// Acceptation en cours d'envoi, ou brouillons en cours de lecture.
@@ -900,7 +849,6 @@ class _CtaBar extends StatelessWidget {
   /// La case des engagements reste à cocher : « Continuer » est grisé.
   final bool needsCheck;
   final VoidCallback onContinue;
-  final VoidCallback onVerify;
 
   @override
   Widget build(BuildContext context) {
@@ -925,33 +873,18 @@ class _CtaBar extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (verified) ...[
-                DonyButton(
-                  key: const Key('publish-intro-continue'),
-                  label: l10n.commonContinue,
-                  iconRightAsset: 'arrow-right',
-                  variant: accentVariant,
-                  isLoading: isLoading,
-                  onPressed: (needsCheck || isLoading) ? null : onContinue,
-                ),
-                if (needsCheck) ...[
-                  const SizedBox(height: DonySpacing.sm),
-                  Text(
-                    l10n.publishCommitmentCheckHint,
-                    textAlign: TextAlign.center,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ],
-              ] else ...[
-                DonyButton(
-                  label: l10n.tripPublishIntroVerifyButton,
-                  iconAsset: 'lock',
-                  variant: accentVariant,
-                  onPressed: onVerify,
-                ),
+              DonyButton(
+                key: const Key('publish-intro-continue'),
+                label: l10n.commonContinue,
+                iconRightAsset: 'arrow-right',
+                variant: accentVariant,
+                isLoading: isLoading,
+                onPressed: (needsCheck || isLoading) ? null : onContinue,
+              ),
+              if (needsCheck) ...[
                 const SizedBox(height: DonySpacing.sm),
                 Text(
-                  l10n.tripPublishIntroVerifyHint(l10n.commonContinue),
+                  l10n.publishCommitmentCheckHint,
                   textAlign: TextAlign.center,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),

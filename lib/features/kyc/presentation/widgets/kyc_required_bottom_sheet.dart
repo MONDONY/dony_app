@@ -1,10 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
+import 'package:dony/features/kyc/presentation/kyc_session_error.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -93,7 +93,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
           if (state is KycSessionCreated) {
             Navigator.of(ctx, rootNavigator: true).pop(state.stripeUrl);
           } else if (state is KycError) {
-            ErrorPresenter.show(ctx, state.error);
+            showKycError(ctx, state.error);
           }
         },
         child: KycRequiredBottomSheet(kycStatus: kycStatus),

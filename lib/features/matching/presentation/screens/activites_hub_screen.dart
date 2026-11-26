@@ -65,8 +65,8 @@ void _openRoute(BuildContext context, String event, String route) {
 }
 
 /// Bouton de la tuile « Mes colis ». Passe d'abord par l'écran d'intro
-/// (conditions + responsabilités) ; c'est lui qui applique le gate KYC et
-/// ouvre le wizard une fois vérifié.
+/// (engagements), puis ouvre le wizard. L'identité se vérifie au clic sur
+/// « Publier » du wizard, jamais avant.
 void _openSendIntro(BuildContext context) => _openPublishRoute(
   context,
   VideoModalTrigger.sendParcel,

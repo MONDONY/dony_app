@@ -2918,25 +2918,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Suivi par QR de la remise jusqu\'à la réception.';
 
   @override
-  String tripPublishIntroVerifyCallout(String identity, String path) {
-    return 'Avant de publier, votre **$identity**. Rendez-vous dans $path pour la valider (2 min).';
-  }
-
-  @override
-  String get tripPublishIntroVerifyIdentity => 'identité doit être vérifiée';
-
-  @override
-  String get tripPublishIntroVerifyPath => 'Profil › Vérifications';
-
-  @override
-  String get tripPublishIntroVerifyButton => 'Vérifier mon identité';
-
-  @override
-  String tripPublishIntroVerifyHint(String continueLabel) {
-    return 'Le bouton devient « $continueLabel » une fois l\'identité vérifiée.';
-  }
-
-  @override
   String get tripPublishIntroStripeTitle => 'Activez les paiements par carte';
 
   @override
@@ -25067,4 +25048,56 @@ class AppLocalizationsFr extends AppLocalizations {
   String nextActionTravelerArrivedBodyNoNameContact(String sender) {
     return 'Demandez au destinataire son code à 6 chiffres. Sans code, contactez $sender.';
   }
+
+  @override
+  String get publishIntroKycNotice =>
+      'Vous vérifierez votre identité avant de publier, en 2 minutes.';
+
+  @override
+  String get publishKycGateTitle => 'Dernière étape : vérifiez votre identité';
+
+  @override
+  String get publishKycGateBodyTrip =>
+      'Votre trajet est enregistré. Vérifiez votre identité (environ 2 minutes) puis publiez-le.';
+
+  @override
+  String get publishKycGateBodyRequest =>
+      'Votre demande est enregistrée. Vérifiez votre identité (environ 2 minutes) puis publiez-la.';
+
+  @override
+  String get publishKycGateBodyUnsaved =>
+      'Vérifiez votre identité (environ 2 minutes) puis publiez.';
+
+  @override
+  String get publishKycGateRejectedNote =>
+      'Votre précédente vérification n\'a pas abouti : recommencez-la avec une pièce d\'identité valide.';
+
+  @override
+  String get publishKycGateVerifyAction => 'Vérifier mon identité';
+
+  @override
+  String get publishKycGatePendingTitle => 'Vérification en cours';
+
+  @override
+  String get publishKycGatePendingBodyTrip =>
+      'Nous vérifions votre identité et vous préviendrons dès que c\'est fait. Votre trajet est enregistré : il vous attend pour être publié.';
+
+  @override
+  String get publishKycGatePendingBodyRequest =>
+      'Nous vérifions votre identité et vous préviendrons dès que c\'est fait. Votre demande est enregistrée : elle vous attend pour être publiée.';
+
+  @override
+  String get publishKycGatePendingBodyUnsaved =>
+      'Nous vérifions votre identité et vous préviendrons dès que c\'est fait.';
+
+  @override
+  String get publishKycGatePendingStatusAction => 'Voir ma vérification';
+
+  @override
+  String get kycSessionUnavailable =>
+      'La vérification d\'identité est momentanément indisponible. Réessayez dans quelques minutes.';
+
+  @override
+  String get kycSessionUnavailableDraftSaved =>
+      'La vérification d\'identité est momentanément indisponible. Votre saisie est enregistrée : réessayez dans quelques minutes.';
 }
