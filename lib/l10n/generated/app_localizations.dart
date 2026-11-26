@@ -22687,6 +22687,18 @@ abstract class AppLocalizations {
   /// **'Bonjour Yadony, j\'ai besoin d\'aide.'**
   String get supportWhatsappMessage;
 
+  /// Ligne fine sous la bannière du trajet, en haut d'une discussion (chat_support_line.dart) : ouvre WhatsApp sur l'équipe Yadony. Doit tenir sur une ligne à 360 dp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Écrire au support Yadony'**
+  String get chatSupportCta;
+
+  /// Message pré-rempli depuis une discussion liée à un trajet. Ni nom ni numéro, seulement le trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonjour Yadony, j\'ai une question sur ma discussion ({trip}).'**
+  String chatSupportMessageWithTrip(String trip);
+
   /// Titre de la feuille de repli quand WhatsApp ne s'ouvre pas.
   ///
   /// In fr, this message translates to:
