@@ -135,7 +135,7 @@ void main() {
   }
 
   Future<void> openMenu(WidgetTester tester) async {
-    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
   }
 

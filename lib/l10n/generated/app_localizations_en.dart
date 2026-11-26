@@ -476,6 +476,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Calling is available from order acceptance until 3 days after delivery.';
 
   @override
+  String get errorCallKycRequiredTitle => 'Verification required';
+
+  @override
+  String get errorCallKycRequiredMessage =>
+      'Only accounts with a verified identity can call. Verify your identity to call.';
+
+  @override
   String get errorCallBlockedTitle => 'Call not possible';
 
   @override
@@ -11369,6 +11376,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kycRequiredMessagePending =>
       'Your verification is in progress. You\'ll be able to send once your identity is validated.';
+
+  @override
+  String get kycRequiredCallMessageNotStarted =>
+      'To protect everyone, only verified accounts can call. Your number stays hidden.';
+
+  @override
+  String get kycRequiredCallMessageRejected =>
+      'Your verification failed. Try again to be able to call. Your number stays hidden.';
+
+  @override
+  String get kycRequiredCallMessagePending =>
+      'Your verification is in progress. You can call once your identity is validated.';
 
   @override
   String get kycRequiredVerifyAction => 'Verify my identity';

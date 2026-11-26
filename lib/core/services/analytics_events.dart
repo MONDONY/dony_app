@@ -507,6 +507,11 @@ abstract final class AnalyticsEvents {
   static const conversationCallInitiated = 'conversation_call_initiated';
   // Appels audio Yadony (Stream Video).
   static const callModeChosen = 'call_mode_chosen';
+
+  /// Icône d'appel touchée par un compte non vérifié : la feuille de
+  /// vérification d'identité s'ouvre (`ChatScreen._onCallTapped`). Propriété
+  /// `kyc_status` : `NOT_STARTED` / `PENDING` / `REJECTED`.
+  static const callKycPromptShown = 'call_kyc_prompt_shown';
   static const callStarted = 'call_started';
   static const callConnected = 'call_connected';
   static const callEnded = 'call_ended';

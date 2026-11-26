@@ -256,6 +256,7 @@ Exception : si un écran a plusieurs états visuels distincts qui valent la pein
 
 `DonyFeedbackButton` (🐞, `lib/core/design/widgets/dony_feedback_button.dart`) envoie à Sentry un message + la capture automatique de l'écran + jusqu'à 4 captures choisies par le testeur (galerie ou appareil photo, via `DonyMediaService`). La capture automatique passe par le `RepaintBoundary` global posé dans `app.dart` (`DonyFeedbackButton.appBoundaryKey`) : **aucun écran n'a besoin de son propre `RepaintBoundary`**.
 
+- **Exception : l'écran de discussion** (`ChatScreen`) ne porte plus le scarabée ; le menu ⋯ (trois points horizontaux, icône `ellipsis`) occupe sa place en bout d'en-tête. L'icône d'appel Yadony reste visible pour tous, mais seuls les comptes vérifiés appellent (feuille de vérification sinon).
 - `DonyAppBar` et `DonySliverAppBar` l'ajoutent **par défaut** en fin d'`actions` (`showFeedback: false` pour l'exclure : verrouillage, splash…). Un écran qui le place lui-même dans `actions` n'est pas doublé.
 - Un `AppBar` brut ou un header maison (onglets Recherche, Activités, Messages, Moi) doit le poser explicitement : `actions: const [DonyFeedbackButton()]`, en dernière position.
 - Tests : `test/core/design/widgets/dony_app_bar_feedback_test.dart` (présence par défaut) et `dony_feedback_button_test.dart` (pièces jointes via `pickImageOverride`, envoi via `onSubmitOverride(FeedbackReport)`).
@@ -485,6 +486,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `conversations_batch_archived` / `conversations_batch_unarchived` / `conversations_batch_deleted` | ConversationListBloc (actions groupées de la sélection multiple, `POST /conversations/batch/*` ou repli unitaire). Propriétés `count` (fils traités) et `failed` (refusés) ; `undo` (bool) pour le désarchivage. Non émis sur une erreur globale |
 | `conversation_call_initiated` | ChatScreen._call() — tap 📞 dans le header chat (numéro révélé) |
 | `call_mode_chosen` | ChatScreen — choix dans la feuille d'appel quand les deux modes existent (propriété `mode` : `yadony`/`phone`). Non émis quand un seul mode est possible (un tap direct) |
+| `call_kyc_prompt_shown` | ChatScreen._onCallTapped — icône d'appel touchée par un compte dont l'identité n'est pas vérifiée : la feuille « Vérification requise » (`KycRequiredBottomSheet`, `purpose: call`) s'ouvre au lieu de lancer l'appel (le back refuse aussi : 403 `call-kyc-required`). Propriété `kyc_status` : `NOT_STARTED` / `PENDING` / `REJECTED`. Émis depuis l'écran (intention sans état métier, comme `call_mode_chosen`) |
 | `call_started` | CallBloc._onStart — appel Yadony créé par le back (`POST /conversations/{id}/calls` accepté), avant la sonnerie |
 | `call_connected` | CallBloc._onSnapshot — l'autre partie a décroché, une fois par appel |
 | `call_ended` | CallBloc._onSnapshot — fin d'appel signalée par Stream (propriété `reason` : `hangup`/`rejected`/`missed`/`failed`) |

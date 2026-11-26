@@ -15,6 +15,9 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_info_sheet.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
+import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/kyc/bloc/kyc_event.dart';
+import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
@@ -47,6 +50,8 @@ class MockChatBloc extends MockBloc<ChatEvent, ChatState> implements ChatBloc {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
+
+class _MockKycBloc extends MockBloc<KycEvent, KycState> implements KycBloc {}
 
 class _MockContactRevealBloc
     extends MockBloc<ContactRevealEvent, ContactRevealState>
@@ -164,6 +169,29 @@ void main() {
   tearDown(() => bloc.close());
 
   group('ChatScreen', () {
+    testWidgets('en-tête : plus de scarabée, menu à trois points horizontaux', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      await _pump(tester, bloc);
+
+      expect(find.byType(DonyFeedbackButton), findsNothing);
+      final menu = find.byType(PopupMenuButton<String>);
+      expect(menu, findsOneWidget);
+      expect(
+        find.descendant(of: menu, matching: find.byType(DonyIcon)),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<DonyIcon>(
+              find.descendant(of: menu, matching: find.byType(DonyIcon)),
+            )
+            .name,
+        'ellipsis',
+      );
+    });
+
     testWidgets('shows skeleton when state is ChatLoading', (tester) async {
       when(() => bloc.state).thenReturn(const ChatLoading());
       await _pump(tester, bloc);
@@ -502,7 +530,7 @@ void main() {
       when(() => bloc.state).thenReturn(const ChatLoaded([]));
       await _pump(tester, bloc);
 
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byType(PopupMenuButton<String>));
       await tester.pumpAndSettle();
 
       expect(find.text('Signaler Modibo Coulibaly'), findsOneWidget);
@@ -520,7 +548,7 @@ void main() {
         when(() => bloc.state).thenReturn(const ChatLoaded([]));
         await _pump(tester, bloc);
 
-        await tester.tap(find.byIcon(Icons.more_vert));
+        await tester.tap(find.byType(PopupMenuButton<String>));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Bloquer Modibo Coulibaly'));
         await tester.pumpAndSettle();
@@ -675,7 +703,7 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 400));
 
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byType(PopupMenuButton<String>));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Signaler Modibo Coulibaly'));
       await tester.pumpAndSettle();
@@ -1043,10 +1071,34 @@ void main() {
       callAvailable: callAvailable,
     );
 
+    late _MockKycBloc kycBloc;
+
+    setUp(() {
+      kycBloc = _MockKycBloc();
+      when(() => kycBloc.state).thenReturn(const KycInitial());
+    });
+
+    _MockAuthBloc authFor(String kycStatus) {
+      final auth = _MockAuthBloc();
+      when(() => auth.isClosed).thenReturn(false);
+      when(() => auth.state).thenReturn(
+        AuthAuthenticated(
+          UserModel(
+            id: 'me',
+            roles: const ['SENDER'],
+            kycStatus: kycStatus,
+            status: 'ACTIVE',
+          ),
+        ),
+      );
+      return auth;
+    }
+
     Future<(List<(String, Object?)>, _MockContactRevealBloc)> pumpChat(
       WidgetTester tester,
-      ConversationModel conv,
-    ) async {
+      ConversationModel conv, {
+      String? viewerKycStatus,
+    }) async {
       when(() => bloc.state).thenReturn(const ChatLoaded([]));
       final reveal = _MockContactRevealBloc();
       when(() => reveal.state).thenReturn(const ContactRevealInitial());
@@ -1058,6 +1110,10 @@ void main() {
             providers: [
               BlocProvider<ChatBloc>.value(value: bloc),
               BlocProvider<ContactRevealBloc>.value(value: reveal),
+              if (viewerKycStatus != null) ...[
+                BlocProvider<AuthBloc>.value(value: authFor(viewerKycStatus)),
+                BlocProvider<KycBloc>.value(value: kycBloc),
+              ],
             ],
             child: ChatScreen(
               conversation: conv,
@@ -1136,6 +1192,89 @@ void main() {
       (tester) async {
         await pumpChat(tester, conversation(callAvailable: false));
         expect(find.byTooltip('Appeler'), findsNothing);
+      },
+    );
+
+    testWidgets('compte vérifié : un tap lance l\'appel, aucune feuille KYC', (
+      tester,
+    ) async {
+      final (routes, _) = await pumpChat(
+        tester,
+        conversation(callAvailable: true, phoneAvailable: false),
+        viewerKycStatus: 'VERIFIED',
+      );
+
+      await tester.tap(find.byTooltip('Appeler'));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Vérification requise'), findsNothing);
+      expect(routes.single.$1, '/calls/pending');
+    });
+
+    testWidgets(
+      'compte non vérifié : l\'icône reste, la feuille de vérification '
+      's\'ouvre et aucun appel ne part',
+      (tester) async {
+        final (routes, reveal) = await pumpChat(
+          tester,
+          conversation(callAvailable: true),
+          viewerKycStatus: 'NOT_STARTED',
+        );
+        expect(find.byTooltip('Appeler'), findsOneWidget);
+
+        await openSheet(tester);
+
+        expect(find.text('Vérification requise'), findsOneWidget);
+        expect(
+          find.textContaining('seuls les comptes vérifiés peuvent appeler'),
+          findsOneWidget,
+        );
+        expect(find.text('Vérifier mon identité'), findsOneWidget);
+        expect(find.text('Plus tard'), findsOneWidget);
+        expect(find.text('Appel Yadony'), findsNothing);
+        expect(routes, isEmpty);
+        verifyNever(() => reveal.add(any()));
+        tester.takeException();
+      },
+    );
+
+    testWidgets('identité en cours : message adapté, aucun appel', (
+      tester,
+    ) async {
+      final (routes, _) = await pumpChat(
+        tester,
+        conversation(callAvailable: true),
+        viewerKycStatus: 'PENDING',
+      );
+
+      await openSheet(tester);
+
+      expect(
+        find.textContaining('Vous pourrez appeler une fois votre identité'),
+        findsOneWidget,
+      );
+      expect(routes, isEmpty);
+    });
+
+    testWidgets(
+      'question avant réservation : jamais le téléphone, un tap lance '
+      'l\'appel Yadony',
+      (tester) async {
+        final (routes, reveal) = await pumpChat(
+          tester,
+          conversation(
+            callAvailable: true,
+            kind: ConversationModel.kindInquiry,
+          ),
+          viewerKycStatus: 'VERIFIED',
+        );
+
+        await tester.tap(find.byTooltip('Appeler'));
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.text('Appel téléphone'), findsNothing);
+        expect(routes.single.$1, '/calls/pending');
+        verifyNever(() => reveal.add(any()));
       },
     );
 

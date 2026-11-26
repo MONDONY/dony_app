@@ -1019,6 +1019,14 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.phone_disabled_rounded,
     ),
+    // 403 : appelant à l'identité non vérifiée. L'app l'intercepte avant (feuille
+    // de vérification) ; ce message n'est que le repli si le serveur tranche.
+    'call-kyc-required': _Entry(
+      title: (l) => l.errorCallKycRequiredTitle,
+      message: (l) => l.errorCallKycRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.badge_outlined,
+    ),
     'call-blocked': _Entry(
       title: (l) => l.errorCallBlockedTitle,
       message: (l) => l.errorCallBlockedMessage,

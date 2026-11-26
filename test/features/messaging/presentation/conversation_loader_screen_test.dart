@@ -122,7 +122,7 @@ void main() {
       expect(find.text('Modibo Coulibaly'), findsOneWidget);
 
       // La sourdine (FLUTTER-CM) est branchée sur ce chemin aussi.
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byType(PopupMenuButton<String>));
       await tester.pumpAndSettle();
       expect(find.text('Mettre en sourdine'), findsOneWidget);
     });
