@@ -36,6 +36,18 @@ const Set<String> kycReturnRoutes = {
   kycResumeParcelRoute,
 };
 
+/// Query param de `/kyc/verify` : la vérification a été ouverte par-dessus
+/// un écran qui doit survivre (formulaire d'une demande sur un trajet, dont
+/// la route dépend d'un `extra`). Les écrans KYC se referment alors par un
+/// `pop`, au lieu du `go` qui viderait la pile : la page du fournisseur sur
+/// `true` une fois le parcours terminé, l'écran de statut sur l'URL d'une
+/// nouvelle tentative ou sans valeur. L'écran resté dessous enchaîne.
+const String kycBackParam = 'back';
+
+/// [queryParameters] demandent le retour par `pop` ([kycBackParam]).
+bool kycBackRequested(Map<String, String> queryParameters) =>
+    queryParameters[kycBackParam] == '1';
+
 /// Le retour rouvre une saisie gardée en brouillon (vérification demandée au
 /// clic sur « Publier »).
 bool kycReturnKeepsDraft(String? returnTo) =>
@@ -46,11 +58,13 @@ String? kycReturnRouteOrNull(String? raw) =>
     raw != null && kycReturnRoutes.contains(raw) ? raw : null;
 
 /// Emplacement de `/kyc/verify`, avec l'écran où revenir s'il est autorisé.
-String kycVerifyLocation({String? returnTo}) {
+/// [back] : retour par `pop` à l'écran resté dessous ([kycBackParam]).
+String kycVerifyLocation({String? returnTo, bool back = false}) {
   final next = kycReturnRouteOrNull(returnTo);
+  final params = {kycReturnParam: ?next, if (back) kycBackParam: '1'};
   return Uri(
     path: kKycVerifyRoute,
-    queryParameters: next == null ? null : {kycReturnParam: next},
+    queryParameters: params.isEmpty ? null : params,
   ).toString();
 }
 

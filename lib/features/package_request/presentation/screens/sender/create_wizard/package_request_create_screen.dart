@@ -42,7 +42,6 @@ import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/publish_gate/bloc/publish_kyc_gate_cubit.dart';
-import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:dony/features/publish_gate/presentation/publish_kyc_gate_sheet.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
@@ -193,7 +192,7 @@ class _PackageRequestCreateScreenState
 
   PublishKycGateCubit _ensureKycGate() =>
       _kycGate ??= getIt<PublishKycGateCubit>(
-        param1: PublishCommitmentRole.sender,
+        param1: KycGateSubject.packageRequest,
         param2: FormDraftCubit.isFromKycGate(widget.resuming?.data),
       );
 

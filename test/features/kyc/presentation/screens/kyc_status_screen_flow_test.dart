@@ -182,4 +182,69 @@ void main() {
     verifyNever(() => authBloc.add(const AuthProfileRefreshRequested()));
     await tester.pump(const Duration(minutes: 6));
   });
+
+  group('ouvert par-dessus un formulaire (back=1)', () {
+    Future<void> pumpPushed(
+      WidgetTester tester,
+      KycState initial,
+      void Function(Object? result) onPopped,
+    ) async {
+      whenListen(kycBloc, states.stream, initialState: initial);
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const Scaffold(body: Text('formulaire')),
+          ),
+          GoRoute(
+            path: '/status',
+            builder: (_, _) => MultiBlocProvider(
+              providers: [
+                BlocProvider<KycBloc>.value(value: kycBloc),
+                BlocProvider<AuthBloc>.value(value: authBloc),
+              ],
+              child: const KycStatusScreen(popOnExit: true),
+            ),
+          ),
+          GoRoute(
+            path: '/kyc/verify',
+            builder: (_, s) => Scaffold(body: Text('page ${s.uri}')),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      unawaited(router.push<Object?>('/status').then(onPopped));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets('sortie : pop vers le formulaire, sans go', (tester) async {
+      Object? popped = 'rien';
+      await pumpPushed(tester, _pending, (r) => popped = r);
+      await tester.tap(find.text('Continue later'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('formulaire'), findsOneWidget);
+      expect(popped, isNull);
+    });
+
+    testWidgets('nouvelle tentative : se referme sur l\'URL du fournisseur', (
+      tester,
+    ) async {
+      Object? popped;
+      await pumpPushed(tester, _pending, (r) => popped = r);
+      states.add(
+        const KycSessionCreated(
+          stripeUrl: 'https://verify.didit.me/r',
+          sessionId: 's2',
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(popped, 'https://verify.didit.me/r');
+      expect(find.text('formulaire'), findsOneWidget);
+      await tester.pump(const Duration(minutes: 6));
+    });
+  });
 }

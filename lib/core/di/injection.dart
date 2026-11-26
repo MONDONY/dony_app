@@ -730,9 +730,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       analytics: getIt<AnalyticsService>(),
     ),
   );
-  getIt.registerFactoryParam<PublishKycGateCubit, PublishCommitmentRole, bool>(
-    (role, resumedFromGate) => PublishKycGateCubit(
-      role: role,
+  getIt.registerFactoryParam<PublishKycGateCubit, KycGateSubject, bool>(
+    (subject, resumedFromGate) => PublishKycGateCubit(
+      subject: subject,
       analytics: getIt<AnalyticsService>(),
       resumedFromGate: resumedFromGate,
     ),

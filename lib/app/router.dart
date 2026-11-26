@@ -531,10 +531,11 @@ final GoRouter appRouter = GoRouter(
         final returnTo = kycReturnRouteOrNull(
           state.uri.queryParameters[kycReturnParam],
         );
+        final back = kycBackRequested(state.uri.queryParameters);
 
         final raw = state.extra;
         if (raw is! String) {
-          return KycStatusScreen(returnTo: returnTo);
+          return KycStatusScreen(returnTo: returnTo, popOnExit: back);
         }
         // Second filtre, en plus de celui de la webview elle-même : une URL
         // qui n'est pas celle d'un fournisseur connu ne doit même pas ouvrir
@@ -548,11 +549,15 @@ final GoRouter appRouter = GoRouter(
             uri.scheme == 'https' &&
             isVerificationProviderHost(uri.host);
         if (!estFournisseurConnu) {
-          return KycStatusScreen(returnTo: returnTo);
+          return KycStatusScreen(returnTo: returnTo, popOnExit: back);
         }
         return BlocProvider(
           create: (_) => getIt<KycBloc>(),
-          child: KycWebViewScreen(stripeUrl: raw, returnTo: returnTo),
+          child: KycWebViewScreen(
+            stripeUrl: raw,
+            returnTo: returnTo,
+            popOnExit: back,
+          ),
         );
       },
     ),

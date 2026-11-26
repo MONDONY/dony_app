@@ -40001,6 +40001,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'La vérification d\'identité est momentanément indisponible. Votre saisie est enregistrée : réessayez dans quelques minutes.'**
   String get kycSessionUnavailableDraftSaved;
+
+  /// Feuille de vérification ouverte au clic sur le bouton final du formulaire « Faire une demande » (create_bid_bottom_sheet.dart, publish_kyc_gate_sheet.dart), voyageur qui exige un profil vérifié : la saisie reste dans le formulaire
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre demande est prête. Vérifiez votre identité (environ 2 minutes) puis envoyez-la.'**
+  String get bidKycGateBody;
+
+  /// Même feuille, vérification envoyée et en attente (PENDING) : la demande reste remplie dans le formulaire ouvert
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous vérifions votre identité et vous préviendrons dès que c\'est fait. Votre demande reste prête sur cet écran : vous l\'enverrez dès que votre identité sera vérifiée.'**
+  String get bidKycGatePendingBody;
+
+  /// Message de succès au retour d'une vérification réussie, juste avant que l'envoi de la demande (et le paiement) reprenne
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée : nous envoyons votre demande.'**
+  String get bidKycGateVerifiedMessage;
 }
 
 class _AppLocalizationsDelegate

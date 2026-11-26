@@ -1028,8 +1028,8 @@ void main() {
 
     tearDown(() => GetIt.I.reset());
 
-    testWidgets('expéditeur NOT_STARTED : ouvre KycStatusBottomSheet '
-        '(titre "Vérification d\'identité")', (tester) async {
+    testWidgets('expéditeur NOT_STARTED : ouvre quand même le formulaire, la '
+        'vérification n\'est demandée qu\'à l\'envoi', (tester) async {
       final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
       await tester.pumpWidget(
         _harness(
@@ -1043,12 +1043,12 @@ void main() {
       await tester.tap(find.text('Faire une demande'));
       await tester.pumpAndSettle();
 
-      expect(find.text("Vérification d'identité"), findsOneWidget);
-      expect(find.byKey(const Key('bid-submit-btn')), findsNothing);
+      expect(find.byKey(const Key('bid-submit-btn')), findsOneWidget);
+      expect(find.text("Vérification d'identité"), findsNothing);
     });
 
-    testWidgets('expéditeur PENDING : ouvre KycStatusBottomSheet '
-        '(titre "Vérification d\'identité")', (tester) async {
+    testWidgets('expéditeur PENDING : ouvre quand même le formulaire, la '
+        'vérification n\'est demandée qu\'à l\'envoi', (tester) async {
       final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
       await tester.pumpWidget(
         _harness(
@@ -1062,12 +1062,12 @@ void main() {
       await tester.tap(find.text('Faire une demande'));
       await tester.pumpAndSettle();
 
-      expect(find.text("Vérification d'identité"), findsOneWidget);
-      expect(find.byKey(const Key('bid-submit-btn')), findsNothing);
+      expect(find.byKey(const Key('bid-submit-btn')), findsOneWidget);
+      expect(find.text("Vérification d'identité"), findsNothing);
     });
 
-    testWidgets('expéditeur REJECTED : ouvre KycStatusBottomSheet '
-        '(titre "Vérification d\'identité")', (tester) async {
+    testWidgets('expéditeur REJECTED : ouvre quand même le formulaire, la '
+        'vérification n\'est demandée qu\'à l\'envoi', (tester) async {
       final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
       await tester.pumpWidget(
         _harness(
@@ -1081,8 +1081,8 @@ void main() {
       await tester.tap(find.text('Faire une demande'));
       await tester.pumpAndSettle();
 
-      expect(find.text("Vérification d'identité"), findsOneWidget);
-      expect(find.byKey(const Key('bid-submit-btn')), findsNothing);
+      expect(find.byKey(const Key('bid-submit-btn')), findsOneWidget);
+      expect(find.text("Vérification d'identité"), findsNothing);
     });
 
     testWidgets('expéditeur VÉRIFIÉ : ouvre CreateBidBottomSheet '
@@ -1130,7 +1130,7 @@ void main() {
 
     testWidgets(
       'expéditeur NON vérifié + voyageur exigeant des profils vérifiés : '
-      "renvoie vers la vérification d'identité",
+      'ouvre le formulaire (vérification demandée à l\'envoi)',
       (tester) async {
         final a = _buildAnnouncement(kycVerified: true);
         await tester.pumpWidget(
@@ -1145,8 +1145,8 @@ void main() {
         await tester.tap(find.text('Faire une demande'));
         await tester.pumpAndSettle();
 
-        expect(find.text("Vérification d'identité"), findsOneWidget);
-        expect(find.byKey(const Key('bid-submit-btn')), findsNothing);
+        expect(find.byKey(const Key('bid-submit-btn')), findsOneWidget);
+        expect(find.text("Vérification d'identité"), findsNothing);
       },
     );
 

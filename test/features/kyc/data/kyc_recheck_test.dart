@@ -73,4 +73,18 @@ void main() {
     await getIt.reset();
     expect(await recheckKycVerified(bloc), isFalse);
   });
+
+  test('recheckKycStatus : statut du serveur, null sans réponse', () async {
+    when(() => repo.getProfile()).thenAnswer((_) async => _user('PENDING'));
+    expect(await recheckKycStatus(bloc), 'PENDING');
+    when(() => repo.getProfile()).thenAnswer((_) async => _user('VERIFIED'));
+    expect(await recheckKycStatus(bloc), kKycVerifiedStatus);
+    when(() => repo.getProfile()).thenThrow(Exception('hors ligne'));
+    expect(await recheckKycStatus(bloc), isNull);
+  });
+
+  test('recheckKycStatus sans dépôt : null', () async {
+    await getIt.reset();
+    expect(await recheckKycStatus(bloc), isNull);
+  });
 }

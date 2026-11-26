@@ -2,9 +2,27 @@ import 'dart:async';
 
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+/// Ce que l'utilisateur s'apprête à envoyer quand la vérification d'identité
+/// l'arrête. Fixe le texte de la feuille et la propriété analytics `role`.
+enum KycGateSubject {
+  /// Publication d'un trajet.
+  trip('traveler'),
+
+  /// Publication d'une demande d'envoi.
+  packageRequest('sender'),
+
+  /// Envoi d'une demande (ou d'une proposition de prix) sur le trajet d'un
+  /// voyageur qui n'accepte que les profils vérifiés.
+  bid('sender_bid');
+
+  const KycGateSubject(this.analyticsRole);
+
+  /// Valeur de la propriété `role` des événements `publish_kyc_gate_*`.
+  final String analyticsRole;
+}
 
 /// Ce que montre la feuille « Dernière étape : vérifiez votre identité ».
 class PublishKycGateState extends Equatable {
@@ -31,23 +49,26 @@ class PublishKycGateState extends Equatable {
   List<Object?> get props => [shown, kycStatus, draftSaved];
 }
 
-/// Vérification d'identité demandée au moment de publier.
+/// Vérification d'identité demandée au moment de publier ou d'envoyer.
 ///
 /// L'utilisateur non vérifié remplit son formulaire sans être arrêté. Au clic
 /// sur « Publier », sa saisie est d'abord gardée en brouillon local (pour ne
 /// rien perdre pendant la vérification, qui quitte le formulaire), puis la
 /// feuille de vérification s'ouvre. Une fois vérifié, il retrouve sa saisie
 /// et publie : c'est `publish_kyc_gate_resumed`.
+///
+/// Demande sur un trajet ([KycGateSubject.bid]) : le formulaire reste ouvert
+/// sous la vérification, qui revient dessus ; l'envoi repart de lui-même.
 class PublishKycGateCubit extends Cubit<PublishKycGateState> {
   PublishKycGateCubit({
-    required this.role,
+    required this.subject,
     required AnalyticsService analytics,
     bool resumedFromGate = false,
   }) : _analytics = analytics,
        _engaged = resumedFromGate,
        super(const PublishKycGateState());
 
-  final PublishCommitmentRole role;
+  final KycGateSubject subject;
   final AnalyticsService _analytics;
 
   /// La publication de ce formulaire a été arrêtée par la vérification
@@ -56,7 +77,7 @@ class PublishKycGateCubit extends Cubit<PublishKycGateState> {
 
   bool _resumedLogged = false;
 
-  String get _role => role.wire.toLowerCase();
+  String get _role => subject.analyticsRole;
 
   /// Garde la saisie ([saveDraft], `null` quand le formulaire n'a pas de
   /// brouillon local : modification d'un trajet publié) puis prépare la
@@ -94,8 +115,9 @@ class PublishKycGateCubit extends Cubit<PublishKycGateState> {
     ),
   );
 
-  /// Publication réussie (jamais un brouillon serveur) : mesurée une fois,
-  /// seulement si la vérification l'avait arrêtée.
+  /// Publication réussie (jamais un brouillon serveur), ou demande envoyée
+  /// sur un trajet : mesurée une fois, seulement si la vérification l'avait
+  /// arrêtée.
   void publicationSucceeded() {
     if (!_engaged || _resumedLogged) return;
     _resumedLogged = true;

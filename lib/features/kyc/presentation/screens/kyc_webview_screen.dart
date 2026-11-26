@@ -45,6 +45,7 @@ class KycWebViewScreen extends StatefulWidget {
     super.key,
     required this.stripeUrl,
     this.returnTo,
+    this.popOnExit = false,
     this.cameraPermission = const CameraPermissionService(),
     this.analytics,
     this.mediaService,
@@ -54,6 +55,11 @@ class KycWebViewScreen extends StatefulWidget {
 
   /// Écran où revenir une fois vérifié, transmis à l'écran de statut.
   final String? returnTo;
+
+  /// Ouverte par-dessus un écran qui doit survivre (`kycBackParam`) : le
+  /// parcours terminé la referme par `pop(true)` au lieu du `go` vers l'écran
+  /// de statut, qui viderait la pile.
+  final bool popOnExit;
 
   /// Injectable pour les tests ; `null` lit le service du conteneur.
   final AnalyticsService? analytics;
@@ -338,7 +344,14 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
                   if (mounted) {
                     // `/kyc/verify` plutôt que `/kyc/status` : l'écran de
                     // statut garde l'écran où revenir une fois vérifié.
-                    context.go(kycVerifyLocation(returnTo: widget.returnTo));
+                    // Ouverte par-dessus un écran qui doit survivre : elle
+                    // se referme sur `true` (parcours terminé), et cet écran
+                    // ouvre lui-même le statut.
+                    if (widget.popOnExit && context.canPop()) {
+                      context.pop(true);
+                    } else {
+                      context.go(kycVerifyLocation(returnTo: widget.returnTo));
+                    }
                   }
                   return NavigationDecision.prevent;
                 }

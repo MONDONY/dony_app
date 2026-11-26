@@ -18,7 +18,6 @@ import 'package:dony/features/corridor_alerts/presentation/widgets/trip_space_al
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
-import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -116,19 +115,13 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
   // Captured before DonyBottomSheet.show() — context may be invalid inside
   // onPressed since useRootNavigator: true places the sheet outside BlocProvider.
   final authState = context.read<AuthBloc>().state;
-  // currentUser couvre AuthAuthenticated ET AuthProfileUpdated (émis après
-  // upload avatar / édition profil) — sinon le KYC repasserait à false.
-  final isKycVerified = authState.currentUser?.isKycVerified ?? false;
   // Sert à masquer le blocage sur son propre trajet. Lu ici, comme le reste :
   // la feuille s'affiche hors de l'arbre de providers.
   final lecteurId = authState.currentUserId;
-  // Audience du trajet : une personne de plus pour le voyageur, sans attendre.
-  // Un expéditeur non vérifié peut quand même écrire à un voyageur qui a
-  // désactivé « profils vérifiés uniquement » : sans cette exception, le réglage
-  // du voyageur resterait sans effet, le client barrant la route avant l'appel.
-  // Le serveur reste l'autorité (403 contact-kyc-required s'il s'est ravisé).
-  final canSendRequest =
-      isKycVerified || (announcement.traveler?.acceptsUnverified ?? false);
+  // Identité non vérifiée : le formulaire s'ouvre quand même. La
+  // vérification n'est demandée qu'à l'envoi, et seulement si le voyageur
+  // exige un profil vérifié (`CreateBidScreen._sendWithIdentityCheck`) :
+  // bloquer ici arrêtait un expéditeur sur six avant même le formulaire.
   // R13 : le backend rejette toute négociation en mobile money (422
   // mobile-money-negotiation-unsupported, `BidNegotiationService`) —
   // décision produit « offres classiques seulement ». Un trajet qui
@@ -344,35 +337,29 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
             );
             return;
           }
-          if (canSendRequest) {
-            // Le cache lu plus haut peut être périmé (négociation payée dans
-            // son fil, bid NEGOTIATING absent de /bids/me) : on relit le
-            // serveur avant d'ouvrir le formulaire, pour ne pas le laisser
-            // remplir jusqu'au 409 `already-bid` du paiement.
-            final existing = await _findExistingTripRequest(announcement.id);
-            if (!rootCtx.mounted) return;
-            if (existing != null) {
-              // Le cache se remet d'aplomb : à la prochaine ouverture, la
-              // feuille affiche d'emblée « Voir mon colis ».
-              parentBidBloc?.add(
-                const BidMyListAutoRefreshRequested(force: true),
-              );
-              _openExistingTripRequest(rootCtx, existing);
-              return;
-            }
-            await CreateBidBottomSheet.show(
-              rootCtx,
-              announcement: announcement,
-              negotiation: negotiation,
-            );
-            // Refresh silencieux du BidBloc parent pour que la liste
-            // affiche immédiatement le chip "Demande en attente".
+          // Le cache lu plus haut peut être périmé (négociation payée dans
+          // son fil, bid NEGOTIATING absent de /bids/me) : on relit le
+          // serveur avant d'ouvrir le formulaire, pour ne pas le laisser
+          // remplir jusqu'au 409 `already-bid` du paiement.
+          final existing = await _findExistingTripRequest(announcement.id);
+          if (!rootCtx.mounted) return;
+          if (existing != null) {
+            // Le cache se remet d'aplomb : à la prochaine ouverture, la
+            // feuille affiche d'emblée « Voir mon colis ».
             parentBidBloc?.add(
               const BidMyListAutoRefreshRequested(force: true),
             );
-          } else {
-            await KycStatusBottomSheet.show(rootCtx);
+            _openExistingTripRequest(rootCtx, existing);
+            return;
           }
+          await CreateBidBottomSheet.show(
+            rootCtx,
+            announcement: announcement,
+            negotiation: negotiation,
+          );
+          // Refresh silencieux du BidBloc parent pour que la liste
+          // affiche immédiatement le chip "Demande en attente".
+          parentBidBloc?.add(const BidMyListAutoRefreshRequested(force: true));
         }
 
         Future<void> openCreateBid({required bool negotiation}) async {

@@ -1,7 +1,6 @@
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/publish_gate/bloc/publish_kyc_gate_cubit.dart';
-import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -18,10 +17,10 @@ void main() {
   });
 
   PublishKycGateCubit build({
-    PublishCommitmentRole role = PublishCommitmentRole.traveler,
+    KycGateSubject subject = KycGateSubject.trip,
     bool resumedFromGate = false,
   }) => PublishKycGateCubit(
-    role: role,
+    subject: subject,
     analytics: analytics,
     resumedFromGate: resumedFromGate,
   );
@@ -64,7 +63,7 @@ void main() {
 
   test('open : écriture refusée ou en échec, la feuille s\'ouvre quand même '
       '(draftSaved faux)', () async {
-    final cubit = build(role: PublishCommitmentRole.sender);
+    final cubit = build(subject: KycGateSubject.packageRequest);
     await cubit.open(kycStatus: 'PENDING', saveDraft: () async => false);
     expect(cubit.state.draftSaved, isFalse);
     expect(cubit.state.pending, isTrue);
@@ -100,7 +99,7 @@ void main() {
   });
 
   test('verifyTapped : trace le rôle', () async {
-    final cubit = build(role: PublishCommitmentRole.sender);
+    final cubit = build(subject: KycGateSubject.packageRequest);
     cubit.verifyTapped();
     verify(
       () => analytics.logEvent(
@@ -141,7 +140,7 @@ void main() {
 
   test('brouillon gardé par la vérification puis repris : resumed', () async {
     final cubit = build(
-      role: PublishCommitmentRole.sender,
+      subject: KycGateSubject.packageRequest,
       resumedFromGate: true,
     );
     cubit.publicationSucceeded();
@@ -149,6 +148,27 @@ void main() {
       () => analytics.logEvent(
         AnalyticsEvents.publishKycGateResumed,
         properties: {'role': 'sender'},
+      ),
+    ).called(1);
+    await cubit.close();
+  });
+
+  test('demande sur un trajet : role sender_bid', () async {
+    final cubit = build(subject: KycGateSubject.bid);
+    await cubit.open(kycStatus: 'NOT_STARTED', saveDraft: () async => true);
+    cubit
+      ..verifyTapped()
+      ..publicationSucceeded();
+    verify(
+      () => analytics.logEvent(
+        AnalyticsEvents.publishKycGateShown,
+        properties: {'role': 'sender_bid', 'kyc_status': 'not_started'},
+      ),
+    ).called(1);
+    verify(
+      () => analytics.logEvent(
+        AnalyticsEvents.publishKycGateResumed,
+        properties: {'role': 'sender_bid'},
       ),
     ).called(1);
     await cubit.close();

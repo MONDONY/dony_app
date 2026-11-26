@@ -9,7 +9,6 @@ import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/features/kyc/presentation/kyc_session_error.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:dony/features/publish_gate/bloc/publish_kyc_gate_cubit.dart';
-import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,14 +23,25 @@ import 'package:go_router/go_router.dart';
 ///
 /// Vérification envoyée et en attente (`PENDING`) : rien à démarrer, la
 /// feuille explique qu'on préviendra l'utilisateur et que sa saisie l'attend.
+///
+/// [onVerificationReady] : l'appelant ouvre lui-même la vérification avec
+/// l'URL du fournisseur, au lieu du `go` qui vide la pile. Sert au formulaire
+/// d'une demande sur un trajet, qui doit rester ouvert dessous.
 abstract final class PublishKycGateSheet {
   static const analyticsName = 'publish/kyc-gate';
+
+  /// Nom de la feuille ouverte au moment d'envoyer une demande sur un trajet.
+  static const bidAnalyticsName = 'bid/kyc-gate';
 
   static Future<void> show(
     BuildContext context, {
     required PublishKycGateCubit gate,
     String? returnTo,
+    Future<void> Function(String verificationUrl)? onVerificationReady,
   }) async {
+    final analyticsName = gate.subject == KycGateSubject.bid
+        ? bidAnalyticsName
+        : PublishKycGateSheet.analyticsName;
     if (gate.state.pending) {
       var openStatus = false;
       await DonyBottomSheet.show<void>(
@@ -49,10 +59,13 @@ abstract final class PublishKycGateSheet {
             },
           ),
         ),
-        child: _GateContent(state: gate.state, role: gate.role),
+        child: _GateContent(state: gate.state, subject: gate.subject),
       );
       if (openStatus && context.mounted) {
-        await KycStatusBottomSheet.show(context);
+        await KycStatusBottomSheet.show(
+          context,
+          onVerificationReady: onVerificationReady,
+        );
       }
       return;
     }
@@ -89,10 +102,14 @@ abstract final class PublishKycGateSheet {
             showKycError(ctx, kyc.error, draftSaved: gate.state.draftSaved);
           }
         },
-        child: _GateContent(state: gate.state, role: gate.role),
+        child: _GateContent(state: gate.state, subject: gate.subject),
       ),
     );
     if (url != null && context.mounted) {
+      if (onVerificationReady != null) {
+        await onVerificationReady(url);
+        return;
+      }
       GoRouter.of(
         context,
       ).go(kycVerifyLocation(returnTo: returnTo), extra: url);
@@ -126,31 +143,35 @@ class _Actions extends StatelessWidget {
 }
 
 class _GateContent extends StatelessWidget {
-  const _GateContent({required this.state, required this.role});
+  const _GateContent({required this.state, required this.subject});
 
   final PublishKycGateState state;
-  final PublishCommitmentRole role;
+  final KycGateSubject subject;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final trip = role == PublishCommitmentRole.traveler;
+    final trip = subject == KycGateSubject.trip;
 
     final title = state.pending
         ? l.publishKycGatePendingTitle
         : l.publishKycGateTitle;
-    final body = switch ((state.pending, state.draftSaved)) {
-      (true, true) =>
-        trip
-            ? l.publishKycGatePendingBodyTrip
-            : l.publishKycGatePendingBodyRequest,
-      (true, false) => l.publishKycGatePendingBodyUnsaved,
-      (false, true) =>
-        trip ? l.publishKycGateBodyTrip : l.publishKycGateBodyRequest,
-      (false, false) => l.publishKycGateBodyUnsaved,
-    };
+    // Demande sur un trajet : la saisie reste dans le formulaire, ouvert sous
+    // la feuille, qu'il y ait brouillon ou non.
+    final body = subject == KycGateSubject.bid
+        ? (state.pending ? l.bidKycGatePendingBody : l.bidKycGateBody)
+        : switch ((state.pending, state.draftSaved)) {
+            (true, true) =>
+              trip
+                  ? l.publishKycGatePendingBodyTrip
+                  : l.publishKycGatePendingBodyRequest,
+            (true, false) => l.publishKycGatePendingBodyUnsaved,
+            (false, true) =>
+              trip ? l.publishKycGateBodyTrip : l.publishKycGateBodyRequest,
+            (false, false) => l.publishKycGateBodyUnsaved,
+          };
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),

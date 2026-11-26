@@ -137,6 +137,10 @@ Future<GoRouter> _pump(
         ),
       ),
       GoRoute(
+        path: '/bids/new',
+        builder: (_, _) => const Scaffold(body: Text('Formulaire de demande')),
+      ),
+      GoRoute(
         path: '/bids/:bidId',
         builder: (_, state) =>
             Scaffold(body: Text('Colis ${state.pathParameters['bidId']}')),
@@ -280,8 +284,10 @@ void main() {
         getIt.unregister<KycBloc>();
       });
 
-      testWidgets('identité non vérifiée → la feuille KYC reste ouverte, '
-          'la page d\'accueil s\'est retirée', (tester) async {
+      testWidgets('identité non vérifiée → le formulaire s\'ouvre (la '
+          'vérification attend l\'envoi), la page d\'accueil s\'est retirée', (
+        tester,
+      ) async {
         final router = await _pump(tester, kycStatus: 'NOT_STARTED');
         await _openViaLoader(tester);
 
@@ -289,10 +295,11 @@ void main() {
         await tester.pumpAndSettle();
 
         // Sans la suite différée, le `pop` de la page d'accueil refermait
-        // aussitôt la feuille KYC ouverte par-dessus.
-        expect(find.text("Vérification d'identité"), findsOneWidget);
-        expect(_location(router), '/');
-        expect(_depth(router), 1);
+        // aussitôt ce qui s'ouvrait par-dessus.
+        expect(find.text('Formulaire de demande'), findsOneWidget);
+        expect(find.text("Vérification d'identité"), findsNothing);
+        expect(_location(router), '/bids/new');
+        expect(_depth(router), 2);
       });
     });
   });
