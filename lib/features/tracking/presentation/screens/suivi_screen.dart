@@ -445,6 +445,9 @@ class _SuiviBodyState extends State<_SuiviBody> {
           'packageLabel': label,
           'scanMethod': method,
           'deliveryWindow': DeliveryWindow.fromBid(bid),
+          // Lien « Appeler {expéditeur} » de la saisie du code.
+          'senderName': bid.senderName,
+          'senderPhoneAvailable': bid.senderPhoneAvailable,
         },
       );
       if (mounted) _reloadTrips();

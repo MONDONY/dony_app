@@ -1,16 +1,20 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/button_first_name.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/amendment_pay_button.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/cancel_before_payment_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tile_sheets.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_tiles.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_pay_button.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/tracking_actions.dart';
+import 'package:dony/features/matching/presentation/widgets/counterpart_call_launcher.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -246,12 +250,34 @@ class SenderStickyBar extends StatelessWidget {
     // 4. By status
     if (status == 'ACCEPTED') return _SenderFooterAction.showQr;
 
-    // ARRIVED : le colis est arrivé mais pas encore retiré, le suivi reste la
-    // bonne action primaire pour l'expéditeur.
-    if (status == 'HANDED_OVER' ||
-        status == 'IN_TRANSIT' ||
-        status == 'ARRIVED') {
-      return _SenderFooterAction.track;
+    // Colis chez le voyageur (rappels à chaque étape, spec §6.2) : le geste
+    // utile est le code de retrait. Le suivi reste dans la tuile « Suivi ».
+    // - destinataire tiers : « Envoyer le code à … » puis, arrivé,
+    //   « Renvoyer le code à … », seulement si le code existe et que le
+    //   message peut partir ([PrevenirDestinataire]) ;
+    // - expéditeur = destinataire (§6.4) : « Voir mon code », puis, arrivé,
+    //   « Appeler {voyageur} » si son numéro est communicable.
+    // Sinon « Suivi du colis », comme avant.
+    if (status == 'HANDED_OVER' || status == 'IN_TRANSIT') {
+      if (bid.recipientIsSender) {
+        return PrevenirDestinataire.withCode(bid)
+            ? _SenderFooterAction.showMyCode
+            : _SenderFooterAction.track;
+      }
+      return canSendCode(bid)
+          ? _SenderFooterAction.sendCode
+          : _SenderFooterAction.track;
+    }
+
+    if (status == 'ARRIVED') {
+      if (bid.recipientIsSender) {
+        return bid.travelerPhoneAvailable
+            ? _SenderFooterAction.callTraveler
+            : _SenderFooterAction.track;
+      }
+      return canSendCode(bid)
+          ? _SenderFooterAction.resendCode
+          : _SenderFooterAction.track;
     }
 
     if ((status == 'COMPLETED' || status == 'DELIVERED') &&
@@ -261,6 +287,15 @@ class SenderStickyBar extends StatelessWidget {
 
     return _SenderFooterAction.none;
   }
+
+  /// Le code de retrait peut partir vers un destinataire tiers depuis la
+  /// feuille « Prévenir » : le message peut partir et le code existe (ni
+  /// bloqué, ni expiré). Mêmes règles que la tuile et son sheet ; aussi
+  /// celles du bouton « Envoyer le code » d'un modal d'étape du colis.
+  static bool canSendCode(BidModel bid) =>
+      !bid.recipientIsSender &&
+      PrevenirDestinataire.canNotify(bid) &&
+      PrevenirDestinataire.withCode(bid);
 
   Widget? _buildAction(BuildContext context) {
     return switch (_resolve(
@@ -329,6 +364,15 @@ class SenderStickyBar extends StatelessWidget {
           QrSheet.show(context, bidId: bid.id, status: bid.status);
         },
       ),
+      _SenderFooterAction.sendCode ||
+      _SenderFooterAction.resendCode => _sendCodeButton(context),
+      _SenderFooterAction.showMyCode => DonyButton(
+        label: context.l10n.bidDetailSeeMyCode,
+        iconAsset: 'key-round',
+        // La feuille du code du talon : l'haptique est dans la feuille.
+        onPressed: () => RetraitCodeSheet.show(context, bid: bid),
+      ),
+      _SenderFooterAction.callTraveler => _callTravelerButton(context),
       _SenderFooterAction.track => DonyButton(
         label: context.l10n.bidDetailTrackParcel,
         iconAsset: 'package',
@@ -357,6 +401,58 @@ class SenderStickyBar extends StatelessWidget {
         },
       ),
     };
+  }
+
+  // ── Code de retrait et appel (rappels à chaque étape) ─────────────────────
+
+  /// « Envoyer le code à {prénom} » (colis remis ou en route) ou « Renvoyer
+  /// le code à {prénom} » (arrivé) : ouvre la feuille « Prévenir », déjà en
+  /// mode code puisque le code existe ([canSendCode]). Prénom coupé avant le
+  /// libellé ([buttonFirstName]), jamais la police.
+  Widget _sendCodeButton(BuildContext context) {
+    final l = context.l10n;
+    final name = buttonFirstName(bid.recipientName);
+    final arrived = bid.status == 'ARRIVED';
+    final label = switch ((arrived, name.isEmpty)) {
+      (false, true) => l.bidDetailSendCode,
+      (false, false) => l.bidDetailSendCodeTo(name),
+      (true, true) => l.bidDetailResendCode,
+      (true, false) => l.bidDetailResendCodeTo(name),
+    };
+    return DonyButton(
+      key: const Key('sender-footer-send-code'),
+      label: label,
+      iconAsset: 'message-circle',
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        openSenderTileSheet(
+          context,
+          bid,
+          SenderTile.prevenir,
+          source: 'footer',
+        );
+      },
+    );
+  }
+
+  /// « Appeler {voyageur} » : l'expéditeur qui est son propre destinataire,
+  /// colis arrivé. Le numéro est demandé au serveur au geste
+  /// ([CounterpartCallLauncher]).
+  Widget _callTravelerButton(BuildContext context) {
+    final l = context.l10n;
+    final name = buttonFirstName(bid.travelerName);
+    return CounterpartCallLauncher(
+      bidId: bid.id,
+      source: 'sender_footer',
+      status: bid.status,
+      builder: (context, onPressed, isLoading) => DonyButton(
+        key: const Key('sender-footer-call-traveler'),
+        label: name.isEmpty ? l.parcelCallTraveler : l.parcelCallPerson(name),
+        iconAsset: 'phone',
+        isLoading: isLoading,
+        onPressed: onPressed,
+      ),
+    );
   }
 
   // ── Annuler + Payer ──────────────────────────────────────────────────────────
@@ -422,6 +518,18 @@ enum _SenderFooterAction {
   payLoading,
   pay,
   showQr,
+
+  /// Colis remis ou en route : « Envoyer le code à {destinataire} ».
+  sendCode,
+
+  /// Colis arrivé : « Renvoyer le code à {destinataire} ».
+  resendCode,
+
+  /// Expéditeur = destinataire, colis remis ou en route : « Voir mon code ».
+  showMyCode,
+
+  /// Expéditeur = destinataire, colis arrivé : « Appeler {voyageur} ».
+  callTraveler,
   track,
   rate,
 }

@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/video_modal/bloc/video_modal_bloc.dart';
+import 'package:dony/features/video_modal/data/models/parcel_step.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -45,6 +47,12 @@ const kVideoModalEmptyRefresh = Duration(minutes: 1);
 /// fenêtre ni pendant une saisie, [kVideoModalOpenDelay] après le moment, avec
 /// revérification du premier plan. Un moment ouvre le modal sur l'écran qui
 /// l'a émis tant qu'il est monté, sinon sur l'écran du shell.
+///
+/// Étapes d'un colis (`PARCEL_*`) : jamais pour un visiteur ; seulement sur
+/// l'écran du colis qui les a émises (quitté avant le modal : abandonnées) ;
+/// un seul modal par étape et par colis en attente ; textes remplis et
+/// boutons adaptés au rôle à l'ouverture ; « une fois par colis » retenu sur
+/// le téléphone dès l'affichage.
 class VideoModalHost extends StatefulWidget {
   const VideoModalHost({
     super.key,
@@ -315,6 +323,18 @@ class _VideoModalHostState extends State<VideoModalHost> {
 
   void _onMoment(VideoModalMomentSignal signal) {
     if (!mounted || _bloc == null) return;
+    final parcel = signal.moment.parcel;
+    if (parcel != null) {
+      // Un visiteur n'a pas de colis : jamais de modal d'étape.
+      if (!_realSession) return;
+      // La même étape du même colis rouverte avant le modal : la dernière
+      // ouverture remplace la précédente, un seul modal pour ce moment.
+      _moments.removeWhere(
+        (s) =>
+            s.moment.trigger == signal.moment.trigger &&
+            s.moment.parcel?.bidId == parcel.bidId,
+      );
+    }
     // Un paiement réussi après un échec : le modal d'échec n'a plus lieu.
     if (signal.moment.trigger == VideoModalTrigger.paymentSucceeded) {
       _moments.removeWhere(
@@ -356,9 +376,14 @@ class _VideoModalHostState extends State<VideoModalHost> {
     // Liste périmée ou vide après un échec : on la recharge avant de juger,
     // les moments attendent (ils sont réévalués au prochain `ready`).
     if (_refreshIfStale()) return;
-    // Aucune campagne pour ce moment (déclencheur, seuil, corridor) : rien
-    // n'est à attendre.
-    _moments.removeWhere((s) => state.candidateForMoment(s.moment) == null);
+    // Aucune campagne pour ce moment (déclencheur, seuil, corridor, rôle,
+    // déjà vue pour ce colis) : rien n'est à attendre. Étape d'un colis dont
+    // l'écran a été quitté : abandonnée (le colis affiché n'est plus là).
+    _moments.removeWhere(
+      (s) =>
+          _candidate(state, s.moment) == null ||
+          (s.moment.parcel != null && !(s.origin?.mounted ?? false)),
+    );
     if (_moments.isEmpty) return;
     if (_momentTimer != null) return;
     _momentRetryTimer?.cancel();
@@ -393,6 +418,22 @@ class _VideoModalHostState extends State<VideoModalHost> {
     unawaited(_presentMoment(bloc, pick));
   }
 
+  /// Campagne du moment ; pour une étape de colis, hors campagnes « une fois
+  /// par colis » déjà affichées pour ce colis sur ce téléphone.
+  VideoModalCampaign? _candidate(
+    VideoModalState state,
+    VideoModalMoment moment,
+  ) {
+    final parcel = moment.parcel;
+    final service = _momentService;
+    return state.candidateForMoment(
+      moment,
+      shownForParcel: parcel == null
+          ? null
+          : (c) => service.shownForParcelNow(c.id, c.version, parcel.bidId),
+    );
+  }
+
   Future<void> _presentMoment(
     VideoModalBloc bloc,
     ({
@@ -404,11 +445,33 @@ class _VideoModalHostState extends State<VideoModalHost> {
   ) async {
     final moment = pick.signal.moment;
     final service = _momentService;
+    final parcel = moment.parcel;
+    var campaign = pick.campaign;
+    VoidCallback? onShown;
+    if (parcel != null) {
+      campaign = _forParcel(pick.context, campaign, moment, parcel);
+      final shownCampaign = campaign;
+      if (campaign.isOncePerParcel) {
+        onShown = () => unawaited(
+          service.recordShownForParcel(
+            shownCampaign.id,
+            shownCampaign.version,
+            parcel.bidId,
+          ),
+        );
+      }
+    } else {
+      // Moment hors colis : un bouton `PARCEL_*` n'a pas de colis à ouvrir et
+      // ne ferait que fermer. Même filtrage que pour un colis sans droit.
+      campaign = campaign.withParcelStep(fill: (t) => t, canRun: (_) => false);
+    }
     await VideoModalPresenter.present(
       pick.context,
       bloc: bloc,
-      campaign: pick.campaign,
+      campaign: campaign,
       trigger: moment.trigger,
+      parcel: parcel,
+      onShown: onShown,
     );
     // Compteur de consultations remis à zéro une fois le modal affiché.
     final tripId = moment.tripId;
@@ -419,8 +482,35 @@ class _VideoModalHostState extends State<VideoModalHost> {
     }
   }
 
+  /// Campagne d'une étape de colis telle qu'elle s'affiche : variables des
+  /// textes remplies (repli dans la langue de l'app quand un nom manque) et
+  /// boutons `PARCEL_*` qui ne s'appliquent pas à la personne retirés.
+  static VideoModalCampaign _forParcel(
+    BuildContext context,
+    VideoModalCampaign campaign,
+    VideoModalMoment moment,
+    ParcelActionContext parcel,
+  ) {
+    final l = context.l10n;
+    final fallbacks = {
+      ParcelModalVariable.recipient.key: l.parcelModalFallbackRecipient,
+      ParcelModalVariable.traveler.key: l.parcelModalFallbackTraveler,
+      ParcelModalVariable.sender.key: l.parcelModalFallbackSender,
+      ParcelModalVariable.arrivalCity.key: l.parcelModalFallbackArrivalCity,
+    };
+    return campaign.withParcelStep(
+      fill: (text) => fillParcelVariables(
+        text,
+        values: moment.variables,
+        fallbacks: fallbacks,
+      ),
+      canRun: parcel.canRun,
+    );
+  }
+
   /// Le moment à ouvrir maintenant : parmi ceux dont l'écran (celui qui l'a
-  /// émis tant qu'il est monté, sinon le shell) est au premier plan, celui de
+  /// émis tant qu'il est monté, sinon le shell ; jamais le shell pour une
+  /// étape de colis) est au premier plan, celui de
   /// la campagne la plus prioritaire, à égalité le plus ancien. `null` si
   /// l'app n'est pas au premier plan, si la personne saisit du texte ou si
   /// aucun écran n'est libre.
@@ -444,12 +534,12 @@ class _VideoModalHostState extends State<VideoModalHost> {
     })?
     best;
     for (final signal in _moments) {
-      final campaign = state.candidateForMoment(signal.moment);
+      final campaign = _candidate(state, signal.moment);
       if (campaign == null) continue;
       final origin = signal.origin;
       final BuildContext? target = origin != null && origin.mounted
           ? origin
-          : (mounted ? context : null);
+          : (signal.moment.parcel == null && mounted ? context : null);
       if (target == null || !isVideoModalFrontmost(target)) continue;
       if (best == null || campaign.priority > best.campaign.priority) {
         best = (signal: signal, context: target, campaign: campaign);

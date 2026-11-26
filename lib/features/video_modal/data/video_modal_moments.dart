@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/features/video_modal/data/datasources/video_modal_local_datasource.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_local_history.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/features/video_modal/data/repositories/video_modal_repository.dart';
 import 'package:flutter/widgets.dart';
@@ -27,7 +28,9 @@ class VideoModalMomentSignal {
 ///
 /// Garde aussi, sur le téléphone, ce que deux moments calculent dans l'app :
 /// la version de l'app vue au dernier lancement (`APP_UPDATED`) et le
-/// nombre de consultations de chaque fiche trajet (`TRIP_VIEWED_REPEATEDLY`).
+/// nombre de consultations de chaque fiche trajet (`TRIP_VIEWED_REPEATEDLY`),
+/// ainsi que les modals « une fois par colis » déjà affichés (étapes du
+/// colis, [notifyParcelStep]).
 /// Ne lève jamais : un stockage illisible fait perdre le moment, pas l'écran.
 class VideoModalMoments {
   VideoModalMoments({
@@ -54,8 +57,13 @@ class VideoModalMoments {
   final StreamController<VideoModalMomentSignal> _controller =
       StreamController<VideoModalMomentSignal>.broadcast();
 
-  /// Écriture des compteurs, une à la fois (lecture puis écriture).
-  Future<void> _tripViewsQueue = Future<void>.value();
+  /// Écritures du téléphone, une à la fois (lecture puis écriture) :
+  /// compteurs des fiches trajet et affichages par colis.
+  Future<void> _queue = Future<void>.value();
+
+  /// Affichages « une fois par colis », lus une fois puis tenus à jour en
+  /// mémoire (`null` tant qu'ils n'ont pas été lus).
+  VideoModalLocalHistory? _parcels;
 
   /// Entrée des écrans et des BLoCs. Sans effet si personne n'écoute (hors
   /// shell, tests) ; ne lève jamais.
@@ -73,6 +81,16 @@ class VideoModalMoments {
   }) => unawaited(
     instance.recordTripView(tripId, corridor: corridor, origin: origin),
   );
+
+  /// Étape d'un colis ouverte sur sa fiche ou sur l'écran de réception
+  /// ([VideoModalMoment.parcelStep]). [origin] : le contexte de cet écran, le
+  /// seul où le modal s'ouvrira. Les affichages déjà faits pour ce colis sont
+  /// lus avant l'émission. Un moment qui n'est pas une étape de colis, sans
+  /// colis ou sans rôle est ignoré ; ne lève jamais.
+  static void notifyParcelStep(
+    VideoModalMoment moment, {
+    BuildContext? origin,
+  }) => unawaited(instance.emitParcelStep(moment, origin: origin));
 
   @visibleForTesting
   static void useForTest(VideoModalMoments moments) => instance = moments;
@@ -114,7 +132,7 @@ class VideoModalMoments {
   }) {
     if (tripId.isEmpty) return Future.value(0);
     final completer = Completer<int>();
-    _tripViewsQueue = _tripViewsQueue.then((_) async {
+    _queue = _queue.then((_) async {
       try {
         final views = await _local.readTripViews();
         final count = (views.remove(tripId) ?? 0) + 1;
@@ -144,10 +162,96 @@ class VideoModalMoments {
     return completer.future;
   }
 
+  /// Émet l'étape d'un colis une fois l'historique par colis lu (voir
+  /// [notifyParcelStep]).
+  Future<void> emitParcelStep(
+    VideoModalMoment moment, {
+    BuildContext? origin,
+  }) async {
+    final parcel = moment.parcel;
+    if (!moment.trigger.isParcelStep ||
+        parcel == null ||
+        parcel.bidId.isEmpty ||
+        parcel.roles.isEmpty) {
+      return;
+    }
+    await _loadParcels();
+    // L'hôte vérifie `origin.mounted` avant de s'en servir.
+    // ignore: use_build_context_synchronously
+    emit(moment, origin: origin);
+  }
+
+  /// Le modal de cette campagne (et version) a déjà été affiché pour ce colis
+  /// sur ce téléphone. Stockage illisible : `false`.
+  Future<bool> hasShownForParcel(
+    String campaignId,
+    int version,
+    String bidId,
+  ) async {
+    final history = await _loadParcels();
+    return history?.hasShownForParcel(campaignId, version, bidId) ?? false;
+  }
+
+  /// Lecture immédiate, pour l'hôte : l'émission d'une étape attend que
+  /// l'historique soit lu ([emitParcelStep]).
+  bool shownForParcelNow(String campaignId, int version, String bidId) =>
+      _parcels?.hasShownForParcel(campaignId, version, bidId) ?? false;
+
+  /// Retient l'affichage pour ce colis : en mémoire aussitôt, puis sur le
+  /// téléphone (les 200 plus récents).
+  Future<void> recordShownForParcel(
+    String campaignId,
+    int version,
+    String bidId,
+  ) {
+    final cached = _parcels;
+    if (cached != null) {
+      _parcels = cached.recordShownForParcel(campaignId, version, bidId);
+    }
+    final completer = Completer<void>();
+    _queue = _queue.then((_) async {
+      try {
+        final base = _parcels ?? await _readParcels();
+        if (base != null) {
+          final next = base.recordShownForParcel(campaignId, version, bidId);
+          _parcels = next;
+          await _local.writeParcelShown(next.parcelShown);
+        }
+      } on Object {
+        // Écriture impossible : le modal pourra revenir pour ce colis.
+      }
+      completer.complete();
+    });
+    return completer.future;
+  }
+
+  /// Historique par colis, lu une fois. `null` si le stockage est illisible
+  /// (relu à la prochaine demande).
+  Future<VideoModalLocalHistory?> _loadParcels() {
+    final cached = _parcels;
+    if (cached != null) return Future.value(cached);
+    final completer = Completer<VideoModalLocalHistory?>();
+    _queue = _queue.then((_) async {
+      _parcels ??= await _readParcels();
+      completer.complete(_parcels);
+    });
+    return completer.future;
+  }
+
+  Future<VideoModalLocalHistory?> _readParcels() async {
+    try {
+      return const VideoModalLocalHistory().withParcelShown(
+        await _local.readParcelShown(),
+      );
+    } on Object {
+      return null;
+    }
+  }
+
   /// Remise à zéro du compteur d'une fiche trajet, une fois le modal affiché.
   Future<void> resetTripViews(String tripId) {
     final completer = Completer<void>();
-    _tripViewsQueue = _tripViewsQueue.then((_) async {
+    _queue = _queue.then((_) async {
       try {
         final views = await _local.readTripViews();
         if (views.remove(tripId) != null) await _local.writeTripViews(views);

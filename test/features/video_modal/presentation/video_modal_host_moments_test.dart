@@ -996,4 +996,24 @@ void main() {
       ),
     ).called(2);
   });
+
+  testWidgets('M3 : un moment hors colis ne montre pas un bouton PARCEL_*, le '
+      'secondaire est promu', (tester) async {
+    usePhone360(tester);
+    loadResult = [
+      infoMoment(
+        VideoModalTrigger.deliveryConfirmed,
+        extra: {
+          'primaryAction': {'kind': 'SCREEN', 'screen': 'PARCEL_QR'},
+        },
+      ),
+    ];
+    await pumpHost(tester);
+    emit(VideoModalMoment.action(VideoModalTrigger.deliveryConfirmed));
+    await settleAfterOpenDelay(tester);
+    expect(find.text('Mon argent'), findsOneWidget);
+    expect(find.text('Voir mon argent'), findsNothing);
+    expect(find.text('Plus tard'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

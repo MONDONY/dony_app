@@ -68,12 +68,58 @@ class VideoModalVersionRecord extends Equatable {
 /// Historique local d'un visiteur sans compte, campagne par campagne puis
 /// version par version. Aucun plafond global : seule la fréquence de chaque
 /// campagne décide.
+///
+/// Porte aussi, pour tout compte, les affichages « une fois par colis »
+/// ([parcelShown]) : le back sert ces campagnes à chaque fois, c'est le
+/// téléphone qui retient (campagne, version, colis). Ces entrées vivent sous
+/// leur propre clé de stockage, jamais effacées par la synchro de la
+/// connexion ; un autre téléphone de la même personne peut donc réafficher
+/// le modal (limite acceptée).
 class VideoModalLocalHistory extends Equatable {
-  const VideoModalLocalHistory([this.campaigns = const {}]);
+  const VideoModalLocalHistory([
+    this.campaigns = const {},
+    this.parcelShown = const [],
+  ]);
+
+  /// Au plus ce nombre d'affichages par colis gardés : les plus anciens
+  /// partent.
+  static const maxParcelEntries = 200;
 
   final Map<String, Map<int, VideoModalVersionRecord>> campaigns;
 
+  /// Clés [parcelKey] des modals déjà affichés pour un colis, du plus ancien
+  /// au plus récent.
+  final List<String> parcelShown;
+
   bool get isEmpty => campaigns.isEmpty;
+
+  /// Clé d'un affichage « une fois par colis ».
+  static String parcelKey(String campaignId, int version, String bidId) =>
+      '$campaignId|$version|$bidId';
+
+  /// Le modal de cette campagne (et version) a déjà été affiché pour ce colis.
+  bool hasShownForParcel(String campaignId, int version, String bidId) =>
+      parcelShown.contains(parcelKey(campaignId, version, bidId));
+
+  /// Retient l'affichage pour ce colis, en dernier (le plus récent) ; au-delà
+  /// de [maxParcelEntries], les plus anciens partent.
+  VideoModalLocalHistory recordShownForParcel(
+    String campaignId,
+    int version,
+    String bidId,
+  ) {
+    final key = parcelKey(campaignId, version, bidId);
+    final shown = [...parcelShown.where((k) => k != key), key];
+    final overflow = shown.length - maxParcelEntries;
+    return VideoModalLocalHistory(
+      campaigns,
+      List.unmodifiable(overflow > 0 ? shown.sublist(overflow) : shown),
+    );
+  }
+
+  /// Mêmes campagnes, affichages par colis lus à part.
+  VideoModalLocalHistory withParcelShown(List<String> shown) =>
+      VideoModalLocalHistory(campaigns, List.unmodifiable(shown));
 
   VideoModalVersionRecord recordOf(String id, int version) =>
       campaigns[id]?[version] ?? const VideoModalVersionRecord();
@@ -89,7 +135,7 @@ class VideoModalLocalHistory extends Equatable {
       campaigns[id] ?? const {},
     );
     versions[version] = recordOf(id, version).apply(event, at: at);
-    return VideoModalLocalHistory({...campaigns, id: versions});
+    return VideoModalLocalHistory({...campaigns, id: versions}, parcelShown);
   }
 
   /// Mêmes règles que le filtre du back pour un compte : « Ne plus afficher »,
@@ -100,7 +146,10 @@ class VideoModalLocalHistory extends Equatable {
     final current =
         versions[campaign.version] ?? const VideoModalVersionRecord();
     if (current.dontShowAgain) return false;
-    if (campaign.stopAfterAnswer && current.answered) return false;
+    // Une fois par colis : une réponse sur un colis n'éteint pas la campagne
+    // pour les suivants (comme le back), `stopAfterAnswer` est ignoré.
+    final stopsOnAnswer = campaign.stopAfterAnswer && !campaign.isOncePerParcel;
+    if (stopsOnAnswer && current.answered) return false;
     switch (campaign.frequency) {
       case VideoModalFrequency.once:
         if (current.displays >= 1) return false;
@@ -108,6 +157,9 @@ class VideoModalLocalHistory extends Equatable {
         if (current.displays >= campaign.maxDisplays) return false;
       case VideoModalFrequency.everyOpen:
       case VideoModalFrequency.everyTime:
+      case VideoModalFrequency.oncePerParcel:
+        // Dédoublonnée par colis à l'ouverture ([hasShownForParcel]) : pas de
+        // plafond par version.
         break;
       case VideoModalFrequency.everyNDays:
         final last = current.lastShownAt;
@@ -120,7 +172,7 @@ class VideoModalLocalHistory extends Equatable {
     }
     // Quand une réponse ne bloque pas, celle de la version courante ne doit
     // pas non plus exclure le public « jamais répondu ».
-    final others = campaign.stopAfterAnswer
+    final others = stopsOnAnswer
         ? versions.values
         : versions.entries
               .where((e) => e.key != campaign.version)
@@ -165,7 +217,7 @@ class VideoModalLocalHistory extends Equatable {
   }
 
   @override
-  List<Object?> get props => [campaigns];
+  List<Object?> get props => [campaigns, parcelShown];
 }
 
 /// Événement d'un visiteur sans compte, en attente d'envoi au back à la

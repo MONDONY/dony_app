@@ -20,7 +20,12 @@ import '../../../helpers/l10n_test_helpers.dart';
 /// Extras reçus par la confirmation au dernier passage.
 Map<String, dynamic>? _confirmExtra;
 
-GoRouter _router(String etape, {ScanMethod? scanMethod}) => GoRouter(
+GoRouter _router(
+  String etape, {
+  ScanMethod? scanMethod,
+  String? senderName,
+  bool senderPhoneAvailable = false,
+}) => GoRouter(
   routes: [
     GoRoute(
       path: '/',
@@ -29,6 +34,8 @@ GoRouter _router(String etape, {ScanMethod? scanMethod}) => GoRouter(
         etape: etape,
         packageLabel: 'DON-TEST01',
         scanMethod: scanMethod,
+        senderName: senderName,
+        senderPhoneAvailable: senderPhoneAvailable,
       ),
     ),
     GoRoute(
@@ -126,6 +133,44 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('confirm'), findsOneWidget);
     expect(_confirmExtra?['scanMethod'], ScanMethod.manual);
+  });
+
+  // Lien « Le destinataire n'a pas le code ? Appeler … » de la saisie du code :
+  // le nom et la joignabilité de l'expéditeur suivent jusqu'à la confirmation.
+  testWidgets('Passer : le nom et la joignabilité de l\'expéditeur suivent', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router(
+          'TRANSIT',
+          senderName: 'Aminata K.',
+          senderPhoneAvailable: true,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('Passer : continuer sans photo'));
+    await tester.pumpAndSettle();
+    expect(_confirmExtra?['senderName'], 'Aminata K.');
+    expect(_confirmExtra?['senderPhoneAvailable'], isTrue);
+  });
+
+  testWidgets('sans information sur l\'expéditeur : non joignable', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('TRANSIT'),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('Passer : continuer sans photo'));
+    await tester.pumpAndSettle();
+    expect(_confirmExtra?['senderName'], isNull);
+    expect(_confirmExtra?['senderPhoneAvailable'], isFalse);
   });
 
   // ─── Label du colis ────────────────────────────────────────────────────────

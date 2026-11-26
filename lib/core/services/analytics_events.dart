@@ -1171,6 +1171,13 @@ abstract final class AnalyticsEvents {
   static const pickupCodeRequested = 'pickup_code_requested';
   static const trackingLinkShared = 'tracking_link_shared';
   static const recipientNotified = 'recipient_notified';
+
+  /// Bouton ou lien « Appeler {prénom} » d'un colis touché (rappels à chaque
+  /// étape) : barre du bas de l'expéditeur qui est son propre destinataire
+  /// (`source: sender_footer`), lien « Le destinataire n'a pas le code ? » de
+  /// la saisie du code (`source: scan_confirm`). Propriétés `source` et
+  /// `status` (statut du colis quand il est connu) ; jamais le numéro.
+  static const parcelCallTapped = 'parcel_call_tapped';
   static const bidRecipientChanged = 'bid_recipient_changed';
 
   // Le destinataire a refusé le colis : le voyageur demande à l'expéditeur

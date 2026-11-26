@@ -4,6 +4,8 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/next_action.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/next_action_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/copy_code_button.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -16,6 +18,11 @@ import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/receptions/presentation/widgets/reception_leave_confirm_sheet.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
+import 'package:dony/features/video_modal/data/models/parcel_role.dart';
+import 'package:dony/features/video_modal/data/models/parcel_step.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
+import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
+import 'package:dony/features/video_modal/data/video_modal_moments.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -72,14 +79,88 @@ class ReceptionDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final timeline = openTimeline ?? _openTimeline;
     return BlocProvider(
       create: (_) => getIt<ReceptionDetailCubit>()..load(bidId),
-      child: _ReceptionDetailView(
-        openTimeline: openTimeline ?? _openTimeline,
-        openQr: openQr ?? _openQr,
+      child: _ParcelStepNotifier(
+        openTimeline: timeline,
+        child: _ReceptionDetailView(
+          openTimeline: timeline,
+          openQr: openQr ?? _openQr,
+        ),
       ),
     );
   }
+}
+
+/// Moment d'étape du colis vu par son destinataire, ou `null` : lien pas
+/// encore confirmé, statut hors des rails. Variables : noms et ville du
+/// colis, jamais le code de retrait. Seul bouton propre au colis : le suivi
+/// (le QR et l'envoi du code ne sont pas pour le destinataire).
+VideoModalMoment? _receptionParcelStepMoment(
+  Reception reception,
+  ReceptionTimelineOpener openTimeline,
+) {
+  if (!reception.isConfirmed) return null;
+  final trigger = VideoModalTrigger.forParcelStatus(reception.bidStatus);
+  if (trigger == null) return null;
+  return VideoModalMoment.parcelStep(
+    trigger: trigger,
+    bidId: reception.bidId,
+    roles: const {ParcelRole.recipient},
+    variables: {
+      ParcelModalVariable.recipient.key: reception.recipientName ?? '',
+      ParcelModalVariable.traveler.key: reception.travelerFirstName ?? '',
+      ParcelModalVariable.sender.key: reception.senderFirstName ?? '',
+      ParcelModalVariable.arrivalCity.key: reception.arrivalCity ?? '',
+    },
+    openers: ParcelActionOpeners(
+      tracking: (context) => openTimeline(context, reception),
+    ),
+    // Émis par la réception de ce colis : « Voir le colis » ferme le modal.
+    onDetailScreen: true,
+  );
+}
+
+/// Émet le moment d'étape du colis une fois par ouverture de l'écran, au
+/// premier chargement où le rôle destinataire est acquis (lien confirmé ;
+/// après un échec, au chargement de « Réessayer » ; lien confirmé pendant
+/// l'ouverture : à la confirmation) ; ni les gestes ni les relectures qui
+/// suivent ne le réémettent. Le modal s'ouvre sur cet écran.
+class _ParcelStepNotifier extends StatefulWidget {
+  const _ParcelStepNotifier({required this.openTimeline, required this.child});
+
+  final ReceptionTimelineOpener openTimeline;
+  final Widget child;
+
+  @override
+  State<_ParcelStepNotifier> createState() => _ParcelStepNotifierState();
+}
+
+class _ParcelStepNotifierState extends State<_ParcelStepNotifier> {
+  bool _evaluated = false;
+
+  @override
+  Widget build(BuildContext context) =>
+      BlocListener<ReceptionDetailCubit, ReceptionDetailState>(
+        listenWhen: (_, current) =>
+            !_evaluated && current is ReceptionDetailLoaded,
+        listener: (context, state) {
+          final reception = (state as ReceptionDetailLoaded).reception;
+          // Lien en attente : pas encore destinataire, l'ouverture n'est pas
+          // consommée.
+          if (!reception.isConfirmed) return;
+          _evaluated = true;
+          final moment = _receptionParcelStepMoment(
+            reception,
+            widget.openTimeline,
+          );
+          if (moment != null) {
+            VideoModalMoments.notifyParcelStep(moment, origin: context);
+          }
+        },
+        child: widget.child,
+      );
 }
 
 class _ReceptionDetailView extends StatelessWidget {
@@ -623,8 +704,27 @@ class _ConfirmedContent extends StatelessWidget {
         ),
     ];
 
+    // Prochaine action (rappels à chaque étape du colis) : en tête, à
+    // l'arrivée seulement ([nextActionFor] ne rend rien avant, le code et sa
+    // consigne suffisent).
+    final nextAction = nextActionFor(
+      NextActionInput(
+        status: reception.bidStatus,
+        role: ParcelRole.recipient,
+        travelerName: reception.travelerFirstName ?? '',
+        senderName: reception.senderFirstName ?? '',
+        recipientName: reception.recipientName ?? '',
+        arrivalCity: reception.arrivalCity ?? '',
+      ),
+    );
+
     return _StaggeredColumn(
       children: [
+        if (nextAction != null)
+          NextActionCard(
+            key: const Key('reception-next-action'),
+            action: nextAction,
+          ),
         _Hero(
           key: const Key('reception-step'),
           color: heroColor,

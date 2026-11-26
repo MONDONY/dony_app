@@ -99,7 +99,11 @@ BidModel _bid(
   TripRescheduleInfo? reschedule,
   bool recipientDeclined = false,
   bool travelerHasRated = false,
+  bool recipientIsSender = false,
+  bool senderPhoneAvailable = false,
 }) => BidModel(
+  recipientIsSender: recipientIsSender,
+  senderPhoneAvailable: senderPhoneAvailable,
   amendments: amendments,
   supplement: supplement,
   paymentMethod: paymentMethod,
@@ -166,6 +170,7 @@ BidAmendment _amendment(BidAmendmentStatus status, {String id = 'am-1'}) =>
 /// Noms des sections du corps, dans l'ordre du code.
 const _sectionNames = [
   'billet',
+  'next-action',
   'hero',
   'todo',
   'info-awaiting-payment',
@@ -341,16 +346,15 @@ void main() {
         _bid('AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.mobileMoney),
         ['billet', 'hero', 'info-awaiting-payment', ...base],
       ),
-      // Plus de carte « prochaine étape » d'information pour les étapes du
-      // transport (décision du propriétaire) : rien entre le billet et la
-      // suite.
+      // Carte « prochaine action » (rappels à chaque étape du colis) :
+      // juste sous le billet, de l'acceptation à l'arrivée.
       'ACCEPTED présence non confirmée': (
         _bid('ACCEPTED', handoverDeadline: _future),
-        ['billet', ...base],
+        ['billet', 'next-action', ...base],
       ),
       'ACCEPTED présence confirmée': (
         _bid('ACCEPTED', voyageurConfirmed: true, handoverDeadline: _future),
-        ['billet', ...base],
+        ['billet', 'next-action', ...base],
       ),
       // « À traiter » ET informations dans le même scénario : la commission
       // à valider va sous « À traiter », le scan bloqué et le report décidé
@@ -367,23 +371,32 @@ void main() {
           ),
           reschedule: _reschedule(pending: false),
         ),
-        ['billet', 'todo', 'info-scan-blocked', 'info-reschedule', ...base],
+        [
+          'billet',
+          'next-action',
+          'todo',
+          'info-scan-blocked',
+          'info-reschedule',
+          ...base,
+        ],
       ),
       'ACCEPTED date limite dépassée': (
         _bid('ACCEPTED', handoverDeadline: _past),
-        ['billet', 'todo', ...base],
+        ['billet', 'next-action', 'todo', ...base],
       ),
       'ACCEPTED date limite dépassée, présence confirmée': (
         _bid('ACCEPTED', voyageurConfirmed: true, handoverDeadline: _past),
-        ['billet', 'todo', ...base],
+        ['billet', 'next-action', 'todo', ...base],
       ),
+      // Avant le départ, la carte du verrou remplace le rappel d'arrivée :
+      // jamais deux consignes voisines l'une sur l'autre.
       'HANDED_OVER avant le départ': (
         _bid('HANDED_OVER', departureAt: _future),
         ['billet', 'info-locked', ...base],
       ),
       'HANDED_OVER départ passé': (
         _bid('HANDED_OVER', departureAt: _past),
-        ['billet', 'info-noshow', ...base],
+        ['billet', 'next-action', 'info-noshow', ...base],
       ),
       'IN_TRANSIT avant le départ': (
         _bid('IN_TRANSIT', departureAt: _future),
@@ -391,11 +404,11 @@ void main() {
       ),
       'IN_TRANSIT départ passé': (
         _bid('IN_TRANSIT', departureAt: _past),
-        ['billet', 'info-noshow', ...base],
+        ['billet', 'next-action', 'info-noshow', ...base],
       ),
       'ARRIVED': (
         _bid('ARRIVED', departureAt: _past),
-        ['billet', 'info-noshow', ...base],
+        ['billet', 'next-action', 'info-noshow', ...base],
       ),
       'COMPLETED noté': (
         _bid('COMPLETED', travelerHasRated: true),
@@ -590,6 +603,7 @@ void main() {
         );
         expect(_sections(tester), [
           'billet',
+          'next-action',
           'hero',
           'info-noshow',
           'expediteur',
@@ -817,6 +831,7 @@ void main() {
       );
       expect(_sections(tester), [
         'billet',
+        'next-action',
         'info-scan-blocked',
         'info-supplement',
         'expediteur',
@@ -1208,6 +1223,7 @@ void main() {
       // La modification sous « À traiter », puis l'information.
       expect(_sections(tester), [
         'billet',
+        'next-action',
         'todo',
         'info-scan-blocked',
         'expediteur',
@@ -1948,6 +1964,113 @@ void main() {
       await settleScroll(tester);
       expect(offset(tester), 0);
     });
+  });
+
+  // ── Carte « prochaine action » (rappels à chaque étape du colis) ──────────
+  group('carte prochaine action', () {
+    Finder inCard(String text) =>
+        _inSection('next-action', find.textContaining(text));
+
+    testWidgets('cardShownBelowBillet : ACCEPTED, juste sous le billet', (
+      tester,
+    ) async {
+      await _pump(tester, _bid('ACCEPTED', handoverDeadline: _future));
+
+      expect(_sections(tester).take(2), ['billet', 'next-action']);
+      expect(
+        inCard('À la remise, scannez le QR de Mariama D.'),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('ARRIVED : « Ne remettez rien sans le code », le nom du '
+        'destinataire et de l\'expéditeur, jamais un code', (tester) async {
+      await _pump(
+        tester,
+        _bid('ARRIVED', departureAt: _past, senderPhoneAvailable: true),
+      );
+
+      expect(_sections(tester).take(2), ['billet', 'next-action']);
+      expect(inCard('Ne remettez rien sans le code'), findsOneWidget);
+      expect(
+        inCard(
+          'Demandez à Awa son code à 6 chiffres. Sans code, appelez '
+          'Mariama D.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('M2 ARRIVED : numéro de l\'expéditeur indisponible, '
+        '« contactez » et non « appelez »', (tester) async {
+      await _pump(tester, _bid('ARRIVED', departureAt: _past));
+      expect(
+        inCard(
+          'Demandez à Awa son code à 6 chiffres. Sans code, contactez '
+          'Mariama D.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'le drapeau expéditeur = destinataire est ignoré côté voyageur',
+      (tester) async {
+        await _pump(
+          tester,
+          _bid('ARRIVED', departureAt: _past, recipientIsSender: true),
+        );
+        expect(inCard('Ne remettez rien sans le code'), findsOneWidget);
+        expect(find.text('Retirez votre colis'), findsNothing);
+      },
+    );
+
+    for (final status in ['HANDED_OVER', 'IN_TRANSIT']) {
+      testWidgets('$status avant le départ : la carte du verrou remplace le '
+          'rappel d\'arrivée (pas deux consignes empilées)', (tester) async {
+        await _pump(tester, _bid(status, departureAt: _future));
+
+        expect(_section('info-locked'), findsOneWidget);
+        expect(_section('next-action'), findsNothing);
+        expect(find.text("Rappel pour l'arrivée"), findsNothing);
+        expect(_sections(tester).take(2), ['billet', 'info-locked']);
+      });
+
+      testWidgets('$status départ passé : le rappel d\'arrivée, sans verrou', (
+        tester,
+      ) async {
+        await _pump(tester, _bid(status, departureAt: _past));
+
+        expect(_section('info-locked'), findsNothing);
+        expect(inCard("Rappel pour l'arrivée"), findsOneWidget);
+        expect(inCard('Ce n\'est pas le numéro DON-'), findsOneWidget);
+      });
+    }
+
+    for (final status in ['COMPLETED', 'CANCELLED', 'PENDING']) {
+      testWidgets('$status : aucune carte, aucun espace réservé', (
+        tester,
+      ) async {
+        await _pump(tester, _bid(status));
+        expect(_section('next-action'), findsNothing);
+      });
+    }
+
+    for (final noShow in ['CONTESTED', 'CONFIRMED']) {
+      testWidgets('remise bloquée par une absence $noShow : pas de « scannez '
+          'le QR »', (tester) async {
+        await _pump(
+          tester,
+          _bid(
+            'ACCEPTED',
+            handoverDeadline: _past,
+            cancellationNoShowStatus: noShow,
+          ),
+        );
+        expect(_section('next-action'), findsNothing);
+      });
+    }
   });
 }
 

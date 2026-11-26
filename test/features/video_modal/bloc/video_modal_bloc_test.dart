@@ -358,4 +358,70 @@ void main() {
     },
     verify: (b) => expect(b.state.usedSlots, VideoModalSlot.values.toSet()),
   );
+
+  group('« Ne plus afficher » et fréquences hors limite de session', () {
+    blocTest<VideoModalBloc, VideoModalState>(
+      'une fois par colis : la version est écartée pour le lancement',
+      build: build,
+      act: (b) => b.add(
+        VideoModalAnswerRequested(
+          campaign: infoCampaign(
+            id: 'p1',
+            triggers: {VideoModalTrigger.parcelArrived},
+            frequency: VideoModalFrequency.oncePerParcel,
+          ),
+          trigger: VideoModalTrigger.parcelArrived,
+          event: VideoModalEventType.dontShowAgain,
+        ),
+      ),
+      expect: () => [
+        const VideoModalState(suppressed: {'p1#1'}),
+      ],
+      verify: (b) {
+        final ready = b.state.copyWith(
+          status: VideoModalStatus.ready,
+          campaigns: [
+            infoCampaign(
+              id: 'p1',
+              triggers: {VideoModalTrigger.parcelArrived},
+              frequency: VideoModalFrequency.oncePerParcel,
+            ),
+          ],
+        );
+        expect(ready.candidateFor({VideoModalTrigger.parcelArrived}), isNull);
+      },
+    );
+
+    blocTest<VideoModalBloc, VideoModalState>(
+      'à chaque fois : comportement inchangé, aucun état, toujours proposée',
+      build: build,
+      act: (b) => b.add(
+        VideoModalAnswerRequested(
+          campaign: campaign(
+            id: 'e',
+            triggers: {VideoModalTrigger.deliveryConfirmed},
+            frequency: VideoModalFrequency.everyTime,
+          ),
+          trigger: VideoModalTrigger.deliveryConfirmed,
+          event: VideoModalEventType.dontShowAgain,
+        ),
+      ),
+      expect: () => <VideoModalState>[],
+      verify: (b) {
+        final everyTime = campaign(
+          id: 'e',
+          triggers: {VideoModalTrigger.deliveryConfirmed},
+          frequency: VideoModalFrequency.everyTime,
+        );
+        final ready = b.state.copyWith(
+          status: VideoModalStatus.ready,
+          campaigns: [everyTime],
+        );
+        expect(
+          ready.candidateFor({VideoModalTrigger.deliveryConfirmed}),
+          everyTime,
+        );
+      },
+    );
+  });
 }

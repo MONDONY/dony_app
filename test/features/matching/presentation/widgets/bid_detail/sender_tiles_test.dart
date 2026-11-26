@@ -16,7 +16,9 @@ BidModel _bid(
   String? recipientAppStatus,
   AddressData? handoverAddress = _handover,
   TravelerTrackingModel? travelerTracking,
+  bool recipientIsSender = false,
 }) => BidModel(
+  recipientIsSender: recipientIsSender,
   id: 'bid-001',
   announcementId: 'ann-001',
   senderId: 'sender-001',
@@ -121,6 +123,28 @@ void main() {
           SenderTile.colis,
           SenderTile.details,
         ], reason: status);
+      }
+    });
+
+    // Spec §6.4 : l'expéditeur qui est son propre destinataire n'a personne
+    // à prévenir.
+    test('selfRecipient_hidesNotifyTile : pas de « Prévenir »', () {
+      for (final status in [
+        'ACCEPTED',
+        'HANDED_OVER',
+        'IN_TRANSIT',
+        'ARRIVED',
+      ]) {
+        expect(
+          senderTilesFor(_bid(status, recipientIsSender: true)),
+          isNot(contains(SenderTile.prevenir)),
+          reason: status,
+        );
+        expect(
+          senderTilesFor(_bid(status, recipientIsSender: true)),
+          containsAll([SenderTile.colis, SenderTile.details]),
+          reason: status,
+        );
       }
     });
 

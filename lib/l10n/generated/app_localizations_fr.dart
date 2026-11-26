@@ -24628,6 +24628,160 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les frais ne s\'appliquent pas aux paiements en espèces.';
 
   @override
+  String nextActionSenderAcceptedTitle(String traveler) {
+    return 'Préparez la remise avec $traveler';
+  }
+
+  @override
+  String nextActionSenderAcceptedBody(String recipient) {
+    return 'Ouvrez le QR avant la rencontre. Après son scan, vous recevrez le code de retrait à donner à $recipient.';
+  }
+
+  @override
+  String nextActionSenderCodeTitle(String recipient) {
+    return 'Envoyez le code à $recipient';
+  }
+
+  @override
+  String nextActionSenderCodeBody(String traveler) {
+    return 'Sans ce code, $traveler ne lui remettra pas le colis.';
+  }
+
+  @override
+  String nextActionSenderArrivedTitle(String city) {
+    return 'Votre colis est arrivé à $city';
+  }
+
+  @override
+  String nextActionSenderArrivedBody(String recipient) {
+    return '$recipient doit présenter son code pour prendre le colis. Rappelez-le-lui au besoin.';
+  }
+
+  @override
+  String get nextActionSelfKeepCodeTitle => 'Gardez votre code de retrait';
+
+  @override
+  String nextActionSelfKeepCodeBody(String traveler) {
+    return 'Sans ce code, $traveler ne vous remettra pas le colis.';
+  }
+
+  @override
+  String get nextActionSelfWithdrawTitle => 'Retirez votre colis';
+
+  @override
+  String nextActionSelfWithdrawBody(String traveler) {
+    return 'Donnez votre code à $traveler pour récupérer le colis.';
+  }
+
+  @override
+  String nextActionTravelerAcceptedTitle(String sender) {
+    return 'À la remise, scannez le QR de $sender';
+  }
+
+  @override
+  String get nextActionTravelerAcceptedBody =>
+      'À l\'arrivée, ne remettez rien sans le code à 6 chiffres du destinataire.';
+
+  @override
+  String get nextActionTravelerTransitTitle => 'Rappel pour l\'arrivée';
+
+  @override
+  String get nextActionTravelerTransitBody =>
+      'Le destinataire vous donnera un code à 6 chiffres. Ce n\'est pas le numéro DON-…';
+
+  @override
+  String get nextActionTravelerArrivedTitle => 'Ne remettez rien sans le code';
+
+  @override
+  String nextActionTravelerArrivedBody(String recipient, String sender) {
+    return 'Demandez à $recipient son code à 6 chiffres. Sans code, appelez $sender.';
+  }
+
+  @override
+  String get nextActionRecipientArrivedTitle => 'Retirez votre colis';
+
+  @override
+  String nextActionRecipientArrivedBody(String traveler) {
+    return 'Donnez votre code à $traveler pour récupérer le colis.';
+  }
+
+  @override
+  String get nextActionFallbackTraveler => 'votre voyageur';
+
+  @override
+  String get nextActionFallbackSender => 'l\'expéditeur';
+
+  @override
+  String get nextActionFallbackRecipientYour => 'votre destinataire';
+
+  @override
+  String get nextActionFallbackCity => 'la ville d\'arrivée';
+
+  @override
+  String nextActionTravelerArrivedBodyNoName(String sender) {
+    return 'Demandez au destinataire son code à 6 chiffres. Sans code, appelez $sender.';
+  }
+
+  @override
+  String get nextActionSelfWithdrawBodyNoName =>
+      'Donnez votre code au voyageur pour récupérer le colis.';
+
+  @override
+  String get nextActionRecipientArrivedBodyNoName =>
+      'Donnez votre code au voyageur pour récupérer le colis.';
+
+  @override
+  String bidDetailSendCodeTo(String name) {
+    return 'Envoyer le code à $name';
+  }
+
+  @override
+  String get bidDetailSendCode => 'Envoyer le code';
+
+  @override
+  String bidDetailResendCodeTo(String name) {
+    return 'Renvoyer le code à $name';
+  }
+
+  @override
+  String get bidDetailResendCode => 'Renvoyer le code';
+
+  @override
+  String get bidDetailSeeMyCode => 'Voir mon code';
+
+  @override
+  String get bidDetailValidateWithCode => 'Valider avec le code';
+
+  @override
+  String parcelCallPerson(String name) {
+    return 'Appeler $name';
+  }
+
+  @override
+  String get parcelCallTraveler => 'Appeler le voyageur';
+
+  @override
+  String get parcelCallSender => 'Appeler l\'expéditeur';
+
+  @override
+  String get scanConfirmNoCodeTitle => 'Pas de code, pas de remise';
+
+  @override
+  String get scanConfirmNoCodeQuestion => 'Le destinataire n\'a pas le code ?';
+
+  @override
+  String get parcelModalFallbackRecipient => 'votre destinataire';
+
+  @override
+  String get parcelModalFallbackTraveler => 'votre voyageur';
+
+  @override
+  String get parcelModalFallbackSender => 'l\'expéditeur';
+
+  @override
+  String get parcelModalFallbackArrivalCity => 'la ville d\'arrivée';
+
+  @override
   String tripPublishKgPriceDecrease(String step) {
     return 'Baisser le prix de $step';
   }
@@ -24866,6 +25020,20 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tripPublishedItemPricesAddFailed =>
       'Les prix n\'ont pas pu être ajoutés. Réessayez.';
+
+  @override
+  String get nextActionSelfAcceptedBody =>
+      'Ouvrez le QR avant la rencontre. Après son scan, vous recevrez votre code de retrait : gardez-le pour l\'arrivée.';
+
+  @override
+  String nextActionTravelerArrivedBodyContact(String recipient, String sender) {
+    return 'Demandez à $recipient son code à 6 chiffres. Sans code, contactez $sender.';
+  }
+
+  @override
+  String nextActionTravelerArrivedBodyNoNameContact(String sender) {
+    return 'Demandez au destinataire son code à 6 chiffres. Sans code, contactez $sender.';
+  }
 
   @override
   String get publishIntroKycNotice =>

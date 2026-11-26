@@ -296,6 +296,7 @@ void main() {
         await iconAssetFor(tester, 'RECIPIENT_PARCEL_DELIVERED'),
         'circle-check',
       );
+      expect(await iconAssetFor(tester, 'RECIPIENT_CODE_READY'), 'key-round');
       expect(await iconAssetFor(tester, 'RECIPIENT_CONFIRMED'), 'badge-check');
       expect(
         await iconAssetFor(tester, 'SENDER_NOSHOW_WITHDRAWN'),

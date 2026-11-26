@@ -129,6 +129,8 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // porte la confirmation puis les étapes et le code de retrait.
     'RECIPIENT_PARCEL_INCOMING' ||
     'RECIPIENT_PARCEL_DEPARTED' ||
+    // Code de retrait prêt (lien confirmé après la remise) : même écran.
+    'RECIPIENT_CODE_READY' ||
     'RECIPIENT_PARCEL_ARRIVED' ||
     'RECIPIENT_PARCEL_DELIVERED' ||
     'RECIPIENT_PARCEL_CANCELLED' ||

@@ -1,3 +1,4 @@
+import 'package:dony/features/video_modal/data/models/parcel_role.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
 import 'package:equatable/equatable.dart';
 
@@ -26,7 +27,15 @@ enum VideoModalTrigger {
   formAbandoned('FORM_ABANDONED'),
   tripViewedRepeatedly('TRIP_VIEWED_REPEATEDLY'),
   paymentFailed('PAYMENT_FAILED'),
-  appUpdated('APP_UPDATED');
+  appUpdated('APP_UPDATED'),
+
+  // Étapes d'un colis : l'app les déclenche avec le colis concerné (bidId) et
+  // le rôle de la personne ; un modal par colis et par étape (ONCE_PER_PARCEL).
+  parcelAccepted('PARCEL_ACCEPTED'),
+  parcelHandedOver('PARCEL_HANDED_OVER'),
+  parcelInTransit('PARCEL_IN_TRANSIT'),
+  parcelArrived('PARCEL_ARRIVED'),
+  parcelDelivered('PARCEL_DELIVERED');
 
   const VideoModalTrigger(this.wire);
 
@@ -51,6 +60,17 @@ enum VideoModalTrigger {
     _ => true,
   };
 
+  /// Étape de la vie d'un colis (compte comme un moment, avec le colis en
+  /// contexte).
+  bool get isParcelStep => switch (this) {
+    parcelAccepted ||
+    parcelHandedOver ||
+    parcelInTransit ||
+    parcelArrived ||
+    parcelDelivered => true,
+    _ => false,
+  };
+
   /// Les `corridors` d'une campagne s'appliquent à ce déclencheur.
   bool get usesCorridors => switch (this) {
     searchNoTripResults ||
@@ -70,6 +90,19 @@ enum VideoModalTrigger {
     }
     return null;
   }
+
+  /// Statut d'un colis vers son étape : `null` pour tout statut hors des
+  /// rails (annulé, absent, refusé, expiré, en négociation, en attente de
+  /// paiement ou de réponse, refusé par le voyageur…), qui n'ouvre aucun
+  /// modal d'étape.
+  static VideoModalTrigger? forParcelStatus(String? status) => switch (status) {
+    'ACCEPTED' => parcelAccepted,
+    'HANDED_OVER' => parcelHandedOver,
+    'IN_TRANSIT' => parcelInTransit,
+    'ARRIVED' => parcelArrived,
+    'COMPLETED' => parcelDelivered,
+    _ => null,
+  };
 
   /// Onglet du shell (`StatefulShellRoute` de `router.dart`, branches 0 à 4 :
   /// Rechercher, Activités, Suivi, Messages, Moi) vers son déclencheur.
@@ -216,9 +249,22 @@ enum InfoScreen {
   myMoney('MY_MONEY', '/payments/money'),
   referral('REFERRAL', '/profile/referral'),
   tripAlerts('TRIP_ALERTS', '/corridor-alerts'),
-  help('HELP', '/profile/help/faq');
+  help('HELP', '/profile/help/faq'),
 
-  const InfoScreen(this.wire, this.route, {this.isShellTab = false});
+  // Écrans d'un colis : ils exigent le colis (bidId) du moment, fourni à
+  // l'exécution du bouton. La route est un repère jamais naviguée telle
+  // quelle : voir [needsParcelContext].
+  parcelDetail('PARCEL_DETAIL', '/parcel', needsParcelContext: true),
+  parcelQr('PARCEL_QR', '/parcel', needsParcelContext: true),
+  parcelSendCode('PARCEL_SEND_CODE', '/parcel', needsParcelContext: true),
+  parcelTracking('PARCEL_TRACKING', '/parcel', needsParcelContext: true);
+
+  const InfoScreen(
+    this.wire,
+    this.route, {
+    this.isShellTab = false,
+    this.needsParcelContext = false,
+  });
 
   final String wire;
 
@@ -228,6 +274,11 @@ enum InfoScreen {
 
   /// Onglet du shell : on y va avec `go`, les autres écrans se poussent.
   final bool isShellTab;
+
+  /// Écran propre à un colis : la route finale dépend du `bidId` et du rôle,
+  /// connus seulement à l'exécution (le [route] n'est alors qu'un repère, ne
+  /// jamais l'ouvrir directement).
+  final bool needsParcelContext;
 
   static InfoScreen? fromWire(Object? value) {
     for (final s in values) {
@@ -275,7 +326,12 @@ enum VideoModalFrequency {
 
   /// À chaque fois que l'action se produit : aucun plafond, aucun drapeau de
   /// session (un modal d'écran ou de moment peut revenir à chaque occurrence).
-  everyTime('EVERY_TIME');
+  everyTime('EVERY_TIME'),
+
+  /// Une fois par colis (étapes de colis) : le back la sert toujours
+  /// (aucun plafond, réponse sans effet) et l'app dédoublonne par colis dans
+  /// son historique local. Hors de la limite « un modal par lancement ».
+  oncePerParcel('ONCE_PER_PARCEL');
 
   const VideoModalFrequency(this.wire);
 
@@ -445,6 +501,7 @@ class VideoModalCampaign extends Equatable {
     this.lastShownAt,
     this.triggerOptions = const VideoModalTriggerOptions(),
     this.corridors = const [],
+    this.parcelRoles = const {},
   });
 
   static const defaultMaxDisplays = 3;
@@ -509,6 +566,9 @@ class VideoModalCampaign extends Equatable {
   final VideoModalTriggerOptions triggerOptions;
   final List<VideoModalCorridor> corridors;
 
+  /// Étapes de colis : rôles ciblés, ensemble vide pour tous les rôles.
+  final Set<ParcelRole> parcelRoles;
+
   /// Plafond d'affichages de la version, `null` : pas de plafond (à chaque
   /// lancement, tous les N jours).
   int? get displayCap => switch (frequency) {
@@ -516,7 +576,8 @@ class VideoModalCampaign extends Equatable {
     VideoModalFrequency.upToN => maxDisplays,
     VideoModalFrequency.everyOpen ||
     VideoModalFrequency.everyNDays ||
-    VideoModalFrequency.everyTime => null,
+    VideoModalFrequency.everyTime ||
+    VideoModalFrequency.oncePerParcel => null,
   };
 
   /// Le plafond d'affichages n'est pas atteint.
@@ -535,6 +596,97 @@ class VideoModalCampaign extends Equatable {
 
   /// Affichée à chaque occurrence de l'action, hors limites de session.
   bool get isEveryTime => frequency == VideoModalFrequency.everyTime;
+
+  /// Une fois par colis : dédoublonnée par colis sur le téléphone.
+  bool get isOncePerParcel => frequency == VideoModalFrequency.oncePerParcel;
+
+  /// N'occupe aucune case de la limite « un modal par lancement » et n'en
+  /// est jamais bloquée : « à chaque fois » et « une fois par colis ».
+  bool get ignoresSessionLimit => isEveryTime || isOncePerParcel;
+
+  /// Copie adaptée au colis d'un modal d'étape, à l'ouverture : [fill]
+  /// remplit les variables des textes (titre, sous-titre, texte, libellés,
+  /// points forts, texte alternatif de l'image) ; [canRun] dit quels boutons
+  /// `PARCEL_*` s'appliquent à la personne. Un bouton qui ne s'applique pas
+  /// n'est pas affiché : principal masqué, le secondaire prend sa place ; les
+  /// deux masqués, un seul bouton qui ferme le modal. Liens, « Fermer » et
+  /// écrans hors colis ne sont jamais masqués.
+  VideoModalCampaign withParcelStep({
+    required String Function(String text) fill,
+    required bool Function(InfoScreen screen) canRun,
+  }) {
+    bool shown(VideoModalAction? a) {
+      final screen = a?.screen;
+      return a != null &&
+          (a.kind != VideoModalActionKind.screen ||
+              screen == null ||
+              !screen.needsParcelContext ||
+              canRun(screen));
+    }
+
+    String? fillOpt(String? t) => t == null ? null : fill(t);
+
+    VideoModalAction? primary = primaryAction;
+    VideoModalAction? secondary = secondaryAction;
+    String? primaryText = primaryLabel;
+    String? secondaryText = secondaryLabel;
+    if (isInfo) {
+      final keepPrimary = shown(primary);
+      final keepSecondary = shown(secondary);
+      if (!keepPrimary && keepSecondary) {
+        primary = secondary;
+        primaryText = secondaryText;
+        secondary = null;
+        secondaryText = null;
+      } else if (!keepPrimary) {
+        primary = const VideoModalAction.close();
+        primaryText = null;
+        secondary = null;
+        secondaryText = null;
+      } else if (!keepSecondary) {
+        secondary = null;
+        secondaryText = null;
+      }
+    }
+    return VideoModalCampaign(
+      id: id,
+      version: version,
+      triggers: triggers,
+      title: fill(title),
+      subtitle: fillOpt(subtitle),
+      youtubeVideoId: youtubeVideoId,
+      type: type,
+      body: fillOpt(body),
+      icon: icon,
+      primaryAction: primary,
+      secondaryAction: secondary,
+      durationSeconds: durationSeconds,
+      highlights: [
+        for (final h in highlights)
+          VideoModalHighlight(icon: h.icon, text: fill(h.text)),
+      ],
+      primaryLabel: fillOpt(primaryText),
+      secondaryLabel: fillOpt(secondaryText),
+      maxDisplays: maxDisplays,
+      displays: displays,
+      audience: audience,
+      layout: layout,
+      sizePercent: sizePercent,
+      imageMode: imageMode,
+      imageFit: imageFit,
+      imageUrl: imageUrl,
+      imageAlt: fillOpt(imageAlt),
+      priority: priority,
+      frequency: frequency,
+      frequencyDays: frequencyDays,
+      stopAfterAnswer: stopAfterAnswer,
+      allowDontShowAgain: allowDontShowAgain,
+      lastShownAt: lastShownAt,
+      triggerOptions: triggerOptions,
+      corridors: corridors,
+      parcelRoles: parcelRoles,
+    );
+  }
 
   /// Campagne lisible, ou `null` si un champ indispensable manque ou est
   /// invalide : le back peut être plus ancien ou plus récent que l'app, une
@@ -590,6 +742,16 @@ class VideoModalCampaign extends Equatable {
     if (rawCorridors is List && rawCorridors.isNotEmpty && corridors.isEmpty) {
       return null;
     }
+    // Rôles inconnus ignorés ; absent ou illisible : tous les rôles.
+    final rawRoles = json['parcelRoles'];
+    final parcelRoles = rawRoles is List
+        ? rawRoles.map(ParcelRole.fromWire).whereType<ParcelRole>().toSet()
+        : const <ParcelRole>{};
+    // Des rôles envoyés mais tous inconnus : mieux vaut ignorer la campagne
+    // que la montrer à tous les rôles.
+    if (rawRoles is List && rawRoles.isNotEmpty && parcelRoles.isEmpty) {
+      return null;
+    }
     final size = _int(json['sizePercent']);
     final rawHighlights = json['highlights'];
     final highlights = rawHighlights is List
@@ -642,6 +804,7 @@ class VideoModalCampaign extends Equatable {
       lastShownAt: _instant(json['lastShownAt']),
       triggerOptions: VideoModalTriggerOptions.parse(json['triggerOptions']),
       corridors: corridors,
+      parcelRoles: parcelRoles,
     );
   }
 
@@ -779,5 +942,6 @@ class VideoModalCampaign extends Equatable {
     lastShownAt,
     triggerOptions,
     corridors,
+    parcelRoles,
   ];
 }

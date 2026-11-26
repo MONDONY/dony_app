@@ -178,12 +178,28 @@ void main() {
         'REFERRAL',
         'TRIP_ALERTS',
         'HELP',
+        'PARCEL_DETAIL',
+        'PARCEL_QR',
+        'PARCEL_SEND_CODE',
+        'PARCEL_TRACKING',
       ]);
+    });
+
+    test('seuls les 4 écrans de colis sont exemptés de router.dart', () {
+      expect(
+        InfoScreen.values
+            .where((s) => s.needsParcelContext)
+            .map((s) => s.wire)
+            .toList(),
+        ['PARCEL_DETAIL', 'PARCEL_QR', 'PARCEL_SEND_CODE', 'PARCEL_TRACKING'],
+      );
     });
 
     test('chaque route existe dans router.dart', () {
       final router = File('lib/app/router.dart').readAsStringSync();
       for (final s in InfoScreen.values) {
+        // Écrans de colis : route résolue à l'exécution avec le colis.
+        if (s.needsParcelContext) continue;
         final declared =
             router.contains("path: '${s.route}'") ||
             // Mon argent passe par la constante `kMoneyOverviewRoute`.

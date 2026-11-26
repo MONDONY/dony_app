@@ -29,7 +29,11 @@ class VideoModalState extends Equatable {
     this.appOpenConsumed = false,
     this.loadedLang,
     this.loadedForRealSession,
+    this.suppressed = const {},
   });
+
+  /// Clé d'une version dans [suppressed].
+  static String suppressionKey(VideoModalCampaign c) => '${c.id}#${c.version}';
 
   final VideoModalStatus status;
   final List<VideoModalCampaign> campaigns;
@@ -44,6 +48,12 @@ class VideoModalState extends Equatable {
   final String? loadedLang;
   final bool? loadedForRealSession;
 
+  /// Versions « une fois par colis » dont « Ne plus afficher » a été coché
+  /// pendant ce lancement ([suppressionKey]) : hors de la limite de session,
+  /// elles reviendraient au colis suivant. Au prochain chargement, le back ne
+  /// les envoie plus. Les autres fréquences n'y figurent jamais.
+  final Set<String> suppressed;
+
   /// Campagne à ouvrir pour l'un de ces déclencheurs, ou `null`. À
   /// déclencheur égal, l'ordre du back (version la plus récente d'abord).
   VideoModalCampaign? candidateFor(Set<VideoModalTrigger> triggers) {
@@ -57,23 +67,39 @@ class VideoModalState extends Equatable {
 
   /// Campagne à ouvrir pour ce moment d'action, ou `null` : même ordre que
   /// [candidateFor] (priorité puis version la plus récente), et le moment doit
-  /// convenir à la campagne (seuils, corridor : voir `VideoModalMoment.accepts`).
-  VideoModalCampaign? candidateForMoment(VideoModalMoment moment) {
+  /// convenir à la campagne (seuils, corridor, rôle sur le colis : voir
+  /// `VideoModalMoment.accepts`).
+  ///
+  /// Étape d'un colis : une campagne « une fois par colis » déjà affichée pour
+  /// ce colis ([shownForParcel], historique du téléphone) laisse la place à la
+  /// suivante.
+  VideoModalCampaign? candidateForMoment(
+    VideoModalMoment moment, {
+    bool Function(VideoModalCampaign campaign)? shownForParcel,
+  }) {
     if (status != VideoModalStatus.ready) return null;
     for (final c in campaigns) {
       if (_blocked(c, moment: true)) continue;
-      if (moment.accepts(c)) return c;
+      if (!moment.accepts(c)) continue;
+      if (c.isOncePerParcel &&
+          moment.parcel != null &&
+          (shownForParcel?.call(c) ?? false)) {
+        continue;
+      }
+      return c;
     }
     return null;
   }
 
   bool _blocked(VideoModalCampaign c, {required bool moment}) =>
-      !c.isEveryTime &&
-      usedSlots.contains(VideoModalSlot.of(c, moment: moment));
+      suppressed.contains(suppressionKey(c)) ||
+      (!c.ignoresSessionLimit &&
+          usedSlots.contains(VideoModalSlot.of(c, moment: moment)));
 
   /// La campagne a déjà occupé sa case (ou n'en occupe jamais).
   bool hasShown(VideoModalCampaign c, {required bool moment}) =>
-      c.isEveryTime || usedSlots.contains(VideoModalSlot.of(c, moment: moment));
+      c.ignoresSessionLimit ||
+      usedSlots.contains(VideoModalSlot.of(c, moment: moment));
 
   VideoModalState copyWith({
     VideoModalStatus? status,
@@ -83,6 +109,7 @@ class VideoModalState extends Equatable {
     bool? appOpenConsumed,
     String? loadedLang,
     bool? loadedForRealSession,
+    Set<String>? suppressed,
   }) => VideoModalState(
     status: status ?? this.status,
     campaigns: campaigns ?? this.campaigns,
@@ -91,6 +118,7 @@ class VideoModalState extends Equatable {
     appOpenConsumed: appOpenConsumed ?? this.appOpenConsumed,
     loadedLang: loadedLang ?? this.loadedLang,
     loadedForRealSession: loadedForRealSession ?? this.loadedForRealSession,
+    suppressed: suppressed ?? this.suppressed,
   );
 
   @override
@@ -102,5 +130,6 @@ class VideoModalState extends Equatable {
     appOpenConsumed,
     loadedLang,
     loadedForRealSession,
+    suppressed,
   ];
 }

@@ -19,11 +19,37 @@ class VideoModalLocalDatasource {
   static const lastAppVersionKey = 'video_modal_last_app_version_v1';
   static const tripViewsKey = 'video_modal_trip_views_v1';
 
+  /// Affichages « une fois par colis », pour tout compte : jamais envoyés au
+  /// back, jamais effacés par [clear].
+  static const parcelShownKey = 'video_modal_parcel_shown_v1';
+
+  /// Historique des visiteurs, avec les affichages par colis lus à part.
   Future<VideoModalLocalHistory> readHistory() async {
     final raw = (await _prefs()).getString(historyKey);
-    return VideoModalLocalHistory.fromJson(_decode(raw));
+    return VideoModalLocalHistory.fromJson(
+      _decode(raw),
+    ).withParcelShown(await readParcelShown());
   }
 
+  /// Clés `VideoModalLocalHistory.parcelKey`, du plus ancien au plus récent.
+  /// Valeur illisible : liste vide.
+  Future<List<String>> readParcelShown() async {
+    final decoded = _decode((await _prefs()).getString(parcelShownKey));
+    if (decoded is! List) return const [];
+    return decoded.whereType<String>().toList(growable: false);
+  }
+
+  Future<void> writeParcelShown(List<String> keys) async {
+    final prefs = await _prefs();
+    if (keys.isEmpty) {
+      await prefs.remove(parcelShownKey);
+      return;
+    }
+    await prefs.setString(parcelShownKey, jsonEncode(keys));
+  }
+
+  /// Écrit les réponses des visiteurs ; les affichages par colis s'écrivent
+  /// par [writeParcelShown].
   Future<void> writeHistory(VideoModalLocalHistory history) async {
     await (await _prefs()).setString(historyKey, jsonEncode(history.toJson()));
   }
@@ -84,7 +110,8 @@ class VideoModalLocalDatasource {
     await prefs.setString(tripViewsKey, jsonEncode(views));
   }
 
-  /// Efface tout l'historique local (après la synchro au back).
+  /// Efface l'historique des visiteurs (après la synchro au back). Les
+  /// affichages par colis restent.
   Future<void> clear() async {
     final prefs = await _prefs();
     await prefs.remove(historyKey);

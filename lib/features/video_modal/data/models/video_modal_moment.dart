@@ -1,3 +1,5 @@
+import 'package:dony/features/video_modal/data/models/parcel_role.dart';
+import 'package:dony/features/video_modal/data/models/parcel_step.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_corridor.dart';
 import 'package:equatable/equatable.dart';
@@ -18,6 +20,8 @@ class VideoModalMoment extends Equatable {
     this.resultCount,
     this.tripId,
     this.viewCount,
+    this.parcel,
+    this.variables = const {},
   });
 
   /// Action ou événement sans autre contexte que le corridor éventuel
@@ -32,8 +36,9 @@ class VideoModalMoment extends Equatable {
           trigger != VideoModalTrigger.searchNoTripResults &&
           trigger != VideoModalTrigger.searchNoParcelResults &&
           trigger != VideoModalTrigger.searchFewResults &&
-          trigger != VideoModalTrigger.tripViewedRepeatedly,
-      'utiliser VideoModalMoment.search / .tripViewed',
+          trigger != VideoModalTrigger.tripViewedRepeatedly &&
+          !trigger.isParcelStep,
+      'utiliser VideoModalMoment.search / .tripViewed / .parcelStep',
     );
     return VideoModalMoment._(trigger, corridor: corridor);
   }
@@ -61,8 +66,39 @@ class VideoModalMoment extends Equatable {
     VideoModalMomentCorridor? corridor,
   }) = _TripViewedMoment;
 
+  /// Étape d'un colis ([trigger] `PARCEL_*`) ouverte sur sa fiche, ou sur
+  /// l'écran de réception du destinataire : le colis, les rôles de la
+  /// personne et ce que l'écran sait ouvrir pour les boutons du modal.
+  /// [variables] : noms et ville qui remplissent `{destinataire}`,
+  /// `{voyageur}`, `{expéditeur}`, `{ville_arrivee}` (clés
+  /// [ParcelModalVariable.key], valeur vide quand elle est inconnue : le
+  /// repli est posé à l'ouverture). Jamais le code de retrait.
+  factory VideoModalMoment.parcelStep({
+    required VideoModalTrigger trigger,
+    required String bidId,
+    required Set<ParcelRole> roles,
+    required Map<String, String> variables,
+    bool canSendCode = false,
+    ParcelActionOpeners openers = const ParcelActionOpeners(),
+    bool onDetailScreen = false,
+  }) => VideoModalMoment._(
+    trigger,
+    parcel: ParcelActionContext(
+      bidId: bidId,
+      roles: Set.unmodifiable(roles),
+      canSendCode: canSendCode,
+      openers: openers,
+      onDetailScreen: onDetailScreen,
+    ),
+    variables: Map.unmodifiable(variables),
+  );
+
   final VideoModalTrigger trigger;
   final VideoModalMomentCorridor? corridor;
+
+  /// Étape d'un colis : voir [VideoModalMoment.parcelStep].
+  final ParcelActionContext? parcel;
+  final Map<String, String> variables;
 
   /// Nombre de résultats d'une recherche.
   final int? resultCount;
@@ -74,9 +110,16 @@ class VideoModalMoment extends Equatable {
   /// La campagne peut s'ouvrir pour ce moment : elle liste le déclencheur,
   /// ses options sont respectées (seuil de « peu de résultats », nombre de
   /// consultations) et, pour les déclencheurs concernés, son corridor
-  /// correspond (liste vide : tous).
+  /// correspond (liste vide : tous). Pour une étape de colis, l'un des rôles
+  /// de la personne doit être visé par la campagne (aucun rôle : tous).
   bool accepts(VideoModalCampaign campaign) {
     if (!campaign.triggers.contains(trigger)) return false;
+    if (trigger.isParcelStep) {
+      final roles = parcel?.roles ?? const <ParcelRole>{};
+      if (roles.isEmpty) return false;
+      final targeted = campaign.parcelRoles;
+      if (targeted.isNotEmpty && !targeted.any(roles.contains)) return false;
+    }
     switch (trigger) {
       case VideoModalTrigger.searchFewResults:
         final n = resultCount ?? 0;
@@ -101,6 +144,8 @@ class VideoModalMoment extends Equatable {
     resultCount,
     tripId,
     viewCount,
+    parcel,
+    variables,
   ];
 }
 

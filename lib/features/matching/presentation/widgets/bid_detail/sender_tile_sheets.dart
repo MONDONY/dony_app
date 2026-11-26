@@ -34,14 +34,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///
 /// Les boutons qui ouvrent autre chose (frise, modification du colis)
 /// ferment d'abord le sheet, puis agissent avec le [context] de l'écran.
+///
+/// [source] : `tile` pour la grille, `footer` quand le bouton du bas « Envoyer
+/// le code à … » ou « Renvoyer le code à … » ouvre le sheet `prevenir`,
+/// `modal` quand c'est un bouton d'un modal d'étape du colis.
 Future<void> openSenderTileSheet(
   BuildContext context,
   BidModel bid,
-  SenderTile tile,
-) {
+  SenderTile tile, {
+  String source = 'tile',
+}) {
   final l = context.l10n;
   // `source` comme les tuiles « À traiter » (`openSenderTodoSheet`).
-  logBidDetailTileOpened(tile: tile.name, role: 'sender', source: 'tile');
+  logBidDetailTileOpened(tile: tile.name, role: 'sender', source: source);
 
   final bidBloc = maybeRead<BidBloc>(context);
 

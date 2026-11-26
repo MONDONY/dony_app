@@ -828,6 +828,7 @@ void main() {
       'RECIPIENT_PARCEL_CANCELLED',
       'RECIPIENT_PARCEL_RESCHEDULED',
       'RECIPIENT_PICKUP_UPDATED',
+      'RECIPIENT_CODE_READY',
     ]) {
       test('$type ouvre le colis à recevoir', () {
         expect(

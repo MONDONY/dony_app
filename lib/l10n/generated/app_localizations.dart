@@ -39324,6 +39324,246 @@ abstract class AppLocalizations {
   /// **'Les frais ne s\'appliquent pas aux paiements en espèces.'**
   String get cancelScaleCashNote;
 
+  /// Carte prochaine action, expéditeur, avant la remise : titre
+  ///
+  /// In fr, this message translates to:
+  /// **'Préparez la remise avec {traveler}'**
+  String nextActionSenderAcceptedTitle(String traveler);
+
+  /// Carte prochaine action, expéditeur, avant la remise : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrez le QR avant la rencontre. Après son scan, vous recevrez le code de retrait à donner à {recipient}.'**
+  String nextActionSenderAcceptedBody(String recipient);
+
+  /// Carte prochaine action, expéditeur, colis remis ou en route : titre
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyez le code à {recipient}'**
+  String nextActionSenderCodeTitle(String recipient);
+
+  /// Carte prochaine action, expéditeur, colis remis ou en route : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans ce code, {traveler} ne lui remettra pas le colis.'**
+  String nextActionSenderCodeBody(String traveler);
+
+  /// Carte prochaine action, expéditeur, colis arrivé : titre
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis est arrivé à {city}'**
+  String nextActionSenderArrivedTitle(String city);
+
+  /// Carte prochaine action, expéditeur, colis arrivé : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'{recipient} doit présenter son code pour prendre le colis. Rappelez-le-lui au besoin.'**
+  String nextActionSenderArrivedBody(String recipient);
+
+  /// Carte prochaine action, expéditeur qui est son propre destinataire, colis remis ou en route : titre
+  ///
+  /// In fr, this message translates to:
+  /// **'Gardez votre code de retrait'**
+  String get nextActionSelfKeepCodeTitle;
+
+  /// Carte prochaine action, expéditeur qui est son propre destinataire : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans ce code, {traveler} ne vous remettra pas le colis.'**
+  String nextActionSelfKeepCodeBody(String traveler);
+
+  /// Carte prochaine action, expéditeur qui est son propre destinataire, colis arrivé : titre
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirez votre colis'**
+  String get nextActionSelfWithdrawTitle;
+
+  /// Carte prochaine action, expéditeur qui est son propre destinataire, colis arrivé : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'Donnez votre code à {traveler} pour récupérer le colis.'**
+  String nextActionSelfWithdrawBody(String traveler);
+
+  /// Carte prochaine action, voyageur, avant la remise : titre
+  ///
+  /// In fr, this message translates to:
+  /// **'À la remise, scannez le QR de {sender}'**
+  String nextActionTravelerAcceptedTitle(String sender);
+
+  /// Carte prochaine action, voyageur, avant la remise : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'À l\'arrivée, ne remettez rien sans le code à 6 chiffres du destinataire.'**
+  String get nextActionTravelerAcceptedBody;
+
+  /// Carte prochaine action, voyageur, colis remis ou en route : titre
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappel pour l\'arrivée'**
+  String get nextActionTravelerTransitTitle;
+
+  /// Carte prochaine action, voyageur, colis remis ou en route : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'Le destinataire vous donnera un code à 6 chiffres. Ce n\'est pas le numéro DON-…'**
+  String get nextActionTravelerTransitBody;
+
+  /// Carte prochaine action, voyageur, colis arrivé : titre
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne remettez rien sans le code'**
+  String get nextActionTravelerArrivedTitle;
+
+  /// Carte prochaine action, voyageur, colis arrivé : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez à {recipient} son code à 6 chiffres. Sans code, appelez {sender}.'**
+  String nextActionTravelerArrivedBody(String recipient, String sender);
+
+  /// Carte prochaine action, destinataire, colis arrivé : titre
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirez votre colis'**
+  String get nextActionRecipientArrivedTitle;
+
+  /// Carte prochaine action, destinataire, colis arrivé : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'Donnez votre code à {traveler} pour récupérer le colis.'**
+  String nextActionRecipientArrivedBody(String traveler);
+
+  /// Repli quand le nom du voyageur est inconnu
+  ///
+  /// In fr, this message translates to:
+  /// **'votre voyageur'**
+  String get nextActionFallbackTraveler;
+
+  /// Repli quand le nom de l'expéditeur est inconnu
+  ///
+  /// In fr, this message translates to:
+  /// **'l\'expéditeur'**
+  String get nextActionFallbackSender;
+
+  /// Repli quand le nom du destinataire est inconnu (expéditeur)
+  ///
+  /// In fr, this message translates to:
+  /// **'votre destinataire'**
+  String get nextActionFallbackRecipientYour;
+
+  /// Repli quand la ville d'arrivée est inconnue
+  ///
+  /// In fr, this message translates to:
+  /// **'la ville d\'arrivée'**
+  String get nextActionFallbackCity;
+
+  /// Carte prochaine action, voyageur, colis arrivé : texte quand le nom du destinataire est inconnu
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez au destinataire son code à 6 chiffres. Sans code, appelez {sender}.'**
+  String nextActionTravelerArrivedBodyNoName(String sender);
+
+  /// Carte prochaine action, expéditeur qui est son propre destinataire, colis arrivé : texte sans nom de voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Donnez votre code au voyageur pour récupérer le colis.'**
+  String get nextActionSelfWithdrawBodyNoName;
+
+  /// Carte prochaine action, destinataire, colis arrivé : texte sans nom de voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Donnez votre code au voyageur pour récupérer le colis.'**
+  String get nextActionRecipientArrivedBodyNoName;
+
+  /// Barre du bas de la fiche colis (expéditeur), colis remis ou en route : ouvre « Prévenir » pour envoyer le code de retrait au destinataire. {name} : prénom du destinataire, coupé avant le libellé pour tenir sur une ligne
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le code à {name}'**
+  String bidDetailSendCodeTo(String name);
+
+  /// Barre du bas de la fiche colis (expéditeur), colis remis ou en route, nom du destinataire inconnu
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le code'**
+  String get bidDetailSendCode;
+
+  /// Barre du bas de la fiche colis (expéditeur), colis arrivé : rouvre « Prévenir » pour renvoyer le code au destinataire. {name} : prénom du destinataire, coupé avant le libellé
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer le code à {name}'**
+  String bidDetailResendCodeTo(String name);
+
+  /// Barre du bas de la fiche colis (expéditeur), colis arrivé, nom du destinataire inconnu
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer le code'**
+  String get bidDetailResendCode;
+
+  /// Barre du bas de la fiche colis, expéditeur qui est son propre destinataire, colis remis ou en route : ouvre la feuille du code de retrait
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mon code'**
+  String get bidDetailSeeMyCode;
+
+  /// Barre du bas de la fiche colis (voyageur), colis arrivé : remise au destinataire contre son code (même action que « Valider la remise »)
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider avec le code'**
+  String get bidDetailValidateWithCode;
+
+  /// Bouton ou lien qui appelle la contrepartie d'un colis. {name} : prénom, coupé avant le libellé pour tenir sur une ligne
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler {name}'**
+  String parcelCallPerson(String name);
+
+  /// Bouton qui appelle le voyageur quand son nom est inconnu
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler le voyageur'**
+  String get parcelCallTraveler;
+
+  /// Lien qui appelle l'expéditeur quand son nom est inconnu (saisie du code par le voyageur)
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler l\'expéditeur'**
+  String get parcelCallSender;
+
+  /// Saisie du code par le voyageur : titre de l'encadré d'avertissement au-dessus du champ
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de code, pas de remise'**
+  String get scanConfirmNoCodeTitle;
+
+  /// Saisie du code par le voyageur : question sous le champ, suivie du lien « Appeler » et du prénom de l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Le destinataire n\'a pas le code ?'**
+  String get scanConfirmNoCodeQuestion;
+
+  /// Modal d'étape du colis : remplace {destinataire} dans les textes de l'admin quand le nom du destinataire est inconnu (majuscule ajoutée en tête de phrase)
+  ///
+  /// In fr, this message translates to:
+  /// **'votre destinataire'**
+  String get parcelModalFallbackRecipient;
+
+  /// Modal d'étape du colis : remplace {voyageur} dans les textes de l'admin quand le nom du voyageur est inconnu (majuscule ajoutée en tête de phrase)
+  ///
+  /// In fr, this message translates to:
+  /// **'votre voyageur'**
+  String get parcelModalFallbackTraveler;
+
+  /// Modal d'étape du colis : remplace {expéditeur} dans les textes de l'admin quand le nom de l'expéditeur est inconnu (majuscule ajoutée en tête de phrase)
+  ///
+  /// In fr, this message translates to:
+  /// **'l\'expéditeur'**
+  String get parcelModalFallbackSender;
+
+  /// Modal d'étape du colis : remplace {ville_arrivee} dans les textes de l'admin quand la ville d'arrivée est inconnue (majuscule ajoutée en tête de phrase)
+  ///
+  /// In fr, this message translates to:
+  /// **'la ville d\'arrivée'**
+  String get parcelModalFallbackArrivalCity;
+
   /// Bouton − du prix au kilo (lecteur d'écran)
   ///
   /// In fr, this message translates to:
@@ -39647,6 +39887,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les prix n\'ont pas pu être ajoutés. Réessayez.'**
   String get tripPublishedItemPricesAddFailed;
+
+  /// Carte prochaine action, expéditeur qui est son propre destinataire, avant la remise : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrez le QR avant la rencontre. Après son scan, vous recevrez votre code de retrait : gardez-le pour l\'arrivée.'**
+  String get nextActionSelfAcceptedBody;
+
+  /// Carte prochaine action, voyageur arrivé, expéditeur sans numéro joignable : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez à {recipient} son code à 6 chiffres. Sans code, contactez {sender}.'**
+  String nextActionTravelerArrivedBodyContact(String recipient, String sender);
+
+  /// Idem sans nom de destinataire
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez au destinataire son code à 6 chiffres. Sans code, contactez {sender}.'**
+  String nextActionTravelerArrivedBodyNoNameContact(String sender);
 
   /// Écran des engagements (publish_intro_screen.dart) : information non bloquante pour un utilisateur dont l'identité n'est pas encore vérifiée. La vérification est demandée au clic sur Publier.
   ///

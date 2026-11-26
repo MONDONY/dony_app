@@ -8477,6 +8477,63 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'cancelScaleCap': (l) => l.cancelScaleCap(placeholderMarker('fee')),
   'cancelScaleExactAmount': (l) => l.cancelScaleExactAmount,
   'cancelScaleCashNote': (l) => l.cancelScaleCashNote,
+  'nextActionSenderAcceptedTitle': (l) =>
+      l.nextActionSenderAcceptedTitle(placeholderMarker('traveler')),
+  'nextActionSenderAcceptedBody': (l) =>
+      l.nextActionSenderAcceptedBody(placeholderMarker('recipient')),
+  'nextActionSenderCodeTitle': (l) =>
+      l.nextActionSenderCodeTitle(placeholderMarker('recipient')),
+  'nextActionSenderCodeBody': (l) =>
+      l.nextActionSenderCodeBody(placeholderMarker('traveler')),
+  'nextActionSenderArrivedTitle': (l) =>
+      l.nextActionSenderArrivedTitle(placeholderMarker('city')),
+  'nextActionSenderArrivedBody': (l) =>
+      l.nextActionSenderArrivedBody(placeholderMarker('recipient')),
+  'nextActionSelfKeepCodeTitle': (l) => l.nextActionSelfKeepCodeTitle,
+  'nextActionSelfKeepCodeBody': (l) =>
+      l.nextActionSelfKeepCodeBody(placeholderMarker('traveler')),
+  'nextActionSelfWithdrawTitle': (l) => l.nextActionSelfWithdrawTitle,
+  'nextActionSelfWithdrawBody': (l) =>
+      l.nextActionSelfWithdrawBody(placeholderMarker('traveler')),
+  'nextActionTravelerAcceptedTitle': (l) =>
+      l.nextActionTravelerAcceptedTitle(placeholderMarker('sender')),
+  'nextActionTravelerAcceptedBody': (l) => l.nextActionTravelerAcceptedBody,
+  'nextActionTravelerTransitTitle': (l) => l.nextActionTravelerTransitTitle,
+  'nextActionTravelerTransitBody': (l) => l.nextActionTravelerTransitBody,
+  'nextActionTravelerArrivedTitle': (l) => l.nextActionTravelerArrivedTitle,
+  'nextActionTravelerArrivedBody': (l) => l.nextActionTravelerArrivedBody(
+    placeholderMarker('recipient'),
+    placeholderMarker('sender'),
+  ),
+  'nextActionRecipientArrivedTitle': (l) => l.nextActionRecipientArrivedTitle,
+  'nextActionRecipientArrivedBody': (l) =>
+      l.nextActionRecipientArrivedBody(placeholderMarker('traveler')),
+  'nextActionFallbackTraveler': (l) => l.nextActionFallbackTraveler,
+  'nextActionFallbackSender': (l) => l.nextActionFallbackSender,
+  'nextActionFallbackRecipientYour': (l) => l.nextActionFallbackRecipientYour,
+  'nextActionFallbackCity': (l) => l.nextActionFallbackCity,
+  'nextActionTravelerArrivedBodyNoName': (l) =>
+      l.nextActionTravelerArrivedBodyNoName(placeholderMarker('sender')),
+  'nextActionSelfWithdrawBodyNoName': (l) => l.nextActionSelfWithdrawBodyNoName,
+  'nextActionRecipientArrivedBodyNoName': (l) =>
+      l.nextActionRecipientArrivedBodyNoName,
+  'bidDetailSendCodeTo': (l) =>
+      l.bidDetailSendCodeTo(placeholderMarker('name')),
+  'bidDetailSendCode': (l) => l.bidDetailSendCode,
+  'bidDetailResendCodeTo': (l) =>
+      l.bidDetailResendCodeTo(placeholderMarker('name')),
+  'bidDetailResendCode': (l) => l.bidDetailResendCode,
+  'bidDetailSeeMyCode': (l) => l.bidDetailSeeMyCode,
+  'bidDetailValidateWithCode': (l) => l.bidDetailValidateWithCode,
+  'parcelCallPerson': (l) => l.parcelCallPerson(placeholderMarker('name')),
+  'parcelCallTraveler': (l) => l.parcelCallTraveler,
+  'parcelCallSender': (l) => l.parcelCallSender,
+  'scanConfirmNoCodeTitle': (l) => l.scanConfirmNoCodeTitle,
+  'scanConfirmNoCodeQuestion': (l) => l.scanConfirmNoCodeQuestion,
+  'parcelModalFallbackRecipient': (l) => l.parcelModalFallbackRecipient,
+  'parcelModalFallbackTraveler': (l) => l.parcelModalFallbackTraveler,
+  'parcelModalFallbackSender': (l) => l.parcelModalFallbackSender,
+  'parcelModalFallbackArrivalCity': (l) => l.parcelModalFallbackArrivalCity,
   'tripPublishKgPriceDecrease': (l) =>
       l.tripPublishKgPriceDecrease(placeholderMarker('step')),
   'tripPublishKgPriceIncrease': (l) =>
@@ -8555,6 +8612,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripPublishedItemPricesAddedBody(intPlaceholderValue),
   'tripPublishedItemPricesSeeCta': (l) => l.tripPublishedItemPricesSeeCta,
   'tripPublishedItemPricesAddFailed': (l) => l.tripPublishedItemPricesAddFailed,
+  'nextActionSelfAcceptedBody': (l) => l.nextActionSelfAcceptedBody,
+  'nextActionTravelerArrivedBodyContact': (l) =>
+      l.nextActionTravelerArrivedBodyContact(
+        placeholderMarker('recipient'),
+        placeholderMarker('sender'),
+      ),
+  'nextActionTravelerArrivedBodyNoNameContact': (l) =>
+      l.nextActionTravelerArrivedBodyNoNameContact(placeholderMarker('sender')),
   'publishIntroKycNotice': (l) => l.publishIntroKycNotice,
   'publishKycGateTitle': (l) => l.publishKycGateTitle,
   'publishKycGateBodyTrip': (l) => l.publishKycGateBodyTrip,
@@ -9269,6 +9334,21 @@ const textParameters = <String, List<String>>{
   'usernameChangeTooSoon': ['date'],
   'usernameCopySemantics': ['username'],
   'cancelScaleCap': ['fee'],
+  'nextActionSenderAcceptedTitle': ['traveler'],
+  'nextActionSenderAcceptedBody': ['recipient'],
+  'nextActionSenderCodeTitle': ['recipient'],
+  'nextActionSenderCodeBody': ['traveler'],
+  'nextActionSenderArrivedTitle': ['city'],
+  'nextActionSenderArrivedBody': ['recipient'],
+  'nextActionSelfKeepCodeBody': ['traveler'],
+  'nextActionSelfWithdrawBody': ['traveler'],
+  'nextActionTravelerAcceptedTitle': ['sender'],
+  'nextActionTravelerArrivedBody': ['recipient', 'sender'],
+  'nextActionRecipientArrivedBody': ['traveler'],
+  'nextActionTravelerArrivedBodyNoName': ['sender'],
+  'bidDetailSendCodeTo': ['name'],
+  'bidDetailResendCodeTo': ['name'],
+  'parcelCallPerson': ['name'],
   'tripPublishKgPriceDecrease': ['step'],
   'tripPublishKgPriceIncrease': ['step'],
   'tripPublishKgPriceSemantics': ['price'],
@@ -9279,4 +9359,6 @@ const textParameters = <String, List<String>>{
   'tripPublishItemPriceExample': ['label', 'price'],
   'tripPublishItemPricesRestPerKg': ['price'],
   'tripRecurrenceDatesSheetSubtitle': ['date'],
+  'nextActionTravelerArrivedBodyContact': ['recipient', 'sender'],
+  'nextActionTravelerArrivedBodyNoNameContact': ['sender'],
 };

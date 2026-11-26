@@ -20,7 +20,9 @@ const _trackedStatuses = <String>{
 /// HANDED_OVER fait passer « Lieux » à « Suivi »).
 ///
 /// - `prevenir` : le message au destinataire peut partir (lien de suivi, colis
-///   pas encore remis, destinataire n'ayant pas refusé) ;
+///   pas encore remis, destinataire n'ayant pas refusé), et l'expéditeur
+///   n'est pas lui-même le destinataire (`recipientIsSender`, spec §6.4 :
+///   personne à prévenir) ;
 /// - `suivi` : colis chez le voyageur ou livré, avec la carte du voyageur ou
 ///   les adresses à montrer ;
 /// - `lieux` : colis accepté mais pas encore remis, avec une adresse ;
@@ -28,7 +30,8 @@ const _trackedStatuses = <String>{
 List<SenderTile> senderTilesFor(BidModel bid) {
   final hasLocations = ParcelLocationsCard.shouldShow(bid);
   return [
-    if (PrevenirDestinataire.canNotify(bid)) SenderTile.prevenir,
+    if (!bid.recipientIsSender && PrevenirDestinataire.canNotify(bid))
+      SenderTile.prevenir,
     if (_trackedStatuses.contains(bid.status) &&
         (TravelerTrackingCard.shouldShow(bid) || hasLocations))
       SenderTile.suivi,
