@@ -266,6 +266,30 @@ jobs:
         run: flutter config --no-enable-swift-package-manager
       - run: flutter pub get
 
+      # stream_webrtc_flutter télécharge son framework natif par le
+      # `prepare_command` de son podspec. CocoaPods ne lance jamais cette
+      # commande pour un pod local (`:path`, cas de tous les plugins Flutter) :
+      # le framework n'existait que parce que le cache pub le gardait. Dès que
+      # pubspec.lock change, le cache pub est vide, le plugin arrive sans
+      # Frameworks/ et l'archive échoue (« 'StreamWebRTC/StreamWebRTC.h' file
+      # not found », 26/11, app #886). On rejoue donc la commande ici.
+      - name: Framework StreamWebRTC
+        run: |
+          V=$(awk '/^  stream_webrtc_flutter:/{f=1} f&&/^    version:/{gsub(/"/,"",$2);print $2;exit}' pubspec.lock)
+          if [ -z "$V" ]; then echo "stream_webrtc_flutter absent de pubspec.lock"; exit 0; fi
+          DIR="${PUB_CACHE:-$HOME/.pub-cache}/hosted/pub.dev/stream_webrtc_flutter-$V/ios"
+          if [ -d "$DIR/Frameworks/StreamWebRTC.xcframework" ]; then
+            echo "StreamWebRTC.xcframework déjà présent ($V)"; exit 0
+          fi
+          URL=$(grep -oE 'https://[^"]+StreamWebRTC\.xcframework\.zip' "$DIR/stream_webrtc_flutter.podspec" | head -1)
+          if [ -z "$URL" ]; then echo "::error::URL du framework introuvable dans le podspec $V"; exit 1; fi
+          mkdir -p "$DIR/Frameworks"
+          curl -fsSL "$URL" -o "$DIR/Frameworks/StreamWebRTC.zip"
+          unzip -oq "$DIR/Frameworks/StreamWebRTC.zip" -d "$DIR/Frameworks/"
+          rm "$DIR/Frameworks/StreamWebRTC.zip"
+          test -d "$DIR/Frameworks/StreamWebRTC.xcframework" || { echo "::error::StreamWebRTC.xcframework absent après extraction"; exit 1; }
+          echo "StreamWebRTC.xcframework téléchargé ($V)"
+
       - name: Fichiers natifs iOS
         env:
           GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.IOS_GOOGLE_SERVICE_INFO_PLIST }}
