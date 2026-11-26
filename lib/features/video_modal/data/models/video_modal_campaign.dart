@@ -747,6 +747,11 @@ class VideoModalCampaign extends Equatable {
     final parcelRoles = rawRoles is List
         ? rawRoles.map(ParcelRole.fromWire).whereType<ParcelRole>().toSet()
         : const <ParcelRole>{};
+    // Des rôles envoyés mais tous inconnus : mieux vaut ignorer la campagne
+    // que la montrer à tous les rôles.
+    if (rawRoles is List && rawRoles.isNotEmpty && parcelRoles.isEmpty) {
+      return null;
+    }
     final size = _int(json['sizePercent']);
     final rawHighlights = json['highlights'];
     final highlights = rawHighlights is List

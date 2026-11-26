@@ -100,8 +100,10 @@ BidModel _bid(
   bool recipientDeclined = false,
   bool travelerHasRated = false,
   bool recipientIsSender = false,
+  bool senderPhoneAvailable = false,
 }) => BidModel(
   recipientIsSender: recipientIsSender,
+  senderPhoneAvailable: senderPhoneAvailable,
   amendments: amendments,
   supplement: supplement,
   paymentMethod: paymentMethod,
@@ -1984,13 +1986,28 @@ void main() {
 
     testWidgets('ARRIVED : « Ne remettez rien sans le code », le nom du '
         'destinataire et de l\'expéditeur, jamais un code', (tester) async {
-      await _pump(tester, _bid('ARRIVED', departureAt: _past));
+      await _pump(
+        tester,
+        _bid('ARRIVED', departureAt: _past, senderPhoneAvailable: true),
+      );
 
       expect(_sections(tester).take(2), ['billet', 'next-action']);
       expect(inCard('Ne remettez rien sans le code'), findsOneWidget);
       expect(
         inCard(
           'Demandez à Awa son code à 6 chiffres. Sans code, appelez '
+          'Mariama D.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('M2 ARRIVED : numéro de l\'expéditeur indisponible, '
+        '« contactez » et non « appelez »', (tester) async {
+      await _pump(tester, _bid('ARRIVED', departureAt: _past));
+      expect(
+        inCard(
+          'Demandez à Awa son code à 6 chiffres. Sans code, contactez '
           'Mariama D.',
         ),
         findsOneWidget,

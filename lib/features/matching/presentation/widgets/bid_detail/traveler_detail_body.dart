@@ -345,6 +345,7 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
               senderName: bid.senderName ?? '',
               recipientName: bid.recipientName ?? '',
               arrivalCity: bid.arrivalCity ?? '',
+              senderCallable: bid.senderPhoneAvailable,
             ),
           );
 

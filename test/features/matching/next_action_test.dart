@@ -10,6 +10,7 @@ NextActionInput _in(
   String sender = 'Awa',
   String recipient = 'Mariam',
   String city = 'Dakar',
+  bool callable = true,
 }) => NextActionInput(
   status: status,
   role: role,
@@ -18,6 +19,7 @@ NextActionInput _in(
   senderName: sender,
   recipientName: recipient,
   arrivalCity: city,
+  senderCallable: callable,
 );
 
 void main() {
@@ -67,9 +69,11 @@ void main() {
       expect(a.bodyKey, 'nextActionSelfWithdrawBody');
     });
 
-    test('selfRecipient_sender_accepted : ACCEPTED garde le texte normal', () {
+    test('selfRecipient_sender_accepted : texte « vous », pas de nom', () {
       final a = nextActionFor(_in('ACCEPTED', ParcelRole.sender, self: true))!;
+      expect(a.tone, NextActionTone.info);
       expect(a.titleKey, 'nextActionSenderAcceptedTitle');
+      expect(a.bodyKey, 'nextActionSelfAcceptedBody');
     });
   });
 
@@ -102,6 +106,26 @@ void main() {
 
     test('COMPLETED : aucune carte', () {
       expect(nextActionFor(_in('COMPLETED', ParcelRole.traveler)), isNull);
+    });
+
+    test('ARRIVED : sans numéro de l\'expéditeur, « contactez »', () {
+      final a = nextActionFor(
+        _in('ARRIVED', ParcelRole.traveler, callable: false),
+      )!;
+      expect(a.bodyKey, 'nextActionTravelerArrivedBodyContact');
+      final b = nextActionFor(
+        _in('ARRIVED', ParcelRole.traveler, callable: false, recipient: ''),
+      )!;
+      expect(b.bodyKey, 'nextActionTravelerArrivedBodyContact');
+    });
+
+    test('senderCallable ne change rien hors ARRIVED', () {
+      for (final s in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT']) {
+        expect(
+          nextActionFor(_in(s, ParcelRole.traveler, callable: false))!.bodyKey,
+          nextActionFor(_in(s, ParcelRole.traveler))!.bodyKey,
+        );
+      }
     });
 
     test('traveler_ignoresRecipientIsSender', () {

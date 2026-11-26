@@ -15,6 +15,7 @@ class NextActionInput {
     this.senderName = '',
     this.recipientName = '',
     this.arrivalCity = '',
+    this.senderCallable = true,
   });
 
   final String status;
@@ -24,6 +25,10 @@ class NextActionInput {
   final String senderName;
   final String recipientName;
   final String arrivalCity;
+
+  /// Le voyageur peut appeler l'expéditeur (numéro joignable). Faux : la carte
+  /// dit « contactez » plutôt qu'« appelez ». Ne sert qu'au voyageur.
+  final bool senderCallable;
 }
 
 /// Consigne à afficher : clés de texte (`nextAction*`) et arguments nommés
@@ -69,7 +74,10 @@ NextAction? nextActionFor(NextActionInput input) {
     case ParcelRole.sender:
       final self = input.recipientIsSender;
       return switch (status) {
-        'ACCEPTED' => make(info, 'SenderAccepted', 'SenderAccepted'),
+        'ACCEPTED' =>
+          self
+              ? make(info, 'SenderAccepted', 'SelfAccepted')
+              : make(info, 'SenderAccepted', 'SenderAccepted'),
         'HANDED_OVER' || 'IN_TRANSIT' =>
           self
               ? make(info, 'SelfKeepCode', 'SelfKeepCode')
@@ -85,7 +93,14 @@ NextAction? nextActionFor(NextActionInput input) {
         'ACCEPTED' => make(info, 'TravelerAccepted', 'TravelerAccepted'),
         'HANDED_OVER' ||
         'IN_TRANSIT' => make(info, 'TravelerTransit', 'TravelerTransit'),
-        'ARRIVED' => make(action, 'TravelerArrived', 'TravelerArrived'),
+        'ARRIVED' => NextAction(
+          tone: action,
+          titleKey: 'nextActionTravelerArrivedTitle',
+          bodyKey: input.senderCallable
+              ? 'nextActionTravelerArrivedBody'
+              : 'nextActionTravelerArrivedBodyContact',
+          args: args,
+        ),
         _ => null,
       };
     case ParcelRole.recipient:

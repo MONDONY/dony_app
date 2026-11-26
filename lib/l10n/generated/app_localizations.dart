@@ -39935,6 +39935,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les prix n\'ont pas pu être ajoutés. Réessayez.'**
   String get tripPublishedItemPricesAddFailed;
+
+  /// Carte prochaine action, expéditeur qui est son propre destinataire, avant la remise : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrez le QR avant la rencontre. Après son scan, vous recevrez votre code de retrait : gardez-le pour l\'arrivée.'**
+  String get nextActionSelfAcceptedBody;
+
+  /// Carte prochaine action, voyageur arrivé, expéditeur sans numéro joignable : texte
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez à {recipient} son code à 6 chiffres. Sans code, contactez {sender}.'**
+  String nextActionTravelerArrivedBodyContact(String recipient, String sender);
+
+  /// Idem sans nom de destinataire
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez au destinataire son code à 6 chiffres. Sans code, contactez {sender}.'**
+  String nextActionTravelerArrivedBodyNoNameContact(String sender);
 }
 
 class _AppLocalizationsDelegate

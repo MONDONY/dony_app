@@ -23974,5 +23974,11 @@
   "tripPublishedItemPricesSeeCta": "Voir mes prix",
   "@tripPublishedItemPricesSeeCta": {"description": "Écran de succès : ouvre la grille du profil après l'ajout (court)"},
   "tripPublishedItemPricesAddFailed": "Les prix n'ont pas pu être ajoutés. Réessayez.",
-  "@tripPublishedItemPricesAddFailed": {"description": "Écran de succès : échec de l'ajout des prix proposés"}
+  "@tripPublishedItemPricesAddFailed": {"description": "Écran de succès : échec de l'ajout des prix proposés"},
+  "nextActionSelfAcceptedBody": "Ouvrez le QR avant la rencontre. Après son scan, vous recevrez votre code de retrait : gardez-le pour l'arrivée.",
+  "@nextActionSelfAcceptedBody": {"description": "Carte prochaine action, expéditeur qui est son propre destinataire, avant la remise : texte"},
+  "nextActionTravelerArrivedBodyContact": "Demandez à {recipient} son code à 6 chiffres. Sans code, contactez {sender}.",
+  "@nextActionTravelerArrivedBodyContact": {"description": "Carte prochaine action, voyageur arrivé, expéditeur sans numéro joignable : texte", "placeholders": {"recipient": {"type": "String"}, "sender": {"type": "String"}}},
+  "nextActionTravelerArrivedBodyNoNameContact": "Demandez au destinataire son code à 6 chiffres. Sans code, contactez {sender}.",
+  "@nextActionTravelerArrivedBodyNoNameContact": {"description": "Idem sans nom de destinataire", "placeholders": {"sender": {"type": "String"}}}
 }

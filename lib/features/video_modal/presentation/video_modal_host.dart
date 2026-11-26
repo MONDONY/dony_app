@@ -460,6 +460,10 @@ class _VideoModalHostState extends State<VideoModalHost> {
           ),
         );
       }
+    } else {
+      // Moment hors colis : un bouton `PARCEL_*` n'a pas de colis à ouvrir et
+      // ne ferait que fermer. Même filtrage que pour un colis sans droit.
+      campaign = campaign.withParcelStep(fill: (t) => t, canRun: (_) => false);
     }
     await VideoModalPresenter.present(
       pick.context,

@@ -16,9 +16,7 @@ void main() {
         'PARCEL_DELIVERED': VideoModalTrigger.parcelDelivered,
       };
       wires.forEach((wire, trigger) {
-        final c = VideoModalCampaign.tryParse(
-          campaignJson(triggers: [wire]),
-        )!;
+        final c = VideoModalCampaign.tryParse(campaignJson(triggers: [wire]))!;
         expect(c.triggers, {trigger});
         expect(trigger.isParcelStep, isTrue);
         expect(trigger.isMoment, isTrue);
@@ -65,6 +63,21 @@ void main() {
       )!;
       expect(c.parcelRoles, {ParcelRole.traveler});
     });
+
+    test(
+      'M1 : parcelRoles non vide faite de rôles inconnus : campagne écartée',
+      () {
+        final c = VideoModalCampaign.tryParse(
+          campaignJson(
+            triggers: ['PARCEL_ARRIVED'],
+            extra: {
+              'parcelRoles': ['COURIER', 42, null],
+            },
+          ),
+        );
+        expect(c, isNull);
+      },
+    );
 
     test('ParcelRole.fromWire', () {
       expect(ParcelRole.fromWire('SENDER'), ParcelRole.sender);

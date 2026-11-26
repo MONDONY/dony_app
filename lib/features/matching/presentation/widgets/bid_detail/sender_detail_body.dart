@@ -397,7 +397,9 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     // Prochaine action (rappels à chaque étape du colis), juste sous le
     // billet. Rien pendant une remise bloquée par une absence examinée par
     // l'équipe : « Préparez la remise » contredirait la carte du blocage.
-    final nextAction = SenderHandoverBlockedCard.shouldShow(bid)
+    final nextAction =
+        SenderHandoverBlockedCard.shouldShow(bid) ||
+            PrevenirDestinataire.showsDeclined(bid)
         ? null
         : nextActionFor(
             NextActionInput(

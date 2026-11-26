@@ -25053,4 +25053,18 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tripPublishedItemPricesAddFailed =>
       'Les prix n\'ont pas pu être ajoutés. Réessayez.';
+
+  @override
+  String get nextActionSelfAcceptedBody =>
+      'Ouvrez le QR avant la rencontre. Après son scan, vous recevrez votre code de retrait : gardez-le pour l\'arrivée.';
+
+  @override
+  String nextActionTravelerArrivedBodyContact(String recipient, String sender) {
+    return 'Demandez à $recipient son code à 6 chiffres. Sans code, contactez $sender.';
+  }
+
+  @override
+  String nextActionTravelerArrivedBodyNoNameContact(String sender) {
+    return 'Demandez au destinataire son code à 6 chiffres. Sans code, contactez $sender.';
+  }
 }

@@ -12209,5 +12209,11 @@
   "tripPublishedItemPricesAddedTitle": "Prices added for your next trips",
   "tripPublishedItemPricesAddedBody": "{count, plural, =1{1 price per item in your profile. This trip keeps its price per kg.} other{{count} prices per item in your profile. This trip keeps its price per kg.}}",
   "tripPublishedItemPricesSeeCta": "See my prices",
-  "tripPublishedItemPricesAddFailed": "The prices could not be added. Please try again."
+  "tripPublishedItemPricesAddFailed": "The prices could not be added. Please try again.",
+  "nextActionSelfAcceptedBody": "Have the QR open before you meet. Once it is scanned, you will get your pickup code: keep it for arrival.",
+  "@nextActionSelfAcceptedBody": {"description": "Carte prochaine action, expéditeur qui est son propre destinataire, avant la remise : texte"},
+  "nextActionTravelerArrivedBodyContact": "Ask {recipient} for their 6-digit code. Without the code, contact {sender}.",
+  "@nextActionTravelerArrivedBodyContact": {"description": "Carte prochaine action, voyageur arrivé, expéditeur sans numéro joignable : texte", "placeholders": {"recipient": {"type": "String"}, "sender": {"type": "String"}}},
+  "nextActionTravelerArrivedBodyNoNameContact": "Ask the recipient for their 6-digit code. Without the code, contact {sender}.",
+  "@nextActionTravelerArrivedBodyNoNameContact": {"description": "Idem sans nom de destinataire", "placeholders": {"sender": {"type": "String"}}}
 }

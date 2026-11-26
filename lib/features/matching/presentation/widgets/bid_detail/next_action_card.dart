@@ -83,6 +83,7 @@ String _cap(String s) =>
     'nextActionSenderArrivedBody' => l.nextActionSenderArrivedBody(
       recipientYourStart,
     ),
+    'nextActionSelfAcceptedBody' => l.nextActionSelfAcceptedBody,
     'nextActionSelfKeepCodeTitle' => l.nextActionSelfKeepCodeTitle,
     'nextActionSelfKeepCodeBody' => l.nextActionSelfKeepCodeBody(traveler),
     'nextActionSelfWithdrawTitle' => l.nextActionSelfWithdrawTitle,
@@ -101,6 +102,13 @@ String _cap(String s) =>
       recipientKnown
           ? l.nextActionTravelerArrivedBody(a.args['recipient']!.trim(), sender)
           : l.nextActionTravelerArrivedBodyNoName(sender),
+    'nextActionTravelerArrivedBodyContact' =>
+      recipientKnown
+          ? l.nextActionTravelerArrivedBodyContact(
+              a.args['recipient']!.trim(),
+              sender,
+            )
+          : l.nextActionTravelerArrivedBodyNoNameContact(sender),
     'nextActionRecipientArrivedTitle' => l.nextActionRecipientArrivedTitle,
     'nextActionRecipientArrivedBody' =>
       travelerKnown

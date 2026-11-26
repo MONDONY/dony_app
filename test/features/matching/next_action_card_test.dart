@@ -13,6 +13,7 @@ NextAction _action(
   String sender = 'Awa',
   String recipient = 'Mariam',
   String city = 'Dakar',
+  bool callable = true,
 }) => nextActionFor(
   NextActionInput(
     status: status,
@@ -22,6 +23,7 @@ NextAction _action(
     senderName: sender,
     recipientName: recipient,
     arrivalCity: city,
+    senderCallable: callable,
   ),
 )!;
 
@@ -361,5 +363,93 @@ void main() {
         );
       }
     }
+  });
+
+  testWidgets('M2 : voyageur sans numéro de l\'expéditeur, « contactez »', (
+    t,
+  ) async {
+    await pump(
+      t,
+      _action('ARRIVED', ParcelRole.traveler, callable: false),
+      AppL10n.fr,
+      Brightness.light,
+    );
+    expect(
+      find.text(
+        'Demandez à Mariam son code à 6 chiffres. Sans code, contactez Awa.',
+      ),
+      findsOneWidget,
+    );
+    await pump(
+      t,
+      _action(
+        'ARRIVED',
+        ParcelRole.traveler,
+        callable: false,
+        recipient: '',
+        sender: '',
+      ),
+      AppL10n.fr,
+      Brightness.light,
+    );
+    expect(
+      find.text(
+        "Demandez au destinataire son code à 6 chiffres. Sans code, contactez l'expéditeur.",
+      ),
+      findsOneWidget,
+    );
+    await pump(
+      t,
+      _action('ARRIVED', ParcelRole.traveler, callable: false),
+      AppL10n.en,
+      Brightness.light,
+    );
+    expect(
+      find.text(
+        'Ask Mariam for their 6-digit code. Without the code, contact Awa.',
+      ),
+      findsOneWidget,
+    );
+    await pump(
+      t,
+      _action('ARRIVED', ParcelRole.traveler, callable: false, recipient: ''),
+      AppL10n.en,
+      Brightness.light,
+    );
+    expect(
+      find.text(
+        'Ask the recipient for their 6-digit code. Without the code, contact Awa.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('I2 : expéditeur = destinataire, ACCEPTED, sans nom', (t) async {
+    await pump(
+      t,
+      _action('ACCEPTED', ParcelRole.sender, self: true),
+      AppL10n.fr,
+      Brightness.light,
+    );
+    expect(find.text('Préparez la remise avec Moussa'), findsOneWidget);
+    expect(
+      find.text(
+        'Ouvrez le QR avant la rencontre. Après son scan, vous recevrez votre code de retrait : gardez-le pour l\'arrivée.',
+      ),
+      findsOneWidget,
+    );
+    await pump(
+      t,
+      _action('ACCEPTED', ParcelRole.sender, self: true),
+      AppL10n.en,
+      Brightness.light,
+    );
+    expect(
+      find.text(
+        'Have the QR open before you meet. Once it is scanned, you will get your pickup code: keep it for arrival.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Mariam'), findsNothing);
   });
 }

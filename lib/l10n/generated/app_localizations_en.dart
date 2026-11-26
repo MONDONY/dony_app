@@ -24878,4 +24878,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tripPublishedItemPricesAddFailed =>
       'The prices could not be added. Please try again.';
+
+  @override
+  String get nextActionSelfAcceptedBody =>
+      'Have the QR open before you meet. Once it is scanned, you will get your pickup code: keep it for arrival.';
+
+  @override
+  String nextActionTravelerArrivedBodyContact(String recipient, String sender) {
+    return 'Ask $recipient for their 6-digit code. Without the code, contact $sender.';
+  }
+
+  @override
+  String nextActionTravelerArrivedBodyNoNameContact(String sender) {
+    return 'Ask the recipient for their 6-digit code. Without the code, contact $sender.';
+  }
 }

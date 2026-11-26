@@ -1862,6 +1862,22 @@ void main() {
       });
     }
 
+    for (final status in ['HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+      testWidgets('I3 : destinataire à remplacer ($status), aucune carte qui '
+          'contredit « À traiter »', (tester) async {
+        await pumpBody(
+          tester,
+          _bid(
+            status: status,
+            confirmationCode: '482913',
+            recipientAppStatus: 'DECLINED',
+          ),
+        );
+        expect(find.byKey(const ValueKey('next-action')), findsNothing);
+        expect(find.byType(NextActionCard), findsNothing);
+      });
+    }
+
     testWidgets('selfRecipient_hidesNotifyTile : la tuile « Prévenir » '
         'disparaît, la carte dit « vous »', (tester) async {
       await pumpBody(

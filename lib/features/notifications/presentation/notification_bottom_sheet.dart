@@ -827,6 +827,7 @@ class _NotificationIcon extends StatelessWidget {
       'TRIP_DEPARTURE_PROMPT' => (cs.primary, 'plane-takeoff'),
       'TRIP_ARRIVAL_PROMPT' => (cs.primary, 'plane-landing'),
       'RECIPIENT_PARCEL_DEPARTED' => (cs.primary, 'plane-takeoff'),
+      'RECIPIENT_CODE_READY' => (cs.primary, 'key-round'),
       'RECIPIENT_PARCEL_ARRIVED' => (cs.primary, 'plane-landing'),
       'RECIPIENT_PICKUP_UPDATED' => (cs.primary, 'map-pin'),
       'RECIPIENT_PARCEL_ANNOUNCED' => (cs.primary, 'inbox'),
