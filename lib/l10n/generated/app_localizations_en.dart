@@ -14876,16 +14876,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get priceGridYouReceiveLabel => 'What you receive';
 
   @override
-  String priceGridMaxPriceMessage(String max) {
-    return 'Maximum $max per item.';
-  }
-
-  @override
-  String priceGridMinPriceMessage(String min) {
-    return 'At least $min per item.';
-  }
-
-  @override
   String get priceGridEnterAmountMessage =>
       'Enter the amount you want to receive.';
 
@@ -18298,10 +18288,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorPriceOutOfBoundsMessage =>
       'This price per kg is outside the allowed range for the trip currency. Check the amount and the selected currency.';
-
-  @override
-  String get errorPriceGridOutOfBoundsMessage =>
-      'This item price is outside the allowed range: at least €5 and at most €500, converted into your currency.';
 
   @override
   String get tripLegSheetCurrency => 'Leg currency';

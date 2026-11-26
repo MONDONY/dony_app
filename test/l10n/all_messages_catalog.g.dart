@@ -5264,10 +5264,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.priceGridAddCustomLabel(placeholderMarker('query')),
   'priceGridChangeItemButton': (l) => l.priceGridChangeItemButton,
   'priceGridYouReceiveLabel': (l) => l.priceGridYouReceiveLabel,
-  'priceGridMaxPriceMessage': (l) =>
-      l.priceGridMaxPriceMessage(placeholderMarker('max')),
-  'priceGridMinPriceMessage': (l) =>
-      l.priceGridMinPriceMessage(placeholderMarker('min')),
   'priceGridEnterAmountMessage': (l) => l.priceGridEnterAmountMessage,
   'priceGridSenderWillPayMessage': (l) => l.priceGridSenderWillPayMessage(
     placeholderMarker('paid'),
@@ -6434,7 +6430,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.tripLegsPriceBelowMin(placeholderMarker('currency')),
   'errorPriceOutOfBoundsTitle': (l) => l.errorPriceOutOfBoundsTitle,
   'errorPriceOutOfBoundsMessage': (l) => l.errorPriceOutOfBoundsMessage,
-  'errorPriceGridOutOfBoundsMessage': (l) => l.errorPriceGridOutOfBoundsMessage,
   'tripLegSheetCurrency': (l) => l.tripLegSheetCurrency,
   'tripLegSheetCurrencyHint': (l) => l.tripLegSheetCurrencyHint,
   'tripLegSheetCurrencyOption': (l) => l.tripLegSheetCurrencyOption(
@@ -8913,8 +8908,6 @@ const textParameters = <String, List<String>>{
   'priceGridItemSemantics': ['label', 'paid', 'net'],
   'priceGridDeleteItemMessage': ['label'],
   'priceGridAddCustomLabel': ['query'],
-  'priceGridMaxPriceMessage': ['max'],
-  'priceGridMinPriceMessage': ['min'],
   'priceGridSenderWillPayMessage': ['paid', 'fee'],
   'referralVoucherExpiresLabel': ['date'],
   'referralShareMessage': ['code', 'url'],

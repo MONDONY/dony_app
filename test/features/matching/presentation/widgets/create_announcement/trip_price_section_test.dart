@@ -275,18 +275,20 @@ void main() {
       expect(gridSuggestionsFrom(_backendState), isEmpty);
     });
 
-    test('prix ramenés dans les bornes d\'un article (5 à 500 €)', () {
+    test('prix gardés tels quels, sans bornes ; montants nuls écartés', () {
       const state = TripPriceSuggestionState(
         suggestion: TripPriceSuggestion(
           currency: 'EUR',
           items: [
             TripPriceSuggestionItem(label: 'Clé USB', unitPrice: 2),
             TripPriceSuggestionItem(label: 'Moto', unitPrice: 900),
+            TripPriceSuggestionItem(label: 'Vide', unitPrice: 0),
           ],
         ),
       );
       final list = gridSuggestionsFrom(state);
-      expect(list.map((e) => e.unitPriceNet), [5, 500]);
+      expect(list.map((e) => e.label), ['Clé USB', 'Moto']);
+      expect(list.map((e) => e.unitPriceNet), [2, 900]);
     });
   });
 

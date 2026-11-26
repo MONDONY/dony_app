@@ -114,15 +114,14 @@ double? _amount(String raw) {
   return double.tryParse(trimmed.replaceAll(',', '.'));
 }
 
-/// Montant saisi une fois les bornes du domaine appliquées, ou `null` si la
-/// saisie n'est pas un prix acceptable.
+/// Montant saisi s'il est un prix acceptable, sinon `null`.
+///
+/// Seule règle : un prix strictement positif. Le prix d'un article n'a ni
+/// plancher ni plafond (un voyageur en francs CFA doit pouvoir saisir 10 F CFA),
+/// le serveur n'en applique plus non plus (yadony-back #794).
 double? _parse(String raw) {
   final parsed = _amount(raw);
-  if (parsed == null ||
-      parsed < minGridItemPriceActive ||
-      parsed > maxUnitPriceActive) {
-    return null;
-  }
+  if (parsed == null || parsed <= 0) return null;
   return parsed;
 }
 
@@ -524,7 +523,7 @@ class _PriceStep extends StatelessWidget {
 }
 
 /// Nature du message d'écho, qui sert de clé d'animation.
-enum _EchoKind { invite, valid, tooLow, tooHigh }
+enum _EchoKind { invite, valid }
 
 /// Écho du montant réellement payé par l'expéditeur, recalculé à chaque touche.
 class _Echo extends StatelessWidget {
@@ -538,35 +537,14 @@ class _Echo extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
 
-    final amount = _amount(raw);
     final price = _parse(raw);
-    final kind = amount != null && amount > maxUnitPriceActive
-        ? _EchoKind.tooHigh
-        // Sous le plancher : un article à 8 F CFA trahit une saisie dans la
-        // mauvaise devise (5 € minimum, convertis dans la devise du profil).
-        : amount != null && amount > 0 && amount < minGridItemPriceActive
-        ? _EchoKind.tooLow
-        : price == null
-        ? _EchoKind.invite
-        : _EchoKind.valid;
+    final kind = price == null ? _EchoKind.invite : _EchoKind.valid;
 
     final Color background;
     final Color ink;
     final String message;
 
     switch (kind) {
-      case _EchoKind.tooHigh:
-        background = cs.errorLight;
-        ink = cs.error;
-        message = l.priceGridMaxPriceMessage(
-          formatPriceActive(maxUnitPriceActive),
-        );
-      case _EchoKind.tooLow:
-        background = cs.errorLight;
-        ink = cs.error;
-        message = l.priceGridMinPriceMessage(
-          formatPriceActive(minGridItemPriceActive),
-        );
       case _EchoKind.invite:
         background = cs.surfaceContainerHighest;
         ink = cs.onSurfaceVariant;
