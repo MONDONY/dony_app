@@ -2214,14 +2214,20 @@ void main() {
       expect(find.text('Brouillon enregistré'), findsNothing);
     });
 
-    testWidgets('trajet direct créé : carte « Vous faites ce trajet '
-        'souvent ? » sur l\'écran de succès', (tester) async {
+    testWidgets('trajet direct créé : ligne « Rendre ce trajet récurrent » '
+        'dans « Et maintenant ? » de l\'écran de succès, sans mascotte ni '
+        'croix', (tester) async {
       await emitCreated(
         tester,
         const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
       );
       expect(find.byKey(const Key('trip-series-open')), findsOneWidget);
-      expect(find.text('Vous faites ce trajet souvent ?'), findsOneWidget);
+      expect(find.text('Rendre ce trajet récurrent'), findsOneWidget);
+      expect(find.text('Choisir d\'autres dates'), findsOneWidget);
+      expect(find.text('Et maintenant ?'), findsOneWidget);
+      expect(find.byKey(const Key('success-screen-banner')), findsOneWidget);
+      expect(find.byType(DonyMascotteAnimated), findsNothing);
+      expect(find.byTooltip('Fermer'), findsNothing);
     });
 
     testWidgets('trajet avec escales : pas de carte de trajet récurrent', (

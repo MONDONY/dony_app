@@ -19600,6 +19600,9 @@
     "description": "Action de la carte d'accueil"
   },
   "tripPublishSuccessPayoutsCta": "Configurer mes paiements",
+  "tripPublishSuccessShareHint": "Faire connaître le trajet",
+  "tripPublishSuccessPayoutsHint": "Recevoir l'argent par carte",
+  "successScreenNextTitle": "Et maintenant ?",
   "@tripPublishSuccessPayoutsCta": {
     "description": "Bouton après publication d'un trajet sans paiements configurés"
   },
@@ -21501,6 +21504,7 @@
   "tripSeriesCardBody": "Choisissez d'autres dates : on prépare le même trajet pour chacune, avec les mêmes villes, kilos, prix et adresses.",
   "@tripSeriesCardBody": {"description": "Texte de la carte « trajet récurrent »."},
   "tripSeriesCardCta": "Rendre ce trajet récurrent",
+  "tripSeriesCardHint": "Choisir d'autres dates",
   "@tripSeriesCardCta": {"description": "Bouton de la carte, ouvre le calendrier."},
   "tripSeriesCardDone": "{count, plural, =1{1 autre date ajoutée} other{{count} autres dates ajoutées}}",
   "@tripSeriesCardDone": {"description": "Carte après création de la série.", "placeholders": {"count": {"type": "int"}}},

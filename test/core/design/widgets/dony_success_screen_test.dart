@@ -34,6 +34,10 @@ void main() {
     List<DonySuccessAction> extraActions = const [],
     String? secondaryIconAsset = 'share-curved',
     VideoModalMoment? modalMoment,
+    DonySuccessLayout layout = DonySuccessLayout.hero,
+    bool showCloseButton = true,
+    List<Widget> listItems = const [],
+    Widget? extra,
   }) => MaterialApp(
     theme: AppTheme.light(),
     home: DonySuccessScreen(
@@ -51,6 +55,10 @@ void main() {
       extraActions: extraActions,
       secondaryIconAsset: secondaryIconAsset,
       modalMoment: modalMoment,
+      layout: layout,
+      showCloseButton: showCloseButton,
+      listItems: listItems,
+      extra: extra,
     ),
   );
 
@@ -524,6 +532,166 @@ void main() {
 
       await tester.pump(const Duration(seconds: 2));
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  // ── Mise en page « bandeau » (sans mascotte) ─────────────────────────────
+
+  group('layout banner', () {
+    const banner = DonySuccessLayout.banner;
+
+    testWidgets('ni mascotte ni confettis : bandeau de confirmation', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(onCta: () {}, layout: banner));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(DonyMascotteAnimated), findsNothing);
+      expect(find.byKey(const ValueKey('dony-success-confetti')), findsNothing);
+      expect(find.byKey(const Key('success-screen-banner')), findsOneWidget);
+      expect(find.text('Envoi réservé !'), findsOneWidget);
+      expect(find.text('Voir mes envois'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 2));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('le titre est en haut de l\'écran, sans défiler', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(360 * 3, 640 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(host(onCta: () {}, layout: banner));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Avec la mascotte, le titre commençait sous 300 px.
+      expect(tester.getTopLeft(find.text('Envoi réservé !')).dy, lessThan(200));
+    });
+
+    testWidgets('showCloseButton false : pas de croix, le CTA reste', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(onCta: () {}, layout: banner, showCloseButton: false),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byTooltip('Fermer'), findsNothing);
+      expect(find.text('Voir mes envois'), findsOneWidget);
+    });
+
+    testWidgets('par défaut la croix et la mascotte sont là', (tester) async {
+      await tester.pumpWidget(host(onCta: () {}));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(DonyMascotteAnimated), findsOneWidget);
+      expect(find.byKey(const Key('success-screen-banner')), findsNothing);
+      expect(find.byTooltip('Fermer'), findsOneWidget);
+    });
+
+    testWidgets(
+      'tertiaire et extras deviennent des lignes « Et maintenant ? », '
+      'pas des boutons du bas',
+      (tester) async {
+        var tertiary = 0;
+        var extra = 0;
+        await tester.pumpWidget(
+          host(
+            onCta: () {},
+            layout: banner,
+            tertiaryLabel: 'Partager mon affiche',
+            onTertiary: () => tertiary++,
+            extraActions: [
+              DonySuccessAction(
+                label: 'Configurer mes paiements',
+                subtitle: 'Recevoir l\'argent par carte',
+                onTap: () => extra++,
+              ),
+            ],
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.byKey(const Key('success-screen-next-title')), findsOne);
+        expect(find.byKey(const Key('success-screen-next-steps')), findsOne);
+        // Les liens ghost du bas n'existent plus : une ligne = un InkWell.
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('success-screen-actions')),
+            matching: find.text('Partager mon affiche'),
+          ),
+          findsNothing,
+        );
+        expect(find.text('Recevoir l\'argent par carte'), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('success-screen-tertiary')));
+        await tester.tap(find.byKey(const Key('success-screen-extra-0')));
+        expect(tertiary, 1);
+        expect(extra, 1);
+      },
+    );
+
+    testWidgets('listItems passent en tête de la liste', (tester) async {
+      await tester.pumpWidget(
+        host(
+          onCta: () {},
+          layout: banner,
+          listItems: const [Text('Répéter ce trajet')],
+          tertiaryLabel: 'Partager mon affiche',
+          onTertiary: () {},
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      final first = tester.getTopLeft(find.text('Répéter ce trajet')).dy;
+      final second = tester.getTopLeft(find.text('Partager mon affiche')).dy;
+      expect(first, lessThan(second));
+    });
+
+    testWidgets('sans ligne, pas de titre « Et maintenant ? »', (tester) async {
+      await tester.pumpWidget(host(onCta: () {}, layout: banner));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byKey(const Key('success-screen-next-title')), findsNothing);
+    });
+
+    testWidgets('l\'action tertiaire envoie l\'événement habituel', (
+      tester,
+    ) async {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerSingleton<AnalyticsService>(analytics);
+      addTearDown(() => getIt.unregister<AnalyticsService>());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: DonySuccessScreen(
+            mascotteType: DonyMascotteType.securise,
+            title: 'T',
+            subtitle: 'S',
+            ctaLabel: 'Go',
+            onCta: () {},
+            layout: banner,
+            analyticsContext: 'trip_published_v2',
+            tertiaryLabel: 'Partager mon affiche',
+            onTertiary: () {},
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.byKey(const Key('success-screen-tertiary')));
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.successScreenTertiaryTapped,
+          properties: {'context': 'trip_published_v2'},
+        ),
+      ).called(1);
     });
   });
 

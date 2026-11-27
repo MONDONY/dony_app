@@ -23,10 +23,35 @@ import 'package:go_router/go_router.dart';
 /// Action discrète supplémentaire d'un [DonySuccessScreen] (lien sous les
 /// boutons), au-delà de l'action tertiaire.
 class DonySuccessAction {
-  const DonySuccessAction({required this.label, required this.onTap});
+  const DonySuccessAction({
+    required this.label,
+    required this.onTap,
+    this.subtitle,
+    this.iconAsset,
+  });
 
   final String label;
   final VoidCallback onTap;
+
+  /// Précision sous le libellé, affichée seulement en mise en page
+  /// [DonySuccessLayout.banner] (ligne de liste).
+  final String? subtitle;
+
+  /// Icône de la ligne, en mise en page [DonySuccessLayout.banner].
+  final String? iconAsset;
+}
+
+/// Mise en page de [DonySuccessScreen].
+enum DonySuccessLayout {
+  /// Mascotte, confettis, titre centré ; actions discrètes en liens sous les
+  /// boutons. Défaut historique.
+  hero,
+
+  /// Sans mascotte : bandeau vert « publié » compact en tête, contenu, puis
+  /// « Et maintenant ? » en lignes de liste. Seuls le CTA et l'action
+  /// secondaire restent collés en bas. Pour un écran riche en suites
+  /// possibles, qui doivent tenir sans défiler.
+  banner,
 }
 
 /// Écran plein affiché après une action majeure réussie (paiement confirmé,
@@ -52,9 +77,35 @@ class DonySuccessScreen extends StatefulWidget {
     this.secondaryIconAsset = 'share-curved',
     this.extra,
     this.modalMoment,
+    this.layout = DonySuccessLayout.hero,
+    this.showCloseButton = true,
+    this.tertiarySubtitle,
+    this.tertiaryIconAsset,
+    this.listItems = const [],
+    this.nextStepsTitle,
   });
 
   final DonyMascotteType mascotteType;
+
+  final DonySuccessLayout layout;
+
+  /// `false` : pas de croix en haut à droite. La seule sortie est alors un
+  /// bouton ou une ligne de l'écran (le retour système reste ignoré).
+  final bool showCloseButton;
+
+  /// Précision et icône de la ligne de l'action tertiaire ([tertiaryLabel]),
+  /// en mise en page [DonySuccessLayout.banner].
+  final String? tertiarySubtitle;
+  final String? tertiaryIconAsset;
+
+  /// Lignes propres au contexte, en tête de la liste « Et maintenant ? »
+  /// ([DonySuccessLayout.banner]), avant l'action tertiaire et les actions
+  /// supplémentaires. Chacune se dessine sans fond ni bordure.
+  final List<Widget> listItems;
+
+  /// Titre de la liste ([DonySuccessLayout.banner]), « Et maintenant ? » par
+  /// défaut.
+  final String? nextStepsTitle;
   final String title;
   final String subtitle;
   final String ctaLabel;
@@ -171,7 +222,7 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
     _confettiDecided = true;
 
     _reducedMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    if (!_reducedMotion) {
+    if (!_reducedMotion && widget.layout == DonySuccessLayout.hero) {
       _confettiController.forward();
     }
   }
@@ -236,6 +287,31 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
     widget.extraActions[index].onTap();
   }
 
+  /// Lignes de « Et maintenant ? » : lignes propres au contexte, puis l'action
+  /// tertiaire, puis les actions supplémentaires (mêmes événements analytics
+  /// que leurs liens de la mise en page [DonySuccessLayout.hero]).
+  List<Widget> _nextStepRows() {
+    return [
+      ...widget.listItems,
+      if (widget.tertiaryLabel != null && widget.onTertiary != null)
+        _NextStepRow(
+          key: const Key('success-screen-tertiary'),
+          label: widget.tertiaryLabel!,
+          subtitle: widget.tertiarySubtitle,
+          iconAsset: widget.tertiaryIconAsset,
+          onTap: _handleTertiaryTap,
+        ),
+      for (final (i, action) in widget.extraActions.indexed)
+        _NextStepRow(
+          key: Key('success-screen-extra-$i'),
+          label: action.label,
+          subtitle: action.subtitle,
+          iconAsset: action.iconAsset,
+          onTap: () => _handleExtraTap(i),
+        ),
+    ];
+  }
+
   void _handleClose(BuildContext context) {
     _trackEvent(AnalyticsEvents.successScreenClosed);
     if (widget.onClose != null) {
@@ -259,6 +335,8 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final closeLabel = context.l10n.commonClose;
+    final isBanner = widget.layout == DonySuccessLayout.banner;
+    final rows = isBanner ? _nextStepRows() : const <Widget>[];
 
     return PopScope(
       // Seules sorties autorisées : le CTA et le bouton fermer (X). Le retour
@@ -270,34 +348,35 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
           title: '',
           showBackButton: false,
           actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: DonySpacing.base),
-              child: Tooltip(
-                message: closeLabel,
-                child: Semantics(
-                  button: true,
-                  label: closeLabel,
-                  child: InkWell(
-                    onTap: () => _handleClose(context),
-                    customBorder: const CircleBorder(),
-                    child: Container(
-                      width: DonySpacing.icon,
-                      height: DonySpacing.icon,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: cs.surface,
-                        border: Border.all(color: cs.outline),
-                      ),
-                      child: DonyIcon(
-                        'x',
-                        size: DonySpacing.iconSm,
-                        color: cs.onSurface,
+            if (widget.showCloseButton)
+              Padding(
+                padding: const EdgeInsets.only(right: DonySpacing.base),
+                child: Tooltip(
+                  message: closeLabel,
+                  child: Semantics(
+                    button: true,
+                    label: closeLabel,
+                    child: InkWell(
+                      onTap: () => _handleClose(context),
+                      customBorder: const CircleBorder(),
+                      child: Container(
+                        width: DonySpacing.icon,
+                        height: DonySpacing.icon,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: cs.surface,
+                          border: Border.all(color: cs.outline),
+                        ),
+                        child: DonyIcon(
+                          'x',
+                          size: DonySpacing.iconSm,
+                          color: cs.onSurface,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
         body: Builder(
@@ -327,7 +406,7 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
                   child: SingleChildScrollView(
                     padding: EdgeInsets.fromLTRB(
                       h,
-                      DonySpacing.xxl,
+                      isBanner ? DonySpacing.base : DonySpacing.xxl,
                       h,
                       DonySpacing.lg,
                     ),
@@ -335,60 +414,91 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
                       context,
                       fadeScale(
                         Column(
+                          crossAxisAlignment: isBanner
+                              ? CrossAxisAlignment.stretch
+                              : CrossAxisAlignment.center,
                           children: [
-                            const SizedBox(height: DonySpacing.xxl),
-                            SizedBox(
-                              width: _confettiAreaSize,
-                              height: _confettiAreaSize,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  if (!_reducedMotion)
-                                    Positioned.fill(
-                                      child: IgnorePointer(
-                                        key: const ValueKey(
-                                          'dony-success-confetti',
-                                        ),
-                                        child: AnimatedBuilder(
-                                          animation: _confettiController,
-                                          builder: (context, _) => CustomPaint(
-                                            painter: _ConfettiPainter(
-                                              progress: Curves.easeOut
-                                                  .transform(
-                                                    _confettiController.value,
+                            if (!isBanner) ...[
+                              const SizedBox(height: DonySpacing.xxl),
+                              SizedBox(
+                                width: _confettiAreaSize,
+                                height: _confettiAreaSize,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    if (!_reducedMotion)
+                                      Positioned.fill(
+                                        child: IgnorePointer(
+                                          key: const ValueKey(
+                                            'dony-success-confetti',
+                                          ),
+                                          child: AnimatedBuilder(
+                                            animation: _confettiController,
+                                            builder: (context, _) =>
+                                                CustomPaint(
+                                                  painter: _ConfettiPainter(
+                                                    progress: Curves.easeOut
+                                                        .transform(
+                                                          _confettiController
+                                                              .value,
+                                                        ),
+                                                    particles:
+                                                        _confettiParticles,
                                                   ),
-                                              particles: _confettiParticles,
-                                            ),
+                                                ),
                                           ),
                                         ),
                                       ),
+                                    DonyMascotteAnimated(
+                                      type: widget.mascotteType,
+                                      size: DonyMascotteSize.lg,
+                                      withGlow: true,
                                     ),
-                                  DonyMascotteAnimated(
-                                    type: widget.mascotteType,
-                                    size: DonyMascotteSize.lg,
-                                    withGlow: true,
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: DonySpacing.xl),
-                            Text(
-                              widget.title,
-                              style: tt.displayLarge,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: DonySpacing.md),
-                            Text(
-                              widget.subtitle,
-                              textAlign: TextAlign.center,
-                              style: tt.bodyLarge?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                height: 1.5,
-                              ),
-                            ),
-                            if (widget.extra case final extra?) ...[
                               const SizedBox(height: DonySpacing.xl),
+                              Text(
+                                widget.title,
+                                style: tt.displayLarge,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: DonySpacing.md),
+                              Text(
+                                widget.subtitle,
+                                textAlign: TextAlign.center,
+                                style: tt.bodyLarge?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ] else
+                              _SuccessBanner(
+                                title: widget.title,
+                                subtitle: widget.subtitle,
+                              ),
+                            if (widget.extra case final extra?) ...[
+                              SizedBox(
+                                height: isBanner
+                                    ? DonySpacing.md
+                                    : DonySpacing.xl,
+                              ),
                               extra,
+                            ],
+                            if (isBanner && rows.isNotEmpty) ...[
+                              const SizedBox(height: DonySpacing.lg),
+                              Text(
+                                widget.nextStepsTitle ??
+                                    context.l10n.successScreenNextTitle,
+                                key: const Key('success-screen-next-title'),
+                                style: tt.labelMedium?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                              const SizedBox(height: DonySpacing.sm),
+                              _NextStepsCard(rows: rows),
                             ],
                           ],
                         ),
@@ -429,7 +539,8 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
                                 onPressed: _handleSecondaryTap,
                               ),
                             ],
-                            if (widget.tertiaryLabel != null &&
+                            if (!isBanner &&
+                                widget.tertiaryLabel != null &&
                                 widget.onTertiary != null) ...[
                               const SizedBox(height: DonySpacing.sm),
                               DonyButton(
@@ -439,19 +550,20 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
                                 onPressed: _handleTertiaryTap,
                               ),
                             ],
-                            for (final (i, action)
-                                in widget.extraActions.indexed)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  top: DonySpacing.sm,
+                            if (!isBanner)
+                              for (final (i, action)
+                                  in widget.extraActions.indexed)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: DonySpacing.sm,
+                                  ),
+                                  child: DonyButton(
+                                    key: Key('success-screen-extra-$i'),
+                                    label: action.label,
+                                    variant: DonyButtonVariant.ghost,
+                                    onPressed: () => _handleExtraTap(i),
+                                  ),
                                 ),
-                                child: DonyButton(
-                                  key: Key('success-screen-extra-$i'),
-                                  label: action.label,
-                                  variant: DonyButtonVariant.ghost,
-                                  onPressed: () => _handleExtraTap(i),
-                                ),
-                              ),
                           ],
                         ),
                       ),
@@ -461,6 +573,188 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+/// Bandeau de confirmation de [DonySuccessLayout.banner] : pastille verte avec
+/// une coche, titre et sous-titre sur une ligne compacte.
+class _SuccessBanner extends StatelessWidget {
+  const _SuccessBanner({required this.title, required this.subtitle});
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      key: const Key('success-screen-banner'),
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: DonyColors.success50,
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
+        border: Border.all(
+          color: DonyColors.success500.withValues(alpha: 0.28),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: DonyColors.success500,
+            ),
+            alignment: Alignment.center,
+            child: const DonyIcon('check', size: 26, color: Colors.white),
+          ),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: tt.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: DonyColors.success700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: tt.bodyMedium?.copyWith(color: DonyColors.success700),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Carte blanche de « Et maintenant ? » : ses lignes séparées par un filet
+/// qui démarre sous l'icône.
+class _NextStepsCard extends StatelessWidget {
+  const _NextStepsCard({required this.rows});
+
+  final List<Widget> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('success-screen-next-steps'),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        children: [
+          for (final (i, row) in rows.indexed) ...[
+            if (i > 0)
+              Divider(
+                height: 1,
+                thickness: 1,
+                indent: DonySpacing.base + 40 + DonySpacing.md,
+                color: cs.outline,
+              ),
+            row,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Ligne d'action de [_NextStepsCard] : icône, libellé sur une ligne,
+/// précision facultative, chevron.
+class _NextStepRow extends StatelessWidget {
+  const _NextStepRow({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.subtitle,
+    this.iconAsset,
+  });
+
+  final String label;
+  final String? subtitle;
+  final String? iconAsset;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      label: subtitle == null
+          ? label
+          : '$label. $subtitle', // i18n-ignore : format, valeurs déjà localisées par l'appelant
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 64),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.sm,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                  ),
+                  alignment: Alignment.center,
+                  child: DonyIcon(
+                    iconAsset ?? 'chevron-right',
+                    size: 20,
+                    color: cs.primary,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: tt.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (subtitle != null)
+                        Text(
+                          subtitle!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
+              ],
+            ),
+          ),
         ),
       ),
     );
