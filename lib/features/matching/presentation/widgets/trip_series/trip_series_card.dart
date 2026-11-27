@@ -21,10 +21,15 @@ class TripSeriesCard extends StatelessWidget {
     super.key,
     required this.announcement,
     this.autoDates = const [],
+    this.compact = false,
   });
 
   final AnnouncementModel announcement;
   final List<DateTime> autoDates;
+
+  /// Ligne de liste sans fond ni bordure (« Et maintenant ? » de l'écran de
+  /// succès) au lieu de la carte : libellé court, une précision, un chevron.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +39,9 @@ class TripSeriesCard extends StatelessWidget {
         if (autoDates.isNotEmpty) unawaited(cubit.submitDates(autoDates));
         return cubit;
       },
-      child: _CardBody(auto: autoDates.isNotEmpty),
+      child: compact
+          ? _CompactRow(auto: autoDates.isNotEmpty)
+          : _CardBody(auto: autoDates.isNotEmpty),
     );
   }
 }
@@ -161,6 +168,133 @@ class _CardBody extends StatelessWidget {
                 ),
               ],
             ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Version ligne de liste de la carte : même cubit, mêmes états (en cours,
+/// terminé, échec), présentés sur une ligne qui ouvre le calendrier.
+class _CompactRow extends StatelessWidget {
+  const _CompactRow({required this.auto});
+
+  final bool auto;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return BlocBuilder<TripSeriesCubit, TripSeriesState>(
+      buildWhen: (p, c) => p.status != c.status || p.result != c.result,
+      builder: (context, state) {
+        final done = state.status == TripSeriesStatus.done;
+        final busy = state.status == TripSeriesStatus.submitting;
+        final failedCount = state.result?.failed.length ?? 0;
+        final title = done
+            ? l10n.tripSeriesCardDone(state.result?.created.length ?? 0)
+            : busy
+            ? l10n.tripRecurrenceSeriesPublishing(state.selected.length)
+            : l10n.tripSeriesCardCta;
+        String? detail;
+        Color? detailColor;
+        if (auto && state.status == TripSeriesStatus.failed) {
+          detail = tripSeriesErrorText(context, state.errorCode);
+          detailColor = cs.error;
+        } else if (auto && done && failedCount > 0) {
+          detail =
+              '${l10n.tripSeriesSomeFailed(failedCount)} '
+              '${tripSeriesErrorText(context, state.result!.failed.first.code)}';
+        } else if (!done && !busy) {
+          detail = l10n.tripSeriesCardHint;
+        }
+        final tappable = !done && !busy;
+        return Semantics(
+          button: tappable,
+          child: InkWell(
+            key: const Key('trip-series-open'),
+            onTap: tappable
+                ? () => TripSeriesFlow.start(
+                    context,
+                    context.read<TripSeriesCubit>(),
+                  )
+                : null,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 64),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base,
+                  vertical: DonySpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer,
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                      ),
+                      alignment: Alignment.center,
+                      child: DonyIcon(
+                        done ? 'check' : 'calendar-sync',
+                        size: 20,
+                        color: cs.primary,
+                      ),
+                    ),
+                    const SizedBox(width: DonySpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            key: const Key('trip-series-card-title'),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (busy)
+                            const Padding(
+                              padding: EdgeInsets.only(top: DonySpacing.xs),
+                              child: LinearProgressIndicator(
+                                key: Key('trip-series-card-progress'),
+                              ),
+                            )
+                          else if (detail != null)
+                            Text(
+                              detail,
+                              key: auto && done
+                                  ? const Key('trip-series-card-partial')
+                                  : auto &&
+                                        state.status == TripSeriesStatus.failed
+                                  ? const Key('trip-series-card-error')
+                                  : null,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: tt.bodySmall?.copyWith(
+                                color: detailColor ?? cs.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (tappable) ...[
+                      const SizedBox(width: DonySpacing.sm),
+                      DonyIcon(
+                        'chevron-right',
+                        size: 18,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
           ),
         );
       },

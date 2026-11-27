@@ -17353,6 +17353,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishSuccessPayoutsCta => 'Configurer mes paiements';
 
   @override
+  String get tripPublishSuccessShareHint => 'Faire connaître le trajet';
+
+  @override
+  String get tripPublishSuccessPayoutsHint => 'Recevoir l\'argent par carte';
+
+  @override
+  String get successScreenNextTitle => 'Et maintenant ?';
+
+  @override
   String messagesNegotiationsShortcutOpen(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -20458,6 +20467,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripSeriesCardCta => 'Rendre ce trajet récurrent';
+
+  @override
+  String get tripSeriesCardHint => 'Choisir d\'autres dates';
 
   @override
   String tripSeriesCardDone(int count) {

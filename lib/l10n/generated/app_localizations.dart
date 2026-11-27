@@ -28351,6 +28351,24 @@ abstract class AppLocalizations {
   /// **'Configurer mes paiements'**
   String get tripPublishSuccessPayoutsCta;
 
+  /// No description provided for @tripPublishSuccessShareHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Faire connaître le trajet'**
+  String get tripPublishSuccessShareHint;
+
+  /// No description provided for @tripPublishSuccessPayoutsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevoir l\'argent par carte'**
+  String get tripPublishSuccessPayoutsHint;
+
+  /// No description provided for @successScreenNextTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Et maintenant ?'**
+  String get successScreenNextTitle;
+
   /// Sous-titre de la ligne « Discussions de prix » épinglée en tête de Messages quand aucune offre n'attend l'utilisateur (negotiations_shortcut_tile.dart, Sentry FLUTTER-44).
   ///
   /// In fr, this message translates to:
@@ -33047,6 +33065,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Rendre ce trajet récurrent'**
   String get tripSeriesCardCta;
+
+  /// No description provided for @tripSeriesCardHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir d\'autres dates'**
+  String get tripSeriesCardHint;
 
   /// Carte après création de la série.
   ///

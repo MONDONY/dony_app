@@ -2982,6 +2982,14 @@ class _TripFormContentState extends State<_TripFormContent> {
                     final l = routeContext.l10n;
                     return DonySuccessScreen(
                       mascotteType: DonyMascotteType.succes,
+                      // Création : bandeau « publié » compact, prix par article,
+                      // puis « Et maintenant ? » en lignes (récurrence, affiche,
+                      // paiements), sans mascotte ni croix : tout tient sans
+                      // défiler, les sorties sont les deux boutons du bas.
+                      layout: isEdit
+                          ? DonySuccessLayout.hero
+                          : DonySuccessLayout.banner,
+                      showCloseButton: isEdit,
                       title: isEdit
                           ? l.tripPublishSuccessTitleEdit
                           : l.tripPublishSuccessTitleCreate,
@@ -3022,32 +3030,37 @@ class _TripFormContentState extends State<_TripFormContent> {
                       // (yadony-back #525).
                       extra: isEdit
                           ? null
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                TripPublishedItemPricesCard(
-                                  announcement: announcement,
-                                  routeSuggestion: routeSuggestion,
-                                ),
-                                if (state is! AnnouncementTripCreated &&
-                                    announcement.tripGroupId == null)
-                                  TripSeriesCard(
-                                    announcement: announcement,
-                                    autoDates: recurrenceDates,
-                                  ),
-                              ],
+                          : TripPublishedItemPricesCard(
+                              announcement: announcement,
+                              routeSuggestion: routeSuggestion,
                             ),
+                      listItems:
+                          !isEdit &&
+                              state is! AnnouncementTripCreated &&
+                              announcement.tripGroupId == null
+                          ? [
+                              TripSeriesCard(
+                                announcement: announcement,
+                                autoDates: recurrenceDates,
+                                compact: true,
+                              ),
+                            ]
+                          : const [],
                       secondaryLabel: isEdit ? null : l.tripPublishSuccessCta,
                       onSecondary: isEdit ? null : viewTrip,
                       secondaryIconAsset: null,
                       tertiaryLabel: isEdit
                           ? null
                           : l.tripPublishSuccessShareCta,
+                      tertiarySubtitle: l.tripPublishSuccessShareHint,
+                      tertiaryIconAsset: 'share-curved',
                       onTertiary: isEdit ? null : sharePoster,
                       extraActions: needsPayouts
                           ? [
                               DonySuccessAction(
                                 label: l.tripPublishSuccessPayoutsCta,
+                                subtitle: l.tripPublishSuccessPayoutsHint,
+                                iconAsset: 'credit-card',
                                 onTap: setUpPayouts,
                               ),
                             ]
