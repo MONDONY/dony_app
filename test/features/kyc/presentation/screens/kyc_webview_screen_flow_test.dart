@@ -159,6 +159,8 @@ void main() {
   late _MockKycBloc kycBloc;
   late _MockAuthBloc authBloc;
 
+  setUpAll(() => registerFallbackValue(const KycSessionAbandoned()));
+
   setUp(() {
     useEnglish();
     DonySnackbar.clearDedup();
@@ -584,6 +586,57 @@ void main() {
       verify(() => kycBloc.add(const KycSessionAbandoned())).called(1);
       expect(find.text('page /profile'), findsOneWidget);
       expect(find.byType(KycWebViewScreen), findsNothing);
+    });
+
+    testWidgets('page non chargée : aucune question, la croix sort aussitôt', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('What\'s stopping you?'), findsNothing);
+      verify(() => kycBloc.add(const KycSessionAbandoned())).called(1);
+    });
+
+    testWidgets('page vue : la croix pose la question, la raison part avant '
+        'l\'abandon', (tester) async {
+      await pump(tester);
+      platform.onPageFinished!('https://verify.didit.me/session/x');
+      await tester.pump();
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pumpAndSettle();
+      expect(find.text('What\'s stopping you?'), findsOneWidget);
+      verifyNever(() => kycBloc.add(const KycSessionAbandoned()));
+
+      await tester.tap(find.byKey(const Key('kyc-abandon-reason-PRIVACY')));
+      await tester.pumpAndSettle();
+
+      final events = verify(
+        () => kycBloc.add(captureAny()),
+      ).captured.cast<KycEvent>();
+      expect(events, hasLength(2));
+      final reason = events.first as KycAbandonReasonSubmitted;
+      expect(reason.reason, 'PRIVACY');
+      expect(reason.durationMs, isNotNull);
+      expect(events.last, isA<KycSessionAbandoned>());
+      expect(find.text('page /home'), findsOneWidget);
+    });
+
+    testWidgets('page vue : « Skip » sort sans raison', (tester) async {
+      await pump(tester);
+      platform.onPageFinished!('https://verify.didit.me/session/x');
+      await tester.pump();
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('kyc-abandon-skip')));
+      await tester.pumpAndSettle();
+
+      final events = verify(
+        () => kycBloc.add(captureAny()),
+      ).captured.cast<KycEvent>();
+      expect(events.single, isA<KycSessionAbandoned>());
+      expect(find.text('page /home'), findsOneWidget);
     });
 
     testWidgets('retour système : recule d\'abord dans la page', (

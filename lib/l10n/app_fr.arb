@@ -12153,6 +12153,38 @@
   "@kycRejectionGeneric": {
     "description": "Message de repli pour un code de refus KYC inconnu ou absent (kyc_rejection_messages.dart, kycRejectionMessage)."
   },
+  "kycAbandonSheetTitle": "Qu'est-ce qui vous arrête ?",
+  "@kycAbandonSheetTitle": {
+    "description": "Titre de la feuille posée à la fermeture de la vérification d'identité (kyc_abandon_reason_sheet.dart)."
+  },
+  "kycAbandonSheetSubtitle": "Une seule touche, cela nous aide à améliorer la vérification.",
+  "@kycAbandonSheetSubtitle": {
+    "description": "Sous-titre de la feuille de raison d'abandon de la vérification d'identité."
+  },
+  "kycAbandonReasonNoDocument": "Je n'ai pas ma pièce d'identité sous la main",
+  "@kycAbandonReasonNoDocument": {
+    "description": "Raison d'abandon : pas de pièce d'identité disponible."
+  },
+  "kycAbandonReasonPrivacy": "Je préfère ne pas partager mes documents",
+  "@kycAbandonReasonPrivacy": {
+    "description": "Raison d'abandon : réticence à partager ses documents."
+  },
+  "kycAbandonReasonTooLong": "C'est trop long",
+  "@kycAbandonReasonTooLong": {
+    "description": "Raison d'abandon : parcours jugé trop long."
+  },
+  "kycAbandonReasonTechnical": "Ça ne marche pas",
+  "@kycAbandonReasonTechnical": {
+    "description": "Raison d'abandon : problème technique."
+  },
+  "kycAbandonReasonLater": "Je le ferai plus tard",
+  "@kycAbandonReasonLater": {
+    "description": "Raison d'abandon : reporté à plus tard."
+  },
+  "kycAbandonSkip": "Passer",
+  "@kycAbandonSkip": {
+    "description": "Bouton qui ferme la feuille de raison d'abandon sans répondre."
+  },
   "kycCameraBlockedTitle": "Caméra bloquée",
   "@kycCameraBlockedTitle": {
     "description": "Titre de la feuille affichée quand la caméra est refusée pendant la vérification d'identité (kyc_webview_screen.dart)."

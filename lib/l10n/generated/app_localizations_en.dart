@@ -11211,6 +11211,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'We could not verify your identity. Make sure your document is legible and try again.';
 
   @override
+  String get kycAbandonSheetTitle => 'What\'s stopping you?';
+
+  @override
+  String get kycAbandonSheetSubtitle =>
+      'One tap helps us improve verification.';
+
+  @override
+  String get kycAbandonReasonNoDocument => 'I don\'t have my ID with me';
+
+  @override
+  String get kycAbandonReasonPrivacy => 'I\'d rather not share my documents';
+
+  @override
+  String get kycAbandonReasonTooLong => 'It takes too long';
+
+  @override
+  String get kycAbandonReasonTechnical => 'It\'s not working';
+
+  @override
+  String get kycAbandonReasonLater => 'I\'ll do it later';
+
+  @override
+  String get kycAbandonSkip => 'Skip';
+
+  @override
   String get kycCameraBlockedTitle => 'Camera blocked';
 
   @override

@@ -17,3 +17,10 @@ class KycReset extends KycEvent {
 class KycSessionAbandoned extends KycEvent {
   const KycSessionAbandoned();
 }
+
+/// Raison donnée en quittant la vérification (réponse facultative).
+class KycAbandonReasonSubmitted extends KycEvent {
+  const KycAbandonReasonSubmitted(this.reason, {this.durationMs});
+  final String reason;
+  final int? durationMs;
+}
