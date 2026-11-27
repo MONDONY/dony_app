@@ -114,6 +114,10 @@ abstract final class AnalyticsEvents {
   /// Aiguillage avant le formulaire de publication : engagements acceptés,
   /// feuille des brouillons montrée, choix fait dans cette feuille.
   static const publishCommitmentAccepted = 'publish_commitment_accepted';
+
+  /// Liste des engagements lue jusqu'en bas : la case « J'ai lu… » se
+  /// débloque. Mesure combien de personnes vont au bout avant de cocher.
+  static const publishCommitmentsListRead = 'publish_commitments_list_read';
   static const publishDraftsSheetShown = 'publish_drafts_sheet_shown';
   static const publishDraftChosen = 'publish_draft_chosen';
 
@@ -987,8 +991,6 @@ abstract final class AnalyticsEvents {
 
   // Trajets (Mes trajets)
   static const tripFilterApplied = 'trip_filter_applied';
-  static const publishIntroStripeReminderTapped =
-      'publish_intro_stripe_reminder_tapped';
 
   /// Bouton « Modifier mon pays de résidence » de `ConnectUnavailableView`
   /// (onboarding Connect et « Recevoir mes paiements ») : mène à Réglages ›

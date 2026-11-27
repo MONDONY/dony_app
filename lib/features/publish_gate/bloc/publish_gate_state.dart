@@ -35,6 +35,7 @@ class PublishGateState extends Equatable {
     this.commitmentRequired = true,
     this.version,
     this.checked = false,
+    this.listRead = false,
     this.introShown = false,
     this.drafts = const [],
     this.templates = const [],
@@ -52,6 +53,10 @@ class PublishGateState extends Equatable {
 
   /// Case « J'ai lu et pris connaissance de mes engagements ».
   final bool checked;
+
+  /// La liste des engagements a été lue jusqu'en bas (ou tient sur un seul
+  /// écran) : la case se débloque. Tant que c'est faux, elle reste verrouillée.
+  final bool listRead;
 
   /// L'écran des engagements a été montré : fermer la feuille des brouillons
   /// y ramène, au lieu de quitter.
@@ -76,6 +81,7 @@ class PublishGateState extends Equatable {
     bool? commitmentRequired,
     String? version,
     bool? checked,
+    bool? listRead,
     bool? introShown,
     List<PublishDraftEntry>? drafts,
     List<TripTemplate>? templates,
@@ -86,6 +92,7 @@ class PublishGateState extends Equatable {
     commitmentRequired: commitmentRequired ?? this.commitmentRequired,
     version: version ?? this.version,
     checked: checked ?? this.checked,
+    listRead: listRead ?? this.listRead,
     introShown: introShown ?? this.introShown,
     drafts: drafts ?? this.drafts,
     templates: templates ?? this.templates,
@@ -99,6 +106,7 @@ class PublishGateState extends Equatable {
     commitmentRequired,
     version,
     checked,
+    listRead,
     introShown,
     drafts,
     templates,

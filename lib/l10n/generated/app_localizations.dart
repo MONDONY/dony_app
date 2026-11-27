@@ -4832,143 +4832,11 @@ abstract class AppLocalizations {
   /// **'Vos engagements de voyageur'**
   String get tripPublishIntroEngagementsTitleTrip;
 
-  /// Phrase d'introduction de la liste des engagements, rôle voyageur
-  ///
-  /// In fr, this message translates to:
-  /// **'En publiant, vous vous engagez à :'**
-  String get tripPublishIntroEngagementsIntroTrip;
-
-  /// Engagement voyageur : transporter le colis soi-même (** = segment en gras)
-  ///
-  /// In fr, this message translates to:
-  /// **'Transporter le colis **vous-même**, sans le confier à un tiers.'**
-  String get tripPublishIntroRuleTripCarry;
-
-  /// Engagement voyageur : respecter la date et l'itinéraire (** = segments en gras)
-  ///
-  /// In fr, this message translates to:
-  /// **'Respecter la **date** et l\'**itinéraire** annoncés.'**
-  String get tripPublishIntroRuleTripSchedule;
-
-  /// Engagement voyageur : scanner le QR à la remise et à la livraison (** = segment en gras)
-  ///
-  /// In fr, this message translates to:
-  /// **'**Lire le QR** à la remise et à la livraison.'**
-  String get tripPublishIntroRuleTripScan;
-
-  /// Engagement voyageur : n'accepter que des contenus autorisés (** = segment en gras)
-  ///
-  /// In fr, this message translates to:
-  /// **'N\'accepter que des **contenus autorisés**, jamais d\'objet illicite.'**
-  String get tripPublishIntroRuleTripContent;
-
-  /// Engagement voyageur : remettre le colis au bon destinataire (** = segment en gras)
-  ///
-  /// In fr, this message translates to:
-  /// **'Remettre le colis **au bon destinataire**, en main propre.'**
-  String get tripPublishIntroRuleTripHandover;
-
-  /// Titre de la section « pourquoi publier », rôle voyageur
-  ///
-  /// In fr, this message translates to:
-  /// **'Pourquoi publier'**
-  String get tripPublishIntroWhyTitleTrip;
-
-  /// Puce « pourquoi publier », rôle voyageur : visibilité
-  ///
-  /// In fr, this message translates to:
-  /// **'Visible par des milliers d\'expéditeurs de la diaspora.'**
-  String get tripPublishIntroWhyBulletTripVisibility;
-
-  /// Puce « pourquoi publier », rôle voyageur : revenus
-  ///
-  /// In fr, this message translates to:
-  /// **'Rentabilisez vos kilos libres à chaque voyage.'**
-  String get tripPublishIntroWhyBulletTripEarnings;
-
-  /// Puce « pourquoi publier », rôle voyageur : réputation
-  ///
-  /// In fr, this message translates to:
-  /// **'Bâtissez une réputation avec les avis reçus.'**
-  String get tripPublishIntroWhyBulletTripReputation;
-
   /// Titre de la section des engagements de l'intro, rôle expéditeur
   ///
   /// In fr, this message translates to:
   /// **'Vos engagements d\'expéditeur'**
   String get requestPublishIntroEngagementsTitle;
-
-  /// Phrase d'introduction de la liste des engagements, rôle expéditeur
-  ///
-  /// In fr, this message translates to:
-  /// **'En envoyant un colis, vous certifiez :'**
-  String get requestPublishIntroEngagementsIntro;
-
-  /// Engagement expéditeur : contenus licites uniquement (** = segment en gras)
-  ///
-  /// In fr, this message translates to:
-  /// **'N\'envoyer que des **contenus licites** et autorisés.'**
-  String get requestPublishIntroRuleLicit;
-
-  /// Engagement expéditeur : aucun objet interdit (** = segment en gras)
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucun **objet interdit** (espèces, armes, produits dangereux…).'**
-  String get requestPublishIntroRuleForbidden;
-
-  /// Engagement expéditeur : description honnête du contenu (** = segment en gras)
-  ///
-  /// In fr, this message translates to:
-  /// **'Décrire **honnêtement** le contenu et sa valeur si le voyageur la demande.'**
-  String get requestPublishIntroRuleHonest;
-
-  /// Engagement expéditeur : emballage soigné (** = segment en gras)
-  ///
-  /// In fr, this message translates to:
-  /// **'**Emballer soigneusement** et décrire précisément le contenu.'**
-  String get requestPublishIntroRulePackaging;
-
-  /// Engagement expéditeur : présence à la remise (** = segment en gras)
-  ///
-  /// In fr, this message translates to:
-  /// **'Être présent à la **remise** et indiquer le bon destinataire.'**
-  String get requestPublishIntroRuleHandover;
-
-  /// Titre de la section « comment ça marche », rôle expéditeur
-  ///
-  /// In fr, this message translates to:
-  /// **'Comment ça marche'**
-  String get requestPublishIntroWhyTitle;
-
-  /// Puce « comment ça marche », rôle expéditeur : transport
-  ///
-  /// In fr, this message translates to:
-  /// **'Un voyageur transporte votre colis dans ses bagages.'**
-  String get requestPublishIntroWhyBulletCarried;
-
-  /// Puce « comment ça marche », rôle expéditeur : paiement séquestré
-  ///
-  /// In fr, this message translates to:
-  /// **'Paiement sécurisé, libéré à la livraison confirmée.'**
-  String get requestPublishIntroWhyBulletPayment;
-
-  /// Puce « comment ça marche », rôle expéditeur : suivi QR
-  ///
-  /// In fr, this message translates to:
-  /// **'Suivi par QR de la remise jusqu\'à la réception.'**
-  String get requestPublishIntroWhyBulletTracking;
-
-  /// Titre du rappel Stripe (voyageur) dans l'intro de publication d'un trajet
-  ///
-  /// In fr, this message translates to:
-  /// **'Activez les paiements par carte'**
-  String get tripPublishIntroStripeTitle;
-
-  /// Texte du rappel Stripe (voyageur) dans l'intro de publication d'un trajet
-  ///
-  /// In fr, this message translates to:
-  /// **'Configurez votre compte Stripe pour que vos expéditeurs paient par carte, et recevez plus de colis.'**
-  String get tripPublishIntroStripeSubtitle;
 
   /// Libellé de la section prix au kg, réutilisé comme libellé du champ de prix personnalisé
   ///
@@ -32976,11 +32844,257 @@ abstract class AppLocalizations {
   /// **'J\'ai lu et j\'ai pris connaissance de mes engagements en tant qu\'expéditeur.'**
   String get publishCommitmentCheckboxParcel;
 
-  /// Aide sous le bouton Continuer grisé tant que la case des engagements n'est pas cochée.
+  /// Introduction de la liste des engagements avant publication
   ///
   /// In fr, this message translates to:
-  /// **'Cochez la case en bas de la page pour continuer.'**
-  String get publishCommitmentCheckHint;
+  /// **'En publiant, vous vous engagez à respecter les CGU de Yadony. Voici l\'essentiel, en {count} points.'**
+  String publishCommitmentsIntro(int count);
+
+  /// Case des engagements verrouillée tant que la liste n'est pas lue jusqu'en bas ; ** marque le gras
+  ///
+  /// In fr, this message translates to:
+  /// **'**Faites défiler jusqu\'en bas** pour lire les {count} engagements : la case à cocher se débloque ensuite.'**
+  String publishCommitmentLockedHint(int count);
+
+  /// Renvoi à l'article des CGU, espace insécable ; refs = numéros d'articles
+  ///
+  /// In fr, this message translates to:
+  /// **'Art. {refs}'**
+  String publishCommitmentArticle(String refs);
+
+  /// No description provided for @publishCommitmentReadTerms.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire les CGU en entier'**
+  String get publishCommitmentReadTerms;
+
+  /// No description provided for @publishIntroNoCardTrip.
+  ///
+  /// In fr, this message translates to:
+  /// **'**Aucune carte à enregistrer** pour publier.'**
+  String get publishIntroNoCardTrip;
+
+  /// No description provided for @publishIntroNoPaymentParcel.
+  ///
+  /// In fr, this message translates to:
+  /// **'**Rien à payer pour publier.**'**
+  String get publishIntroNoPaymentParcel;
+
+  /// No description provided for @publishCommitmentTripGroupBefore.
+  ///
+  /// In fr, this message translates to:
+  /// **'Avant de partir'**
+  String get publishCommitmentTripGroupBefore;
+
+  /// No description provided for @publishCommitmentTripGroupDuring.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pendant le transport'**
+  String get publishCommitmentTripGroupDuring;
+
+  /// No description provided for @publishCommitmentTripGroupMoney.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement, litiges et impôts'**
+  String get publishCommitmentTripGroupMoney;
+
+  /// No description provided for @publishCommitmentParcelGroupParcel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis'**
+  String get publishCommitmentParcelGroupParcel;
+
+  /// No description provided for @publishCommitmentParcelGroupHandover.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise et livraison'**
+  String get publishCommitmentParcelGroupHandover;
+
+  /// No description provided for @publishCommitmentParcelGroupLiability.
+  ///
+  /// In fr, this message translates to:
+  /// **'Responsabilité et litiges'**
+  String get publishCommitmentParcelGroupLiability;
+
+  /// No description provided for @publishCommitmentTrip01.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier des informations **exactes** : trajet, date, kilos, prix, lieux de remise.'**
+  String get publishCommitmentTrip01;
+
+  /// No description provided for @publishCommitmentTrip02.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire la **déclaration complète** de l\'expéditeur avant d\'accepter un colis.'**
+  String get publishCommitmentTrip02;
+
+  /// No description provided for @publishCommitmentTrip03.
+  ///
+  /// In fr, this message translates to:
+  /// **'N\'accepter que des **contenus autorisés** : refuser tout article interdit ou soumis à autorisation, dans le pays de départ, de transit ou d\'arrivée.'**
+  String get publishCommitmentTrip03;
+
+  /// No description provided for @publishCommitmentTrip04.
+  ///
+  /// In fr, this message translates to:
+  /// **'Respecter la **date et l\'itinéraire** annoncés. Si vous annulez, restituer les colis déjà remis avec le code de retour : sans lui, votre compte reste bloqué.'**
+  String get publishCommitmentTrip04;
+
+  /// No description provided for @publishCommitmentTrip05.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transporter le colis **vous-même**, sans le confier à un tiers.'**
+  String get publishCommitmentTrip05;
+
+  /// No description provided for @publishCommitmentTrip06.
+  ///
+  /// In fr, this message translates to:
+  /// **'À la remise, **vérifier le contenu**, scanner le QR et prendre la photo géolocalisée. Refuser tout colis non conforme.'**
+  String get publishCommitmentTrip06;
+
+  /// No description provided for @publishCommitmentTrip07.
+  ///
+  /// In fr, this message translates to:
+  /// **'Scanner **chaque étape** : départ, transit, arrivée. Chaque scan est horodaté et géolocalisé.'**
+  String get publishCommitmentTrip07;
+
+  /// No description provided for @publishCommitmentTrip08.
+  ///
+  /// In fr, this message translates to:
+  /// **'Être **responsable du colis** du scan de départ jusqu\'à la confirmation de livraison, à hauteur de la valeur déclarée.'**
+  String get publishCommitmentTrip08;
+
+  /// No description provided for @publishCommitmentTrip09.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remettre le colis **au bon destinataire**, en main propre, qui confirme avec son code de livraison.'**
+  String get publishCommitmentTrip09;
+
+  /// No description provided for @publishCommitmentTrip10.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne **jamais** demander ni accepter de paiement ou de contact hors de Yadony (sauf espèces convenues dans l\'application).'**
+  String get publishCommitmentTrip10;
+
+  /// No description provided for @publishCommitmentTrip11.
+  ///
+  /// In fr, this message translates to:
+  /// **'Régler la **commission Yadony** quand le colis est payé en espèces : elle est prélevée sur votre portefeuille ou votre carte à l\'acceptation.'**
+  String get publishCommitmentTrip11;
+
+  /// No description provided for @publishCommitmentTrip12.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter qu\'en cas de litige, Yadony **tranche sur preuves** (scans, photos, messages, déclaration signée), sous 72 h.'**
+  String get publishCommitmentTrip12;
+
+  /// No description provided for @publishCommitmentTrip13.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rester **courtois** : aucun propos haineux, harcèlement ou menace. Tolérance zéro.'**
+  String get publishCommitmentTrip13;
+
+  /// No description provided for @publishCommitmentTrip14.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déclarer **vos revenus** : vous restez seul responsable de votre fiscalité.'**
+  String get publishCommitmentTrip14;
+
+  /// No description provided for @publishCommitmentTrip15.
+  ///
+  /// In fr, this message translates to:
+  /// **'Savoir que Yadony est un **intermédiaire**, pas un transporteur : elle ne répond ni du contenu des colis ni des dommages pendant le transport.'**
+  String get publishCommitmentTrip15;
+
+  /// No description provided for @publishCommitmentParcel01.
+  ///
+  /// In fr, this message translates to:
+  /// **'N\'envoyer que des **contenus licites** et autorisés, dans tous les pays concernés (départ, transit, arrivée).'**
+  String get publishCommitmentParcel01;
+
+  /// No description provided for @publishCommitmentParcel02.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun **objet interdit** : drogues, armes, batteries externes, espèces et moyens de paiement, or et bijoux de valeur, contrefaçons, animaux, documents officiels.'**
+  String get publishCommitmentParcel02;
+
+  /// No description provided for @publishCommitmentParcel03.
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrire **honnêtement** le contenu et sa valeur déclarée (500 € maximum). Déclarer les marchandises destinées à la revente.'**
+  String get publishCommitmentParcel03;
+
+  /// No description provided for @publishCommitmentParcel04.
+  ///
+  /// In fr, this message translates to:
+  /// **'Joindre des **photos fidèles** et emballer soigneusement.'**
+  String get publishCommitmentParcel04;
+
+  /// No description provided for @publishCommitmentParcel05.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signer l\'**avertissement** sur les produits interdits : la signature est conservée comme preuve.'**
+  String get publishCommitmentParcel05;
+
+  /// No description provided for @publishCommitmentParcel06.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquer les **coordonnées exactes** du destinataire et le prévenir de l\'arrivée du colis.'**
+  String get publishCommitmentParcel06;
+
+  /// No description provided for @publishCommitmentParcel07.
+  ///
+  /// In fr, this message translates to:
+  /// **'Être **présent à la remise**. Le voyageur peut refuser un colis non conforme : vous êtes alors remboursé.'**
+  String get publishCommitmentParcel07;
+
+  /// No description provided for @publishCommitmentParcel08.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander au destinataire de **confirmer la réception** avec son code, uniquement une fois le colis reçu.'**
+  String get publishCommitmentParcel08;
+
+  /// No description provided for @publishCommitmentParcel09.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne **jamais** payer ni échanger de contacts hors de Yadony (sauf espèces convenues dans l\'application).'**
+  String get publishCommitmentParcel09;
+
+  /// No description provided for @publishCommitmentParcel10.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre en charge les **droits et taxes de douane**. Le voyageur reste libre de refuser le colis.'**
+  String get publishCommitmentParcel10;
+
+  /// No description provided for @publishCommitmentParcel11.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assumer **seul** toute fausse déclaration, y compris en cas de poursuites douanières ou pénales.'**
+  String get publishCommitmentParcel11;
+
+  /// No description provided for @publishCommitmentParcel12.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler un problème **sous 48 h** après la livraison, ou un colis non livré sous 15 jours après la date prévue, depuis l\'application.'**
+  String get publishCommitmentParcel12;
+
+  /// No description provided for @publishCommitmentParcel13.
+  ///
+  /// In fr, this message translates to:
+  /// **'Savoir que la **garantie est limitée** : 50 € par incident au plus, dans la limite de la valeur déclarée. Sont exclus : contenu non déclaré ou interdit, photo de livraison géolocalisée absente, litige hors délai.'**
+  String get publishCommitmentParcel13;
+
+  /// No description provided for @publishCommitmentParcel14.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fournir des **preuves** en cas de litige : 3 litiges sans preuve entraînent une suspension automatique.'**
+  String get publishCommitmentParcel14;
+
+  /// No description provided for @publishCommitmentParcel15.
+  ///
+  /// In fr, this message translates to:
+  /// **'Savoir que Yadony est un **intermédiaire**, pas un transporteur. Rester courtois : tolérance zéro.'**
+  String get publishCommitmentParcel15;
 
   /// Échec de l'enregistrement de l'acceptation des engagements.
   ///

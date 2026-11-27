@@ -1416,97 +1416,9 @@
   "@tripPublishIntroEngagementsTitleTrip": {
     "description": "Titre de la section des engagements de l'intro, rôle voyageur"
   },
-  "tripPublishIntroEngagementsIntroTrip": "En publiant, vous vous engagez à :",
-  "@tripPublishIntroEngagementsIntroTrip": {
-    "description": "Phrase d'introduction de la liste des engagements, rôle voyageur"
-  },
-  "tripPublishIntroRuleTripCarry": "Transporter le colis **vous-même**, sans le confier à un tiers.",
-  "@tripPublishIntroRuleTripCarry": {
-    "description": "Engagement voyageur : transporter le colis soi-même (** = segment en gras)"
-  },
-  "tripPublishIntroRuleTripSchedule": "Respecter la **date** et l'**itinéraire** annoncés.",
-  "@tripPublishIntroRuleTripSchedule": {
-    "description": "Engagement voyageur : respecter la date et l'itinéraire (** = segments en gras)"
-  },
-  "tripPublishIntroRuleTripScan": "**Lire le QR** à la remise et à la livraison.",
-  "@tripPublishIntroRuleTripScan": {
-    "description": "Engagement voyageur : scanner le QR à la remise et à la livraison (** = segment en gras)"
-  },
-  "tripPublishIntroRuleTripContent": "N'accepter que des **contenus autorisés**, jamais d'objet illicite.",
-  "@tripPublishIntroRuleTripContent": {
-    "description": "Engagement voyageur : n'accepter que des contenus autorisés (** = segment en gras)"
-  },
-  "tripPublishIntroRuleTripHandover": "Remettre le colis **au bon destinataire**, en main propre.",
-  "@tripPublishIntroRuleTripHandover": {
-    "description": "Engagement voyageur : remettre le colis au bon destinataire (** = segment en gras)"
-  },
-  "tripPublishIntroWhyTitleTrip": "Pourquoi publier",
-  "@tripPublishIntroWhyTitleTrip": {
-    "description": "Titre de la section « pourquoi publier », rôle voyageur"
-  },
-  "tripPublishIntroWhyBulletTripVisibility": "Visible par des milliers d'expéditeurs de la diaspora.",
-  "@tripPublishIntroWhyBulletTripVisibility": {
-    "description": "Puce « pourquoi publier », rôle voyageur : visibilité"
-  },
-  "tripPublishIntroWhyBulletTripEarnings": "Rentabilisez vos kilos libres à chaque voyage.",
-  "@tripPublishIntroWhyBulletTripEarnings": {
-    "description": "Puce « pourquoi publier », rôle voyageur : revenus"
-  },
-  "tripPublishIntroWhyBulletTripReputation": "Bâtissez une réputation avec les avis reçus.",
-  "@tripPublishIntroWhyBulletTripReputation": {
-    "description": "Puce « pourquoi publier », rôle voyageur : réputation"
-  },
   "requestPublishIntroEngagementsTitle": "Vos engagements d'expéditeur",
   "@requestPublishIntroEngagementsTitle": {
     "description": "Titre de la section des engagements de l'intro, rôle expéditeur"
-  },
-  "requestPublishIntroEngagementsIntro": "En envoyant un colis, vous certifiez :",
-  "@requestPublishIntroEngagementsIntro": {
-    "description": "Phrase d'introduction de la liste des engagements, rôle expéditeur"
-  },
-  "requestPublishIntroRuleLicit": "N'envoyer que des **contenus licites** et autorisés.",
-  "@requestPublishIntroRuleLicit": {
-    "description": "Engagement expéditeur : contenus licites uniquement (** = segment en gras)"
-  },
-  "requestPublishIntroRuleForbidden": "Aucun **objet interdit** (espèces, armes, produits dangereux…).",
-  "@requestPublishIntroRuleForbidden": {
-    "description": "Engagement expéditeur : aucun objet interdit (** = segment en gras)"
-  },
-  "requestPublishIntroRuleHonest": "Décrire **honnêtement** le contenu et sa valeur si le voyageur la demande.",
-  "@requestPublishIntroRuleHonest": {
-    "description": "Engagement expéditeur : description honnête du contenu (** = segment en gras)"
-  },
-  "requestPublishIntroRulePackaging": "**Emballer soigneusement** et décrire précisément le contenu.",
-  "@requestPublishIntroRulePackaging": {
-    "description": "Engagement expéditeur : emballage soigné (** = segment en gras)"
-  },
-  "requestPublishIntroRuleHandover": "Être présent à la **remise** et indiquer le bon destinataire.",
-  "@requestPublishIntroRuleHandover": {
-    "description": "Engagement expéditeur : présence à la remise (** = segment en gras)"
-  },
-  "requestPublishIntroWhyTitle": "Comment ça marche",
-  "@requestPublishIntroWhyTitle": {
-    "description": "Titre de la section « comment ça marche », rôle expéditeur"
-  },
-  "requestPublishIntroWhyBulletCarried": "Un voyageur transporte votre colis dans ses bagages.",
-  "@requestPublishIntroWhyBulletCarried": {
-    "description": "Puce « comment ça marche », rôle expéditeur : transport"
-  },
-  "requestPublishIntroWhyBulletPayment": "Paiement sécurisé, libéré à la livraison confirmée.",
-  "@requestPublishIntroWhyBulletPayment": {
-    "description": "Puce « comment ça marche », rôle expéditeur : paiement séquestré"
-  },
-  "requestPublishIntroWhyBulletTracking": "Suivi par QR de la remise jusqu'à la réception.",
-  "@requestPublishIntroWhyBulletTracking": {
-    "description": "Puce « comment ça marche », rôle expéditeur : suivi QR"
-  },
-  "tripPublishIntroStripeTitle": "Activez les paiements par carte",
-  "@tripPublishIntroStripeTitle": {
-    "description": "Titre du rappel Stripe (voyageur) dans l'intro de publication d'un trajet"
-  },
-  "tripPublishIntroStripeSubtitle": "Configurez votre compte Stripe pour que vos expéditeurs paient par carte, et recevez plus de colis.",
-  "@tripPublishIntroStripeSubtitle": {
-    "description": "Texte du rappel Stripe (voyageur) dans l'intro de publication d'un trajet"
   },
   "tripPublishPricePerKgSectionLabel": "Prix par kg",
   "@tripPublishPricePerKgSectionLabel": {
@@ -21475,8 +21387,51 @@
   "@publishCommitmentCheckboxTrip": {"description": "Case à cocher en bas de l'écran des engagements du voyageur (première publication d'un trajet)."},
   "publishCommitmentCheckboxParcel": "J'ai lu et j'ai pris connaissance de mes engagements en tant qu'expéditeur.",
   "@publishCommitmentCheckboxParcel": {"description": "Case à cocher en bas de l'écran des engagements de l'expéditeur (première demande d'envoi)."},
-  "publishCommitmentCheckHint": "Cochez la case en bas de la page pour continuer.",
-  "@publishCommitmentCheckHint": {"description": "Aide sous le bouton Continuer grisé tant que la case des engagements n'est pas cochée."},
+  "publishCommitmentsIntro": "En publiant, vous vous engagez à respecter les CGU de Yadony. Voici l'essentiel, en {count} points.",
+  "@publishCommitmentsIntro": {"description": "Introduction de la liste des engagements avant publication", "placeholders": {"count": {"type": "int"}}},
+  "publishCommitmentLockedHint": "**Faites défiler jusqu'en bas** pour lire les {count} engagements : la case à cocher se débloque ensuite.",
+  "@publishCommitmentLockedHint": {"description": "Case des engagements verrouillée tant que la liste n'est pas lue jusqu'en bas ; ** marque le gras", "placeholders": {"count": {"type": "int"}}},
+  "publishCommitmentArticle": "Art. {refs}",
+  "@publishCommitmentArticle": {"description": "Renvoi à l'article des CGU, espace insécable ; refs = numéros d'articles", "placeholders": {"refs": {"type": "String"}}},
+  "publishCommitmentReadTerms": "Lire les CGU en entier",
+  "publishIntroNoCardTrip": "**Aucune carte à enregistrer** pour publier.",
+  "publishIntroNoPaymentParcel": "**Rien à payer pour publier.**",
+  "publishCommitmentTripGroupBefore": "Avant de partir",
+  "publishCommitmentTripGroupDuring": "Pendant le transport",
+  "publishCommitmentTripGroupMoney": "Paiement, litiges et impôts",
+  "publishCommitmentParcelGroupParcel": "Votre colis",
+  "publishCommitmentParcelGroupHandover": "Remise et livraison",
+  "publishCommitmentParcelGroupLiability": "Responsabilité et litiges",
+  "publishCommitmentTrip01": "Publier des informations **exactes** : trajet, date, kilos, prix, lieux de remise.",
+  "publishCommitmentTrip02": "Lire la **déclaration complète** de l'expéditeur avant d'accepter un colis.",
+  "publishCommitmentTrip03": "N'accepter que des **contenus autorisés** : refuser tout article interdit ou soumis à autorisation, dans le pays de départ, de transit ou d'arrivée.",
+  "publishCommitmentTrip04": "Respecter la **date et l'itinéraire** annoncés. Si vous annulez, restituer les colis déjà remis avec le code de retour : sans lui, votre compte reste bloqué.",
+  "publishCommitmentTrip05": "Transporter le colis **vous-même**, sans le confier à un tiers.",
+  "publishCommitmentTrip06": "À la remise, **vérifier le contenu**, scanner le QR et prendre la photo géolocalisée. Refuser tout colis non conforme.",
+  "publishCommitmentTrip07": "Scanner **chaque étape** : départ, transit, arrivée. Chaque scan est horodaté et géolocalisé.",
+  "publishCommitmentTrip08": "Être **responsable du colis** du scan de départ jusqu'à la confirmation de livraison, à hauteur de la valeur déclarée.",
+  "publishCommitmentTrip09": "Remettre le colis **au bon destinataire**, en main propre, qui confirme avec son code de livraison.",
+  "publishCommitmentTrip10": "Ne **jamais** demander ni accepter de paiement ou de contact hors de Yadony (sauf espèces convenues dans l'application).",
+  "publishCommitmentTrip11": "Régler la **commission Yadony** quand le colis est payé en espèces : elle est prélevée sur votre portefeuille ou votre carte à l'acceptation.",
+  "publishCommitmentTrip12": "Accepter qu'en cas de litige, Yadony **tranche sur preuves** (scans, photos, messages, déclaration signée), sous 72 h.",
+  "publishCommitmentTrip13": "Rester **courtois** : aucun propos haineux, harcèlement ou menace. Tolérance zéro.",
+  "publishCommitmentTrip14": "Déclarer **vos revenus** : vous restez seul responsable de votre fiscalité.",
+  "publishCommitmentTrip15": "Savoir que Yadony est un **intermédiaire**, pas un transporteur : elle ne répond ni du contenu des colis ni des dommages pendant le transport.",
+  "publishCommitmentParcel01": "N'envoyer que des **contenus licites** et autorisés, dans tous les pays concernés (départ, transit, arrivée).",
+  "publishCommitmentParcel02": "Aucun **objet interdit** : drogues, armes, batteries externes, espèces et moyens de paiement, or et bijoux de valeur, contrefaçons, animaux, documents officiels.",
+  "publishCommitmentParcel03": "Décrire **honnêtement** le contenu et sa valeur déclarée (500 € maximum). Déclarer les marchandises destinées à la revente.",
+  "publishCommitmentParcel04": "Joindre des **photos fidèles** et emballer soigneusement.",
+  "publishCommitmentParcel05": "Signer l'**avertissement** sur les produits interdits : la signature est conservée comme preuve.",
+  "publishCommitmentParcel06": "Indiquer les **coordonnées exactes** du destinataire et le prévenir de l'arrivée du colis.",
+  "publishCommitmentParcel07": "Être **présent à la remise**. Le voyageur peut refuser un colis non conforme : vous êtes alors remboursé.",
+  "publishCommitmentParcel08": "Demander au destinataire de **confirmer la réception** avec son code, uniquement une fois le colis reçu.",
+  "publishCommitmentParcel09": "Ne **jamais** payer ni échanger de contacts hors de Yadony (sauf espèces convenues dans l'application).",
+  "publishCommitmentParcel10": "Prendre en charge les **droits et taxes de douane**. Le voyageur reste libre de refuser le colis.",
+  "publishCommitmentParcel11": "Assumer **seul** toute fausse déclaration, y compris en cas de poursuites douanières ou pénales.",
+  "publishCommitmentParcel12": "Signaler un problème **sous 48 h** après la livraison, ou un colis non livré sous 15 jours après la date prévue, depuis l'application.",
+  "publishCommitmentParcel13": "Savoir que la **garantie est limitée** : 50 € par incident au plus, dans la limite de la valeur déclarée. Sont exclus : contenu non déclaré ou interdit, photo de livraison géolocalisée absente, litige hors délai.",
+  "publishCommitmentParcel14": "Fournir des **preuves** en cas de litige : 3 litiges sans preuve entraînent une suspension automatique.",
+  "publishCommitmentParcel15": "Savoir que Yadony est un **intermédiaire**, pas un transporteur. Rester courtois : tolérance zéro.",
   "publishCommitmentAcceptFailed": "Votre accord n'a pas pu être enregistré. Vérifiez votre connexion et réessayez.",
   "@publishCommitmentAcceptFailed": {"description": "Échec de l'enregistrement de l'acceptation des engagements."},
   "publishCommitmentOutdated": "Vos engagements ont été mis à jour. Relisez-les avant de continuer.",
