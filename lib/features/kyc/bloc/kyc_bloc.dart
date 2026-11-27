@@ -34,6 +34,7 @@ class KycBloc extends Bloc<KycEvent, KycState> {
     on<KycStatusRefreshed>(_onStatusRefreshed);
     on<KycReset>((_, emit) => emit(const KycInitial()));
     on<KycSessionAbandoned>(_onSessionAbandoned);
+    on<KycAbandonReasonSubmitted>(_onAbandonReasonSubmitted);
   }
 
   Future<void> _onSessionRequested(
@@ -134,6 +135,34 @@ class KycBloc extends Bloc<KycEvent, KycState> {
           _errorReporter?.report(
             error,
             operation: 'kyc.abandon_session',
+            stackTrace: stackTrace,
+            context: {'feature': 'kyc'},
+          ),
+        );
+      }
+    }
+  }
+
+  /// Silencieux : la raison est un plus, jamais un obstacle à la sortie.
+  Future<void> _onAbandonReasonSubmitted(
+    KycAbandonReasonSubmitted event,
+    Emitter<KycState> emit,
+  ) async {
+    final durationMs = event.durationMs;
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.kycAbandonReason,
+        properties: {'reason': event.reason, 'duration_ms': ?durationMs},
+      ),
+    );
+    try {
+      await _repository.sendAbandonReason(event.reason);
+    } catch (error, stackTrace) {
+      if (error is! DioException) {
+        unawaited(
+          _errorReporter?.report(
+            error,
+            operation: 'kyc.abandon_reason',
             stackTrace: stackTrace,
             context: {'feature': 'kyc'},
           ),

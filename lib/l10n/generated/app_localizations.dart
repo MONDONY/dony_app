@@ -18451,6 +18451,54 @@ abstract class AppLocalizations {
   /// **'Nous n\'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.'**
   String get kycRejectionGeneric;
 
+  /// Titre de la feuille posée à la fermeture de la vérification d'identité (kyc_abandon_reason_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Qu\'est-ce qui vous arrête ?'**
+  String get kycAbandonSheetTitle;
+
+  /// Sous-titre de la feuille de raison d'abandon de la vérification d'identité.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une seule touche, cela nous aide à améliorer la vérification.'**
+  String get kycAbandonSheetSubtitle;
+
+  /// Raison d'abandon : pas de pièce d'identité disponible.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je n\'ai pas ma pièce d\'identité sous la main'**
+  String get kycAbandonReasonNoDocument;
+
+  /// Raison d'abandon : réticence à partager ses documents.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je préfère ne pas partager mes documents'**
+  String get kycAbandonReasonPrivacy;
+
+  /// Raison d'abandon : parcours jugé trop long.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est trop long'**
+  String get kycAbandonReasonTooLong;
+
+  /// Raison d'abandon : problème technique.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ça ne marche pas'**
+  String get kycAbandonReasonTechnical;
+
+  /// Raison d'abandon : reporté à plus tard.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je le ferai plus tard'**
+  String get kycAbandonReasonLater;
+
+  /// Bouton qui ferme la feuille de raison d'abandon sans répondre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer'**
+  String get kycAbandonSkip;
+
   /// Titre de la feuille affichée quand la caméra est refusée pendant la vérification d'identité (kyc_webview_screen.dart).
   ///
   /// In fr, this message translates to:

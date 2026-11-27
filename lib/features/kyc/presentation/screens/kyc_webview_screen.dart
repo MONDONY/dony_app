@@ -14,6 +14,7 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
+import 'package:dony/features/kyc/presentation/widgets/kyc_abandon_reason_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -187,6 +188,10 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
   final _openedAt = Stopwatch()..start();
   late final String _provider;
   bool _pageLoaded = false;
+
+  /// Fermeture en cours (feuille de raison ouverte) : un second retour ou un
+  /// second appui sur la croix ne doit pas empiler une autre feuille.
+  bool _closing = false;
   bool _cameraWasBlocked = false;
 
   AnalyticsService get _analytics =>
@@ -407,13 +412,27 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
 
   /// Croix de l'en-tête, et retour système une fois l'historique de la page
   /// de vérification épuisé.
-  void _close({required String via}) {
+  Future<void> _close({required String via}) async {
+    if (_closing) return;
+    _closing = true;
     _track(AnalyticsEvents.kycWebviewClosed, {
       'via': via,
       'page_loaded': _pageLoaded,
       'camera_blocked': _cameraWasBlocked,
     });
-    context.read<KycBloc>().add(const KycSessionAbandoned());
+    final durationMs = _openedAt.elapsedMilliseconds;
+    // La question n'a de sens qu'une fois la page du fournisseur vue ; passer
+    // ou glisser la feuille ne bloque jamais la sortie.
+    String? reason;
+    if (_pageLoaded) {
+      reason = await showKycAbandonReasonSheet(context);
+      if (!mounted) return;
+    }
+    final bloc = context.read<KycBloc>();
+    if (reason != null) {
+      bloc.add(KycAbandonReasonSubmitted(reason, durationMs: durationMs));
+    }
+    bloc.add(const KycSessionAbandoned());
     context.read<AuthBloc>().add(const AuthCheckRequested());
     // Revient d'où la vérification a été ouverte ; seule dans la pile
     // (route ouverte par `go`), l'accueil.
@@ -434,7 +453,7 @@ class _KycWebViewScreenState extends State<KycWebViewScreen>
       await _controller.goBack();
       return;
     }
-    if (mounted) _close(via: 'system_back');
+    if (mounted) unawaited(_close(via: 'system_back'));
   }
 
   @override

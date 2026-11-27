@@ -44,4 +44,17 @@ class KycRepository {
       throw unwrapDioError(e);
     }
   }
+
+  /// Raison donnée par l'utilisateur en quittant sa vérification (liste
+  /// fermée côté back, 422 sinon).
+  Future<void> sendAbandonReason(String reason) async {
+    try {
+      await _apiClient.dio.post<void>(
+        '/kyc/abandon-reason',
+        data: {'reason': reason},
+      );
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
 }

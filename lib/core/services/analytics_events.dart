@@ -74,6 +74,11 @@ abstract final class AnalyticsEvents {
   /// abandon : `kyc_failed` ne part que si la création de session échoue.
   static const kycWebviewClosed = 'kyc_webview_closed';
 
+  /// Raison donnée en quittant la vérification (feuille posée à la fermeture).
+  /// Propriétés `reason` : `NO_DOCUMENT` / `PRIVACY` / `TOO_LONG` /
+  /// `TECHNICAL` / `LATER`, `provider`, `duration_ms`.
+  static const kycAbandonReason = 'kyc_abandon_reason';
+
   /// « Importer une photo » de la page du fournisseur (Android seulement : la
   /// WebView n'ouvrait aucun sélecteur). Propriétés `provider`, `source`
   /// (`gallery`/`camera`), `outcome` (`selected`/`cancelled`/`rejected` : ni

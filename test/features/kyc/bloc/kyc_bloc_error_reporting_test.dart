@@ -107,4 +107,47 @@ void main() {
       verify: (_) => verifyZeroInteractions(reporter),
     );
   });
+
+  group('raison d\u2019abandon', () {
+    blocTest<KycBloc, KycState>(
+      'succès \u2192 raison envoyée au backend, aucun \u00e9tat \u00e9mis',
+      build: () {
+        when(() => repo.sendAbandonReason(any())).thenAnswer((_) async {});
+        return build();
+      },
+      act: (b) => b.add(const KycAbandonReasonSubmitted('TOO_LONG')),
+      expect: () => <KycState>[],
+      verify: (_) {
+        verify(() => repo.sendAbandonReason('TOO_LONG')).called(1);
+        verifyZeroInteractions(reporter);
+      },
+    );
+
+    blocTest<KycBloc, KycState>(
+      'erreur inattendue \u2192 silencieuse, remont\u00e9e \u00e0 Sentry',
+      build: () {
+        when(() => repo.sendAbandonReason(any())).thenThrow(StateError('x'));
+        return build();
+      },
+      act: (b) => b.add(const KycAbandonReasonSubmitted('LATER')),
+      expect: () => <KycState>[],
+      verify: (_) => verifyReported('kyc.abandon_reason'),
+    );
+
+    blocTest<KycBloc, KycState>(
+      'erreur r\u00e9seau \u2192 silencieuse et non remont\u00e9e',
+      build: () {
+        when(() => repo.sendAbandonReason(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/kyc/abandon-reason'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
+        return build();
+      },
+      act: (b) => b.add(const KycAbandonReasonSubmitted('PRIVACY')),
+      expect: () => <KycState>[],
+      verify: (_) => verifyZeroInteractions(reporter),
+    );
+  });
 }

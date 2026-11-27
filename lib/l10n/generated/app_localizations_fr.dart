@@ -11276,6 +11276,33 @@ class AppLocalizationsFr extends AppLocalizations {
       'Nous n\'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.';
 
   @override
+  String get kycAbandonSheetTitle => 'Qu\'est-ce qui vous arrête ?';
+
+  @override
+  String get kycAbandonSheetSubtitle =>
+      'Une seule touche, cela nous aide à améliorer la vérification.';
+
+  @override
+  String get kycAbandonReasonNoDocument =>
+      'Je n\'ai pas ma pièce d\'identité sous la main';
+
+  @override
+  String get kycAbandonReasonPrivacy =>
+      'Je préfère ne pas partager mes documents';
+
+  @override
+  String get kycAbandonReasonTooLong => 'C\'est trop long';
+
+  @override
+  String get kycAbandonReasonTechnical => 'Ça ne marche pas';
+
+  @override
+  String get kycAbandonReasonLater => 'Je le ferai plus tard';
+
+  @override
+  String get kycAbandonSkip => 'Passer';
+
+  @override
   String get kycCameraBlockedTitle => 'Caméra bloquée';
 
   @override
