@@ -2843,93 +2843,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vos engagements de voyageur';
 
   @override
-  String get tripPublishIntroEngagementsIntroTrip =>
-      'En publiant, vous vous engagez à :';
-
-  @override
-  String get tripPublishIntroRuleTripCarry =>
-      'Transporter le colis **vous-même**, sans le confier à un tiers.';
-
-  @override
-  String get tripPublishIntroRuleTripSchedule =>
-      'Respecter la **date** et l\'**itinéraire** annoncés.';
-
-  @override
-  String get tripPublishIntroRuleTripScan =>
-      '**Lire le QR** à la remise et à la livraison.';
-
-  @override
-  String get tripPublishIntroRuleTripContent =>
-      'N\'accepter que des **contenus autorisés**, jamais d\'objet illicite.';
-
-  @override
-  String get tripPublishIntroRuleTripHandover =>
-      'Remettre le colis **au bon destinataire**, en main propre.';
-
-  @override
-  String get tripPublishIntroWhyTitleTrip => 'Pourquoi publier';
-
-  @override
-  String get tripPublishIntroWhyBulletTripVisibility =>
-      'Visible par des milliers d\'expéditeurs de la diaspora.';
-
-  @override
-  String get tripPublishIntroWhyBulletTripEarnings =>
-      'Rentabilisez vos kilos libres à chaque voyage.';
-
-  @override
-  String get tripPublishIntroWhyBulletTripReputation =>
-      'Bâtissez une réputation avec les avis reçus.';
-
-  @override
   String get requestPublishIntroEngagementsTitle =>
       'Vos engagements d\'expéditeur';
-
-  @override
-  String get requestPublishIntroEngagementsIntro =>
-      'En envoyant un colis, vous certifiez :';
-
-  @override
-  String get requestPublishIntroRuleLicit =>
-      'N\'envoyer que des **contenus licites** et autorisés.';
-
-  @override
-  String get requestPublishIntroRuleForbidden =>
-      'Aucun **objet interdit** (espèces, armes, produits dangereux…).';
-
-  @override
-  String get requestPublishIntroRuleHonest =>
-      'Décrire **honnêtement** le contenu et sa valeur si le voyageur la demande.';
-
-  @override
-  String get requestPublishIntroRulePackaging =>
-      '**Emballer soigneusement** et décrire précisément le contenu.';
-
-  @override
-  String get requestPublishIntroRuleHandover =>
-      'Être présent à la **remise** et indiquer le bon destinataire.';
-
-  @override
-  String get requestPublishIntroWhyTitle => 'Comment ça marche';
-
-  @override
-  String get requestPublishIntroWhyBulletCarried =>
-      'Un voyageur transporte votre colis dans ses bagages.';
-
-  @override
-  String get requestPublishIntroWhyBulletPayment =>
-      'Paiement sécurisé, libéré à la livraison confirmée.';
-
-  @override
-  String get requestPublishIntroWhyBulletTracking =>
-      'Suivi par QR de la remise jusqu\'à la réception.';
-
-  @override
-  String get tripPublishIntroStripeTitle => 'Activez les paiements par carte';
-
-  @override
-  String get tripPublishIntroStripeSubtitle =>
-      'Configurez votre compte Stripe pour que vos expéditeurs paient par carte, et recevez plus de colis.';
 
   @override
   String get tripPublishPricePerKgSectionLabel => 'Prix par kg';
@@ -20415,8 +20330,168 @@ class AppLocalizationsFr extends AppLocalizations {
       'J\'ai lu et j\'ai pris connaissance de mes engagements en tant qu\'expéditeur.';
 
   @override
-  String get publishCommitmentCheckHint =>
-      'Cochez la case en bas de la page pour continuer.';
+  String publishCommitmentsIntro(int count) {
+    return 'En publiant, vous vous engagez à respecter les CGU de Yadony. Voici l\'essentiel, en $count points.';
+  }
+
+  @override
+  String publishCommitmentLockedHint(int count) {
+    return '**Faites défiler jusqu\'en bas** pour lire les $count engagements : la case à cocher se débloque ensuite.';
+  }
+
+  @override
+  String publishCommitmentArticle(String refs) {
+    return 'Art. $refs';
+  }
+
+  @override
+  String get publishCommitmentReadTerms => 'Lire les CGU en entier';
+
+  @override
+  String get publishIntroNoCardTrip =>
+      '**Aucune carte à enregistrer** pour publier.';
+
+  @override
+  String get publishIntroNoPaymentParcel => '**Rien à payer pour publier.**';
+
+  @override
+  String get publishCommitmentTripGroupBefore => 'Avant de partir';
+
+  @override
+  String get publishCommitmentTripGroupDuring => 'Pendant le transport';
+
+  @override
+  String get publishCommitmentTripGroupMoney => 'Paiement, litiges et impôts';
+
+  @override
+  String get publishCommitmentParcelGroupParcel => 'Votre colis';
+
+  @override
+  String get publishCommitmentParcelGroupHandover => 'Remise et livraison';
+
+  @override
+  String get publishCommitmentParcelGroupLiability =>
+      'Responsabilité et litiges';
+
+  @override
+  String get publishCommitmentTrip01 =>
+      'Publier des informations **exactes** : trajet, date, kilos, prix, lieux de remise.';
+
+  @override
+  String get publishCommitmentTrip02 =>
+      'Lire la **déclaration complète** de l\'expéditeur avant d\'accepter un colis.';
+
+  @override
+  String get publishCommitmentTrip03 =>
+      'N\'accepter que des **contenus autorisés** : refuser tout article interdit ou soumis à autorisation, dans le pays de départ, de transit ou d\'arrivée.';
+
+  @override
+  String get publishCommitmentTrip04 =>
+      'Respecter la **date et l\'itinéraire** annoncés. Si vous annulez, restituer les colis déjà remis avec le code de retour : sans lui, votre compte reste bloqué.';
+
+  @override
+  String get publishCommitmentTrip05 =>
+      'Transporter le colis **vous-même**, sans le confier à un tiers.';
+
+  @override
+  String get publishCommitmentTrip06 =>
+      'À la remise, **vérifier le contenu**, scanner le QR et prendre la photo géolocalisée. Refuser tout colis non conforme.';
+
+  @override
+  String get publishCommitmentTrip07 =>
+      'Scanner **chaque étape** : départ, transit, arrivée. Chaque scan est horodaté et géolocalisé.';
+
+  @override
+  String get publishCommitmentTrip08 =>
+      'Être **responsable du colis** du scan de départ jusqu\'à la confirmation de livraison, à hauteur de la valeur déclarée.';
+
+  @override
+  String get publishCommitmentTrip09 =>
+      'Remettre le colis **au bon destinataire**, en main propre, qui confirme avec son code de livraison.';
+
+  @override
+  String get publishCommitmentTrip10 =>
+      'Ne **jamais** demander ni accepter de paiement ou de contact hors de Yadony (sauf espèces convenues dans l\'application).';
+
+  @override
+  String get publishCommitmentTrip11 =>
+      'Régler la **commission Yadony** quand le colis est payé en espèces : elle est prélevée sur votre portefeuille ou votre carte à l\'acceptation.';
+
+  @override
+  String get publishCommitmentTrip12 =>
+      'Accepter qu\'en cas de litige, Yadony **tranche sur preuves** (scans, photos, messages, déclaration signée), sous 72 h.';
+
+  @override
+  String get publishCommitmentTrip13 =>
+      'Rester **courtois** : aucun propos haineux, harcèlement ou menace. Tolérance zéro.';
+
+  @override
+  String get publishCommitmentTrip14 =>
+      'Déclarer **vos revenus** : vous restez seul responsable de votre fiscalité.';
+
+  @override
+  String get publishCommitmentTrip15 =>
+      'Savoir que Yadony est un **intermédiaire**, pas un transporteur : elle ne répond ni du contenu des colis ni des dommages pendant le transport.';
+
+  @override
+  String get publishCommitmentParcel01 =>
+      'N\'envoyer que des **contenus licites** et autorisés, dans tous les pays concernés (départ, transit, arrivée).';
+
+  @override
+  String get publishCommitmentParcel02 =>
+      'Aucun **objet interdit** : drogues, armes, batteries externes, espèces et moyens de paiement, or et bijoux de valeur, contrefaçons, animaux, documents officiels.';
+
+  @override
+  String get publishCommitmentParcel03 =>
+      'Décrire **honnêtement** le contenu et sa valeur déclarée (500 € maximum). Déclarer les marchandises destinées à la revente.';
+
+  @override
+  String get publishCommitmentParcel04 =>
+      'Joindre des **photos fidèles** et emballer soigneusement.';
+
+  @override
+  String get publishCommitmentParcel05 =>
+      'Signer l\'**avertissement** sur les produits interdits : la signature est conservée comme preuve.';
+
+  @override
+  String get publishCommitmentParcel06 =>
+      'Indiquer les **coordonnées exactes** du destinataire et le prévenir de l\'arrivée du colis.';
+
+  @override
+  String get publishCommitmentParcel07 =>
+      'Être **présent à la remise**. Le voyageur peut refuser un colis non conforme : vous êtes alors remboursé.';
+
+  @override
+  String get publishCommitmentParcel08 =>
+      'Demander au destinataire de **confirmer la réception** avec son code, uniquement une fois le colis reçu.';
+
+  @override
+  String get publishCommitmentParcel09 =>
+      'Ne **jamais** payer ni échanger de contacts hors de Yadony (sauf espèces convenues dans l\'application).';
+
+  @override
+  String get publishCommitmentParcel10 =>
+      'Prendre en charge les **droits et taxes de douane**. Le voyageur reste libre de refuser le colis.';
+
+  @override
+  String get publishCommitmentParcel11 =>
+      'Assumer **seul** toute fausse déclaration, y compris en cas de poursuites douanières ou pénales.';
+
+  @override
+  String get publishCommitmentParcel12 =>
+      'Signaler un problème **sous 48 h** après la livraison, ou un colis non livré sous 15 jours après la date prévue, depuis l\'application.';
+
+  @override
+  String get publishCommitmentParcel13 =>
+      'Savoir que la **garantie est limitée** : 50 € par incident au plus, dans la limite de la valeur déclarée. Sont exclus : contenu non déclaré ou interdit, photo de livraison géolocalisée absente, litige hors délai.';
+
+  @override
+  String get publishCommitmentParcel14 =>
+      'Fournir des **preuves** en cas de litige : 3 litiges sans preuve entraînent une suspension automatique.';
+
+  @override
+  String get publishCommitmentParcel15 =>
+      'Savoir que Yadony est un **intermédiaire**, pas un transporteur. Rester courtois : tolérance zéro.';
 
   @override
   String get publishCommitmentAcceptFailed =>

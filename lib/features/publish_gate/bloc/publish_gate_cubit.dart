@@ -119,6 +119,20 @@ class PublishGateCubit extends Cubit<PublishGateState> {
 
   void setChecked(bool value) => emit(state.copyWith(checked: value));
 
+  /// La liste des engagements est arrivée en bas de l'écran (ou tient sur un
+  /// seul écran) : la case se débloque (elle reste verrouillée à l'écran tant
+  /// que ce n'est pas fait). Une seule fois par affichage.
+  void markListRead() {
+    if (state.listRead || state.status != PublishGateStatus.intro) return;
+    emit(state.copyWith(listRead: true));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.publishCommitmentsListRead,
+        properties: {'role': role.wire.toLowerCase()},
+      ),
+    );
+  }
+
   /// « Continuer » de l'écran des engagements.
   Future<void> accept() async {
     if (state.status == PublishGateStatus.accepting) return;
@@ -184,6 +198,9 @@ class PublishGateCubit extends Cubit<PublishGateState> {
         status: PublishGateStatus.intro,
         version: version,
         introShown: true,
+        // La liste est la même à l'écran et déjà lue : la case reste
+        // déverrouillable (aucun nouveau défilement ne viendrait la rouvrir).
+        listRead: state.listRead,
         error: PublishGateError.outdated,
         errorSeq: state.errorSeq + 1,
       ),

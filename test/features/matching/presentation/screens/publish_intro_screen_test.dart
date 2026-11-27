@@ -3,6 +3,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -82,8 +83,9 @@ Future<void> _pump(
   List<TripTemplate> tripTemplates = const [],
   AuthRepository? authRepository,
   bool resumeLocalDraft = false,
+  Size screen = const Size(900, 1800),
 }) async {
-  tester.view.physicalSize = const Size(900, 1800);
+  tester.view.physicalSize = screen;
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
 
@@ -207,6 +209,13 @@ Future<void> _pump(
         },
       ),
       GoRoute(
+        path: '/legal/terms',
+        builder: (_, _) {
+          visited.add('/legal/terms');
+          return const Scaffold(body: Text('CGU'));
+        },
+      ),
+      GoRoute(
         path: '/trips/create',
         builder: (_, state) {
           visited.add('/trips/create');
@@ -280,6 +289,11 @@ Future<void> _pump(
 }
 
 /// Coche la case des engagements, tout en bas de l'écran.
+/// Textes d'engagements : `Text.rich` (segments en gras), invisibles à
+/// `find.text`.
+Finder _rich(String fragment) =>
+    find.textContaining(fragment, findRichText: true);
+
 Future<void> _check(WidgetTester tester) async {
   final box = find.byKey(const Key('publish-commitment-checkbox'));
   await tester.ensureVisible(box);
@@ -351,8 +365,11 @@ void main() {
         );
 
         expect(
-          find.text(
-            'Vous vérifierez votre identité avant de publier, en 2 minutes.',
+          find.descendant(
+            of: find.byKey(const Key('publish-intro-kyc-notice')),
+            matching: _rich(
+              'Vous vérifierez votre identité avant de publier, en 2 minutes.',
+            ),
           ),
           findsOneWidget,
         );
@@ -473,8 +490,8 @@ void main() {
           findsOneWidget,
         );
         expect(
-          find.text('Cochez la case en bas de la page pour continuer.'),
-          findsOneWidget,
+          find.byKey(const Key('publish-commitment-locked')),
+          findsNothing,
         );
         await tester.tap(find.text('Continuer'));
         await tester.pumpAndSettle();
@@ -488,10 +505,6 @@ void main() {
       await _pump(tester, role: PublishIntroRole.trip, kycStatus: 'VERIFIED');
 
       await _check(tester);
-      expect(
-        find.text('Cochez la case en bas de la page pour continuer.'),
-        findsNothing,
-      );
       await tester.tap(find.text('Continuer'));
       await tester.pumpAndSettle();
 
@@ -537,9 +550,14 @@ void main() {
         findsOneWidget,
       );
       expect(visited, isEmpty);
+      // Case décochée : il faut accepter de nouveau le texte mis à jour.
       expect(
-        find.text('Cochez la case en bas de la page pour continuer.'),
-        findsOneWidget,
+        tester
+            .widget<DonyCheckbox>(
+              find.byKey(const Key('publish-commitment-checkbox')),
+            )
+            .value,
+        isFalse,
       );
     });
 
@@ -562,9 +580,8 @@ void main() {
       expect(visited, isEmpty);
     });
 
-    testWidgets('rappel Stripe visible si compte non configuré, et navigue', (
-      tester,
-    ) async {
+    testWidgets('plus de rappel Stripe : « Aucune carte à enregistrer » à la '
+        'place, même compte non configuré', (tester) async {
       await _pump(
         tester,
         role: PublishIntroRole.trip,
@@ -572,36 +589,15 @@ void main() {
         stripeStatus: 'NOT_CREATED',
       );
 
-      expect(find.text('Activez les paiements par carte'), findsOneWidget);
-
-      await tester.tap(find.text('Activez les paiements par carte'));
-      await tester.pumpAndSettle();
-
-      expect(visited, contains('/connect/onboarding/intro'));
-    });
-
-    testWidgets('rappel Stripe masqué si compte déjà opérationnel', (
-      tester,
-    ) async {
-      await _pump(tester, role: PublishIntroRole.trip, kycStatus: 'VERIFIED');
-
       expect(find.text('Activez les paiements par carte'), findsNothing);
-    });
-
-    testWidgets('rappel Stripe masqué si Stripe ne couvre pas le pays', (
-      tester,
-    ) async {
-      // Compte non configuré, donc le rappel s'afficherait normalement : c'est
-      // bien le pays qui le masque. Un tap ne pourrait jamais convertir.
-      await _pump(
-        tester,
-        role: PublishIntroRole.trip,
-        kycStatus: 'VERIFIED',
-        stripeStatus: 'NOT_CREATED',
-        connectAvailable: false,
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('publish-intro-no-card')),
+          matching: _rich('Aucune carte à enregistrer pour publier.'),
+        ),
+        findsOneWidget,
       );
-
-      expect(find.text('Activez les paiements par carte'), findsNothing);
+      expect(visited, isNot(contains('/connect/onboarding/intro')));
     });
   });
 
@@ -614,8 +610,14 @@ void main() {
       expect(find.text('Publier un colis'), findsOneWidget);
       expect(find.text('Vos engagements d\'expéditeur'), findsOneWidget);
       expect(find.text('Continuer'), findsOneWidget);
-      // Le rappel Stripe est réservé au voyageur : absent côté expéditeur.
       expect(find.text('Activez les paiements par carte'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('publish-intro-no-card')),
+          matching: _rich('Rien à payer pour publier.'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('vérifié : case cochée puis Continuer ouvre le wizard', (
@@ -887,6 +889,148 @@ void main() {
     });
   });
 
+  group('PublishIntroScreen — 15 engagements par rôle (CGU)', () {
+    testWidgets('voyageur : trois blocs, 15 engagements numérotés, renvois '
+        'aux articles des CGU', (tester) async {
+      await _pump(tester, role: PublishIntroRole.trip, kycStatus: 'VERIFIED');
+
+      expect(find.text('Avant de partir'), findsOneWidget);
+      expect(find.text('Pendant le transport'), findsOneWidget);
+      expect(find.text('Paiement, litiges et impôts'), findsOneWidget);
+      expect(
+        _rich('En publiant, vous vous engagez à respecter les CGU de Yadony'),
+        findsOneWidget,
+      );
+      expect(_rich('en 15 points'), findsOneWidget);
+      for (final fragment in [
+        'Publier des informations exactes',
+        'Lire la déclaration complète',
+        'Scanner chaque étape',
+        'responsable du colis',
+        'commission Yadony',
+        'tranche sur preuves',
+        'Déclarer vos revenus',
+        'intermédiaire, pas un transporteur',
+      ]) {
+        expect(_rich(fragment), findsOneWidget, reason: fragment);
+      }
+      // Numérotation à la suite d'un bloc à l'autre.
+      for (final n in ['1', '5', '6', '10', '11', '15']) {
+        expect(find.text(n), findsOneWidget, reason: 'numéro $n');
+      }
+      expect(_rich('Art.\u00a012bis'), findsOneWidget);
+    });
+
+    testWidgets('expéditeur : trois blocs et 15 engagements', (tester) async {
+      await _pump(tester, role: PublishIntroRole.parcel, kycStatus: 'VERIFIED');
+
+      expect(find.text('Votre colis'), findsOneWidget);
+      expect(find.text('Remise et livraison'), findsOneWidget);
+      expect(find.text('Responsabilité et litiges'), findsOneWidget);
+      for (final fragment in [
+        'contenus licites',
+        'objet interdit',
+        '500 € maximum',
+        'avertissement sur les produits interdits',
+        'sous 48 h après la livraison',
+        'garantie est limitée',
+        '3 litiges sans preuve',
+      ]) {
+        expect(_rich(fragment), findsOneWidget, reason: fragment);
+      }
+      expect(find.text('15'), findsOneWidget);
+    });
+
+    testWidgets('liste qui tient sur un écran : la case est débloquée tout de '
+        'suite', (tester) async {
+      await _pump(tester, role: PublishIntroRole.trip, kycStatus: 'VERIFIED');
+
+      expect(find.byKey(const Key('publish-commitment-locked')), findsNothing);
+      expect(
+        find.byKey(const Key('publish-commitment-checkbox')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('petit écran : case verrouillée, « Continuer » grisé, case '
+        'débloquée et mesurée en bas de liste', (tester) async {
+      await _pump(
+        tester,
+        role: PublishIntroRole.trip,
+        kycStatus: 'VERIFIED',
+        screen: const Size(360, 640),
+      );
+
+      expect(
+        find.byKey(const Key('publish-commitment-locked')),
+        findsOneWidget,
+      );
+      expect(_rich('Faites défiler jusqu\'en bas'), findsOneWidget);
+      expect(_rich('15 engagements'), findsOneWidget);
+      expect(
+        find.byKey(const Key('publish-commitment-checkbox')),
+        findsNothing,
+      );
+      await tester.tap(find.text('Continuer'));
+      await tester.pumpAndSettle();
+      verifyNever(() => _commitmentRepo.accept(any(), any()));
+
+      await tester.drag(
+        find.byType(SingleChildScrollView).first,
+        const Offset(0, -6000),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('publish-commitment-locked')), findsNothing);
+      expect(
+        find.byKey(const Key('publish-commitment-checkbox')),
+        findsOneWidget,
+      );
+      verify(
+        () => getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.publishCommitmentsListRead,
+          properties: {'role': 'traveler'},
+        ),
+      ).called(1);
+
+      await _check(tester);
+      await tester.tap(find.text('Continuer'));
+      await tester.pumpAndSettle();
+      verify(
+        () => _commitmentRepo.accept(PublishCommitmentRole.traveler, '2026-10'),
+      ).called(1);
+    });
+
+    testWidgets('« Lire les CGU en entier » ouvre les CGU', (tester) async {
+      await _pump(tester, role: PublishIntroRole.parcel, kycStatus: 'VERIFIED');
+
+      await tester.ensureVisible(
+        find.byKey(const Key('publish-intro-terms-link')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('publish-intro-terms-link')));
+      await tester.pumpAndSettle();
+
+      expect(visited, contains('/legal/terms'));
+    });
+
+    testWidgets('anglais, expéditeur : blocs, engagements et case verrouillée '
+        'traduits', (tester) async {
+      useEnglish();
+      await _pump(
+        tester,
+        role: PublishIntroRole.parcel,
+        kycStatus: 'VERIFIED',
+        screen: const Size(360, 640),
+      );
+
+      expect(find.text('Your parcel'), findsOneWidget);
+      expect(_rich('Only send lawful contents'), findsOneWidget);
+      expect(_rich('Scroll to the bottom'), findsOneWidget);
+      expect(_rich('15 commitments'), findsOneWidget);
+    });
+  });
+
   group('PublishIntroScreen — English', () {
     testWidgets('trajet, vérifié : titre et bouton traduits', (tester) async {
       useEnglish();
@@ -896,7 +1040,9 @@ void main() {
       expect(find.text('Continue'), findsOneWidget);
     });
 
-    testWidgets('trajet, rappel Stripe traduit', (tester) async {
+    testWidgets('trajet : « No card to save » et blocs traduits', (
+      tester,
+    ) async {
       useEnglish();
       await _pump(
         tester,
@@ -905,7 +1051,11 @@ void main() {
         stripeStatus: 'NOT_CREATED',
       );
 
-      expect(find.text('Activate card payments'), findsOneWidget);
+      expect(find.text('Activate card payments'), findsNothing);
+      expect(_rich('No card to save to post.'), findsOneWidget);
+      expect(find.text('Before you leave'), findsOneWidget);
+      expect(find.text('Payment, disputes and taxes'), findsOneWidget);
+      expect(_rich('Read the full terms of use'), findsOneWidget);
     });
 
     testWidgets('colis, vérifié : titre traduit', (tester) async {
@@ -924,7 +1074,7 @@ void main() {
       );
 
       expect(
-        find.text(
+        _rich(
           "You'll verify your identity before posting. It takes 2 minutes.",
         ),
         findsOneWidget,

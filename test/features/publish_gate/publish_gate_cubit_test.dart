@@ -368,6 +368,70 @@ void main() {
     );
   });
 
+  group('liste des engagements lue jusqu\'en bas', () {
+    test(
+      'markListRead débloque la case, une seule fois, et mesure le rôle',
+      () async {
+        when(
+          () => commitmentRepo.fetch(),
+        ).thenAnswer((_) async => commitments());
+        final cubit = build(PublishCommitmentRole.traveler);
+        await cubit.start();
+        expect(cubit.state.listRead, isFalse);
+
+        cubit.markListRead();
+        cubit.markListRead();
+
+        expect(cubit.state.listRead, isTrue);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.publishCommitmentsListRead,
+            properties: {'role': 'traveler'},
+          ),
+        ).called(1);
+        await cubit.close();
+      },
+    );
+
+    test('expéditeur : le rôle mesuré est sender', () async {
+      when(() => commitmentRepo.fetch()).thenAnswer((_) async => commitments());
+      final cubit = build(PublishCommitmentRole.sender);
+      await cubit.start();
+
+      cubit.markListRead();
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.publishCommitmentsListRead,
+          properties: {'role': 'sender'},
+        ),
+      ).called(1);
+      await cubit.close();
+    });
+
+    test(
+      'avant l\'écran des engagements : rien (engagements déjà acceptés)',
+      () async {
+        when(
+          () => commitmentRepo.fetch(),
+        ).thenAnswer((_) async => commitments(travelerRequired: false));
+        final cubit = build(PublishCommitmentRole.traveler);
+        await cubit.start();
+
+        cubit.markListRead();
+
+        expect(cubit.state.listRead, isFalse);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.publishCommitmentsListRead,
+            properties: any(named: 'properties'),
+          ),
+        );
+        await cubit.close();
+      },
+    );
+  });
+
   group('brouillons', () {
     test(
       'voyageur : brouillon local d\'abord, puis DRAFT serveur récents',
