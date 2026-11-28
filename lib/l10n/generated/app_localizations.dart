@@ -28957,6 +28957,36 @@ abstract class AppLocalizations {
   /// **'Les expéditeurs le voient et vous envoient leurs colis.'**
   String get homeEmptyPublishTripHint;
 
+  /// Titre du bloc de réassurance de l'aperçu d'un trajet, avant de publier.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ensuite'**
+  String get listingPreviewNextTitle;
+
+  /// Réassurance de l'aperçu d'un trajet : rien n'est visible avant la publication.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre trajet n\'est visible qu\'après avoir touché Publier.'**
+  String get listingPreviewNextVisible;
+
+  /// Réassurance de l'aperçu d'un trajet : les demandes arrivent par notification.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes prévenu quand un expéditeur vous fait une demande.'**
+  String get listingPreviewNextNotified;
+
+  /// Réassurance de l'aperçu d'un trajet : le voyageur accepte ou refuse chaque demande.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous choisissez les colis que vous acceptez.'**
+  String get listingPreviewNextChoose;
+
+  /// Réassurance de l'aperçu d'un trajet : le trajet publié reste modifiable et annulable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pouvez modifier ou annuler votre trajet ensuite.'**
+  String get listingPreviewNextEdit;
+
   /// Sous-titre du choix « Publier un trajet » de la feuille « + Publier ».
   ///
   /// In fr, this message translates to:
@@ -40173,19 +40203,19 @@ abstract class AppLocalizations {
   /// Même feuille, trajet : la saisie a été gardée en brouillon sur le téléphone
   ///
   /// In fr, this message translates to:
-  /// **'Votre trajet est enregistré. Vérifiez votre identité (environ 2 minutes) puis publiez-le.'**
+  /// **'Votre trajet est enregistré. Vérifiez votre identité (environ 2 minutes) puis publiez-le. Les expéditeurs voient que vous êtes vérifié : c\'est ce qui les met en confiance.'**
   String get publishKycGateBodyTrip;
 
   /// Même feuille, demande d'envoi : la saisie a été gardée en brouillon sur le téléphone
   ///
   /// In fr, this message translates to:
-  /// **'Votre demande est enregistrée. Vérifiez votre identité (environ 2 minutes) puis publiez-la.'**
+  /// **'Votre demande est enregistrée. Vérifiez votre identité (environ 2 minutes) puis publiez-la. Les voyageurs voient que vous êtes vérifié : c\'est ce qui les met en confiance.'**
   String get publishKycGateBodyRequest;
 
   /// Même feuille, quand la saisie n'a pas pu être gardée en brouillon (trousseau refusé, modification d'un trajet publié)
   ///
   /// In fr, this message translates to:
-  /// **'Vérifiez votre identité (environ 2 minutes) puis publiez.'**
+  /// **'Vérifiez votre identité (environ 2 minutes) puis publiez. Les autres membres voient que vous êtes vérifié : c\'est ce qui les met en confiance.'**
   String get publishKycGateBodyUnsaved;
 
   /// Même feuille, ligne ajoutée quand la vérification précédente a été refusée (statut REJECTED)

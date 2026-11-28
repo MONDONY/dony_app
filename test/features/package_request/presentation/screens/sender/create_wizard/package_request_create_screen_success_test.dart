@@ -870,7 +870,8 @@ void main() {
       expect(
         find.text(
           'Votre demande est enregistrée. Vérifiez votre identité (environ 2 '
-          'minutes) puis publiez-la.',
+          'minutes) puis publiez-la. Les voyageurs voient que vous êtes '
+          'vérifié : c\'est ce qui les met en confiance.',
         ),
         findsOneWidget,
       );

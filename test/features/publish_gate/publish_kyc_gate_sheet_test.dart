@@ -147,7 +147,8 @@ void main() {
       expect(
         find.text(
           'Votre trajet est enregistré. Vérifiez votre identité (environ 2 '
-          'minutes) puis publiez-le.',
+          'minutes) puis publiez-le. Les expéditeurs voient que vous êtes '
+          'vérifié : c\'est ce qui les met en confiance.',
         ),
         findsOne,
       );
@@ -167,7 +168,8 @@ void main() {
       expect(
         find.text(
           'Votre demande est enregistrée. Vérifiez votre identité (environ 2 '
-          'minutes) puis publiez-la.',
+          'minutes) puis publiez-la. Les voyageurs voient que vous êtes '
+          'vérifié : c\'est ce qui les met en confiance.',
         ),
         findsOne,
       );
@@ -178,7 +180,11 @@ void main() {
     ) async {
       await pump(tester, await gateFor(saved: false));
       expect(
-        find.text('Vérifiez votre identité (environ 2 minutes) puis publiez.'),
+        find.text(
+          'Vérifiez votre identité (environ 2 minutes) puis publiez. Les '
+          'autres membres voient que vous êtes vérifié : c\'est ce qui les '
+          'met en confiance.',
+        ),
         findsOne,
       );
     });
