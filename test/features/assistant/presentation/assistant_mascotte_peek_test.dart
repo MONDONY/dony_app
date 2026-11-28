@@ -240,7 +240,10 @@ void main() {
     testWidgets('l’aide de première fois repousse le passage', (tester) async {
       final counts = <int>[];
       await _pump(tester, showHint: true, onShown: counts.add);
-      await _play(tester, const Duration(seconds: 12));
+      await _play(
+        tester,
+        kAssistantMascotteFirstDelay + const Duration(seconds: 6),
+      );
       expect(counts, isEmpty);
       expect(_mascotte, findsNothing);
       // L’aide se ferme (le parent remonte la bulle sans aide) : le passage
@@ -280,7 +283,10 @@ void main() {
     ) async {
       final counts = <int>[];
       await _pump(tester, onShown: counts.add);
-      await _play(tester, const Duration(seconds: 5));
+      await _play(
+        tester,
+        kAssistantMascotteFirstDelay - const Duration(seconds: 1),
+      );
       final gesture = await tester.startGesture(_bubbleRect(tester).center);
       await gesture.moveBy(const Offset(-20, -20));
       await tester.pump();
