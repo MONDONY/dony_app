@@ -20,23 +20,37 @@ void main() {
     });
   });
 
-  test('rien d\'écrit : le tour commence à la première bulle', () {
-    expect(TourProgressStore(box).read('uid-1'), 0);
-  });
-
-  test('l\'avancée se relit par compte', () async {
+  test('rien d\'écrit : rien de vu, aucune date', () {
     final store = TourProgressStore(box);
-    await store.write('uid-1', 2);
-    expect(store.read('uid-1'), 2);
-    expect(store.read('uid-2'), 0);
-    expect(stored['${TourProgressStore.keyPrefix}uid-1'], 2);
+    expect(store.readSeen('uid-1'), 0);
+    expect(store.readDoneAt('uid-1'), isNull);
+    expect(store.readLastContextualDay('uid-1'), isNull);
   });
 
-  test('une valeur illisible vaut le début', () {
-    stored['${TourProgressStore.keyPrefix}uid-1'] = 'oups';
-    expect(TourProgressStore(box).read('uid-1'), 0);
-    stored['${TourProgressStore.keyPrefix}uid-1'] = -3;
-    expect(TourProgressStore(box).read('uid-1'), 0);
+  test('les trois valeurs se relisent par compte', () async {
+    final store = TourProgressStore(box);
+    final at = DateTime(2026, 11, 28, 10);
+    await store.writeSeen('uid-1', 5);
+    await store.writeDoneAt('uid-1', at);
+    await store.writeLastContextualDay('uid-1', '2026-11-28');
+
+    expect(store.readSeen('uid-1'), 5);
+    expect(store.readDoneAt('uid-1'), at);
+    expect(store.readLastContextualDay('uid-1'), '2026-11-28');
+    expect(store.readSeen('uid-2'), 0);
+    expect(stored['${TourProgressStore.seenPrefix}uid-1'], 5);
+  });
+
+  test('une valeur illisible vaut « rien de vu »', () {
+    stored['${TourProgressStore.seenPrefix}uid-1'] = 'oups';
+    stored['${TourProgressStore.doneAtPrefix}uid-1'] = 'oups';
+    stored['${TourProgressStore.lastContextualPrefix}uid-1'] = 12;
+    final store = TourProgressStore(box);
+    expect(store.readSeen('uid-1'), 0);
+    expect(store.readDoneAt('uid-1'), isNull);
+    expect(store.readLastContextualDay('uid-1'), isNull);
+    stored['${TourProgressStore.seenPrefix}uid-1'] = -3;
+    expect(store.readSeen('uid-1'), 0);
   });
 
   test(
@@ -45,8 +59,12 @@ void main() {
       when(() => box.get(any())).thenThrow(StateError('fermée'));
       when(() => box.put(any(), any())).thenThrow(StateError('fermée'));
       final store = TourProgressStore(box);
-      expect(store.read('uid-1'), 0);
-      await store.write('uid-1', 1);
+      expect(store.readSeen('uid-1'), 0);
+      expect(store.readDoneAt('uid-1'), isNull);
+      expect(store.readLastContextualDay('uid-1'), isNull);
+      await store.writeSeen('uid-1', 1);
+      await store.writeDoneAt('uid-1', DateTime(2026));
+      await store.writeLastContextualDay('uid-1', 'x');
     },
   );
 }

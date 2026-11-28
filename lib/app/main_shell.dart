@@ -614,56 +614,59 @@ class MainShellBottomNav extends StatelessWidget {
                             ),
                             // 3 — Messages
                             Expanded(
-                              child: Builder(
-                                builder: (context) {
-                                  // `hasRealSession` : un visiteur a un uid
-                                  // anonyme parfaitement valide, mais aucune
-                                  // conversation. Ouvrir le stream sur cet uid
-                                  // n'apporterait qu'une écoute Firestore
-                                  // inutile, refusée par les règles d'accès.
-                                  final uid =
-                                      getIt<FirebaseSessionProbe>()
-                                          .hasRealSession
-                                      ? FirebaseAuth.instance.currentUser?.uid
-                                      : null;
-                                  if (uid == null || uid.isEmpty) {
-                                    // Pendant le sign-out, ou pour un
-                                    // visiteur : pas de stream Firestore
-                                    // (path vide invalide).
-                                    return DonyNavItem(
-                                      iconAsset: 'message-circle',
-                                      label: context.l10n.shellTabMessages,
-                                      index: 3,
-                                      currentIndex: currentIndex,
-                                      onTap: () => onTap(3),
-                                    );
-                                  }
-                                  return StreamBuilder<int>(
-                                    stream: getIt<FirestoreChatRepository>()
-                                        .totalUnreadStream(uid),
-                                    builder: (context, snapshot) {
-                                      return BlocBuilder<
-                                        SupportUnreadCubit,
-                                        int
-                                      >(
-                                        bloc: getIt<SupportUnreadCubit>(),
-                                        builder: (context, supportUnread) {
-                                          return DonyNavItem(
-                                            iconAsset: 'message-circle',
-                                            label:
-                                                context.l10n.shellTabMessages,
-                                            index: 3,
-                                            currentIndex: currentIndex,
-                                            onTap: () => onTap(3),
-                                            badgeCount:
-                                                (snapshot.data ?? 0) +
-                                                supportUnread,
-                                          );
-                                        },
+                              child: TourAnchor(
+                                step: TourStep.support,
+                                child: Builder(
+                                  builder: (context) {
+                                    // `hasRealSession` : un visiteur a un uid
+                                    // anonyme parfaitement valide, mais aucune
+                                    // conversation. Ouvrir le stream sur cet uid
+                                    // n'apporterait qu'une écoute Firestore
+                                    // inutile, refusée par les règles d'accès.
+                                    final uid =
+                                        getIt<FirebaseSessionProbe>()
+                                            .hasRealSession
+                                        ? FirebaseAuth.instance.currentUser?.uid
+                                        : null;
+                                    if (uid == null || uid.isEmpty) {
+                                      // Pendant le sign-out, ou pour un
+                                      // visiteur : pas de stream Firestore
+                                      // (path vide invalide).
+                                      return DonyNavItem(
+                                        iconAsset: 'message-circle',
+                                        label: context.l10n.shellTabMessages,
+                                        index: 3,
+                                        currentIndex: currentIndex,
+                                        onTap: () => onTap(3),
                                       );
-                                    },
-                                  );
-                                },
+                                    }
+                                    return StreamBuilder<int>(
+                                      stream: getIt<FirestoreChatRepository>()
+                                          .totalUnreadStream(uid),
+                                      builder: (context, snapshot) {
+                                        return BlocBuilder<
+                                          SupportUnreadCubit,
+                                          int
+                                        >(
+                                          bloc: getIt<SupportUnreadCubit>(),
+                                          builder: (context, supportUnread) {
+                                            return DonyNavItem(
+                                              iconAsset: 'message-circle',
+                                              label:
+                                                  context.l10n.shellTabMessages,
+                                              index: 3,
+                                              currentIndex: currentIndex,
+                                              onTap: () => onTap(3),
+                                              badgeCount:
+                                                  (snapshot.data ?? 0) +
+                                                  supportUnread,
+                                            );
+                                          },
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                             // 4 — Moi (photo de profil style Facebook)

@@ -65,6 +65,8 @@ import 'package:dony/features/package_request/presentation/widgets/package_reque
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
 import 'package:dony/features/receptions/bloc/receptions_prompt_cubit.dart';
 import 'package:dony/features/receptions/presentation/widgets/receptions_prompt_banner.dart';
+import 'package:dony/features/tour/bloc/tour_cubit.dart';
+import 'package:dony/features/tour/presentation/tour_anchors.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -848,6 +850,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// [_openComposer], seul endroit où l'utilisateur valide vraiment une
   /// recherche via le bouton « Rechercher ».
   void _onFiltersChanged(HomeSearchFilters next) {
+    // Première fois qu'on touche à un filtre : la bulle du filtre Urgent
+    // pourra l'expliquer.
+    getItSafe<TourCubit>()?.trigger(TourStep.urgent);
     _trackFilterDiff(_filters, next);
     setState(() => _filters = next);
     _dispatchForMode();
@@ -1180,6 +1185,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
   // recherche du mode courant.
   void _onUrgentToggle() {
     final next = !_filters.urgentOnly;
+    // Il vient de s'en servir : inutile de lui expliquer ce filtre.
+    unawaited(getItSafe<TourCubit>()?.markSeen(TourStep.urgent));
     unawaited(
       getIt<AnalyticsService>().logEvent(
         AnalyticsEvents.urgentFilterToggled,
@@ -3982,64 +3989,67 @@ class _FavoritesButton extends StatelessWidget {
       builder: (context, state) {
         final cs = Theme.of(context).colorScheme;
         final count = state.count;
-        return GestureDetector(
-          key: const Key('favorites-button'),
-          // Les favoris sont accessibles à un visiteur : c'est le seul
-          // contenu qu'une session invitée peut conserver (backend et
-          // routeur les autorisent déjà — `GuestAccessGuard.isPublicGuestPath`).
-          onTap: () => context.push('/favoris'),
-          behavior: HitTestBehavior.opaque,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.10),
-                      blurRadius: 12,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  count > 0 ? Icons.bookmark : Icons.bookmark_border,
-                  size: 22,
-                  color: count > 0 ? DonyColors.primary : cs.onSurfaceVariant,
-                ),
-              ),
-              if (count > 0)
-                Positioned(
-                  top: -4,
-                  right: -4,
-                  child: Container(
-                    key: const Key('favorites-badge'),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 3),
-                    decoration: BoxDecoration(
-                      color: DonyColors.favorite,
-                      borderRadius: BorderRadius.circular(DonyRadius.full),
-                    ),
-                    child: Text(
-                      count > 99 ? '99+' : '$count',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: DonyColors.white,
-                        height: 1.6,
+        return TourAnchor(
+          step: TourStep.favorites,
+          child: GestureDetector(
+            key: const Key('favorites-button'),
+            // Les favoris sont accessibles à un visiteur : c'est le seul
+            // contenu qu'une session invitée peut conserver (backend et
+            // routeur les autorisent déjà — `GuestAccessGuard.isPublicGuestPath`).
+            onTap: () => context.push('/favoris'),
+            behavior: HitTestBehavior.opaque,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.10),
+                        blurRadius: 12,
+                        offset: const Offset(0, 3),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
+                    ],
+                  ),
+                  child: Icon(
+                    count > 0 ? Icons.bookmark : Icons.bookmark_border,
+                    size: 22,
+                    color: count > 0 ? DonyColors.primary : cs.onSurfaceVariant,
                   ),
                 ),
-            ],
+                if (count > 0)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Container(
+                      key: const Key('favorites-badge'),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      decoration: BoxDecoration(
+                        color: DonyColors.favorite,
+                        borderRadius: BorderRadius.circular(DonyRadius.full),
+                      ),
+                      child: Text(
+                        count > 99 ? '99+' : '$count',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: DonyColors.white,
+                          height: 1.6,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         );
       },

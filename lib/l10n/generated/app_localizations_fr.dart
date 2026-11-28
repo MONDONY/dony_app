@@ -17771,6 +17771,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tourDone => 'Terminer';
 
   @override
+  String get tourStepUrgentTitle => 'Urgent';
+
+  @override
+  String get tourStepUrgentBody =>
+      'Les trajets qui partent dans moins de 7 jours.';
+
+  @override
+  String get tourStepFavoritesBody =>
+      'Le trajet que vous venez d\'aimer est ici, avec tous les autres.';
+
+  @override
+  String get tourStepSupportTitle => 'Besoin d\'aide ?';
+
+  @override
+  String get tourStepSupportBody =>
+      'Une question ? Ouvrez Messages : l\'équipe Yadony vous répond là, dans une conversation.';
+
+  @override
+  String get tourGotIt => 'Compris';
+
+  @override
   String get homePublishTripSubtitle => 'Proposez vos kilos disponibles';
 
   @override

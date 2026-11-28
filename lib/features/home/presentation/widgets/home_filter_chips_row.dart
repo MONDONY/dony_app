@@ -23,6 +23,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/search_period.dart';
+import 'package:dony/features/tour/bloc/tour_cubit.dart';
+import 'package:dony/features/tour/presentation/tour_anchors.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -151,11 +153,14 @@ class HomeFilterChipsRow extends StatelessWidget {
       : l.homeFilterChipsSize;
 
   /// Chip « Urgent », commun aux deux modes (même `key`, même rendu).
-  Widget _urgentChip(AppLocalizations l) => HomeSmallChip(
-    key: const Key('chip-urgent'),
-    label: l.homeFilterChipsUrgent,
-    isActive: filters.urgentOnly,
-    onTap: onUrgentToggle,
+  Widget _urgentChip(AppLocalizations l) => TourAnchor(
+    step: TourStep.urgent,
+    child: HomeSmallChip(
+      key: const Key('chip-urgent'),
+      label: l.homeFilterChipsUrgent,
+      isActive: filters.urgentOnly,
+      onTap: onUrgentToggle,
+    ),
   );
 
   @override

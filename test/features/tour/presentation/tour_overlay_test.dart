@@ -90,6 +90,33 @@ void main() {
                     child: SizedBox(width: 72, height: 60),
                   ),
                 ),
+                const Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 140),
+                    child: TourAnchor(
+                      step: TourStep.urgent,
+                      child: SizedBox(width: 80, height: 32),
+                    ),
+                  ),
+                ),
+                const Align(
+                  alignment: Alignment.topLeft,
+                  child: TourAnchor(
+                    step: TourStep.favorites,
+                    child: SizedBox(width: 48, height: 48),
+                  ),
+                ),
+                const Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 200),
+                    child: TourAnchor(
+                      step: TourStep.support,
+                      child: SizedBox(width: 72, height: 60),
+                    ),
+                  ),
+                ),
                 Positioned.fill(
                   child: TourOverlay(
                     tabIndex: tabIndex,
@@ -113,7 +140,7 @@ void main() {
     await tester.pump(_delay + const Duration(milliseconds: 50));
     await tester.pump();
     expect(find.text('Le bouton +'), findsOneWidget);
-    expect(find.text('1 sur 4'), findsOneWidget);
+    expect(find.text('1 sur 8'), findsOneWidget);
     expect(find.text('Suivant'), findsOneWidget);
     expect(find.text('Passer le tour'), findsOneWidget);
   });
@@ -128,7 +155,7 @@ void main() {
     await tester.tap(find.byKey(const Key('tour-next')));
     await tester.pump();
     await tester.pump();
-    expect(find.text('2 sur 4'), findsOneWidget);
+    expect(find.text('2 sur 8'), findsOneWidget);
     expect(find.text('J\'envoie un colis'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('tour-next')));
@@ -144,9 +171,9 @@ void main() {
 
     await tester.tap(find.byKey(const Key('tour-next')));
     await tester.pump();
-    expect(cubit.state.finished, isTrue);
-    expect(find.text('4 sur 4'), findsNothing);
-    expect(stored['${TourProgressStore.keyPrefix}uid-1'], 4);
+    expect(cubit.state.step, isNull);
+    expect(find.text('4 sur 8'), findsNothing);
+    expect(stored['${TourProgressStore.seenPrefix}uid-1'], 15);
   });
 
   testWidgets('« Passer le tour » ferme tout', (tester) async {
@@ -156,7 +183,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('tour-skip')));
     await tester.pump();
-    expect(cubit.state.finished, isTrue);
+    expect(cubit.state.step, isNull);
     expect(find.text('Le bouton +'), findsNothing);
   });
 
@@ -201,7 +228,7 @@ void main() {
   testWidgets('la bulle de la barre d\'onglets se pose au-dessus du bouton', (
     tester,
   ) async {
-    stored['${TourProgressStore.keyPrefix}uid-1'] = 3;
+    stored['${TourProgressStore.seenPrefix}uid-1'] = 7;
     cubit.sync('uid-2');
     cubit.sync('uid-1');
     await pump(tester);
@@ -211,5 +238,73 @@ void main() {
     final bubble = tester.getRect(find.text('Activités'));
     final target = tester.getRect(find.byType(TourAnchor).last);
     expect(bubble.bottom, lessThan(target.top));
+  });
+
+  group('bulles au moment utile', () {
+    int bit(TourStep s) => 1 << s.index;
+    final tourMask = TourStep.sequential.map(bit).reduce((a, b) => a | b);
+
+    void tourFini() {
+      stored['${TourProgressStore.seenPrefix}uid-1'] = tourMask;
+      stored['${TourProgressStore.doneAtPrefix}uid-1'] =
+          DateTime.now().millisecondsSinceEpoch;
+      cubit.sync('uid-2');
+      cubit.sync('uid-1');
+    }
+
+    testWidgets('le filtre touché fait venir la bulle Urgent', (tester) async {
+      tourFini();
+      await pump(tester);
+      await tester.pump(_delay * 2);
+      expect(find.text('Urgent'), findsNothing);
+
+      cubit.trigger(TourStep.urgent);
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(_delay + const Duration(milliseconds: 50));
+      await tester.pump();
+      expect(find.text('Urgent'), findsOneWidget);
+      expect(find.text('5 sur 8'), findsOneWidget);
+      expect(find.text('Compris'), findsOneWidget);
+      expect(find.byKey(const Key('tour-skip')), findsNothing);
+    });
+
+    testWidgets('« Compris » ferme la bulle pour de bon', (tester) async {
+      tourFini();
+      await pump(tester);
+      cubit.trigger(TourStep.favorites);
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(_delay + const Duration(milliseconds: 50));
+      await tester.pump();
+      expect(find.text('Mes favoris'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('tour-next')));
+      await tester.pump();
+      expect(find.text('Mes favoris'), findsNothing);
+      expect(
+        stored['${TourProgressStore.seenPrefix}uid-1'],
+        tourMask | bit(TourStep.favorites),
+      );
+    });
+
+    testWidgets('le support se pose au-dessus de l\'onglet Messages', (
+      tester,
+    ) async {
+      stored['${TourProgressStore.seenPrefix}uid-1'] = tourMask;
+      stored['${TourProgressStore.doneAtPrefix}uid-1'] = DateTime.now()
+          .subtract(const Duration(days: 4))
+          .millisecondsSinceEpoch;
+      cubit.sync('uid-2');
+      cubit.sync('uid-1');
+      await pump(tester);
+      await tester.pump(_delay + const Duration(milliseconds: 50));
+      await tester.pump();
+
+      expect(find.text('Besoin d\'aide ?'), findsOneWidget);
+      final bubble = tester.getRect(find.text('Besoin d\'aide ?'));
+      final target = tester.getRect(find.byType(TourAnchor).last);
+      expect(bubble.bottom, lessThan(target.top));
+    });
   });
 }

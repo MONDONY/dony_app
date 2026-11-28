@@ -2093,8 +2093,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => TripLikeRepository(getIt<TripLikeRemoteDatasource>()),
   );
   getIt.registerLazySingleton<TripLikesCubit>(
-    () =>
-        TripLikesCubit(getIt<TripLikeRepository>(), getIt<AnalyticsService>()),
+    () => TripLikesCubit(
+      getIt<TripLikeRepository>(),
+      getIt<AnalyticsService>(),
+      // Premier cœur : la bulle des favoris peut l'expliquer.
+      onLiked: () => getIt<TourCubit>().trigger(TourStep.favorites),
+    ),
     dispose: (c) => c.close(),
   );
   getIt.registerFactory<FavoriteTripsCubit>(
