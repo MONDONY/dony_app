@@ -17705,6 +17705,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homePublishTrip => 'Publier un trajet';
 
   @override
+  String get homeEmptyPublishRequest => 'Publier ma demande';
+
+  @override
+  String get homeEmptyPublishRequestHint =>
+      'Les voyageurs la voient et vous proposent leur trajet.';
+
+  @override
+  String get homeEmptyPublishTrip => 'Publier mon trajet';
+
+  @override
+  String get homeEmptyPublishTripHint =>
+      'Les expéditeurs le voient et vous envoient leurs colis.';
+
+  @override
   String get homePublishTripSubtitle => 'Proposez vos kilos disponibles';
 
   @override

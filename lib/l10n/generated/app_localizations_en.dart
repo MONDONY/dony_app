@@ -17583,6 +17583,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homePublishTrip => 'Publish a trip';
 
   @override
+  String get homeEmptyPublishRequest => 'Post my request';
+
+  @override
+  String get homeEmptyPublishRequestHint =>
+      'Travelers will see it and offer you their trip.';
+
+  @override
+  String get homeEmptyPublishTrip => 'Post my trip';
+
+  @override
+  String get homeEmptyPublishTripHint =>
+      'Senders will see it and send you their parcels.';
+
+  @override
   String get homePublishTripSubtitle => 'Offer your available kilos';
 
   @override

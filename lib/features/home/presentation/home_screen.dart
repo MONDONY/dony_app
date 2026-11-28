@@ -987,13 +987,48 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// où l'autre mode a le plus de valeur.
   Widget _emptyWithCrossDiscovery(Widget emptyState) {
     final showAlert = _showAlertForSearch;
-    if (!_showCrossDiscovery && !showAlert) {
-      return emptyState;
-    }
+    final l = context.l10n;
+    // Mode Trajets : l'expéditeur n'a trouvé personne, il publie sa demande.
+    // Mode Colis : le voyageur n'a trouvé aucun colis, il publie son trajet.
+    final publishLabel = _mode.isTrips
+        ? l.homeEmptyPublishRequest
+        : l.homeEmptyPublishTrip;
+    final publishHint = _mode.isTrips
+        ? l.homeEmptyPublishRequestHint
+        : l.homeEmptyPublishTripHint;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         emptyState,
+        // Première sortie d'une liste vide : publier plutôt que repartir.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.lg,
+            0,
+            DonySpacing.lg,
+            DonySpacing.lg,
+          ),
+          child: Column(
+            children: [
+              DonyButton(
+                key: const Key('empty-publish'),
+                label: publishLabel,
+                variant: _mode.isTrips
+                    ? DonyButtonVariant.accent
+                    : DonyButtonVariant.primary,
+                onPressed: _onEmptyPublishTap,
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              Text(
+                publishHint,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
         if (_showCrossDiscovery)
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -1031,6 +1066,38 @@ class _MapSenderViewState extends State<_MapSenderView> {
           ),
       ],
     );
+  }
+
+  /// Publie depuis l'état vide : une demande d'envoi (mode Trajets) ou un
+  /// trajet (mode Colis). Même parcours que la feuille « + » : un invité tombe
+  /// sur la feuille de connexion, le modal vidéo de l'admin passe devant le
+  /// formulaire, puis l'intro (conditions et engagements) s'ouvre.
+  Future<void> _onEmptyPublishTap() async {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.homeEmptyPublishTapped,
+        properties: {'mode': _mode.name},
+      ),
+    );
+    if (!getIt<FirebaseSessionProbe>().hasRealSession) {
+      unawaited(AuthRequiredSheet.show(context));
+      return;
+    }
+    final router = GoRouter.maybeOf(context);
+    if (router == null) {
+      return;
+    }
+    final choice = _mode.isTrips
+        ? HomePublishChoice.parcel
+        : HomePublishChoice.trip;
+    final proceed = await VideoModalGate.before(
+      context,
+      choice.videoModalTrigger,
+    );
+    if (!proceed || !mounted) {
+      return;
+    }
+    unawaited(router.push<Object?>(choice.route));
   }
 
   /// Une alerte exige un corridor complet et un compte connecté : un invité
