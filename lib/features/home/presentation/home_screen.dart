@@ -2266,7 +2266,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// « Effacer les filtres » passait sous la pastille sur un téléphone.
   Widget _aboveFloatingControls(double bottomPad, Widget sliver) =>
       SliverPadding(
-        padding: EdgeInsets.only(bottom: bottomPad + _kFloatingNavClearance),
+        padding: EdgeInsets.only(
+          bottom: bottomPad + _kFloatingNavClearance + DonySpacing.xl,
+        ),
         sliver: sliver,
       );
 
@@ -2574,6 +2576,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                       ? ctx.l10n.homeEmptyParcelsFilteredHint
                                       : ctx.l10n.homeEmptyParcelsSoonHint,
                                   mascotte: DonyMascotteType.aucunResultat,
+                                  mascotteSize: DonyMascotteSize.md,
+                                  padding: const EdgeInsets.all(DonySpacing.lg),
                                   actionLabel: hasFilters
                                       ? ctx.l10n.commonClearFilters
                                       : null,
@@ -2692,6 +2696,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                 ? ctx.l10n.homeEmptyTravelersFilteredHint
                                 : ctx.l10n.homeEmptyTravelersRouteHint,
                             mascotte: DonyMascotteType.aucunResultat,
+                            mascotteSize: DonyMascotteSize.md,
+                            padding: const EdgeInsets.all(DonySpacing.lg),
                             actionLabel:
                                 !_isNearMeActive && _activeFilterCount > 0
                                 ? ctx.l10n.commonClearFilters
