@@ -17719,6 +17719,25 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les expéditeurs le voient et vous envoient leurs colis.';
 
   @override
+  String get listingPreviewNextTitle => 'Ensuite';
+
+  @override
+  String get listingPreviewNextVisible =>
+      'Votre trajet n\'est visible qu\'après avoir touché Publier.';
+
+  @override
+  String get listingPreviewNextNotified =>
+      'Vous êtes prévenu quand un expéditeur vous fait une demande.';
+
+  @override
+  String get listingPreviewNextChoose =>
+      'Vous choisissez les colis que vous acceptez.';
+
+  @override
+  String get listingPreviewNextEdit =>
+      'Vous pouvez modifier ou annuler votre trajet ensuite.';
+
+  @override
   String get homePublishTripSubtitle => 'Proposez vos kilos disponibles';
 
   @override
@@ -25199,15 +25218,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get publishKycGateBodyTrip =>
-      'Votre trajet est enregistré. Vérifiez votre identité (environ 2 minutes) puis publiez-le.';
+      'Votre trajet est enregistré. Vérifiez votre identité (environ 2 minutes) puis publiez-le. Les expéditeurs voient que vous êtes vérifié : c\'est ce qui les met en confiance.';
 
   @override
   String get publishKycGateBodyRequest =>
-      'Votre demande est enregistrée. Vérifiez votre identité (environ 2 minutes) puis publiez-la.';
+      'Votre demande est enregistrée. Vérifiez votre identité (environ 2 minutes) puis publiez-la. Les voyageurs voient que vous êtes vérifié : c\'est ce qui les met en confiance.';
 
   @override
   String get publishKycGateBodyUnsaved =>
-      'Vérifiez votre identité (environ 2 minutes) puis publiez.';
+      'Vérifiez votre identité (environ 2 minutes) puis publiez. Les autres membres voient que vous êtes vérifié : c\'est ce qui les met en confiance.';
 
   @override
   String get publishKycGateRejectedNote =>

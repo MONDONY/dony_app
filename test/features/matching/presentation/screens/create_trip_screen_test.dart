@@ -5538,7 +5538,8 @@ void main() {
         expect(
           find.text(
             'Votre trajet est enregistré. Vérifiez votre identité (environ '
-            '2 minutes) puis publiez-le.',
+            '2 minutes) puis publiez-le. Les expéditeurs voient que vous '
+            'êtes vérifié : c\'est ce qui les met en confiance.',
           ),
           findsOneWidget,
         );

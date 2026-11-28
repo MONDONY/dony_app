@@ -17597,6 +17597,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Senders will see it and send you their parcels.';
 
   @override
+  String get listingPreviewNextTitle => 'What happens next';
+
+  @override
+  String get listingPreviewNextVisible =>
+      'Your trip is only visible once you tap Publish.';
+
+  @override
+  String get listingPreviewNextNotified =>
+      'You are notified when a sender makes a request.';
+
+  @override
+  String get listingPreviewNextChoose => 'You choose which parcels you accept.';
+
+  @override
+  String get listingPreviewNextEdit =>
+      'You can edit or cancel your trip afterwards.';
+
+  @override
   String get homePublishTripSubtitle => 'Offer your available kilos';
 
   @override
@@ -25020,15 +25038,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get publishKycGateBodyTrip =>
-      'Your trip is saved. Verify your identity (about 2 minutes), then post it.';
+      'Your trip is saved. Verify your identity (about 2 minutes), then post it. Senders can see that you are verified: it is what gives them confidence.';
 
   @override
   String get publishKycGateBodyRequest =>
-      'Your request is saved. Verify your identity (about 2 minutes), then post it.';
+      'Your request is saved. Verify your identity (about 2 minutes), then post it. Travelers can see that you are verified: it is what gives them confidence.';
 
   @override
   String get publishKycGateBodyUnsaved =>
-      'Verify your identity (about 2 minutes), then post.';
+      'Verify your identity (about 2 minutes), then post. Other members can see that you are verified: it is what gives them confidence.';
 
   @override
   String get publishKycGateRejectedNote =>

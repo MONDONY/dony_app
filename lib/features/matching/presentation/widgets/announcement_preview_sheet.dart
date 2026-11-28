@@ -206,6 +206,8 @@ class AnnouncementPreviewSheet extends StatelessWidget {
               label: l.listingRowLabelNote,
               value: formState.description!,
             ),
+          const SizedBox(height: DonySpacing.sm),
+          const _NextSteps(),
           if (formState.priceWarning != null)
             Container(
               margin: const EdgeInsets.only(top: DonySpacing.sm),
@@ -317,6 +319,59 @@ class _PreviewRow extends StatelessWidget {
             ),
           ),
           Expanded(child: Text(value, style: tt.bodyMedium)),
+        ],
+      ),
+    );
+  }
+}
+
+/// « Ensuite » : ce qui se passe une fois le trajet publié, dit avant de publier
+/// pour lever les doutes d'un premier voyageur. Chaque ligne décrit un
+/// comportement réel de l'app : annonce visible à la publication, demandes par
+/// notification, acceptation ou refus de chaque colis, trajet modifiable et
+/// annulable.
+class _NextSteps extends StatelessWidget {
+  const _NextSteps();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    final lines = [
+      l.listingPreviewNextVisible,
+      l.listingPreviewNextNotified,
+      l.listingPreviewNextChoose,
+      l.listingPreviewNextEdit,
+    ];
+    return Container(
+      key: const Key('preview-next-steps'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.listingPreviewNextTitle,
+            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          for (final line in lines)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DonyIcon('circle-check', size: 16, color: cs.primary),
+                  const SizedBox(width: DonySpacing.sm),
+                  Expanded(child: Text(line, style: tt.bodyMedium)),
+                ],
+              ),
+            ),
         ],
       ),
     );
