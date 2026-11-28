@@ -168,6 +168,7 @@ const _sameInBothLanguages = <String>{
   'shellPlaceholderAdmin', // « Admin » se dit pareil
   'homeFilterChipsDate', // « Date » se dit pareil
   'homeFilterChipsUrgent', // « 🔥 Urgent » se dit pareil
+  'tourStepUrgentTitle', // « Urgent » se dit pareil
   'homeFilterFieldsTransport', // « TRANSPORT » se dit pareil
   'homeFilterFieldsDate', // « DATE » se dit pareil
   'tripTransportTrain', // « Train » se dit pareil

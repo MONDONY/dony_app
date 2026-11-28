@@ -17648,6 +17648,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tourDone => 'Done';
 
   @override
+  String get tourStepUrgentTitle => 'Urgent';
+
+  @override
+  String get tourStepUrgentBody => 'Trips leaving in less than 7 days.';
+
+  @override
+  String get tourStepFavoritesBody =>
+      'The trip you just liked is here, with all the others.';
+
+  @override
+  String get tourStepSupportTitle => 'Need help?';
+
+  @override
+  String get tourStepSupportBody =>
+      'A question? Open Messages: the Yadony team answers you there, in a conversation.';
+
+  @override
+  String get tourGotIt => 'Got it';
+
+  @override
   String get homePublishTripSubtitle => 'Offer your available kilos';
 
   @override

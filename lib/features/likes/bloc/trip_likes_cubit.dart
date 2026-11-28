@@ -21,10 +21,15 @@ class TripLikesState extends Equatable {
 /// Source de vérité des « j'aime » des cartes de trajet, partagée par toute
 /// l'app (singleton GetIt, fourni dans `app.dart`).
 class TripLikesCubit extends Cubit<TripLikesState> {
-  TripLikesCubit(this._repo, this._analytics) : super(const TripLikesState());
+  TripLikesCubit(this._repo, this._analytics, {this.onLiked})
+    : super(const TripLikesState());
 
   final TripLikeRepository _repo;
   final AnalyticsService _analytics;
+
+  /// Appelé après chaque « j'aime » confirmé par le serveur. L'app s'en sert
+  /// pour proposer la bulle qui explique les favoris.
+  final void Function()? onLiked;
 
   /// Trajets dont un appel est en cours.
   final Set<String> _inFlight = {};
@@ -90,6 +95,7 @@ class TripLikesCubit extends Cubit<TripLikesState> {
           adding ? AnalyticsEvents.tripLiked : AnalyticsEvents.tripUnliked,
         ),
       );
+      if (adding) onLiked?.call();
     } catch (e) {
       if (epoch == _epoch) {
         _put(id, before);

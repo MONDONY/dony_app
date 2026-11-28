@@ -29041,6 +29041,42 @@ abstract class AppLocalizations {
   /// **'Terminer'**
   String get tourDone;
 
+  /// Titre de la bulle sur le filtre Urgent de la recherche.
+  ///
+  /// In fr, this message translates to:
+  /// **'Urgent'**
+  String get tourStepUrgentTitle;
+
+  /// Bulle sur le filtre Urgent de la recherche, la première fois qu'on touche à un filtre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les trajets qui partent dans moins de 7 jours.'**
+  String get tourStepUrgentBody;
+
+  /// Bulle sur le bouton des favoris, après le premier cœur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le trajet que vous venez d\'aimer est ici, avec tous les autres.'**
+  String get tourStepFavoritesBody;
+
+  /// Titre de la bulle sur l'onglet Messages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Besoin d\'aide ?'**
+  String get tourStepSupportTitle;
+
+  /// Bulle sur l'onglet Messages, quelques jours après l'arrivée : le support y a sa conversation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une question ? Ouvrez Messages : l\'équipe Yadony vous répond là, dans une conversation.'**
+  String get tourStepSupportBody;
+
+  /// Ferme une bulle d'explication isolée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compris'**
+  String get tourGotIt;
+
   /// Sous-titre du choix « Publier un trajet » de la feuille « + Publier ».
   ///
   /// In fr, this message translates to:

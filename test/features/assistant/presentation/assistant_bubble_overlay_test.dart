@@ -833,10 +833,17 @@ void main() {
   group('petit tour', () {
     const mascotteKey = ValueKey('assistant-mascotte');
     late TourCubit tour;
+    var allSeen = false;
 
     setUp(() {
+      allSeen = false;
       final box = _MockHiveBox();
-      when(() => box.get(any())).thenReturn(null);
+      when(() => box.get(any())).thenAnswer((inv) {
+        final key = inv.positionalArguments.first as String;
+        return allSeen && key.startsWith(TourProgressStore.seenPrefix)
+            ? (1 << TourStep.values.length) - 1
+            : null;
+      });
       when(() => box.put(any(), any())).thenAnswer((_) async {});
       final analytics = _MockAnalyticsService();
       when(
@@ -873,7 +880,7 @@ void main() {
       expect(find.byKey(mascotteKey), findsNothing);
     });
 
-    testWidgets('tour passé : la mascotte vient proposer son aide', (
+    testWidgets('tour et bulles vus : la mascotte vient proposer son aide', (
       tester,
     ) async {
       tour.sync('u1');
@@ -881,9 +888,22 @@ void main() {
       await play(tester, const Duration(seconds: 2));
       expect(find.byKey(mascotteKey), findsNothing);
 
-      await tour.skip();
+      // Toutes les bulles vues : l'assistant n'attend plus rien.
+      allSeen = true;
+      tour.sync('u2');
+      tour.sync('u1');
       await play(tester, const Duration(seconds: 10));
       expect(find.byKey(mascotteKey), findsOneWidget);
+    });
+
+    testWidgets('tour passé mais bulles en attente : il patiente', (
+      tester,
+    ) async {
+      tour.sync('u1');
+      await pump(tester);
+      await tour.skip();
+      await play(tester, const Duration(seconds: 10));
+      expect(find.byKey(mascotteKey), findsNothing);
     });
 
     testWidgets('tour pas encore lu : l\'assistant attend', (tester) async {

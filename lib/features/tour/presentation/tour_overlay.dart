@@ -115,6 +115,12 @@ class _TourOverlayState extends State<TourOverlay> {
           }
           _measureRetries = 0;
           final local = box.globalToLocal(target.topLeft) & target.size;
+          // Un bouton défilé hors de la vue (chips) ne reçoit pas de bulle.
+          if (!(Offset.zero & box.size).contains(local.center) ||
+              local.left < 0 ||
+              local.right > box.size.width) {
+            return const SizedBox.shrink();
+          }
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) context.read<TourCubit>().shown();
           });
@@ -122,7 +128,7 @@ class _TourOverlayState extends State<TourOverlay> {
             step: step,
             target: local,
             screen: box.size,
-            isLast: step.index == TourStep.values.length - 1,
+            isLast: step == TourStep.activities,
           );
         },
       ),
@@ -153,6 +159,9 @@ class _TourBubble extends StatelessWidget {
     TourStep.modeTrips => l.homeModeSelectorSending,
     TourStep.modeParcels => l.homeModeSelectorTraveling,
     TourStep.activities => l.shellTabActivity,
+    TourStep.urgent => l.tourStepUrgentTitle,
+    TourStep.favorites => l.favoritesTitle,
+    TourStep.support => l.tourStepSupportTitle,
   };
 
   String _body(AppLocalizations l) => switch (step) {
@@ -160,6 +169,9 @@ class _TourBubble extends StatelessWidget {
     TourStep.modeTrips => l.tourStepModeTripsBody,
     TourStep.modeParcels => l.tourStepModeParcelsBody,
     TourStep.activities => l.tourStepActivitiesBody,
+    TourStep.urgent => l.tourStepUrgentBody,
+    TourStep.favorites => l.tourStepFavoritesBody,
+    TourStep.support => l.tourStepSupportBody,
   };
 
   @override
@@ -196,7 +208,7 @@ class _TourBubble extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l.tourCounter(step.index + 1, TourStep.values.length),
+              l.tourCounter(step.index + 1, kTourTotalSteps),
               style: tt.labelSmall?.copyWith(
                 color: accent,
                 fontWeight: FontWeight.w700,
@@ -213,26 +225,10 @@ class _TourBubble extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
             Text(_body(l), style: tt.bodyMedium?.copyWith(color: fg)),
             const SizedBox(height: DonySpacing.sm),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: TextButton(
-                    key: const Key('tour-skip'),
-                    onPressed: cubit.skip,
-                    style: TextButton.styleFrom(
-                      foregroundColor: fg.withValues(alpha: 0.7),
-                      minimumSize: const Size(44, 44),
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
-                    child: Text(
-                      l.tourSkip,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                TextButton(
+            if (step.isContextual)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
                   key: const Key('tour-next'),
                   onPressed: cubit.next,
                   style: TextButton.styleFrom(
@@ -241,14 +237,46 @@ class _TourBubble extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     textStyle: const TextStyle(fontWeight: FontWeight.w800),
                   ),
-                  child: Text(
-                    isLast ? l.tourDone : l.tourNext,
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
+                  child: Text(l.tourGotIt, maxLines: 1, softWrap: false),
                 ),
-              ],
-            ),
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: TextButton(
+                      key: const Key('tour-skip'),
+                      onPressed: cubit.skip,
+                      style: TextButton.styleFrom(
+                        foregroundColor: fg.withValues(alpha: 0.7),
+                        minimumSize: const Size(44, 44),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      child: Text(
+                        l.tourSkip,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    key: const Key('tour-next'),
+                    onPressed: cubit.next,
+                    style: TextButton.styleFrom(
+                      foregroundColor: accent,
+                      minimumSize: const Size(44, 44),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      textStyle: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    child: Text(
+                      isLast ? l.tourDone : l.tourNext,
+                      maxLines: 1,
+                      softWrap: false,
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),

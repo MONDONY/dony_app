@@ -1,33 +1,64 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
-/// Mémoire locale de l'avancée du petit tour, par compte.
+/// Mémoire locale de ce que le petit tour a déjà montré, par compte.
 ///
-/// La valeur est le rang de la prochaine bulle à montrer (0 pour la première).
-/// Dès qu'elle atteint le nombre de bulles, le tour est fini pour ce compte :
-/// il ne revient plus, ni après une déconnexion, ni après un redémarrage. La
-/// boîte `user_prefs` n'est pas vidée à la déconnexion, la clé porte l'UID.
+/// Trois valeurs, toutes portées par l'UID (la boîte `user_prefs` n'est pas
+/// vidée à la déconnexion) :
+/// - les bulles vues ou écartées, en masque de bits (une bulle ne revient plus) ;
+/// - le moment où la première partie du tour (les quatre premières bulles) s'est
+///   terminée, qui sert de point de départ aux bulles différées et à l'assistant ;
+/// - le dernier jour où une bulle « au moment utile » s'est affichée, pour n'en
+///   montrer qu'une par jour.
+///
+/// Toute lecture illisible rend « rien de vu » : mieux vaut un tour proposé
+/// deux fois qu'un tour jamais montré.
 class TourProgressStore {
   TourProgressStore(this._prefs);
 
   final Box<dynamic> _prefs;
 
-  static const keyPrefix = 'tour_next_step_v1_';
+  static const seenPrefix = 'tour_seen_v2_';
+  static const doneAtPrefix = 'tour_done_at_v2_';
+  static const lastContextualPrefix = 'tour_last_ctx_v2_';
 
-  /// Rang de la prochaine bulle pour [uid], 0 si rien n'est écrit ou si le
-  /// stockage est illisible : mieux vaut un tour proposé deux fois qu'un tour
-  /// jamais montré.
-  int read(String uid) {
+  int readSeen(String uid) {
     try {
-      final value = _prefs.get('$keyPrefix$uid');
+      final value = _prefs.get('$seenPrefix$uid');
       return value is int && value >= 0 ? value : 0;
     } catch (_) {
       return 0;
     }
   }
 
-  Future<void> write(String uid, int nextStep) async {
+  Future<void> writeSeen(String uid, int mask) => _put('$seenPrefix$uid', mask);
+
+  DateTime? readDoneAt(String uid) {
     try {
-      await _prefs.put('$keyPrefix$uid', nextStep);
+      final value = _prefs.get('$doneAtPrefix$uid');
+      return value is int ? DateTime.fromMillisecondsSinceEpoch(value) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> writeDoneAt(String uid, DateTime at) =>
+      _put('$doneAtPrefix$uid', at.millisecondsSinceEpoch);
+
+  String? readLastContextualDay(String uid) {
+    try {
+      final value = _prefs.get('$lastContextualPrefix$uid');
+      return value is String ? value : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> writeLastContextualDay(String uid, String day) =>
+      _put('$lastContextualPrefix$uid', day);
+
+  Future<void> _put(String key, Object value) async {
+    try {
+      await _prefs.put(key, value);
     } catch (_) {
       // Le tour ne vaut pas une erreur visible : au pire il se rejouera.
     }
