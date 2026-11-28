@@ -9,6 +9,8 @@ import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
+import 'package:dony/features/tour/bloc/tour_cubit.dart';
+import 'package:dony/features/tour/presentation/tour_anchors.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/presentation/video_modal_gate.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -106,28 +108,31 @@ class HomePublishButton extends StatelessWidget {
       child: Tooltip(
         message: l.homePublishButtonTooltip,
         excludeFromSemantics: true,
-        child: GestureDetector(
-          key: const Key('home-publish-button'),
-          onTap: () => _onTap(context),
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: cs.surface,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.10),
-                  blurRadius: 12,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Center(
-              // Teinte primaire : se distingue de la cloche (gris au repos)
-              // sans changer de surface ni d'ombre.
-              child: DonyIcon('plus', color: cs.primary),
+        child: TourAnchor(
+          step: TourStep.plus,
+          child: GestureDetector(
+            key: const Key('home-publish-button'),
+            onTap: () => _onTap(context),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: cs.surface,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.10),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Center(
+                // Teinte primaire : se distingue de la cloche (gris au repos)
+                // sans changer de surface ni d'ombre.
+                child: DonyIcon('plus', color: cs.primary),
+              ),
             ),
           ),
         ),

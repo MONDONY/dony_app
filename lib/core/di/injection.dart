@@ -344,6 +344,8 @@ import 'package:dony/features/tax_info/bloc/tax_info_prompt_cubit.dart';
 import 'package:dony/features/tax_info/bloc/tax_info_session.dart';
 import 'package:dony/features/tax_info/data/datasources/tax_info_remote_datasource.dart';
 import 'package:dony/features/tax_info/data/repositories/tax_info_repository.dart';
+import 'package:dony/features/tour/bloc/tour_cubit.dart';
+import 'package:dony/features/tour/data/tour_progress_store.dart';
 import 'package:dony/features/tracking/bloc/pickup_code_request_cubit.dart';
 import 'package:dony/features/tracking/bloc/position_reporter_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
@@ -1340,6 +1342,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<SupportRepository>(),
       summaryCubit: getIt<SupportSummaryCubit>(),
     ),
+  );
+
+  // Petit tour de l'écran Rechercher : une seule instance, lue par le shell et
+  // par la bulle de l'assistant, relue à chaque changement de compte.
+  getIt.registerLazySingleton<TourProgressStore>(
+    () => TourProgressStore(getIt<HiveService>().userPrefs),
+  );
+  getIt.registerLazySingleton<TourCubit>(
+    () => TourCubit(getIt<TourProgressStore>(), getIt<AnalyticsService>()),
   );
 
   // Assistant IA (dépôt REST, pas de cache ni de temps réel)

@@ -17738,6 +17738,39 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous pouvez modifier ou annuler votre trajet ensuite.';
 
   @override
+  String get tourStepPlusBody =>
+      'Publiez ici un trajet si vous voyagez, ou une demande d\'envoi si vous avez un colis.';
+
+  @override
+  String get tourStepModeTripsBody =>
+      'Vous avez un colis : voici les voyageurs qui partent vers votre destination. Touchez un trajet pour le consulter et faire une demande.';
+
+  @override
+  String get tourStepModeParcelsBody =>
+      'Vous voyagez : voici les colis à emporter qui correspondent à vos trajets. Touchez un colis pour vous proposer.';
+
+  @override
+  String get tourStepActivitiesBody =>
+      'Vos trajets, vos colis, les demandes reçues et les discussions de prix, au même endroit.';
+
+  @override
+  String get tourStepPlusTitle => 'Le bouton +';
+
+  @override
+  String tourCounter(int position, int total) {
+    return '$position sur $total';
+  }
+
+  @override
+  String get tourSkip => 'Passer le tour';
+
+  @override
+  String get tourNext => 'Suivant';
+
+  @override
+  String get tourDone => 'Terminer';
+
+  @override
   String get homePublishTripSubtitle => 'Proposez vos kilos disponibles';
 
   @override

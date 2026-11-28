@@ -28987,6 +28987,60 @@ abstract class AppLocalizations {
   /// **'Vous pouvez modifier ou annuler votre trajet ensuite.'**
   String get listingPreviewNextEdit;
 
+  /// Bulle du petit tour sur le bouton + de la recherche.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publiez ici un trajet si vous voyagez, ou une demande d\'envoi si vous avez un colis.'**
+  String get tourStepPlusBody;
+
+  /// Bulle du petit tour sur l'onglet « J'envoie un colis » de la recherche.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez un colis : voici les voyageurs qui partent vers votre destination. Touchez un trajet pour le consulter et faire une demande.'**
+  String get tourStepModeTripsBody;
+
+  /// Bulle du petit tour sur l'onglet « Je voyage » de la recherche.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous voyagez : voici les colis à emporter qui correspondent à vos trajets. Touchez un colis pour vous proposer.'**
+  String get tourStepModeParcelsBody;
+
+  /// Bulle du petit tour sur l'onglet Activités.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos trajets, vos colis, les demandes reçues et les discussions de prix, au même endroit.'**
+  String get tourStepActivitiesBody;
+
+  /// Titre de la bulle du petit tour sur le bouton +.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le bouton +'**
+  String get tourStepPlusTitle;
+
+  /// Rang de la bulle dans le petit tour.
+  ///
+  /// In fr, this message translates to:
+  /// **'{position} sur {total}'**
+  String tourCounter(int position, int total);
+
+  /// Écarte toutes les bulles restantes du petit tour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer le tour'**
+  String get tourSkip;
+
+  /// Passe à la bulle suivante du petit tour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivant'**
+  String get tourNext;
+
+  /// Ferme la dernière bulle du petit tour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminer'**
+  String get tourDone;
+
   /// Sous-titre du choix « Publier un trajet » de la feuille « + Publier ».
   ///
   /// In fr, this message translates to:

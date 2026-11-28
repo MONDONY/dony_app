@@ -7,6 +7,7 @@ import 'package:dony/app/widgets/dony_nav_item.dart';
 import 'package:dony/app/widgets/dony_nav_orb.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
+import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/app_badge_service.dart';
@@ -43,6 +44,9 @@ import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/account_rejected_banner.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/tax_info/bloc/tax_info_signal.dart';
+import 'package:dony/features/tour/bloc/tour_cubit.dart';
+import 'package:dony/features/tour/presentation/tour_anchors.dart';
+import 'package:dony/features/tour/presentation/tour_overlay.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_campaign.dart';
 import 'package:dony/features/video_modal/data/models/video_modal_moment.dart';
 import 'package:dony/features/video_modal/data/video_modal_moments.dart';
@@ -205,6 +209,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Petit tour : l'avancée se lit pour le compte courant dès le premier
+    // affichage, puis à chaque changement de compte (voir le listener).
+    getItSafe<TourCubit>()?.sync(context.read<AuthBloc>().state.currentUserId);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
@@ -359,6 +366,12 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
         child: MultiBlocListener(
           listeners: [
             NotificationBadgeListener(badge: getIt<AppBadgeService>()),
+            BlocListener<AuthBloc, AuthState>(
+              listenWhen: (previous, current) =>
+                  previous.currentUserId != current.currentUserId,
+              listener: (context, state) =>
+                  getItSafe<TourCubit>()?.sync(state.currentUserId),
+            ),
             BlocListener<RatingBloc, RatingState>(
               listener: (context, state) {
                 if (state is PendingRatingFound && !_ratingPromptShown) {
@@ -401,7 +414,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
                   banner = const AccountRejectedBanner();
                 }
               }
-              return Scaffold(
+              final tour = getItSafe<TourCubit>();
+              final scaffold = Scaffold(
                 // Le contenu passe DERRIÈRE la bottom nav (bar ancrée dont le
                 // fond s'étend sous le home indicator). Scaffold injecte la
                 // hauteur de la nav dans MediaQuery.padding.bottom du body,
@@ -419,6 +433,22 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
                 bottomNavigationBar: MainShellBottomNav(
                   currentIndex: widget.navigationShell.currentIndex,
                   onTap: _onTap,
+                ),
+              );
+              if (tour == null) return scaffold;
+              // Petit tour : par-dessus tout le shell, barre d'onglets
+              // comprise, sans capter de toucher hors de sa bulle.
+              return BlocProvider<TourCubit>.value(
+                value: tour,
+                child: Stack(
+                  children: [
+                    scaffold,
+                    Positioned.fill(
+                      child: TourOverlay(
+                        tabIndex: widget.navigationShell.currentIndex,
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -557,13 +587,16 @@ class MainShellBottomNav extends StatelessWidget {
                                       );
                                   final hasNew =
                                       pendingRequests > 0 || activeNegos > 0;
-                                  return DonyNavItem(
-                                    iconAsset: tab1IconAsset,
-                                    label: tab1Label,
-                                    index: 1,
-                                    currentIndex: currentIndex,
-                                    onTap: () => onTap(1),
-                                    showDot: hasNew,
+                                  return TourAnchor(
+                                    step: TourStep.activities,
+                                    child: DonyNavItem(
+                                      iconAsset: tab1IconAsset,
+                                      label: tab1Label,
+                                      index: 1,
+                                      currentIndex: currentIndex,
+                                      onTap: () => onTap(1),
+                                      showDot: hasNew,
+                                    ),
                                   );
                                 },
                               ),
