@@ -10,6 +10,7 @@ import 'package:dony/features/assistant/data/assistant_models.dart';
 import 'package:dony/features/assistant/data/assistant_repository.dart';
 import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_bubble_overlay.dart';
+import 'package:dony/features/assistant/presentation/widgets/assistant_mascotte_peek.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -892,7 +893,10 @@ void main() {
       allSeen = true;
       tour.sync('u2');
       tour.sync('u1');
-      await play(tester, const Duration(seconds: 10));
+      await play(
+        tester,
+        kAssistantMascotteFirstDelay + const Duration(seconds: 4),
+      );
       expect(find.byKey(mascotteKey), findsOneWidget);
     });
 
@@ -941,7 +945,10 @@ void main() {
     ) async {
       hintSeen();
       await pump(tester);
-      await play(tester, const Duration(seconds: 5));
+      await play(
+        tester,
+        kAssistantMascotteFirstDelay - const Duration(seconds: 1),
+      );
       expect(find.byKey(mascotteKey), findsNothing);
       verifyNever(
         () => assistantBloc.add(any(that: isA<AssistantMascotteShown>())),
@@ -959,7 +966,10 @@ void main() {
     ) async {
       hintSeen();
       await pump(tester);
-      await play(tester, const Duration(milliseconds: 9500));
+      await play(
+        tester,
+        kAssistantMascotteFirstDelay + const Duration(milliseconds: 3500),
+      );
       await tester.tapAt(tester.getRect(find.byKey(mascotteKey)).center);
       await tester.pumpAndSettle();
       verify(
@@ -972,7 +982,10 @@ void main() {
     testWidgets('toucher la phrase ouvre aussi l’assistant', (tester) async {
       hintSeen();
       await pump(tester);
-      await play(tester, const Duration(milliseconds: 9500));
+      await play(
+        tester,
+        kAssistantMascotteFirstDelay + const Duration(milliseconds: 3500),
+      );
       await tester.tap(find.text('Comment puis-je vous aider ?'));
       await tester.pumpAndSettle();
       verify(
@@ -993,12 +1006,12 @@ void main() {
       );
     });
 
-    testWidgets('cinq passages terminés : elle ne sort plus', (tester) async {
+    testWidgets('deux passages terminés : elle ne sort plus', (tester) async {
       when(() => prefsBloc.state).thenReturn(
         const AppPreferencesState(
           preferences: UserPreferencesModel(
             assistantHintSeen: true,
-            assistantMascottePasses: 5,
+            assistantMascottePasses: 2,
           ),
         ),
       );
@@ -1010,23 +1023,26 @@ void main() {
       );
     });
 
-    testWidgets('le cinquième passage est mesuré puis compté à sa fin', (
+    testWidgets('le deuxième passage est mesuré puis compté à sa fin', (
       tester,
     ) async {
       when(() => prefsBloc.state).thenReturn(
         const AppPreferencesState(
           preferences: UserPreferencesModel(
             assistantHintSeen: true,
-            assistantMascottePasses: 4,
+            assistantMascottePasses: 1,
           ),
         ),
       );
       await pump(tester);
-      await play(tester, const Duration(milliseconds: 9500));
+      await play(
+        tester,
+        kAssistantMascotteFirstDelay + const Duration(milliseconds: 3500),
+      );
       expect(find.byKey(mascotteKey), findsOneWidget);
       // Numéro du passage depuis le début, pas depuis le montage de la bulle.
       verify(
-        () => assistantBloc.add(const AssistantMascotteShown(5)),
+        () => assistantBloc.add(const AssistantMascotteShown(2)),
       ).called(1);
       verifyNever(() => prefsBloc.add(const AssistantMascottePassCompleted()));
       await play(tester, const Duration(seconds: 6));

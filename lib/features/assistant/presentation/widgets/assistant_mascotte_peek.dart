@@ -19,7 +19,7 @@ const double _tipGap = 2;
 const double _tipMaxWidth = 148;
 
 /// Premier passage après l'affichage de la bulle.
-const Duration kAssistantMascotteFirstDelay = Duration(seconds: 6);
+const Duration kAssistantMascotteFirstDelay = Duration(minutes: 1);
 
 /// Délai entre la fin d'un passage et le suivant.
 const Duration kAssistantMascotteInterval = Duration(minutes: 3);
@@ -29,7 +29,7 @@ const Duration kAssistantMascotteShow = Duration(milliseconds: 6700);
 
 /// Nombre de passages terminés après lesquels la mascotte ne sort plus : sans
 /// question posée à l'assistant, la relancer encore agacerait.
-const int kAssistantMascotteMaxPasses = 5;
+const int kAssistantMascotteMaxPasses = 2;
 
 /// Nouvel essai quand un passage tombe pendant un glissement ou l'aide.
 const Duration _retryDelay = Duration(seconds: 5);
