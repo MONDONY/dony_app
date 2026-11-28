@@ -3547,6 +3547,63 @@ void main() {
     });
   });
 
+  group('publier depuis l\'état vide', () {
+    testWidgets('0 résultat : « Publier ma demande » est proposé', (
+      tester,
+    ) async {
+      await pumpHome(tester, tripResults: const []);
+      tester.view.physicalSize = const Size(1000, 2400);
+      await tester.pump();
+      await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+      await ouvrirListe(tester);
+
+      final bouton = find.byKey(const Key('empty-publish'));
+      expect(bouton, findsOneWidget);
+      expect(
+        find.descendant(of: bouton, matching: find.text('Publier ma demande')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Les voyageurs la voient et vous proposent leur trajet.'),
+        findsOneWidget,
+      );
+      // Jamais de tiret cadratin dans un texte affiché.
+      expect(find.textContaining('—'), findsNothing);
+    });
+
+    testWidgets('le bouton passe avant les propositions d\'alerte', (
+      tester,
+    ) async {
+      await pumpHome(tester, tripResults: const []);
+      tester.view.physicalSize = const Size(1000, 2400);
+      await tester.pump();
+      await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+      await ouvrirListe(tester);
+
+      final publierY = tester
+          .getTopLeft(find.byKey(const Key('empty-publish')))
+          .dy;
+      final alerteY = tester
+          .getTopLeft(find.byKey(const Key('alert-for-search')))
+          .dy;
+      expect(publierY, lessThan(alerteY));
+    });
+
+    testWidgets('un invité voit aussi le bouton', (tester) async {
+      await pumpHome(
+        tester,
+        tripResults: const [],
+        authState: const AuthGuestSessionReady(),
+      );
+      tester.view.physicalSize = const Size(1000, 2400);
+      await tester.pump();
+      await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+      await ouvrirListe(tester);
+
+      expect(find.byKey(const Key('empty-publish')), findsOneWidget);
+    });
+  });
+
   group('découverte croisée', () {
     /// Le texte réellement porté par la tuile. Sert aux assertions sur le
     /// libellé complet (accord, corridor) sans dépendre de `find.text`.

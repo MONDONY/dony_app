@@ -28933,6 +28933,30 @@ abstract class AppLocalizations {
   /// **'Publier un trajet'**
   String get homePublishTrip;
 
+  /// Bouton de l'état vide de la recherche en mode Trajets : ouvre l'intro d'envoi de colis pour publier une demande d'envoi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier ma demande'**
+  String get homeEmptyPublishRequest;
+
+  /// Phrase sous le bouton « Publier ma demande » de l'état vide de la recherche.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les voyageurs la voient et vous proposent leur trajet.'**
+  String get homeEmptyPublishRequestHint;
+
+  /// Bouton de l'état vide de la recherche en mode Colis : ouvre l'intro de publication de trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier mon trajet'**
+  String get homeEmptyPublishTrip;
+
+  /// Phrase sous le bouton « Publier mon trajet » de l'état vide de la recherche.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les expéditeurs le voient et vous envoient leurs colis.'**
+  String get homeEmptyPublishTripHint;
+
   /// Sous-titre du choix « Publier un trajet » de la feuille « + Publier ».
   ///
   /// In fr, this message translates to:

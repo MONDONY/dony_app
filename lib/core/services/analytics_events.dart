@@ -1053,6 +1053,10 @@ abstract final class AnalyticsEvents {
   /// Tap sur « M'alerter dès que… » sous l'état vide. Propriété `mode`.
   static const homeAlertForSearchTapped = 'home_alert_for_search_tapped';
 
+  /// Bouton « Publier ma demande » / « Publier mon trajet » de l'état vide de
+  /// la recherche touché.
+  static const homeEmptyPublishTapped = 'home_empty_publish_tapped';
+
   /// Bascule de la pastille « Pour mes trajets » de la feuille de filtres colis.
   /// Propriétés `active` (bool) et `active_trips` (nombre de trajets actifs).
   static const homeMatchingTripsFilterToggled =
