@@ -17,11 +17,14 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:dony/features/support/data/support_repository.dart';
+import 'package:dony/features/tour/bloc/tour_cubit.dart';
+import 'package:dony/features/tour/data/tour_progress_store.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/mock_analytics_backend.dart';
@@ -40,6 +43,10 @@ class _FakeAppPreferencesEvent extends Fake implements AppPreferencesEvent {}
 class _MockAssistantRepository extends Mock implements AssistantRepository {}
 
 class _MockSupportRepository extends Mock implements SupportRepository {}
+
+class _MockHiveBox extends Mock implements Box<dynamic> {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 const _bubbleKey = ValueKey('assistant-bubble');
 const _homeButtonKey = ValueKey('home-button');
@@ -820,6 +827,69 @@ void main() {
         assistantLocationFrom(router),
         '/assistant?source=bubble&screen=%2Fbids%2F%3AbidId&parcel=b9',
       );
+    });
+  });
+
+  group('petit tour', () {
+    const mascotteKey = ValueKey('assistant-mascotte');
+    late TourCubit tour;
+
+    setUp(() {
+      final box = _MockHiveBox();
+      when(() => box.get(any())).thenReturn(null);
+      when(() => box.put(any(), any())).thenAnswer((_) async {});
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      tour = TourCubit(TourProgressStore(box), analytics);
+      when(() => prefsBloc.state).thenReturn(
+        const AppPreferencesState(
+          preferences: UserPreferencesModel(assistantHintSeen: true),
+        ),
+      );
+      if (getIt.isRegistered<TourCubit>()) getIt.unregister<TourCubit>();
+      getIt.registerSingleton<TourCubit>(tour);
+      addTearDown(() async {
+        if (getIt.isRegistered<TourCubit>()) getIt.unregister<TourCubit>();
+        await tour.close();
+      });
+    });
+
+    Future<void> play(WidgetTester tester, Duration d) async {
+      var left = d;
+      while (left > Duration.zero) {
+        const step = Duration(milliseconds: 100);
+        final next = left < step ? left : step;
+        await tester.pump(next);
+        left -= next;
+      }
+    }
+
+    testWidgets('tour en cours : la mascotte ne sort pas', (tester) async {
+      tour.sync('u1');
+      await pump(tester);
+      await play(tester, const Duration(seconds: 10));
+      expect(find.byKey(mascotteKey), findsNothing);
+    });
+
+    testWidgets('tour passé : la mascotte vient proposer son aide', (
+      tester,
+    ) async {
+      tour.sync('u1');
+      await pump(tester);
+      await play(tester, const Duration(seconds: 2));
+      expect(find.byKey(mascotteKey), findsNothing);
+
+      await tour.skip();
+      await play(tester, const Duration(seconds: 10));
+      expect(find.byKey(mascotteKey), findsOneWidget);
+    });
+
+    testWidgets('tour pas encore lu : l\'assistant attend', (tester) async {
+      await pump(tester);
+      await play(tester, const Duration(seconds: 10));
+      expect(find.byKey(mascotteKey), findsNothing);
     });
   });
 

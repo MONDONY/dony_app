@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/tour/bloc/tour_cubit.dart';
+import 'package:dony/features/tour/presentation/tour_anchors.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -84,32 +86,38 @@ class SearchModeSelector extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  child: _Segment(
-                    key: const Key('search_mode_segment_trips'),
-                    iconName: 'package',
-                    title: tripsTitle(l),
-                    subtitle: _subtitle(l, SearchMode.trips),
-                    count: _countShown(SearchMode.trips)
-                        ? otherModeCount
-                        : null,
-                    isActive: mode.isTrips,
-                    onTap: () =>
-                        mode.isTrips ? null : onChanged(SearchMode.trips),
+                  child: TourAnchor(
+                    step: TourStep.modeTrips,
+                    child: _Segment(
+                      key: const Key('search_mode_segment_trips'),
+                      iconName: 'package',
+                      title: tripsTitle(l),
+                      subtitle: _subtitle(l, SearchMode.trips),
+                      count: _countShown(SearchMode.trips)
+                          ? otherModeCount
+                          : null,
+                      isActive: mode.isTrips,
+                      onTap: () =>
+                          mode.isTrips ? null : onChanged(SearchMode.trips),
+                    ),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
-                  child: _Segment(
-                    key: const Key('search_mode_segment_colis'),
-                    iconName: 'plane',
-                    title: parcelsTitle(l),
-                    subtitle: _subtitle(l, SearchMode.parcels),
-                    count: _countShown(SearchMode.parcels)
-                        ? otherModeCount
-                        : null,
-                    isActive: mode.isParcels,
-                    onTap: () =>
-                        mode.isParcels ? null : onChanged(SearchMode.parcels),
+                  child: TourAnchor(
+                    step: TourStep.modeParcels,
+                    child: _Segment(
+                      key: const Key('search_mode_segment_colis'),
+                      iconName: 'plane',
+                      title: parcelsTitle(l),
+                      subtitle: _subtitle(l, SearchMode.parcels),
+                      count: _countShown(SearchMode.parcels)
+                          ? otherModeCount
+                          : null,
+                      isActive: mode.isParcels,
+                      onTap: () =>
+                          mode.isParcels ? null : onChanged(SearchMode.parcels),
+                    ),
                   ),
                 ),
               ],

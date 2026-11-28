@@ -1057,6 +1057,18 @@ abstract final class AnalyticsEvents {
   /// la recherche touché.
   static const homeEmptyPublishTapped = 'home_empty_publish_tapped';
 
+  /// Petit tour de l'écran Rechercher : bulle affichée (`step`, `position`).
+  static const tourStepShown = 'tour_step_shown';
+
+  /// « Suivant » ou « Terminer » touché sur une bulle du tour (`step`).
+  static const tourStepNext = 'tour_step_next';
+
+  /// « Passer le tour » touché (`step`, `position` de la bulle écartée).
+  static const tourSkipped = 'tour_skipped';
+
+  /// Dernière bulle du tour validée.
+  static const tourCompleted = 'tour_completed';
+
   /// Bascule de la pastille « Pour mes trajets » de la feuille de filtres colis.
   /// Propriétés `active` (bool) et `active_trips` (nombre de trajets actifs).
   static const homeMatchingTripsFilterToggled =

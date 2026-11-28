@@ -17615,6 +17615,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can edit or cancel your trip afterwards.';
 
   @override
+  String get tourStepPlusBody =>
+      'Post a trip here if you\'re traveling, or a shipping request if you have a parcel.';
+
+  @override
+  String get tourStepModeTripsBody =>
+      'You have a parcel: these are the travelers heading to your destination. Tap a trip to view it and make a request.';
+
+  @override
+  String get tourStepModeParcelsBody =>
+      'You\'re traveling: these are the parcels to carry that match your trips. Tap a parcel to offer your trip.';
+
+  @override
+  String get tourStepActivitiesBody =>
+      'Your trips, your parcels, the requests you received and the price discussions, all in one place.';
+
+  @override
+  String get tourStepPlusTitle => 'The + button';
+
+  @override
+  String tourCounter(int position, int total) {
+    return '$position of $total';
+  }
+
+  @override
+  String get tourSkip => 'Skip the tour';
+
+  @override
+  String get tourNext => 'Next';
+
+  @override
+  String get tourDone => 'Done';
+
+  @override
   String get homePublishTripSubtitle => 'Offer your available kilos';
 
   @override

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/app/router.dart';
+import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
@@ -11,6 +12,7 @@ import 'package:dony/features/assistant/presentation/widgets/assistant_mascotte_
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/tour/bloc/tour_cubit.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -102,6 +104,12 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
   StreamSubscription<AuthState>? _authSub;
   AppLifecycleListener? _lifecycle;
 
+  /// Petit tour de l'écran Rechercher. L'assistant ne se manifeste (aide de
+  /// première fois, mascotte) qu'une fois le tour fini ou passé : il vient
+  /// alors proposer son aide, en dernier, au lieu de parler dès l'ouverture.
+  late final TourCubit? _tour = getItSafe<TourCubit>();
+  StreamSubscription<TourState>? _tourSub;
+
   /// Dernier chemin vu et état de l'aide : l'aide se ferme (et s'écrit) dès
   /// que l'utilisateur change de route, sans jamais revenir.
   String? _lastPath;
@@ -117,6 +125,9 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
     );
     _uid = auth.state.currentUserId;
     _authSub = auth.stream.listen(_onAuth);
+    _tourSub = _tour?.stream.listen((_) {
+      if (mounted) setState(() {});
+    });
     _lifecycle = AppLifecycleListener(onResume: _onResume);
     if (_signedIn.value) _assistant.add(const AssistantStatusRequested());
   }
@@ -124,6 +135,7 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
   @override
   void dispose() {
     unawaited(_authSub?.cancel());
+    unawaited(_tourSub?.cancel());
     _lifecycle?.dispose();
     _signedIn.dispose();
     super.dispose();
@@ -259,7 +271,13 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
         );
     if (!visible) return const SizedBox.shrink();
 
-    final showHint = !hintSeen && !_hintClosed && !(routeChanged && _hintShown);
+    // Sans tour branché (tests, aperçus), rien ne retient l'assistant.
+    final tourFinished = _tour?.state.finished ?? true;
+    final showHint =
+        tourFinished &&
+        !hintSeen &&
+        !_hintClosed &&
+        !(routeChanged && _hintShown);
     _hintShown = showHint;
 
     void open() {
@@ -281,7 +299,10 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
       // Elle s'arrête à la première question, ou après cinq passages vus en
       // entier sans question : le compteur est écrit à la fin d'un passage,
       // jamais pendant, pour ne pas la démonter en pleine sortie.
-      showMascotte: !questionAsked && passes < kAssistantMascotteMaxPasses,
+      showMascotte:
+          tourFinished &&
+          !questionAsked &&
+          passes < kAssistantMascotteMaxPasses,
       // Numéro du passage depuis le début (1 à 5), pas depuis le montage de la
       // bulle qui repart de zéro à chaque retour sur un écran.
       onMascotteShown: (_) =>
