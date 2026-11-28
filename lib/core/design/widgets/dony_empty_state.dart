@@ -17,6 +17,7 @@ class DonyEmptyState extends StatelessWidget {
     this.icon,
     this.iconAsset,
     this.mascotte,
+    this.mascotteSize = DonyMascotteSize.lg,
     this.type = DonyEmptyStateType.empty,
     this.actionLabel,
     this.onAction,
@@ -31,6 +32,10 @@ class DonyEmptyState extends StatelessWidget {
   /// [icon]. Prioritaire sur [icon] s'il est fourni.
   final String? iconAsset;
   final DonyMascotteType? mascotte;
+
+  /// Taille de la mascotte. Réduite quand l'état vide porte d'autres actions
+  /// sous le message et doit les laisser visibles sans défiler.
+  final DonyMascotteSize mascotteSize;
   final DonyEmptyStateType type;
   final String? actionLabel;
   final VoidCallback? onAction;
@@ -82,10 +87,7 @@ class DonyEmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           (mascotte != null
-                  ? DonyMascotteAnimated(
-                      type: mascotte!,
-                      size: DonyMascotteSize.lg,
-                    )
+                  ? DonyMascotteAnimated(type: mascotte!, size: mascotteSize)
                   : DonyIconContainer(
                       icon: iconAsset == null ? (icon ?? defaultIcon) : null,
                       iconAsset: iconAsset,
