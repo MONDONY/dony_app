@@ -36,6 +36,16 @@ Future<String?> showKycAbandonReasonSheet(BuildContext context) {
   );
 }
 
+/// Icône (SVG Lucide de `assets/icons/`) de chaque raison : on reconnaît la
+/// raison d'un coup d'œil avant de lire la phrase.
+const _reasonIcons = <String, String>{
+  'NO_DOCUMENT': 'id-card',
+  'PRIVACY': 'eye-off',
+  'TOO_LONG': 'hourglass',
+  'TECHNICAL': 'circle-alert',
+  'LATER': 'clock',
+};
+
 class _ReasonList extends StatelessWidget {
   const _ReasonList();
 
@@ -52,19 +62,20 @@ class _ReasonList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          for (final code in kycAbandonReasonCodes)
-            ListTile(
+          for (final (i, code) in kycAbandonReasonCodes.indexed)
+            DonyListTile(
               key: Key('kyc-abandon-reason-$code'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(_label(context, code), style: tt.bodyLarge),
-              trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+              iconAsset: _reasonIcons[code] ?? 'circle-help',
+              iconColor: cs.primary,
+              iconBgColor: cs.primary.withValues(alpha: 0.10),
+              label: _label(context, code),
+              showDivider: i < kycAbandonReasonCodes.length - 1,
               onTap: () => Navigator.of(context, rootNavigator: true).pop(code),
             ),
         ],
